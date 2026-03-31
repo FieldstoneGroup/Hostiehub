@@ -338,6 +338,8 @@
   }
 
   function applyBranding(host) {
+    console.log('Host data:', host);
+    console.log('Logo URL:', host.logo_url);
     const colour = host.brand_colour || '#2C6E6A';
     document.documentElement.style.setProperty('--brand', colour);
     const name = host.store_name || host.username.charAt(0).toUpperCase() + host.username.slice(1) + "'s Hostie Hub Store";

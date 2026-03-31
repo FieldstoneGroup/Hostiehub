@@ -439,10 +439,13 @@
             <div class="card-desc">Your current Hostie Hub plan.</div>
             <div style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:14px;margin-bottom:14px">
               <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Current plan</div>
-              <div style="font-size:20px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif">Host Plan · $99/yr</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:4px">Renews 1 Jan 2026</div>
+              <div style="font-size:20px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif" id="planName">Host Plan · $99/yr</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:4px" id="planProperties">Up to 3 properties</div>
             </div>
-            <button class="btn btn-outline btn-sm">Manage billing →</button>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-outline btn-sm">Manage billing →</button>
+              <a href="index.html#pricing" class="btn btn-primary btn-sm">View all plans →</a>
+            </div>
           </div>
           <div class="card">
             <div class="card-title">Danger zone</div>
@@ -627,6 +630,12 @@
     } else {
       document.getElementById('stripeBadge').style.display = 'flex';
     }
+    // Show plan details
+    const plan = currentHost.plan || 'host';
+    const planNames = { host: 'Host Plan · $99/yr', pro: 'Pro Plan · $199/yr', enterprise: 'Enterprise Plan · Custom' };
+    const planProps = { host: 'Up to 3 properties', pro: 'Up to 10 properties', enterprise: 'Unlimited properties' };
+    if (document.getElementById('planName')) document.getElementById('planName').textContent = planNames[plan] || planNames.host;
+    if (document.getElementById('planProperties')) document.getElementById('planProperties').textContent = planProps[plan] || planProps.host;
   }
 
   function showPage(name, btn) {
@@ -693,6 +702,19 @@
   async function saveProperty() {
     const nickname = document.getElementById('propNickname').value.trim();
     if (!nickname) { showToast('⚠️ Property nickname is required'); return; }
+
+    // Check property limits based on plan
+    if (!editingPropertyId) {
+      const plan = currentHost.plan || 'host';
+      const limit = plan === 'pro' ? 10 : plan === 'enterprise' ? Infinity : 3;
+      if (properties.length >= limit) {
+        showToast(`⚠️ Your ${plan === 'host' ? 'Host' : 'Pro'} plan allows up to ${limit} properties. Upgrade to add more.`);
+        closePropertyModal();
+        showPage('account', document.querySelector('[onclick*=account]'));
+        return;
+      }
+    }
+
     const data = { host_id: currentUser.id, nickname, address: document.getElementById('propAddress').value.trim(), postcode: document.getElementById('propPostcode').value.trim() };
     if (editingPropertyId) {
       await sb.from('properties').update(data).eq('id', editingPropertyId);

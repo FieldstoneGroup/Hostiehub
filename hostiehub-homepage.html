@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hostie Hub – Your own guest extras store</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #2C6E6A;
+    --brand-dark: #1d4d4a;
+    --brand-light: #e6f2f1;
+    --brand-mid: #4a9490;
+    --accent: #E8A838;
+    --accent-light: #fdf3e0;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --bg: #faf9f7;
+    --card: #ffffff;
+    --border: #e8e4df;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 0 32px;
+    background: rgba(250,249,247,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    transition: box-shadow 0.3s;
+  }
+
+  .nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--brand);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--brand); }
+
+  .nav-cta {
+    background: var(--brand);
+    color: white !important;
+    padding: 10px 22px;
+    border-radius: 50px;
+    font-weight: 600 !important;
+    transition: background 0.2s !important;
+  }
+
+  .nav-cta:hover { background: var(--brand-dark) !important; color: white !important; }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 100px 32px 80px;
+    background: linear-gradient(160deg, #f0f7f6 0%, var(--bg) 50%, #fdf3e0 100%);
+  }
+
+  .hero-bg-circle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .hero-bg-circle-1 {
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(44,110,106,0.08) 0%, transparent 70%);
+    top: -100px; right: -100px;
+  }
+
+  .hero-bg-circle-2 {
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(232,168,56,0.08) 0%, transparent 70%);
+    bottom: 0; left: -80px;
+  }
+
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--brand-light);
+    color: var(--brand);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 50px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(38px, 5vw, 58px);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--brand);
+  }
+
+  .hero-desc {
+    font-size: 18px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-weight: 300;
+    margin-bottom: 36px;
+    max-width: 480px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .btn-primary {
+    background: var(--brand);
+    color: white;
+    padding: 16px 32px;
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary:hover { background: var(--brand-dark); transform: translateY(-1px); }
+
+  .btn-secondary {
+    color: var(--brand);
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: gap 0.2s;
+  }
+
+  .btn-secondary:hover { gap: 10px; }
+
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    margin-top: 48px;
+    padding-top: 36px;
+    border-top: 1.5px solid var(--border);
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--brand);
+  }
+
+  .stat-label {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* HERO STORE MOCKUP */
+  .hero-mockup {
+    position: relative;
+    animation: fadeUp 0.7s 0.2s ease both;
+  }
+
+  .mockup-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(44,110,106,0.15), 0 4px 16px rgba(0,0,0,0.06);
+    overflow: hidden;
+    border: 1.5px solid var(--border);
+  }
+
+  .mockup-header {
+    background: var(--brand);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mockup-host {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mockup-avatar {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .mockup-name { color: white; font-size: 14px; font-weight: 600; }
+  .mockup-sub { color: rgba(255,255,255,0.65); font-size: 11px; }
+
+  .mockup-cart {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border-radius: 50px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .mockup-body { padding: 20px; }
+
+  .mockup-hero-strip {
+    background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .mockup-hero-strip h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .mockup-hero-strip p { font-size: 12px; opacity: 0.75; }
+
+  .mockup-products {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .mockup-product {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 12px;
+    border: 1.5px solid var(--border);
+  }
+
+  .mockup-product-icon { font-size: 22px; margin-bottom: 6px; }
+  .mockup-product-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; color: var(--text); }
+  .mockup-product-price { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+
+  .mockup-add {
+    background: var(--brand);
+    color: white;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    display: inline-block;
+  }
+
+  .mockup-url {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 50px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--brand);
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  .mockup-float {
+    position: absolute;
+    background: white;
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border: 1.5px solid var(--border);
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mockup-float-1 { bottom: -20px; left: -24px; }
+  .mockup-float-2 { top: 60px; right: -28px; }
+  .float-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ─── SECTIONS SHARED ─── */
+  section { padding: 100px 32px; }
+
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+
+  .section-eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--brand);
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(30px, 4vw, 44px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+  }
+
+  .section-desc {
+    font-size: 17px;
+    color: var(--muted);
+    line-height: 1.7;
+    font-weight: 300;
+    max-width: 560px;
+  }
+
+  /* ─── HOW IT WORKS ─── */
+  .how-section { background: white; }
+
+  .how-header { text-align: center; margin-bottom: 72px; }
+  .how-header .section-desc { margin: 0 auto; }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    position: relative;
+  }
+
+  .steps::before {
+    content: '';
+    position: absolute;
+    top: 36px;
+    left: 12.5%;
+    right: 12.5%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--brand-light), var(--brand), var(--brand-light));
+    z-index: 0;
+  }
+
+  .step {
+    text-align: center;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .step-num {
+    width: 72px; height: 72px;
+    background: var(--brand);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 auto 24px;
+    border: 4px solid white;
+    box-shadow: 0 0 0 2px var(--brand);
+    position: relative;
+  }
+
+  .step-icon {
+    position: absolute;
+    bottom: -6px;
+    right: -6px;
+    background: var(--accent);
+    border-radius: 50%;
+    width: 26px; height: 26px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .step h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .step p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* ─── PRICING ─── */
+  .pricing-section { background: var(--bg); }
+
+  .pricing-header { text-align: center; margin-bottom: 56px; }
+  .pricing-header .section-desc { margin: 0 auto; }
+
+  .pricing-card-wrap {
+    display: flex;
+    justify-content: center;
+  }
+
+  .pricing-card {
+    background: white;
+    border: 2px solid var(--brand);
+    border-radius: 24px;
+    padding: 48px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(44,110,106,0.12);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pricing-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--brand), var(--accent));
+  }
+
+  .pricing-badge {
+    display: inline-block;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 50px;
+    margin-bottom: 20px;
+  }
+
+  .pricing-amount {
+    font-family: 'Playfair Display', serif;
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--brand);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .pricing-amount sup { font-size: 32px; vertical-align: top; margin-top: 12px; }
+
+  .pricing-period {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 36px;
+  }
+
+  .pricing-features {
+    list-style: none;
+    text-align: left;
+    margin-bottom: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .pricing-features li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .pricing-check {
+    width: 22px; height: 22px;
+    background: var(--brand-light);
+    color: var(--brand);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .pricing-note {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 16px;
+    line-height: 1.5;
+  }
+
+  /* ─── DEMO ─── */
+  .demo-section { background: linear-gradient(160deg, var(--brand-dark) 0%, var(--brand) 100%); color: white; }
+
+  .demo-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .demo-section .section-eyebrow { color: rgba(255,255,255,0.6); }
+  .demo-section .section-title { color: white; }
+  .demo-section .section-desc { color: rgba(255,255,255,0.75); }
+
+  .demo-stores {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .demo-store {
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    text-decoration: none;
+  }
+
+  .demo-store:hover {
+    background: rgba(255,255,255,0.18);
+    transform: translateX(4px);
+  }
+
+  .demo-store-icon {
+    width: 44px; height: 44px;
+    background: var(--accent);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .demo-store-info { flex: 1; }
+
+  .demo-store-name { color: white; font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+  .demo-store-url { color: rgba(255,255,255,0.55); font-size: 12px; }
+
+  .demo-store-arrow { color: rgba(255,255,255,0.4); font-size: 18px; }
+
+  .demo-cta {
+    margin-top: 24px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+  }
+
+  /* ─── TESTIMONIALS ─── */
+  .testimonials-section { background: white; }
+
+  .testimonials-header { text-align: center; margin-bottom: 56px; }
+
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+
+  .testimonial-card {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    position: relative;
+  }
+
+  .testimonial-card::before {
+    content: '"';
+    position: absolute;
+    top: 16px; right: 24px;
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    color: var(--brand-light);
+    line-height: 1;
+  }
+
+  .testimonial-stars {
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+  }
+
+  .testimonial-text {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .testimonial-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', serif;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .testimonial-name { font-size: 14px; font-weight: 600; }
+  .testimonial-location { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  /* ─── FAQ ─── */
+  .faq-section { background: var(--bg); }
+
+  .faq-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .faq-header { margin-bottom: 48px; }
+
+  .faq-list {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .faq-item {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .faq-item.open { border-color: var(--brand); }
+
+  .faq-question {
+    padding: 20px 24px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    user-select: none;
+  }
+
+  .faq-chevron {
+    color: var(--brand);
+    font-size: 18px;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+
+  .faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+  .faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.3s;
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.7;
+    padding: 0 24px;
+  }
+
+  .faq-item.open .faq-answer {
+    max-height: 300px;
+    padding: 0 24px 20px;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--brand-dark);
+    color: white;
+    padding: 60px 32px 40px;
+  }
+
+  .footer-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 60px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    margin-bottom: 32px;
+  }
+
+  .footer-brand-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .footer-brand-desc {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.7;
+    max-width: 300px;
+    margin-bottom: 20px;
+  }
+
+  .footer-contact {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.9;
+  }
+
+  .footer-contact a { color: var(--accent); text-decoration: none; }
+
+  .footer-col-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 20px;
+  }
+
+  .footer-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .footer-links a {
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: white; }
+
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: rgba(255,255,255,0.35);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .footer-bottom a { color: rgba(255,255,255,0.5); text-decoration: none; }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 768px) {
+    section { padding: 72px 20px; }
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+
+    .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+    .hero-mockup { display: none; }
+    .hero { padding: 100px 20px 60px; min-height: auto; }
+
+    .steps { grid-template-columns: 1fr 1fr; gap: 40px; }
+    .steps::before { display: none; }
+
+    .demo-inner { grid-template-columns: 1fr; gap: 40px; }
+
+    .testimonials-grid { grid-template-columns: 1fr; }
+
+    .footer-top { grid-template-columns: 1fr; gap: 36px; }
+
+    .pricing-card { padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">Hostie Hub <span class="nav-logo-dot"></span></a>
+    <ul class="nav-links">
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#demo">See a store</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#" class="nav-cta">Get started →</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-circle hero-bg-circle-1"></div>
+  <div class="hero-bg-circle hero-bg-circle-2"></div>
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-eyebrow">🇦🇺 Built by hosts, for hosts</div>
+      <h1>Your own store.<br>Your guests.<br><em>More revenue.</em></h1>
+      <p class="hero-desc">Give your guests a beautiful online store to purchase extras before they arrive — early check-in, welcome baskets, experiences and more. All paid directly to you.</p>
+      <div class="hero-actions">
+        <a href="#" class="btn-primary">Start for $99/yr →</a>
+        <a href="#demo" class="btn-secondary">See an example store ↓</a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="stat-num">$99</div>
+          <div class="stat-label">Per year, that's it</div>
+        </div>
+        <div>
+          <div class="stat-num">100%</div>
+          <div class="stat-label">Revenue goes to you</div>
+        </div>
+        <div>
+          <div class="stat-num">5 min</div>
+          <div class="stat-label">To set up your store</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOCKUP -->
+    <div class="hero-mockup">
+      <div style="position:relative; padding-top: 20px;">
+        <div class="mockup-url">sarah.hostiehub.com</div>
+        <div class="mockup-card">
+          <div class="mockup-header">
+            <div class="mockup-host">
+              <div class="mockup-avatar">S</div>
+              <div>
+                <div class="mockup-name">Sarah's Beach House</div>
+                <div class="mockup-sub">Extras & Add-ons</div>
+              </div>
+            </div>
+            <div class="mockup-cart">🛒 Cart (2)</div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-hero-strip">
+              <h3>Make your stay special ✨</h3>
+              <p>Add extras before you arrive</p>
+            </div>
+            <div class="mockup-products">
+              <div class="mockup-product">
+                <div class="mockup-product-icon">🌸</div>
+                <div class="mockup-product-name">Welcome Flowers</div>
+                <div class="mockup-product-price">$45 / stay</div>
+                <div class="mockup-add">✓ Added</div>
+              </div>
+              <div class="mockup-product">
+                <div class="mockup-product-icon">🧺</div>
+                <div class="mockup-product-name">Breakfast Basket</div>
+                <div class="mockup-product-price">$55 / morning</div>
+                <div class="mockup-add">Add</div>
+              </div>
+              <div class="mockup-product">
+                <div class="mockup-product-icon">🏄</div>
+                <div class="mockup-product-name">Surf Lesson</div>
+                <div class="mockup-product-price">$120 / person</div>
+                <div class="mockup-add">Add</div>
+              </div>
+              <div class="mockup-product">
+                <div class="mockup-product-icon">🚗</div>
+                <div class="mockup-product-name">Airport Pickup</div>
+                <div class="mockup-product-price">$75 / trip</div>
+                <div class="mockup-add">✓ Added</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mockup-float mockup-float-1">
+          <div class="float-dot" style="background:#22c55e"></div>
+          <span style="font-size:13px">$130 just came in 💰</span>
+        </div>
+        <div class="mockup-float mockup-float-2">
+          <span>🔒</span>
+          <span style="font-size:12px;color:var(--muted)">Paid via Stripe</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-inner">
+    <div class="how-header reveal">
+      <div class="section-eyebrow">Simple as that</div>
+      <h2 class="section-title">Up and running in minutes</h2>
+      <p class="section-desc">No tech skills needed. We handle everything — you just add your products and share your link.</p>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">1<div class="step-icon">✍️</div></div>
+        <h3>Sign up</h3>
+        <p>Create your Hostie Hub account for $99/yr. No lock-in, cancel anytime.</p>
+      </div>
+      <div class="step reveal" style="transition-delay:0.1s">
+        <div class="step-num">2<div class="step-icon">🎨</div></div>
+        <h3>Build your store</h3>
+        <p>Add your logo, colours and products. We give you a template to get started fast.</p>
+      </div>
+      <div class="step reveal" style="transition-delay:0.2s">
+        <div class="step-num">3<div class="step-icon">💳</div></div>
+        <h3>Connect Stripe</h3>
+        <p>Link your existing Stripe account (or open one free). Payments go directly to you.</p>
+      </div>
+      <div class="step reveal" style="transition-delay:0.3s">
+        <div class="step-num">4<div class="step-icon">🔗</div></div>
+        <h3>Share your link</h3>
+        <p>Drop your store link in your welcome message. Guests browse and buy before arrival.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section" id="pricing">
+  <div class="section-inner">
+    <div class="pricing-header reveal">
+      <div class="section-eyebrow">Pricing</div>
+      <h2 class="section-title">One plan. Everything included.</h2>
+      <p class="section-desc">No commissions, no per-sale fees, no surprises. Just a flat yearly fee and all the revenue is yours.</p>
+    </div>
+    <div class="pricing-card-wrap reveal">
+      <div class="pricing-card">
+        <div class="pricing-badge">⭐ Host Plan</div>
+        <div class="pricing-amount"><sup>$</sup>99</div>
+        <div class="pricing-period">per year · cancel anytime</div>
+        <ul class="pricing-features">
+          <li><div class="pricing-check">✓</div> Your own store at <strong>yourname.hostiehub.com</strong></li>
+          <li><div class="pricing-check">✓</div> Unlimited products & services</li>
+          <li><div class="pricing-check">✓</div> Custom branding — your logo & colours</li>
+          <li><div class="pricing-check">✓</div> Direct Stripe payments — 100% goes to you</li>
+          <li><div class="pricing-check">✓</div> Guest stay details & notes at checkout</li>
+          <li><div class="pricing-check">✓</div> Order dashboard & sales overview</li>
+          <li><div class="pricing-check">✓</div> Mobile-friendly store for guests</li>
+          <li><div class="pricing-check">✓</div> Email support from Luke & Stacey</li>
+        </ul>
+        <a href="#" class="btn-primary" style="width:100%;justify-content:center;border-radius:12px;font-size:17px;padding:18px">Get started today →</a>
+        <p class="pricing-note">We did over $1,200 in sales in our first 2 weeks using this exact system. We know it works.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO -->
+<section class="demo-section" id="demo">
+  <div class="demo-inner">
+    <div class="reveal">
+      <div class="section-eyebrow">See it in action</div>
+      <h2 class="section-title" style="color:white">Real stores, real hosts</h2>
+      <p class="section-desc">Here's what a Hostie Hub store looks like for guests. Every store is branded to the host and takes minutes to set up.</p>
+      <div style="margin-top:36px">
+        <a href="#" class="btn-primary" style="background:white;color:var(--brand)">View demo store →</a>
+      </div>
+    </div>
+    <div class="reveal" style="transition-delay:0.15s">
+      <div class="demo-stores">
+        <a href="#" class="demo-store">
+          <div class="demo-store-icon">🏖️</div>
+          <div class="demo-store-info">
+            <div class="demo-store-name">Sarah's Beach House</div>
+            <div class="demo-store-url">sarah.hostiehub.com</div>
+          </div>
+          <div class="demo-store-arrow">→</div>
+        </a>
+        <a href="#" class="demo-store">
+          <div class="demo-store-icon">🏔️</div>
+          <div class="demo-store-info">
+            <div class="demo-store-name">Blue Mountains Retreat</div>
+            <div class="demo-store-url">bluemountains.hostiehub.com</div>
+          </div>
+          <div class="demo-store-arrow">→</div>
+        </a>
+        <a href="#" class="demo-store">
+          <div class="demo-store-icon">🌿</div>
+          <div class="demo-store-info">
+            <div class="demo-store-name">Hunter Valley Farmhouse</div>
+            <div class="demo-store-url">huntervalley.hostiehub.com</div>
+          </div>
+          <div class="demo-store-arrow">→</div>
+        </a>
+      </div>
+      <p class="demo-cta">These are example stores — yours could be next.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials-section" id="testimonials">
+  <div class="section-inner">
+    <div class="testimonials-header reveal">
+      <div class="section-eyebrow">From hosts like you</div>
+      <h2 class="section-title">Hosts love it. Guests love it.</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card reveal">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">I added my store link to my Airbnb welcome message on a Monday. By Friday I'd made $340 in extras without any extra effort. This is an absolute no-brainer.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">J</div>
+          <div>
+            <div class="testimonial-name">Jessica M.</div>
+            <div class="testimonial-location">Gold Coast, QLD</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal" style="transition-delay:0.1s">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">I manage 6 properties and set up a store for each one in an afternoon. Guests really appreciate being able to organise extras before they arrive. It's a win-win.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">M</div>
+          <div>
+            <div class="testimonial-name">Marcus T.</div>
+            <div class="testimonial-location">Byron Bay, NSW</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal" style="transition-delay:0.2s">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">The fact that payments go straight to my account is huge. No waiting, no middleman taking a cut. Luke and Stacey have built something really special here.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">R</div>
+          <div>
+            <div class="testimonial-name">Rachel K.</div>
+            <div class="testimonial-location">Noosa, QLD</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section" id="faq">
+  <div class="faq-inner">
+    <div class="faq-header reveal">
+      <div class="section-eyebrow">FAQ</div>
+      <h2 class="section-title">Questions? We've got answers.</h2>
+    </div>
+    <div class="faq-list reveal">
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Do I need a Stripe account to use Hostie Hub?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-answer">Yes — Stripe is how your guests pay you directly. If you don't have one it only takes a few minutes to set up, and we walk you through it inside your dashboard. Stripe is free to open and only charges a small fee per transaction (paid by your guest at checkout).</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Does Hostie Hub take a cut of my sales?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-answer">No. Your $99/yr covers everything. Every dollar your guests spend goes directly into your Stripe account — we don't touch it. The only fees are Stripe's standard processing fees, which are standard across all online payments.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          What's my store address?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-answer">When you sign up you choose a name (e.g. "sarah") and your store lives at sarah.hostiehub.com. It's that simple. You just drop that link into your Airbnb or booking confirmation messages and guests can browse and buy.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          What kinds of products and services can I sell?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-answer">Anything your guests might want — early check-in, welcome gifts, breakfast baskets, experiences, airport transfers, pet fees, extra cleaning, flowers, champagne, tours. We give you suggested items to start with, but you can add or remove anything you like.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          How will I know what my guests ordered?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-answer">Every order shows up in your host dashboard with the guest's name, check-in and check-out dates, what they ordered, and any notes they left you. You'll also receive an email notification for every new order so you're never caught off guard.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          Can I cancel my subscription?
+          <span class="faq-chevron">⌄</span>
+        </div>
+        <div class="faq-answer">Yes, anytime. We don't believe in lock-ins. If you cancel, your store stays active until the end of your billing year. We'd be sad to see you go — but no hard feelings!</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand-name">Hostie Hub <span class="nav-logo-dot"></span></div>
+        <p class="footer-brand-desc">Australia's first online extras store platform built by hosts, for hosts. We're Luke and Stacey — and we built this because we needed it ourselves.</p>
+        <div class="footer-contact">
+          <div>📧 <a href="mailto:support@hostiehub.com">support@hostiehub.com</a></div>
+          <div>📍 Newcastle, NSW, Australia</div>
+        </div>
+      </div>
+      <div>
+        <div class="footer-col-title">Product</div>
+        <ul class="footer-links">
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#demo">See a store</a></li>
+          <li><a href="#">Sign up</a></li>
+          <li><a href="#">Host login</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Support</div>
+        <ul class="footer-links">
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="mailto:support@hostiehub.com">Contact us</a></li>
+          <li><a href="#">Privacy policy</a></li>
+          <li><a href="#">Terms of service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Hostie Hub · Made with ❤️ in Newcastle, Australia</span>
+      <span>Payments powered by <a href="https://stripe.com" target="_blank">Stripe</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // FAQ toggle
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Nav shadow on scroll
+  window.addEventListener('scroll', () => {
+    document.querySelector('nav').style.boxShadow =
+      window.scrollY > 10 ? '0 4px 20px rgba(0,0,0,0.08)' : 'none';
+  });
+</script>
+</body>
+</html>

@@ -446,7 +446,7 @@
 
 <!-- LEFT PANEL -->
 <div class="left-panel">
-  <a href="hostiehub-homepage.html" class="panel-logo">
+  <a href="index.html" class="panel-logo">
     Hostie Hub <span class="logo-dot"></span>
   </a>
 
@@ -474,7 +474,7 @@
     </div>
   </div>
 
-  <div class="panel-bottom">© 2025 Hostie Hub · support@hostiehub.com</div>
+  <div class="panel-bottom">© 2025 Hostie Hub · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="2b585e5b5b44595f6b4344585f424e435e4905484446">[email&#160;protected]</a></div>
 </div>
 
 <!-- RIGHT PANEL -->
@@ -532,7 +532,16 @@
           <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
           <div class="strength-label" id="strengthLabel"></div>
         </div>
-        <div class="field-error" id="passwordError">Password must be at least 8 characters.</div>
+        <div class="field-hint" style="margin-top:8px">
+          Your password must have:
+          <div style="display:flex;flex-direction:column;gap:4px;margin-top:6px">
+            <div id="req-length" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span>○</span> At least 8 characters</div>
+            <div id="req-upper" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span>○</span> One uppercase letter (A–Z)</div>
+            <div id="req-number" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span>○</span> One number (0–9)</div>
+            <div id="req-special" style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><span>○</span> One special character (!@#$% etc.)</div>
+          </div>
+        </div>
+        <div class="field-error" id="passwordError">Please meet the password requirements above.</div>
       </div>
 
       <button class="submit-btn" onclick="handleSignup()" id="signupBtn">
@@ -569,16 +578,26 @@
     <!-- ── SUCCESS STATE ── -->
     <div class="success-state" id="successState">
       <div class="success-icon">🎉</div>
-      <h2>Your store is ready!</h2>
-      <p>Welcome to Hostie Hub. Your store URL has been reserved — head to your dashboard to add products and connect Stripe.</p>
+      <h2>Account created!</h2>
+      <p>Your store URL has been reserved. Now choose your plan to activate your store.</p>
       <div class="success-store-url" id="successUrl"></div>
-      <button class="submit-btn" onclick="goToDashboard()">Go to my dashboard →</button>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;width:100%">
+        <a id="hostPlanBtn" href="https://buy.stripe.com/00w00j3HM4Tt2PiacA8ww01" class="submit-btn" style="text-decoration:none;justify-content:center">
+          🏠 Host Plan — $99/yr (1–3 properties)
+        </a>
+        <a id="proPlanBtn" href="https://buy.stripe.com/aFacN55PU0Dd61u0C08ww02" class="submit-btn" style="text-decoration:none;justify-content:center;background:var(--brand-dark)">
+          ⭐ Pro Plan — $199/yr (4–10 properties)
+        </a>
+        <button class="submit-btn" onclick="goToDashboard()" style="background:var(--muted)">
+          Skip for now — go to dashboard
+        </button>
+      </div>
     </div>
 
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   // ── SUPABASE INIT ──
   const { createClient } = supabase;
   const sb = createClient(
@@ -623,22 +642,32 @@
     if (val.length === 0) { strengthEl.style.display = 'none'; return; }
     strengthEl.style.display = 'block';
 
-    let score = 0;
-    if (val.length >= 8) score++;
-    if (val.length >= 12) score++;
-    if (/[A-Z]/.test(val)) score++;
-    if (/[0-9]/.test(val)) score++;
-    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const checks = {
+      length:  val.length >= 8,
+      upper:   /[A-Z]/.test(val),
+      number:  /[0-9]/.test(val),
+      special: /[^A-Za-z0-9]/.test(val),
+    };
+
+    // Update requirement indicators
+    Object.entries(checks).forEach(([key, met]) => {
+      const el = document.getElementById('req-' + key);
+      if (!el) return;
+      el.querySelector('span').textContent = met ? '✓' : '○';
+      el.style.color = met ? 'var(--success)' : 'var(--muted)';
+      el.style.fontWeight = met ? '600' : '400';
+    });
+
+    const score = Object.values(checks).filter(Boolean).length;
 
     const levels = [
-      { pct: '20%', color: '#ef4444', text: 'Too short' },
-      { pct: '40%', color: '#f97316', text: 'Weak' },
-      { pct: '60%', color: '#eab308', text: 'Fair' },
-      { pct: '80%', color: '#22c55e', text: 'Good' },
-      { pct: '100%', color: '#16a34a', text: 'Strong' },
+      { pct: '25%', color: '#ef4444', text: 'Too weak' },
+      { pct: '50%', color: '#f97316', text: 'Weak' },
+      { pct: '75%', color: '#eab308', text: 'Almost there' },
+      { pct: '100%', color: '#16a34a', text: '✓ Strong password' },
     ];
 
-    const level = levels[Math.min(score, 4)];
+    const level = levels[Math.min(score - 1, 3)] || levels[0];
     fill.style.width = level.pct;
     fill.style.background = level.color;
     label.textContent = level.text;
@@ -687,7 +716,12 @@
     const v1 = validate('fullName', 'fullNameError', fullName.length >= 2);
     const v2 = validate('signupEmail', 'emailError', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
     const v3 = validate('username', 'usernameError', /^[a-z0-9-]{3,30}$/.test(username));
-    const v4 = validate('signupPassword', 'passwordError', password.length >= 8);
+    const v4 = validate('signupPassword', 'passwordError',
+      password.length >= 8 &&
+      /[A-Z]/.test(password) &&
+      /[0-9]/.test(password) &&
+      /[^A-Za-z0-9]/.test(password)
+    );
 
     if (!v1 || !v2 || !v3 || !v4) return;
 
@@ -782,13 +816,4 @@
   }
 
   function goToDashboard() {
-    window.location.href = 'dashboard.html';
-  }
-
-  // ── CHECK IF ALREADY LOGGED IN ──
-  sb.auth.getSession().then(({ data: { session } }) => {
-    if (session) window.location.href = 'dashboard.html';
-  });
-</script>
-</body>
-</html>
+    window.

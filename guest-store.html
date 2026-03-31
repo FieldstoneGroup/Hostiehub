@@ -338,20 +338,11 @@
   }
 
   function applyBranding(host) {
-    console.log('Host data:', host);
-    console.log('Logo URL:', host.logo_url);
     const colour = host.brand_colour || '#2C6E6A';
     document.documentElement.style.setProperty('--brand', colour);
     const name = host.store_name || host.username.charAt(0).toUpperCase() + host.username.slice(1) + "'s Hostie Hub Store";
     const avatarEl = document.getElementById('hostAvatar');
-    if (host.logo_url) {
-      avatarEl.style.backgroundImage = `url('${host.logo_url}')`;
-      avatarEl.style.backgroundSize = 'cover';
-      avatarEl.style.backgroundPosition = 'center';
-      avatarEl.textContent = '';
-    } else {
-      avatarEl.textContent = name.charAt(0).toUpperCase();
-    }
+    avatarEl.textContent = name.charAt(0).toUpperCase();
     document.getElementById('hostName').textContent = name;
     document.getElementById('hostSub').textContent = host.store_tagline || 'Extras & Add-ons Store';
     document.getElementById('heroTitle').innerHTML = `Welcome to<br><em>${name}</em>`;

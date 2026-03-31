@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo Store – Hostie Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --brand: #2C6E6A; --brand-light: #e6f2f1; --accent: #E8A838;
+    --text: #1a1a1a; --muted: #6b7280; --bg: #faf9f7;
+    --card: #ffffff; --border: #e8e4df; --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* DEMO BANNER */
+  .demo-banner {
+    background: linear-gradient(135deg, #1a1a2e, #0f3460);
+    color: white;
+    padding: 14px 24px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .demo-banner-text {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.9;
+  }
+
+  .demo-banner-text strong { color: var(--accent); }
+
+  .demo-cta {
+    background: var(--accent);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+
+  .demo-cta:hover { background: #d4952e; }
+
+  /* HEADER */
+  header { background: var(--brand); color: white; padding: 0 24px; position: sticky; top: 48px; z-index: 100; box-shadow: 0 2px 20px rgba(44,110,106,0.3); }
+  .header-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .host-brand { display: flex; align-items: center; gap: 12px; }
+  .host-logo { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 18px; color: white; font-weight: 600; flex-shrink: 0; overflow: hidden; }
+  .host-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .host-name { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  .host-sub { font-size: 12px; opacity: 0.75; font-weight: 300; margin-top: 1px; }
+  .demo-cart-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 50px; padding: 8px 18px; font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 8px; opacity: 0.6; cursor: not-allowed; }
+
+  /* HERO */
+  .hero { background: linear-gradient(135deg, var(--brand) 0%, #1d4d4a 100%); color: white; padding: 56px 24px 48px; text-align: center; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); pointer-events: none; }
+  .hero-content { position: relative; max-width: 600px; margin: 0 auto; }
+  .hero-eyebrow { font-size: 12px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; opacity: 0.65; margin-bottom: 12px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 42px); font-weight: 600; line-height: 1.2; margin-bottom: 14px; letter-spacing: -0.5px; }
+  .hero p { font-size: 16px; opacity: 0.8; font-weight: 300; line-height: 1.6; max-width: 420px; margin: 0 auto; }
+
+  /* CATEGORIES */
+  .categories { padding: 28px 24px 0; max-width: 900px; margin: 0 auto; }
+  .cat-label { font-size: 11px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .cat-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cat-tab { padding: 8px 18px; border-radius: 50px; border: 1.5px solid var(--border); background: white; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 400; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+  .cat-tab:hover { border-color: var(--brand); color: var(--brand); }
+  .cat-tab.active { background: var(--brand); border-color: var(--brand); color: white; font-weight: 500; }
+
+  /* PRODUCTS */
+  .products-section { max-width: 900px; margin: 0 auto; padding: 28px 24px 60px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; margin-bottom: 20px; color: var(--text); display: flex; align-items: center; gap: 10px; }
+  .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+
+  .product-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); overflow: hidden; display: flex; flex-direction: column; animation: fadeUp 0.5s ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .product-img { height: 170px; background: var(--brand-light); display: flex; align-items: center; justify-content: center; font-size: 52px; position: relative; overflow: hidden; }
+  .product-img img { width: 100%; height: 100%; object-fit: cover; }
+  .product-body { padding: 18px; flex: 1; display: flex; flex-direction: column; }
+  .product-category { font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--brand); margin-bottom: 6px; }
+  .product-name { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 600; margin-bottom: 6px; line-height: 1.3; }
+  .product-desc { font-size: 13px; color: var(--muted); line-height: 1.5; flex: 1; margin-bottom: 16px; }
+  .product-footer { display: flex; align-items: center; justify-content: space-between; }
+  .product-price { font-size: 20px; font-weight: 600; }
+  .product-price small { font-size: 12px; color: var(--muted); font-weight: 400; }
+
+  .demo-add-btn {
+    background: var(--brand-light);
+    color: var(--brand);
+    border: 1.5px solid var(--brand);
+    border-radius: 50px;
+    padding: 9px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .demo-add-btn:hover {
+    background: var(--brand);
+    color: white;
+  }
+
+  /* DEMO CTA STRIP */
+  .demo-strip {
+    background: linear-gradient(135deg, #1a1a2e, #0f3460);
+    color: white;
+    padding: 48px 24px;
+    text-align: center;
+  }
+
+  .demo-strip h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: white;
+  }
+
+  .demo-strip p {
+    font-size: 16px;
+    color: rgba(255,255,255,0.7);
+    margin-bottom: 28px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+  }
+
+  .demo-strip-btn {
+    background: var(--accent);
+    color: white;
+    padding: 16px 36px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s;
+  }
+
+  .demo-strip-btn:hover { background: #d4952e; }
+
+  /* DEMO MODAL */
+  .demo-modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .demo-modal-overlay.open { display: flex; }
+  .demo-modal {
+    background: white; border-radius: 20px; width: min(440px, 100%);
+    padding: 36px; text-align: center;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+  .demo-modal-icon { font-size: 48px; margin-bottom: 16px; }
+  .demo-modal h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+  .demo-modal p { font-size: 15px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+  .demo-modal-actions { display: flex; flex-direction: column; gap: 10px; }
+  .demo-modal-primary { background: var(--brand); color: white; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 600; text-decoration: none; display: block; transition: background 0.2s; }
+  .demo-modal-primary:hover { background: var(--brand-dark, #1d4d4a); }
+  .demo-modal-close { background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; padding: 8px; }
+  .demo-modal-close:hover { color: var(--text); }
+
+  footer { background: white; border-top: 1.5px solid var(--border); padding: 24px; text-align: center; }
+  .footer-inner { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .powered-by { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .powered-by strong { color: var(--brand); }
+
+  @media (max-width: 500px) { .products-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- DEMO BANNER -->
+<div class="demo-banner">
+  <div class="demo-banner-text">👋 This is a <strong>demo store</strong> — see what your guests could order before they arrive</div>
+  <a href="signup.html" class="demo-cta">Create your store →</a>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="host-brand">
+      <div class="host-logo" id="hostLogo">B</div>
+      <div>
+        <div class="host-name" id="hostName">The Beach House</div>
+        <div class="host-sub" id="hostSub">Extras & Add-ons Store</div>
+      </div>
+    </div>
+    <div class="demo-cart-btn">🛒 Cart · Demo only</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">Welcome, Guest</div>
+    <h1>Make your stay<br><em>truly special</em></h1>
+    <p>Add a few extras before you arrive and we'll have everything ready for you.</p>
+  </div>
+</div>
+
+<!-- CATEGORIES -->
+<div class="categories">
+  <div class="cat-label">Browse by category</div>
+  <div class="cat-tabs" id="catTabs">
+    <button class="cat-tab active" onclick="filterCat('all', this)">All</button>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="products-section">
+  <div class="section-title"><span>✨</span> Available Add-ons</div>
+  <div class="products-grid" id="productsGrid"></div>
+</div>
+
+<!-- DEMO CTA STRIP -->
+<div class="demo-strip">
+  <h2>Ready to offer this to your guests?</h2>
+  <p>Set up your own store in minutes. Add your products, connect Stripe and share your link — it's that simple.</p>
+  <a href="signup.html" class="demo-strip-btn">Start for $99/yr →</a>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="powered-by">Powered by <strong>Hostie Hub</strong> · Australia's host platform</div>
+    <div style="font-size:12px;color:var(--muted)">This is a demo store · <a href="signup.html" style="color:var(--brand);text-decoration:none;font-weight:500">Create your own →</a></div>
+  </div>
+</footer>
+
+<!-- DEMO MODAL -->
+<div class="demo-modal-overlay" id="demoModal">
+  <div class="demo-modal">
+    <div class="demo-modal-icon">🛍️</div>
+    <h3>Love what you see?</h3>
+    <p>This is just a demo — but your guests could be ordering extras from YOUR store just like this. Set up takes less than 5 minutes.</p>
+    <div class="demo-modal-actions">
+      <a href="signup.html" class="demo-modal-primary">Create my store for $99/yr →</a>
+      <button class="demo-modal-close" onclick="closeDemoModal()">Continue browsing the demo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const { createClient } = supabase;
+  const sb = createClient(
+    'https://hjwkycknjiyvrxbcejet.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8'
+  );
+
+  const categoryLabels = { arrival:'🌅 Arrival', food:'🥂 Food & Drink', experiences:'🏄 Experiences', transport:'🚗 Transport', other:'✨ Other' };
+  let allProducts = [];
+  let addClickCount = 0;
+
+  async function loadDemo() {
+    const { data: host } = await sb.from('hosts').select('*').eq('username', 'demo').single();
+    if (!host) return;
+
+    if (host.logo_url) {
+      const logo = document.getElementById('hostLogo');
+      logo.innerHTML = `<img src="${host.logo_url}" alt="logo">`;
+    }
+
+    const { data: products } = await sb.from('products').select('*').eq('host_id', host.id).eq('active', true).order('created_at');
+    allProducts = products || [];
+    renderCategories(allProducts);
+    renderProducts(allProducts);
+  }
+
+  function renderCategories(products) {
+    const cats = [...new Set(products.map(p => p.category).filter(Boolean))];
+    const tabs = document.getElementById('catTabs');
+    cats.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'cat-tab';
+      btn.textContent = categoryLabels[cat] || cat;
+      btn.onclick = () => filterCat(cat, btn);
+      tabs.appendChild(btn);
+    });
+  }
+
+  function filterCat(cat, btn) {
+    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    renderProducts(cat === 'all' ? allProducts : allProducts.filter(p => p.category === cat));
+  }
+
+  function renderProducts(products) {
+    const grid = document.getElementById('productsGrid');
+    grid.innerHTML = products.map((p, i) => `
+      <div class="product-card" style="animation-delay:${i * 0.06}s">
+        <div class="product-img">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '✨')}</div>
+        <div class="product-body">
+          <div class="product-category">${categoryLabels[p.category] || ''}</div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-desc">${p.description || ''}</div>
+          <div class="product-footer">
+            <div class="product-price">$${p.price} <small>${p.unit ? '/ ' + p.unit : ''}</small></div>
+            <button class="demo-add-btn" onclick="handleDemoAdd()">Add +</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function handleDemoAdd() {
+    addClickCount++;
+    if (addClickCount >= 2) {
+      document.getElementById('demoModal').classList.add('open');
+      addClickCount = 0;
+    }
+  }
+
+  function closeDemoModal() {
+    document.getElementById('demoModal').classList.remove('open');
+  }
+
+  loadDemo();
+</script>
+</body>
+</html>

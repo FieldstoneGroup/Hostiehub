@@ -309,6 +309,20 @@
           <div class="card" style="margin-bottom:20px">
             <div class="card-title">Store identity</div>
             <div class="card-desc">This is what guests see at the top of your store.</div>
+            <div class="field">
+              <label>Store logo <span style="font-weight:300;font-size:12px">(optional)</span></label>
+              <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">
+                <div id="logoPreviewWrap" style="width:64px;height:64px;border-radius:12px;overflow:hidden;border:1.5px solid var(--border);flex-shrink:0;display:none">
+                  <img id="logoPreview" style="width:100%;height:100%;object-fit:cover">
+                </div>
+                <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;color:var(--muted);transition:border-color 0.2s;" id="logoUploadLabel" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+                  🖼️ Upload logo
+                  <input type="file" id="logoFile" accept="image/*" style="display:none" onchange="previewLogo(this)">
+                </label>
+                <button class="btn btn-danger btn-sm" id="logoRemoveBtn" style="display:none" onclick="removeLogo()">Remove</button>
+              </div>
+              <div class="field-hint">Square logo works best. Shown in the header of your guest store.</div>
+            </div>
             <div class="field"><label>Store name</label><input type="text" id="storeName" placeholder="e.g. Stayable Newcastle"></div>
             <div class="field"><label>Tagline</label><input type="text" id="storeTagline" placeholder="e.g. Extras & add-ons for your stay"></div>
             <div class="field"><label>Welcome message</label><textarea id="storeWelcome" placeholder="e.g. Welcome! Add a few extras before you arrive and we'll have everything ready for you."></textarea></div>
@@ -614,6 +628,12 @@
     if (currentHost.store_welcome) document.getElementById('storeWelcome').value = currentHost.store_welcome;
     if (currentHost.postcode) document.getElementById('storePostcode').value = currentHost.postcode;
     if (currentHost.brand_colour) { document.getElementById('brandColour').value = currentHost.brand_colour; updateColourPreview(currentHost.brand_colour); }
+    if (currentHost.logo_url) {
+      currentLogoUrl = currentHost.logo_url;
+      document.getElementById('logoPreview').src = currentHost.logo_url;
+      document.getElementById('logoPreviewWrap').style.display = 'block';
+      document.getElementById('logoRemoveBtn').style.display = 'inline-flex';
+    }
     if (currentHost.stripe_connected) {
       document.getElementById('stripeNotConnected').style.display = 'none';
       document.getElementById('stripeConnected').style.display = 'block';
@@ -992,13 +1012,52 @@
   }
 
   // ── STORE SETTINGS ──
+  // ── LOGO ──
+  let currentLogoUrl = null;
+
+  function previewLogo(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('logoPreview').src = e.target.result;
+      document.getElementById('logoPreviewWrap').style.display = 'block';
+      document.getElementById('logoRemoveBtn').style.display = 'inline-flex';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeLogo() {
+    document.getElementById('logoFile').value = '';
+    document.getElementById('logoPreview').src = '';
+    document.getElementById('logoPreviewWrap').style.display = 'none';
+    document.getElementById('logoRemoveBtn').style.display = 'none';
+    currentLogoUrl = null;
+  }
+
+  async function uploadLogo(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const path = `logos/${currentUser.id}.${ext}`;
+    const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
+    if (error) { console.error(error); return null; }
+    const { data } = sb.storage.from('product-images').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
   async function saveStoreSettings() {
+    const logoFile = document.getElementById('logoFile').files[0];
+    let logoUrl = currentLogoUrl;
+    if (logoFile) {
+      showToast('⏳ Uploading logo...');
+      logoUrl = await uploadLogo(logoFile);
+    }
     const updates = {
       store_name: document.getElementById('storeName').value.trim(),
       store_tagline: document.getElementById('storeTagline').value.trim(),
       store_welcome: document.getElementById('storeWelcome').value.trim(),
       brand_colour: document.getElementById('brandColour').value,
       postcode: document.getElementById('storePostcode').value.trim(),
+      logo_url: logoUrl,
     };
     await sb.from('hosts').update(updates).eq('id', currentUser.id);
     Object.assign(currentHost, updates);

@@ -341,7 +341,12 @@
     const colour = host.brand_colour || '#2C6E6A';
     document.documentElement.style.setProperty('--brand', colour);
     const name = host.store_name || host.username.charAt(0).toUpperCase() + host.username.slice(1) + "'s Hostie Hub Store";
-    document.getElementById('hostAvatar').textContent = name.charAt(0).toUpperCase();
+    const avatarEl = document.getElementById('hostAvatar');
+    if (host.logo_url) {
+      avatarEl.innerHTML = `<img src="${host.logo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    } else {
+      avatarEl.textContent = name.charAt(0).toUpperCase();
+    }
     document.getElementById('hostName').textContent = name;
     document.getElementById('hostSub').textContent = host.store_tagline || 'Extras & Add-ons Store';
     document.getElementById('heroTitle').innerHTML = `Welcome to<br><em>${name}</em>`;

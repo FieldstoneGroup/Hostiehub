@@ -604,7 +604,6 @@
     window.location.href = 'dashboard.html';
   }
 
-  window.addEventListener('load', function() {
   // ── SUPABASE INIT ──
   const { createClient } = supabase;
   const sb = createClient(
@@ -831,7 +830,6 @@
     if (session) window.location.href = 'dashboard.html';
   });
 
-  }); // end window.addEventListener
 </script>
 </body>
 </html>

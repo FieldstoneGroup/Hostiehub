@@ -304,6 +304,24 @@
     const { data: host } = await sb.from('hosts').select('*').eq('username', username).single();
     if (!host) { hideLoading(); document.getElementById('notFound').style.display = 'block'; return; }
     hostData = host;
+
+    // Check if store is active
+    const trialEndsAt = host.trial_ends_at ? new Date(host.trial_ends_at) : null;
+    const isPaid = host.plan && host.plan !== 'trial';
+    const trialExpired = trialEndsAt && new Date() > trialEndsAt && !isPaid;
+    const isInactive = host.is_active === false;
+
+    if (trialExpired || isInactive) {
+      hideLoading();
+      document.getElementById('notFound').innerHTML = `
+        <div style="font-size:64px;margin-bottom:16px">⏸️</div>
+        <h1>Store temporarily unavailable</h1>
+        <p>This store is currently inactive. If you're the host, please log in to reactivate your account.</p>
+        <a href="dashboard.html" style="background:var(--brand);color:white;padding:12px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block;margin-top:8px">Host login →</a>`;
+      document.getElementById('notFound').style.display = 'block';
+      return;
+    }
+
     applyBranding(host);
 
     const [{ data: prods }, { data: props }] = await Promise.all([

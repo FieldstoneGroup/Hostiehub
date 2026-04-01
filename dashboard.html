@@ -251,6 +251,30 @@
     </div>
   </div>
 
+  <!-- TRIAL BANNER -->
+  <div id="trialBanner" style="display:none;background:linear-gradient(135deg,#E8A838,#d4952e);color:white;padding:12px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500">
+      <span>⏳</span>
+      <span id="trialBannerText">Your free trial is active</span>
+    </div>
+    <a href="https://buy.stripe.com/00w00j3HM4Tt2PiacA8ww01" style="background:white;color:#92600a;padding:8px 20px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;">Activate plan →</a>
+  </div>
+
+  <!-- TRIAL EXPIRED OVERLAY -->
+  <div id="trialExpiredOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:white;border-radius:24px;padding:48px;max-width:520px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.3);">
+      <div style="font-size:56px;margin-bottom:16px">⏰</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;margin-bottom:12px">Your free trial has ended</h2>
+      <p style="font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:32px">Your store is currently inactive. Choose a plan to reactivate it — your products, properties and settings are all saved and ready to go.</p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <a href="https://buy.stripe.com/00w00j3HM4Tt2PiacA8ww01" style="background:var(--brand);color:white;padding:16px;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;display:block;transition:background 0.2s;">🏠 Host Plan — $99/yr (1–3 properties)</a>
+        <a href="https://buy.stripe.com/aFacN55PU0Dd61u0C08ww02" style="background:var(--brand-dark);color:white;padding:16px;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;display:block;">⭐ Pro Plan — $199/yr (4–10 properties)</a>
+        <a href="mailto:hello@hostiehub.com?subject=Enterprise Enquiry" style="background:var(--bg);color:var(--text);padding:14px;border-radius:12px;font-size:14px;font-weight:500;text-decoration:none;display:block;border:1.5px solid var(--border);">🏢 Enterprise (11+ properties) — Get in touch</a>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:20px">Questions? Email us at <a href="mailto:hello@hostiehub.com" style="color:var(--brand)">hello@hostiehub.com</a></p>
+    </div>
+  </div>
+
   <div class="content">
 
     <!-- OVERVIEW -->
@@ -437,14 +461,19 @@
           <div class="card" style="margin-bottom:16px">
             <div class="card-title">Subscription</div>
             <div class="card-desc">Your current Hostie Hub plan.</div>
-            <div style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:14px;margin-bottom:14px">
+            <div id="trialStatusCard" style="background:var(--accent-light);border:1.5px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;display:none">
+              <div style="font-size:13px;color:#92600a;margin-bottom:4px">Free Trial</div>
+              <div style="font-size:18px;font-weight:700;color:#92600a;font-family:'Playfair Display',serif" id="trialDaysLeft">30 days remaining</div>
+              <div style="font-size:12px;color:#92600a;margin-top:4px">No credit card required — your store pauses after trial ends</div>
+            </div>
+            <div id="paidStatusCard" style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:14px;margin-bottom:14px;display:none">
               <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Current plan</div>
               <div style="font-size:20px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif" id="planName">Host Plan · $99/yr</div>
               <div style="font-size:12px;color:var(--muted);margin-top:4px" id="planProperties">Up to 3 properties</div>
             </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <button class="btn btn-outline btn-sm">Manage billing →</button>
-              <a href="index.html#pricing" class="btn btn-primary btn-sm">View all plans →</a>
+              <a href="https://buy.stripe.com/00w00j3HM4Tt2PiacA8ww01" class="btn btn-primary btn-sm">🏠 Activate Host Plan $99/yr</a>
+              <a href="https://buy.stripe.com/aFacN55PU0Dd61u0C08ww02" class="btn btn-outline btn-sm">⭐ Pro Plan $199/yr</a>
             </div>
           </div>
           <div class="card">
@@ -636,6 +665,56 @@
     const planProps = { host: 'Up to 3 properties', pro: 'Up to 10 properties', enterprise: 'Unlimited properties' };
     if (document.getElementById('planName')) document.getElementById('planName').textContent = planNames[plan] || planNames.host;
     if (document.getElementById('planProperties')) document.getElementById('planProperties').textContent = planProps[plan] || planProps.host;
+
+    // ── TRIAL CHECK ──
+    checkTrial();
+  }
+
+  function checkTrial() {
+    const trialEndsAt = currentHost.trial_ends_at ? new Date(currentHost.trial_ends_at) : null;
+    const isPaid = currentHost.plan && currentHost.plan !== 'trial' && currentHost.plan !== 'host' === false;
+    const isActive = currentHost.is_active !== false;
+
+    const now = new Date();
+    const daysLeft = trialEndsAt ? Math.ceil((trialEndsAt - now) / (1000 * 60 * 60 * 24)) : 0;
+    const trialExpired = trialEndsAt && now > trialEndsAt;
+
+    // Update billing card
+    if (currentHost.plan && currentHost.plan !== 'trial') {
+      document.getElementById('paidStatusCard').style.display = 'block';
+      document.getElementById('trialStatusCard').style.display = 'none';
+      const planNames = { host: 'Host Plan · $99/yr', pro: 'Pro Plan · $199/yr', enterprise: 'Enterprise Plan · Custom' };
+      const planProps = { host: 'Up to 3 properties', pro: 'Up to 10 properties', enterprise: 'Unlimited properties' };
+      document.getElementById('planName').textContent = planNames[currentHost.plan] || planNames.host;
+      document.getElementById('planProperties').textContent = planProps[currentHost.plan] || planProps.host;
+      return;
+    }
+
+    // On trial
+    document.getElementById('trialStatusCard').style.display = 'block';
+    document.getElementById('paidStatusCard').style.display = 'none';
+    if (daysLeft > 0) {
+      document.getElementById('trialDaysLeft').textContent = daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' remaining';
+    } else {
+      document.getElementById('trialDaysLeft').textContent = 'Trial ended';
+    }
+
+    if (!trialExpired && daysLeft > 0) {
+      // Trial still active — show banner
+      const banner = document.getElementById('trialBanner');
+      banner.style.display = 'flex';
+      const text = daysLeft === 1
+        ? '⚠️ Your free trial ends tomorrow — activate your plan to keep your store live'
+        : daysLeft <= 7
+        ? `⚠️ Your free trial ends in ${daysLeft} days — activate your plan to keep your store live`
+        : `Your free trial is active — ${daysLeft} days remaining`;
+      document.getElementById('trialBannerText').textContent = text;
+      if (daysLeft <= 3) document.getElementById('trialBanner').style.background = 'linear-gradient(135deg,#e53e3e,#c53030)';
+    } else if (trialExpired) {
+      // Trial expired — show overlay
+      document.getElementById('trialExpiredOverlay').style.display = 'flex';
+      sb.from('hosts').update({ is_active: false }).eq('id', currentUser.id);
+    }
   }
 
   function showPage(name, btn) {

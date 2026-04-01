@@ -269,9 +269,9 @@
       <div style="display:flex;flex-direction:column;gap:12px">
         <a href="https://buy.stripe.com/00w00j3HM4Tt2PiacA8ww01" style="background:var(--brand);color:white;padding:16px;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;display:block;transition:background 0.2s;">🏠 Host Plan — $99/yr (1–3 properties)</a>
         <a href="https://buy.stripe.com/aFacN55PU0Dd61u0C08ww02" style="background:var(--brand-dark);color:white;padding:16px;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;display:block;">⭐ Pro Plan — $199/yr (4–10 properties)</a>
-        <a href="mailto:hello@hostiehub.com?subject=Enterprise Enquiry" style="background:var(--bg);color:var(--text);padding:14px;border-radius:12px;font-size:14px;font-weight:500;text-decoration:none;display:block;border:1.5px solid var(--border);">🏢 Enterprise (11+ properties) — Get in touch</a>
+        <a href="/cdn-cgi/l/email-protection#0e666b6262614e66617d7a676b667b6c206d6163317d7b6c646b6d7a334b607a6b7c7e7c677d6b2e4b607f7b677c77" style="background:var(--bg);color:var(--text);padding:14px;border-radius:12px;font-size:14px;font-weight:500;text-decoration:none;display:block;border:1.5px solid var(--border);">🏢 Enterprise (11+ properties) — Get in touch</a>
       </div>
-      <p style="font-size:12px;color:var(--muted);margin-top:20px">Questions? Email us at <a href="mailto:hello@hostiehub.com" style="color:var(--brand)">hello@hostiehub.com</a></p>
+      <p style="font-size:12px;color:var(--muted);margin-top:20px">Questions? Email us at <a href="/cdn-cgi/l/email-protection#741c1118181b341c1b07001d111c01165a171b19" style="color:var(--brand)"><span class="__cf_email__" data-cfemail="58303d3434371830372b2c313d302d3a763b3735">[email&#160;protected]</span></a></p>
     </div>
   </div>
 
@@ -382,11 +382,11 @@
           <p style="font-size:13px;color:var(--muted);margin-top:2px">What guests can buy from your store</p>
         </div>
         <div style="display:flex;gap:10px">
-          <button class="btn btn-outline btn-sm" onclick="addPresetProducts()">✨ Add presets</button>
+          <button class="btn btn-outline btn-sm" onclick="openPresetModal()">✨ Browse presets</button>
           <button class="btn btn-primary" onclick="openProductModal()">+ Add product</button>
         </div>
       </div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;background:var(--accent-light);border-radius:8px;padding:10px 14px;border-left:3px solid var(--accent);">💡 Click <strong>Add presets</strong> to instantly add popular products like early check-in, flowers, wine and more.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;background:var(--accent-light);border-radius:8px;padding:10px 14px;border-left:3px solid var(--accent);">💡 Click <strong>Browse presets</strong> to pick and choose popular products to add to your store.</p>
       <div class="products-list" id="productsList">
         <div class="empty-state"><div class="empty-icon">📦</div><h3>No products yet</h3><p>Add your first product or service for guests to purchase.</p></div>
       </div>
@@ -456,6 +456,21 @@
           <div class="field"><label>Full name</label><input type="text" id="accountName" placeholder="Your name"></div>
           <div class="field"><label>Email address</label><input type="email" id="accountEmail" placeholder="you@example.com" disabled style="background:var(--bg);color:var(--muted)"><div class="field-hint">Email cannot be changed here. Contact support.</div></div>
           <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-title">Store URL</div>
+          <div class="card-desc">Change your store's unique web address. ⚠️ Your old URL will stop working immediately.</div>
+          <div class="field">
+            <label>Username</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-size:14px;color:var(--muted);white-space:nowrap">hostiehub.com/store/</span>
+              <input type="text" id="newUsername" placeholder="e.g. stayable" style="flex:1;text-transform:lowercase">
+            </div>
+            <div class="field-hint">Only lowercase letters, numbers and hyphens. Minimum 3 characters.</div>
+          </div>
+          <div id="usernameChangePreview" style="display:none;background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;color:var(--brand);margin-bottom:12px"></div>
+          <button class="btn btn-outline btn-sm" onclick="changeUsername()">Update store URL</button>
         </div>
         <div>
           <div class="card" style="margin-bottom:16px">
@@ -566,10 +581,28 @@
   </div>
 </div>
 
+<!-- PRESET MODAL -->
+<div class="modal-overlay" id="presetModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Browse preset products</div>
+      <button class="modal-close" onclick="closePresetModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--muted);margin-bottom:20px">Select the products you'd like to add to your store. You can edit them after adding.</p>
+      <div id="presetList" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closePresetModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addSelectedPresets()">Add selected →</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"><span id="toastMsg">Saved!</span></div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   const { createClient } = supabase;
   const sb = createClient(
     'https://hjwkycknjiyvrxbcejet.supabase.co',
@@ -641,17 +674,26 @@
     document.getElementById('viewStoreBtn').href = '/guest-store.html?store=' + (currentHost.username || '');
     document.getElementById('accountName').value = currentHost.full_name || '';
     document.getElementById('accountEmail').value = currentHost.email || '';
+    const unField = document.getElementById('newUsername');
+    if (unField) {
+      unField.value = currentHost.username || '';
+      unField.addEventListener('input', () => {
+        const val = unField.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+        unField.value = val;
+        const preview = document.getElementById('usernameChangePreview');
+        if (val.length >= 3) {
+          preview.style.display = 'block';
+          preview.textContent = 'New URL: ' + val + '.hostiehub.com';
+        } else {
+          preview.style.display = 'none';
+        }
+      });
+    }
     if (currentHost.store_name) document.getElementById('storeName').value = currentHost.store_name;
     if (currentHost.store_tagline) document.getElementById('storeTagline').value = currentHost.store_tagline;
     if (currentHost.store_welcome) document.getElementById('storeWelcome').value = currentHost.store_welcome;
     if (currentHost.postcode) document.getElementById('storePostcode').value = currentHost.postcode;
     if (currentHost.brand_colour) { document.getElementById('brandColour').value = currentHost.brand_colour; updateColourPreview(currentHost.brand_colour); }
-    if (currentHost.logo_url) {
-      currentLogoUrl = currentHost.logo_url;
-      document.getElementById('logoPreview').src = currentHost.logo_url;
-      document.getElementById('logoPreviewWrap').style.display = 'block';
-      document.getElementById('logoRemoveBtn').style.display = 'inline-flex';
-    }
     if (currentHost.stripe_connected) {
       document.getElementById('stripeNotConnected').style.display = 'none';
       document.getElementById('stripeConnected').style.display = 'block';
@@ -995,12 +1037,31 @@
     loadProducts();
   }
 
-  async function addPresetProducts() {
-    if (!confirm('Add preset products to your store? This will add 6 popular products including early check-in, wine, flowers and more.')) return;
-    const inserts = PRESET_PRODUCTS.map(p => ({ ...p, host_id: currentUser.id, available_all_properties: true, active: true }));
+  function openPresetModal() {
+    const list = document.getElementById('presetList');
+    list.innerHTML = PRESET_PRODUCTS.map((p, i) => `
+      <label style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+        <input type="checkbox" class="preset-check" value="${i}" style="width:18px;height:18px;accent-color:var(--brand);flex-shrink:0">
+        <div style="font-size:24px;flex-shrink:0">${p.emoji}</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:600;margin-bottom:2px">${p.name}</div>
+          <div style="font-size:12px;color:var(--muted)">$${p.price} / ${p.unit} · ${p.category}</div>
+        </div>
+      </label>
+    `).join('');
+    document.getElementById('presetModal').classList.add('open');
+  }
+
+  function closePresetModal() { document.getElementById('presetModal').classList.remove('open'); }
+
+  async function addSelectedPresets() {
+    const selected = [...document.querySelectorAll('.preset-check:checked')].map(cb => parseInt(cb.value));
+    if (selected.length === 0) { showToast('⚠️ Please select at least one product'); return; }
+    const inserts = selected.map(i => ({ ...PRESET_PRODUCTS[i], host_id: currentUser.id, available_all_properties: true, active: true }));
     const { error } = await sb.from('products').insert(inserts);
     if (error) { showToast('⚠️ Error adding presets'); console.error(error); return; }
-    showToast('✅ 6 preset products added!');
+    showToast(`✅ ${selected.length} product${selected.length > 1 ? 's' : ''} added!`);
+    closePresetModal();
     loadProducts();
   }
 
@@ -1102,49 +1163,17 @@
   // ── LOGO ──
   let currentLogoUrl = null;
 
-  function previewLogo(input) {
-    const file = input.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      document.getElementById('logoPreview').src = e.target.result;
-      document.getElementById('logoPreviewWrap').style.display = 'block';
-      document.getElementById('logoRemoveBtn').style.display = 'inline-flex';
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function removeLogo() {
-    document.getElementById('logoFile').value = '';
-    document.getElementById('logoPreview').src = '';
-    document.getElementById('logoPreviewWrap').style.display = 'none';
-    document.getElementById('logoRemoveBtn').style.display = 'none';
-    currentLogoUrl = null;
-  }
-
-  async function uploadLogo(file) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    const path = `logos/${currentUser.id}.${ext}`;
-    const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
-    if (error) { console.error(error); return null; }
-    const { data } = sb.storage.from('product-images').getPublicUrl(path);
-    return data.publicUrl;
-  }
+  function previewLogo(input) { }
+  function removeLogo() { currentLogoUrl = null; }
+  async function uploadLogo(file) { return null; }
 
   async function saveStoreSettings() {
-    const logoFile = document.getElementById('logoFile').files[0];
-    let logoUrl = currentLogoUrl;
-    if (logoFile) {
-      showToast('⏳ Uploading logo...');
-      logoUrl = await uploadLogo(logoFile);
-    }
     const updates = {
       store_name: document.getElementById('storeName').value.trim(),
       store_tagline: document.getElementById('storeTagline').value.trim(),
       store_welcome: document.getElementById('storeWelcome').value.trim(),
       brand_colour: document.getElementById('brandColour').value,
       postcode: document.getElementById('storePostcode').value.trim(),
-      logo_url: logoUrl,
     };
     await sb.from('hosts').update(updates).eq('id', currentUser.id);
     Object.assign(currentHost, updates);
@@ -1188,6 +1217,30 @@
     showToast('✅ Profile saved');
   }
 
+  async function changeUsername() {
+    const newUsername = document.getElementById('newUsername').value.trim();
+    if (!newUsername || !/^[a-z0-9-]{3,30}$/.test(newUsername)) {
+      showToast('⚠️ Username must be 3–30 lowercase letters, numbers or hyphens');
+      return;
+    }
+    if (newUsername === currentHost.username) {
+      showToast('⚠️ That\'s already your current username');
+      return;
+    }
+    if (!confirm(`⚠️ Are you sure?\n\nYour store URL will change to:\n${newUsername}.hostiehub.com\n\nYour old URL (${currentHost.username}.hostiehub.com) will stop working immediately.`)) return;
+
+    // Check if taken
+    const { data: existing } = await sb.from('hosts').select('username').eq('username', newUsername).single();
+    if (existing) { showToast('⚠️ That username is already taken'); return; }
+
+    await sb.from('hosts').update({ username: newUsername }).eq('id', currentUser.id);
+    currentHost.username = newUsername;
+    document.getElementById('sidebarUrl').textContent = newUsername + '.hostiehub.com';
+    document.getElementById('storeUrlDisplay').textContent = newUsername + '.hostiehub.com';
+    document.getElementById('viewStoreBtn').href = '/guest-store.html?store=' + newUsername;
+    showToast('✅ Store URL updated to ' + newUsername + '.hostiehub.com');
+  }
+
   async function handleLogout() { await sb.auth.signOut(); window.location.href = 'signup.html'; }
 
   // ── HELPERS ──
@@ -1195,17 +1248,4 @@
     const el = document.getElementById(id);
     if (!el) return;
     el.querySelector('.check-circle').className = 'check-circle check-done';
-    el.querySelector('.check-circle').textContent = '✓';
-  }
-
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    document.getElementById('toastMsg').textContent = msg;
-    t.style.display = 'flex';
-    setTimeout(() => { t.style.display = 'none'; }, 3000);
-  }
-
-  init();
-</script>
-</body>
-</html>
+    el.querySelec

@@ -590,6 +590,20 @@
 </div>
 
 <script data-cfasync="false">
+  // Global functions needed by onclick handlers
+  function showTab(tab) {
+    document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
+    document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+    document.querySelectorAll('.auth-tab').forEach((t, i) => {
+      t.classList.toggle('active', (tab === 'signup' && i === 0) || (tab === 'login' && i === 1));
+    });
+    if (typeof hideAlert === 'function') hideAlert();
+  }
+
+  function goToDashboard() {
+    window.location.href = 'dashboard.html';
+  }
+
   window.addEventListener('load', function() {
   // ── SUPABASE INIT ──
   const { createClient } = supabase;
@@ -599,16 +613,6 @@
   );
 
   let currentUsername = '';
-
-  // ── TABS ──
-  function showTab(tab) {
-    document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
-    document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
-    document.querySelectorAll('.auth-tab').forEach((t, i) => {
-      t.classList.toggle('active', (tab === 'signup' && i === 0) || (tab === 'login' && i === 1));
-    });
-    hideAlert();
-  }
 
   // ── USERNAME PREVIEW ──
   function updateUsernamePreview(input) {

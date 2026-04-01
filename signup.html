@@ -590,6 +590,7 @@
 </div>
 
 <script data-cfasync="false">
+  window.addEventListener('load', function() {
   // ── SUPABASE INIT ──
   const { createClient } = supabase;
   const sb = createClient(
@@ -808,4 +809,25 @@
   }
 
   function goToDashboard() {
-    window.
+    window.location.href = 'dashboard.html';
+  }
+
+  function showAlert(msg, type) {
+    const box = document.getElementById('alertBox');
+    const msgEl = document.getElementById('alertMsg');
+    const icon = document.getElementById('alertIcon');
+    box.className = 'alert ' + type;
+    msgEl.textContent = msg;
+    icon.textContent = type === 'error' ? '⚠️' : '✅';
+  }
+
+  function hideAlert() { document.getElementById('alertBox').className = 'alert'; }
+
+  sb.auth.getSession().then(({ data: { session } }) => {
+    if (session) window.location.href = 'dashboard.html';
+  });
+
+  }); // end window.addEventListener
+</script>
+</body>
+</html>

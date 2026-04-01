@@ -220,11 +220,11 @@
   <div class="footer-logo">Hostie Hub <span class="logo-dot"></span></div>
   <div class="footer-text">
     Made with ❤️ in Newcastle, Australia<br>
-    <a href="mailto:hello@hostiehub.com">hello@hostiehub.com</a> · <a href="index.html">Back to homepage</a>
+    <a href="mailto:hello@hostiehub.com.au">hello@hostiehub.com.au</a> · <a href="index.html">Back to homepage</a>
   </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   function selectCategory(category) {
     setTimeout(() => {
       const sel = document.getElementById('contactCategory');
@@ -280,15 +280,4 @@
       document.getElementById('contactName').value = '';
       document.getElementById('contactEmail').value = '';
       document.getElementById('contactCategory').value = '';
-      document.getElementById('contactMessage').value = '';
-
-    } catch (err) {
-      alert('Something went wrong. Please email us directly at hello@hostiehub.com');
-    }
-
-    btn.disabled = false;
-    btn.textContent = 'Send message →';
-  }
-</script>
-</body>
-</html>
+      document.getElementById

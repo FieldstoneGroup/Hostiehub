@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Choose Your Plan – Hostie Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #2C6E6A; --brand-dark: #1d4d4a; --brand-light: #e6f2f1;
+    --accent: #E8A838; --accent-light: #fdf3e0;
+    --text: #1a1a1a; --muted: #6b7280; --bg: #faf9f7;
+    --card: #ffffff; --border: #e8e4df; --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+
+  .header { text-align: center; margin-bottom: 48px; }
+  .logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--brand); margin-bottom: 32px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+  .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+  .header h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 40px); font-weight: 700; margin-bottom: 12px; letter-spacing: -0.5px; }
+  .header p { font-size: 16px; color: var(--muted); line-height: 1.6; max-width: 480px; margin: 0 auto; }
+
+  .plans { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; max-width: 1000px; width: 100%; margin-bottom: 32px; }
+
+  .plan-card { background: white; border: 1.5px solid var(--border); border-radius: 24px; padding: 36px 28px; position: relative; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; }
+  .plan-card:hover { transform: translateY(-4px); box-shadow: 0 20px 48px rgba(0,0,0,0.08); }
+  .plan-card.featured { border: 2px solid var(--brand); box-shadow: 0 20px 60px rgba(44,110,106,0.15); transform: translateY(-8px); }
+  .plan-card.featured:hover { transform: translateY(-12px); }
+  .plan-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--border); }
+  .plan-card.featured::before { background: linear-gradient(90deg, var(--brand), var(--accent)); }
+
+  .plan-badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 5px 14px; border-radius: 50px; margin-bottom: 16px; background: var(--brand-light); color: var(--brand); }
+  .plan-card.featured .plan-badge { background: var(--accent-light); color: #92600a; }
+
+  .plan-price { font-family: 'Playfair Display', serif; font-size: 56px; font-weight: 700; color: var(--brand); line-height: 1; margin-bottom: 4px; }
+  .plan-price sup { font-size: 26px; vertical-align: top; margin-top: 10px; }
+  .plan-price.enterprise { font-size: 32px; padding-top: 12px; }
+  .plan-period { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+  .plan-properties { font-size: 13px; font-weight: 600; color: var(--brand); background: var(--brand-light); display: inline-block; padding: 4px 12px; border-radius: 50px; margin-bottom: 24px; }
+
+  .plan-features { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 11px; flex: 1; }
+  .plan-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--text); line-height: 1.4; }
+  .check { width: 20px; height: 20px; background: var(--brand-light); color: var(--brand); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+  .plan-card.featured .check { background: var(--brand); color: white; }
+
+  .plan-btn { display: block; text-align: center; padding: 15px; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; text-decoration: none; transition: all 0.2s; background: var(--brand); color: white; border: none; cursor: pointer; width: 100%; }
+  .plan-btn:hover { background: var(--brand-dark); transform: translateY(-1px); }
+  .plan-btn.enterprise { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
+  .plan-btn.enterprise:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
+
+  .back-link { font-size: 14px; color: var(--muted); text-align: center; }
+  .back-link a { color: var(--brand); text-decoration: none; font-weight: 500; }
+  .back-link a:hover { text-decoration: underline; }
+
+  .guarantee { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-top: 24px; }
+  .guarantee span { font-size: 18px; }
+
+  @media (max-width: 768px) {
+    .plans { grid-template-columns: 1fr; }
+    .plan-card.featured { transform: translateY(0); }
+    .plan-card.featured:hover { transform: translateY(-4px); }
+  }
+</style>
+</head>
+<body>
+
+  <div class="header">
+    <a href="index.html" class="logo">Hostie Hub <span class="logo-dot"></span></a>
+    <h1>Choose your plan</h1>
+    <p>No commissions, no per-sale fees. Every dollar your guests spend goes directly to you.</p>
+  </div>
+
+  <div class="plans">
+
+    <!-- HOST -->
+    <div class="plan-card">
+      <div class="plan-badge">🏠 Host</div>
+      <div class="plan-price"><sup>$</sup>99</div>
+      <div class="plan-period">per year · cancel anytime</div>
+      <div class="plan-properties">1–3 properties</div>
+      <ul class="plan-features">
+        <li><div class="check">✓</div> Your store at <strong>yourname.hostiehub.com</strong></li>
+        <li><div class="check">✓</div> Unlimited products & services</li>
+        <li><div class="check">✓</div> Custom branding & colours</li>
+        <li><div class="check">✓</div> Direct Stripe payments — 100% to you</li>
+        <li><div class="check">✓</div> Guest notes & property selector</li>
+        <li><div class="check">✓</div> Order dashboard</li>
+        <li><div class="check">✓</div> Local partner vouchers</li>
+        <li><div class="check">✓</div> Email support</li>
+      </ul>
+      <a href="https://buy.stripe.com/00w00j3HM4Tt2PiacA8ww01" class="plan-btn">Get started →</a>
+    </div>
+
+    <!-- PRO -->
+    <div class="plan-card featured">
+      <div class="plan-badge">⭐ Most Popular — Pro</div>
+      <div class="plan-price"><sup>$</sup>199</div>
+      <div class="plan-period">per year · cancel anytime</div>
+      <div class="plan-properties">4–10 properties</div>
+      <ul class="plan-features">
+        <li><div class="check">✓</div> Everything in Host</li>
+        <li><div class="check">✓</div> Up to 10 properties</li>
+        <li><div class="check">✓</div> Upsell analytics — see what sells</li>
+        <li><div class="check">✓</div> Bulk product management</li>
+        <li><div class="check">✓</div> Revenue by property reporting</li>
+        <li><div class="check">✓</div> Priority email support</li>
+        <li><div class="check">✓</div> Early access to new features</li>
+      </ul>
+      <a href="https://buy.stripe.com/aFacN55PU0Dd61u0C08ww02" class="plan-btn">Get started →</a>
+    </div>
+
+    <!-- ENTERPRISE -->
+    <div class="plan-card">
+      <div class="plan-badge">🏢 Enterprise</div>
+      <div class="plan-price enterprise">Let's talk</div>
+      <div class="plan-period">custom pricing · tailored to you</div>
+      <div class="plan-properties">11+ properties</div>
+      <ul class="plan-features">
+        <li><div class="check">✓</div> Everything in Pro</li>
+        <li><div class="check">✓</div> Unlimited properties</li>
+        <li><div class="check">✓</div> White label option</li>
+        <li><div class="check">✓</div> Dedicated onboarding call</li>
+        <li><div class="check">✓</div> Custom integrations on request</li>
+        <li><div class="check">✓</div> Direct phone support</li>
+        <li><div class="check">✓</div> Tailored pricing for your portfolio</li>
+      </ul>
+      <a href="mailto:hello@hostiehub.com?subject=Enterprise Enquiry" class="plan-btn enterprise">Get in touch →</a>
+    </div>
+
+  </div>
+
+  <div class="guarantee"><span>🔒</span> Secure payment via Stripe · Cancel anytime · No hidden fees</div>
+  <div class="back-link" style="margin-top:16px"><a href="dashboard.html">← Back to dashboard</a></div>
+
+</body>
+</html>

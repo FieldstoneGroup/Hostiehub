@@ -248,13 +248,13 @@
     btn.disabled = true;
     btn.textContent = 'Sending...';
 
-    // Send via Resend
+    // Send via Cloudflare Worker
     try {
-      await fetch('https://api.resend.com/emails', {
+      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer re_N5oPVZWP_AQ6wBy56qbkchMXjbxxLNyVF',
           'Content-Type': 'application/json',
+          'X-Service': 'resend',
         },
         body: JSON.stringify({
           from: 'Hostie Hub <hello@hostiehub.com.au>',

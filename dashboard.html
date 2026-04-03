@@ -785,7 +785,7 @@
 
   function checkTrial() {
     const trialEndsAt = currentHost.trial_ends_at ? new Date(currentHost.trial_ends_at) : null;
-    const isPaid = currentHost.plan && currentHost.plan !== 'trial' && currentHost.plan !== 'host' === false;
+    const isPaid = currentHost.plan && ['host', 'pro', 'enterprise'].includes(currentHost.plan);
     const isActive = currentHost.is_active !== false;
 
     const now = new Date();
@@ -793,13 +793,16 @@
     const trialExpired = trialEndsAt && now > trialEndsAt;
 
     // Update billing card
-    if (currentHost.plan && currentHost.plan !== 'trial') {
+    if (isPaid) {
       document.getElementById('paidStatusCard').style.display = 'block';
       document.getElementById('trialStatusCard').style.display = 'none';
       const planNames = { host: 'Host Plan · $99/yr', pro: 'Pro Plan · $199/yr', enterprise: 'Enterprise Plan · Custom' };
       const planProps = { host: 'Up to 3 properties', pro: 'Up to 10 properties', enterprise: 'Unlimited properties' };
       document.getElementById('planName').textContent = planNames[currentHost.plan] || planNames.host;
       document.getElementById('planProperties').textContent = planProps[currentHost.plan] || planProps.host;
+      // Hide trial banner and overlay for paid users
+      document.getElementById('trialBanner').style.display = 'none';
+      document.getElementById('trialExpiredOverlay').style.display = 'none';
       return;
     }
 

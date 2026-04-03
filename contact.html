@@ -220,11 +220,11 @@
   <div class="footer-logo">Hostie Hub <span class="logo-dot"></span></div>
   <div class="footer-text">
     Made with ❤️ in Newcastle, Australia<br>
-    <a href="mailto:hello@hostiehub.com.au">hello@hostiehub.com.au</a> · <a href="index.html">Back to homepage</a>
+    <a href="/cdn-cgi/l/email-protection#6008050c0c0f20080f131409050815024e030f0d4e0115"><span class="__cf_email__" data-cfemail="422a272e2e2d022a2d31362b272a37206c212d2f6c2337">[email&#160;protected]</span></a> · <a href="index.html">Back to homepage</a>
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   function selectCategory(category) {
     setTimeout(() => {
       const sel = document.getElementById('contactCategory');
@@ -258,9 +258,9 @@
         },
         body: JSON.stringify({
           from: 'Hostie Hub Contact <onboarding@resend.dev>',
-          to: 'hello@hostiehub.com',
+          to: 'hello@hostiehub.com.au',
           reply_to: email,
-          subject: `[${category}] Message from ${name}`,
+          subject: `[Hostie Hub] ${category} — message from ${name}`,
           html: `
             <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:32px;">
               <h2 style="color:#2C6E6A;font-family:Georgia,serif">New message from Hostie Hub Contact Form</h2>
@@ -276,8 +276,4 @@
         })
       });
 
-      document.getElementById('successMsg').style.display = 'block';
-      document.getElementById('contactName').value = '';
-      document.getElementById('contactEmail').value = '';
-      document.getElementById('contactCategory').value = '';
-      document.getElementById
+      document.getElement

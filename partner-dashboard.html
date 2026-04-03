@@ -221,13 +221,57 @@
           <div class="field"><label>Description</label><textarea id="vDesc" placeholder="What does this include? Any conditions? e.g. Valid Mon–Thu, dine-in only, one per table."></textarea></div>
           <div class="field-row">
             <div class="field"><label>Value</label><input type="text" id="vValue" placeholder="e.g. 2 free drinks, 10% off, $20 voucher"></div>
-            <div class="field"><label>Price to guest ($)</label><input type="number" id="vPrice" placeholder="e.g. 0 for free, 15 for paid" min="0"></div>
+            <div class="field"><label>Price to guest ($) — enter 0 for FREE</label><input type="number" id="vPrice" placeholder="0" min="0"></div>
           </div>
           <div class="field">
             <label>Expiry date</label>
             <input type="date" id="vExpiry">
             <div class="field-hint">Vouchers will stop showing to guests after this date.</div>
           </div>
+
+          <!-- VOUCHER DELIVERY -->
+          <div class="field">
+            <label>How do guests receive this voucher?</label>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
+              <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:border-color 0.2s" id="pdfOptionLabel">
+                <input type="radio" name="voucherType" value="pdf" id="vTypePdf" onchange="toggleVoucherType()" checked style="accent-color:var(--partner)">
+                <div>
+                  <div style="font-size:14px;font-weight:600">📄 Upload a PDF voucher</div>
+                  <div style="font-size:12px;color:var(--muted);margin-top:2px">Guests download your PDF after purchase</div>
+                </div>
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:border-color 0.2s" id="linkOptionLabel">
+                <input type="radio" name="voucherType" value="link" id="vTypeLink" onchange="toggleVoucherType()" style="accent-color:var(--partner)">
+                <div>
+                  <div style="font-size:14px;font-weight:600">🔗 Provide a link</div>
+                  <div style="font-size:12px;color:var(--muted);margin-top:2px">Guests are sent to a URL to redeem their voucher</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- PDF UPLOAD -->
+          <div class="field" id="pdfUploadField">
+            <label>Upload voucher PDF</label>
+            <div id="pdfPreviewWrap" style="display:none;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:20px">📄</span>
+              <span id="pdfFileName" style="font-size:14px;font-weight:500;flex:1"></span>
+              <button onclick="removePdf()" style="background:none;border:none;color:var(--error);cursor:pointer;font-size:13px;">Remove</button>
+            </div>
+            <label id="pdfUploadLabel" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;color:var(--muted);" onmouseover="this.style.borderColor='var(--partner)'" onmouseout="this.style.borderColor='var(--border)'">
+              📄 Click to upload PDF
+              <input type="file" id="vPdfFile" accept=".pdf" style="display:none" onchange="previewPdf(this)">
+            </label>
+            <div class="field-hint">Upload your voucher as a PDF. Guests will be able to download it after purchase.</div>
+          </div>
+
+          <!-- LINK -->
+          <div class="field" id="linkField" style="display:none">
+            <label>Voucher link URL</label>
+            <input type="url" id="vLink" placeholder="e.g. https://yourbusiness.com/voucher">
+            <div class="field-hint">Guests will be redirected to this URL after purchase.</div>
+          </div>
+
           <div class="field">
             <label>Postcodes for this voucher</label>
             <div class="field-hint" style="margin-bottom:8px">By default this voucher uses your account postcodes. Add specific ones here to override.</div>
@@ -358,8 +402,82 @@
     document.getElementById('vValue').value = '';
     document.getElementById('vPrice').value = '';
     document.getElementById('vExpiry').value = '';
+    document.getElementById('vLink').value = '';
+    document.getElementById('vTypePdf').checked = true;
+    document.getElementById('pdfUploadField').style.display = 'block';
+    document.getElementById('linkField').style.display = 'none';
+    document.getElementById('pdfPreviewWrap').style.display = 'none';
+    document.getElementById('pdfUploadLabel').style.display = 'flex';
+    document.getElementById('vPdfFile').value = '';
     voucherPostcodes = [];
     renderVoucherPostcodes();
+  }
+
+  function toggleVoucherType() {
+    const isPdf = document.getElementById('vTypePdf').checked;
+    document.getElementById('pdfUploadField').style.display = isPdf ? 'block' : 'none';
+    document.getElementById('linkField').style.display = isPdf ? 'none' : 'block';
+  }
+
+  function previewPdf(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('pdfFileName').textContent = file.name;
+    document.getElementById('pdfPreviewWrap').style.display = 'flex';
+    document.getElementById('pdfUploadLabel').style.display = 'none';
+  }
+
+  function removePdf() {
+    document.getElementById('vPdfFile').value = '';
+    document.getElementById('pdfPreviewWrap').style.display = 'none';
+    document.getElementById('pdfUploadLabel').style.display = 'flex';
+  }
+
+  async function uploadVoucherPdf(file, voucherId) {
+    const path = `vouchers/${partnerData.id}/${voucherId}.pdf`;
+    const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
+    if (error) { console.error(error); return null; }
+    const { data } = sb.storage.from('product-images').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  async function saveVoucher() {
+    const title = document.getElementById('vTitle').value.trim();
+    if (!title) { showToast('⚠️ Please enter a voucher title'); return; }
+    const isPdf = document.getElementById('vTypePdf').checked;
+    const pdfFile = document.getElementById('vPdfFile').files[0];
+    const link = document.getElementById('vLink').value.trim();
+    if (isPdf && !pdfFile) { showToast('⚠️ Please upload a PDF voucher'); return; }
+    if (!isPdf && !link) { showToast('⚠️ Please enter a voucher link'); return; }
+
+    const codes = voucherPostcodes.length > 0 ? voucherPostcodes : accountPostcodes;
+    const price = parseFloat(document.getElementById('vPrice').value) || 0;
+
+    const { data: inserted, error } = await sb.from('vouchers').insert({
+      partner_id: partnerData.id,
+      title,
+      description: document.getElementById('vDesc').value.trim(),
+      value: document.getElementById('vValue').value.trim(),
+      price,
+      expiry_date: document.getElementById('vExpiry').value || null,
+      postcodes: codes,
+      voucher_link: isPdf ? null : link,
+      active: true,
+    }).select().single();
+
+    if (error) { showToast('⚠️ Error saving voucher'); console.error(error); return; }
+
+    // Upload PDF if selected
+    if (isPdf && pdfFile) {
+      showToast('⏳ Uploading PDF...');
+      const pdfUrl = await uploadVoucherPdf(pdfFile, inserted.id);
+      if (pdfUrl) await sb.from('vouchers').update({ pdf_url: pdfUrl }).eq('id', inserted.id);
+    }
+
+    showToast(`✅ Voucher published${price === 0 ? ' — marked as FREE' : ''}!`);
+    clearVoucherForm();
+    loadVouchers();
+    showPage('vouchers', document.querySelector('[onclick*="vouchers"]'));
   }
 
   // VOUCHER POSTCODES
@@ -377,27 +495,6 @@
     document.getElementById('vPostcodeTags').innerHTML = voucherPostcodes.map(p =>
       `<div class="postcode-tag">${p} <button onclick="removeVoucherPostcode('${p}')">✕</button></div>`
     ).join('');
-  }
-
-  async function saveVoucher() {
-    const title = document.getElementById('vTitle').value.trim();
-    if (!title) { showToast('⚠️ Please enter a voucher title'); return; }
-    const codes = voucherPostcodes.length > 0 ? voucherPostcodes : accountPostcodes;
-    const { error } = await sb.from('vouchers').insert({
-      partner_id: partnerData.id,
-      title,
-      description: document.getElementById('vDesc').value.trim(),
-      value: document.getElementById('vValue').value.trim(),
-      price: parseFloat(document.getElementById('vPrice').value) || 0,
-      expiry_date: document.getElementById('vExpiry').value || null,
-      postcodes: codes,
-      active: true,
-    });
-    if (error) { showToast('⚠️ Error saving voucher'); console.error(error); return; }
-    showToast('✅ Voucher published!');
-    clearVoucherForm();
-    loadVouchers();
-    showPage('vouchers', document.querySelector('[onclick*="vouchers"]'));
   }
 
   async function toggleVoucher(id, active) {

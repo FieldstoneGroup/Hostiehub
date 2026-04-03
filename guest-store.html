@@ -282,6 +282,7 @@
       <div class="mfield"><label>Check-out Date</label><input type="date" id="checkoutDate"></div>
     </div>
     <div class="mfield"><label>Your Name</label><input type="text" id="guestName" placeholder="e.g. James & Emma"></div>
+    <div class="mfield"><label>Your Email <span style="font-weight:300;font-size:11px">(for order confirmation)</span></label><input type="email" id="guestEmail" placeholder="your@email.com"></div>
     <div class="mfield" id="propertyFieldWrap">
       <label>Which property are you staying at?</label>
       <select id="checkoutPropertySelect">
@@ -668,6 +669,24 @@
       total,
     });
 
+    // Send confirmation email to guest
+    const guestEmail = document.getElementById('guestEmail') ? document.getElementById('guestEmail').value.trim() : '';
+    if (guestEmail) {
+      await sendGuestConfirmation({
+        guestEmail,
+        guestName,
+        storeName: hostData.store_name || hostData.username,
+        hostName: hostData.full_name || hostData.store_name,
+        checkin,
+        checkout,
+        propName,
+        notes,
+        productNotes,
+        items: cart.map(i => ({ name: i.name, price: i.price, icon: i.icon, note: i.note })),
+        total,
+      });
+    }
+
     closeCheckout();
     cart = [];
     updateCartUI();
@@ -777,6 +796,102 @@
       });
     } catch (err) {
       console.error('Email notification failed:', err);
+    }
+  }
+
+  async function sendGuestConfirmation({ guestEmail, guestName, storeName, hostName, checkin, checkout, propName, notes, productNotes, items, total }) {
+    const itemsHtml = items.map(i => `
+      <tr>
+        <td style="padding:12px 0;border-bottom:1px solid #e8e4df;font-size:15px;color:#1a1a1a">${i.icon} ${i.name}${i.note ? `<div style="font-size:12px;color:#6b7280;margin-top:3px;font-style:italic">📝 ${i.note}</div>` : ''}</td>
+        <td style="padding:12px 0;border-bottom:1px solid #e8e4df;font-size:15px;text-align:right;font-weight:600;color:#2C6E6A">$${i.price}</td>
+      </tr>`).join('');
+
+    const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f6f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f5;padding:40px 20px">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+
+        <!-- HEADER -->
+        <tr><td style="background:linear-gradient(135deg,#2C6E6A,#1d4d4a);border-radius:16px 16px 0 0;padding:36px 40px;text-align:center">
+          <div style="font-size:28px;font-weight:700;color:white;font-family:Georgia,serif;letter-spacing:-0.5px;margin-bottom:4px">Hostie Hub</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase">Order Confirmed</div>
+        </td></tr>
+
+        <!-- BODY -->
+        <tr><td style="background:white;padding:40px;border-radius:0 0 16px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+
+          <!-- GREETING -->
+          <div style="text-align:center;margin-bottom:32px">
+            <div style="font-size:48px;margin-bottom:12px">🎉</div>
+            <h1 style="font-size:26px;font-weight:700;color:#1a1a1a;font-family:Georgia,serif;margin:0 0 8px">You're all set, ${guestName}!</h1>
+            <p style="font-size:15px;color:#6b7280;margin:0;line-height:1.6">Your extras have been ordered from <strong style="color:#2C6E6A">${storeName}</strong>.<br>Your host will have everything ready for your arrival.</p>
+          </div>
+
+          <!-- STAY DETAILS -->
+          <div style="background:#f4f6f5;border-radius:12px;padding:20px;margin-bottom:28px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:14px">Stay Details</div>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              ${propName ? `<tr><td style="padding:6px 0;font-size:14px;color:#6b7280;width:40%">🏠 Property</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#1a1a1a">${propName}</td></tr>` : ''}
+              <tr><td style="padding:6px 0;font-size:14px;color:#6b7280;width:40%">📅 Check-in</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#1a1a1a">${checkin}</td></tr>
+              <tr><td style="padding:6px 0;font-size:14px;color:#6b7280">📅 Check-out</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#1a1a1a">${checkout}</td></tr>
+              ${notes ? `<tr><td style="padding:6px 0;font-size:14px;color:#6b7280;vertical-align:top">📝 Notes</td><td style="padding:6px 0;font-size:14px;color:#1a1a1a">${notes}</td></tr>` : ''}
+            </table>
+          </div>
+
+          <!-- ORDER ITEMS -->
+          <div style="margin-bottom:28px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:14px">Your Order</div>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              ${itemsHtml}
+              <tr>
+                <td style="padding:16px 0 0;font-size:16px;font-weight:700;color:#1a1a1a">Total</td>
+                <td style="padding:16px 0 0;font-size:22px;font-weight:700;color:#2C6E6A;text-align:right;font-family:Georgia,serif">$${total}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- WHAT HAPPENS NEXT -->
+          <div style="background:#e6f2f1;border-radius:12px;padding:20px;margin-bottom:28px;border-left:4px solid #2C6E6A">
+            <div style="font-size:14px;font-weight:700;color:#2C6E6A;margin-bottom:8px">What happens next?</div>
+            <p style="font-size:14px;color:#1d4d4a;margin:0;line-height:1.7">Your host <strong>${hostName}</strong> has been notified and will have everything ready for your arrival. If anything needs confirming (like exact check-in times), they'll be in touch directly.</p>
+          </div>
+
+          <p style="font-size:13px;color:#6b7280;text-align:center;margin:0;line-height:1.6">This confirmation was sent by Hostie Hub on behalf of ${storeName}.<br>Questions about your order? Contact your host directly.</p>
+
+        </td></tr>
+
+        <!-- FOOTER -->
+        <tr><td style="padding:28px 0;text-align:center">
+          <div style="font-size:13px;font-weight:700;color:#2C6E6A;font-family:Georgia,serif;margin-bottom:6px">Hostie Hub</div>
+          <div style="font-size:12px;color:#9ca3af">© 2025 Hostie Hub · Made with ❤️ in Newcastle, Australia</div>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+    try {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer re_N5oPVZWP_AQ6wBy56qbkchMXjbxxLNyVF',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'Hostie Hub <hello@hostiehub.com.au>',
+          to: guestEmail,
+          subject: `✅ Your order is confirmed — ${storeName}`,
+          html: emailHtml,
+        }),
+      });
+    } catch (err) {
+      console.error('Guest confirmation email failed:', err);
     }
   }
 

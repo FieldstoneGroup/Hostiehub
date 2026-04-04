@@ -1297,7 +1297,8 @@
         body: JSON.stringify({ email: currentHost.email })
       });
       const account = await createRes.json();
-      if (!account.id) { showToast('⚠️ Error setting up Stripe. Please try again.'); return; }
+      console.log('Stripe account response:', JSON.stringify(account));
+      if (!account.id) { showToast('⚠️ Stripe error: ' + (account.error?.message || JSON.stringify(account))); return; }
 
       // Save account ID to database
       await sb.from('hosts').update({ stripe_account_id: account.id }).eq('id', currentUser.id);

@@ -857,10 +857,10 @@
           <!-- WHAT HAPPENS NEXT -->
           <div style="background:#e6f2f1;border-radius:12px;padding:20px;margin-bottom:28px;border-left:4px solid #2C6E6A">
             <div style="font-size:14px;font-weight:700;color:#2C6E6A;margin-bottom:8px">What happens next?</div>
-            <p style="font-size:14px;color:#1d4d4a;margin:0;line-height:1.7">Your host <strong>${hostName}</strong> has been notified and will have everything ready for your arrival. If anything needs confirming (like exact check-in times), they'll be in touch directly.</p>
+            <p style="font-size:14px;color:#1d4d4a;margin:0;line-height:1.7">Your host <strong>${hostName}</strong> has been notified and will have everything ready for your arrival. If you have any questions about your order or stay, please contact your host directly — <strong>do not reply to this email</strong> as it is sent from an unmonitored address.</p>
           </div>
 
-          <p style="font-size:13px;color:#6b7280;text-align:center;margin:0;line-height:1.6">This confirmation was sent by Hostie Hub on behalf of ${storeName}.<br>Questions about your order? Contact your host directly.</p>
+          <p style="font-size:13px;color:#6b7280;text-align:center;margin:0;line-height:1.6">⚠️ <strong>Please do not reply to this email.</strong><br>This is an automated confirmation from Hostie Hub.<br>For any questions about your order or stay, please contact your host <strong>${hostName}</strong> directly.</p>
 
         </td></tr>
 
@@ -884,7 +884,7 @@
           'X-Service': 'resend',
         },
         body: JSON.stringify({
-          from: 'Hostie Hub <hello@hostiehub.com.au>',
+          from: 'Hostie Hub <noreply@hostiehub.com.au>',
           to: guestEmail,
           subject: `✅ Your order is confirmed — ${storeName}`,
           html: emailHtml,

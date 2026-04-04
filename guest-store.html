@@ -631,6 +631,7 @@
     errEl.style.display = 'none';
 
     const guestName = document.getElementById('guestName').value || 'Guest';
+    const guestEmail = document.getElementById('guestEmail') ? document.getElementById('guestEmail').value.trim() : '';
     const notes = document.getElementById('guestNotes').value || '';
     const propId = document.getElementById('checkoutPropertySelect').value;
     const propName = propId ? (properties.find(p => p.id === propId)?.nickname || '') : '';
@@ -638,6 +639,7 @@
     const productNotes = {};
     cart.forEach(i => { if (i.note) productNotes[i.name] = i.note; });
 
+    // Save order to database first
     const { error } = await sb.from('orders').insert({
       host_id: hostData.id,
       guest_name: guestName,
@@ -654,7 +656,27 @@
 
     if (error) { console.error(error); alert('Something went wrong. Please try again.'); return; }
 
-    // Send email notification to host
+    // If host has Stripe connected, redirect to Stripe checkout
+    if (hostData.stripe_account_id && hostData.stripe_connected) {
+      const checkoutRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-checkout' },
+        body: JSON.stringify({
+          items: cart.map(i => ({ name: i.name, price: i.price })),
+          stripe_account_id: hostData.stripe_account_id,
+          guest_email: guestEmail || undefined,
+          success_url: `${window.location.href}&order=success&guest=${encodeURIComponent(guestName)}`,
+          cancel_url: window.location.href,
+        })
+      });
+      const session = await checkoutRes.json();
+      if (session.url) {
+        window.location.href = session.url;
+        return;
+      }
+    }
+
+    // No Stripe — just confirm order and send emails
     await sendHostNotification({
       hostEmail: hostData.email,
       hostName: hostData.full_name || hostData.store_name || 'Host',
@@ -669,8 +691,6 @@
       total,
     });
 
-    // Send confirmation email to guest
-    const guestEmail = document.getElementById('guestEmail') ? document.getElementById('guestEmail').value.trim() : '';
     if (guestEmail) {
       await sendGuestConfirmation({
         guestEmail,
@@ -902,6 +922,18 @@
   }
 
   loadStore();
+
+  // Handle Stripe payment success return
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('order') === 'success') {
+    const guestName = decodeURIComponent(urlParams.get('guest') || 'Guest');
+    setTimeout(() => {
+      document.getElementById('heroContent').innerHTML = `
+        <div style="font-size:48px;margin-bottom:16px">🎉</div>
+        <h1 style="font-size:clamp(22px,4vw,34px)">Thanks, ${guestName}!</h1>
+        <p style="margin-top:12px;opacity:0.85">Payment confirmed! Your host will have everything ready for your arrival.</p>`;
+    }, 1000);
+  }
 </script>
 </body>
 </html>

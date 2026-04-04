@@ -246,7 +246,7 @@
   <div class="topbar">
     <div class="topbar-title" id="topbarTitle">Overview</div>
     <div class="topbar-actions">
-      <span class="badge badge-warn" id="stripeBadge" style="display:none;cursor:pointer" onclick="showPage('stripe', document.querySelector('[onclick*=stripe]'))">⚡ Connect Stripe</span>
+      <span class="badge badge-warn" id="stripeBadge" style="display:none;cursor:pointer" onclick="document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-stripe').classList.add('active');document.getElementById('topbarTitle').textContent='Stripe Connect'">⚡ Connect Stripe</span>
       <span class="badge badge-success" id="stripeConnectedBadge" style="display:none">✓ Stripe Connected</span>
     </div>
   </div>
@@ -729,6 +729,23 @@
     loadVouchers();
     buildEmojiGrid();
     buildSwatches();
+
+    // Handle Stripe Connect return
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('stripe') === 'success') {
+      await sb.from('hosts').update({ stripe_connected: true }).eq('id', currentUser.id);
+      currentHost.stripe_connected = true;
+      document.getElementById('stripeNotConnected').style.display = 'none';
+      document.getElementById('stripeConnected').style.display = 'block';
+      document.getElementById('stripeBadge').style.display = 'none';
+      document.getElementById('stripeConnectedBadge').style.display = 'flex';
+      tickCheck('checkStripe');
+      showToast('✅ Stripe connected successfully!');
+      window.history.replaceState({}, '', 'dashboard.html');
+    } else if (params.get('stripe') === 'refresh') {
+      showToast('⚠️ Stripe setup incomplete. Please try again.');
+      window.history.replaceState({}, '', 'dashboard.html');
+    }
   }
 
   function populateUI() {
@@ -1270,17 +1287,41 @@
   }
 
   // ── STRIPE ──
-  function connectStripe() {
-    showToast('⚡ In production: redirects to Stripe Connect OAuth');
-    setTimeout(async () => {
-      document.getElementById('stripeNotConnected').style.display = 'none';
-      document.getElementById('stripeConnected').style.display = 'block';
-      document.getElementById('stripeBadge').style.display = 'none';
-      document.getElementById('stripeConnectedBadge').style.display = 'flex';
-      await sb.from('hosts').update({ stripe_connected: true }).eq('id', currentUser.id);
-      tickCheck('checkStripe');
-      showToast('✅ Stripe connected!');
-    }, 1500);
+  async function connectStripe() {
+    showToast('⏳ Setting up Stripe Connect...');
+    try {
+      // Create a Stripe Connect Express account for this host
+      const createRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-create-account' },
+        body: JSON.stringify({ email: currentHost.email })
+      });
+      const account = await createRes.json();
+      if (!account.id) { showToast('⚠️ Error setting up Stripe. Please try again.'); return; }
+
+      // Save account ID to database
+      await sb.from('hosts').update({ stripe_account_id: account.id }).eq('id', currentUser.id);
+
+      // Get onboarding URL
+      const linkRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-connect-url' },
+        body: JSON.stringify({
+          account_id: account.id,
+          return_url: 'https://hostiehub.com.au/dashboard.html?stripe=success',
+          refresh_url: 'https://hostiehub.com.au/dashboard.html?stripe=refresh',
+        })
+      });
+      const link = await linkRes.json();
+      if (!link.url) { showToast('⚠️ Error getting Stripe link. Please try again.'); return; }
+
+      // Redirect host to Stripe onboarding
+      window.location.href = link.url;
+
+    } catch (err) {
+      console.error(err);
+      showToast('⚠️ Something went wrong. Please try again.');
+    }
   }
 
   // ── PROFILE ──

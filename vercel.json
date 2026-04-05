@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/store/:username",
+      "destination": "/guest-store.html?store=:username"
+    }
+  ]
+}

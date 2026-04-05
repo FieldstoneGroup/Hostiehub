@@ -464,7 +464,7 @@
           <div class="field">
             <label>Username</label>
             <div style="display:flex;gap:8px;align-items:center">
-              <span style="font-size:14px;color:var(--muted);white-space:nowrap">hostiehub.com/store/</span>
+              <span style="font-size:14px;color:var(--muted);white-space:nowrap">hostiehub.com.au/store/</span>
               <input type="text" id="newUsername" placeholder="e.g. stayable" style="flex:1;text-transform:lowercase">
             </div>
             <div class="field-hint">Only lowercase letters, numbers and hyphens. Minimum 3 characters.</div>
@@ -752,9 +752,9 @@
     const initials = (currentHost.full_name || '?').split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
     document.getElementById('sidebarAvatar').textContent = initials;
     document.getElementById('sidebarName').textContent = currentHost.full_name || '';
-    document.getElementById('sidebarUrl').textContent = (currentHost.username || '') + '.hostiehub.com';
-    document.getElementById('storeUrlDisplay').textContent = (currentHost.username || '') + '.hostiehub.com';
-    document.getElementById('viewStoreBtn').href = '/guest-store.html?store=' + (currentHost.username || '');
+    document.getElementById('sidebarUrl').textContent = 'hostiehub.com.au/store/' + (currentHost.username || '');
+    document.getElementById('storeUrlDisplay').textContent = 'hostiehub.com.au/store/' + (currentHost.username || '');
+    document.getElementById('viewStoreBtn').href = 'https://hostiehub.com.au/store/' + (currentHost.username || '');
     document.getElementById('accountName').value = currentHost.full_name || '';
     document.getElementById('accountEmail').value = currentHost.email || '';
     const unField = document.getElementById('newUsername');
@@ -766,7 +766,7 @@
         const preview = document.getElementById('usernameChangePreview');
         if (val.length >= 3) {
           preview.style.display = 'block';
-          preview.textContent = 'New URL: ' + val + '.hostiehub.com';
+          preview.textContent = 'New URL: hostiehub.com.au/store/' + val;
         } else {
           preview.style.display = 'none';
         }
@@ -1283,7 +1283,7 @@
   function updateColourPreview(val) { document.getElementById('colourPreview').style.background = val; }
 
   function copyStoreUrl() {
-    navigator.clipboard.writeText((currentHost?.username || '') + '.hostiehub.com').then(() => showToast('📋 Link copied!'));
+    navigator.clipboard.writeText('https://hostiehub.com.au/store/' + (currentHost?.username || '')).then(() => showToast('📋 Link copied!'));
   }
 
   // ── STRIPE ──
@@ -1343,7 +1343,7 @@
       showToast('⚠️ That\'s already your current username');
       return;
     }
-    if (!confirm(`⚠️ Are you sure?\n\nYour store URL will change to:\n${newUsername}.hostiehub.com\n\nYour old URL (${currentHost.username}.hostiehub.com) will stop working immediately.`)) return;
+    if (!confirm(`⚠️ Are you sure?\n\nYour store URL will change to:\nhostiehub.com.au/store/${newUsername}\n\nYour old URL (hostiehub.com.au/store/${currentHost.username}) will stop working immediately.`)) return;
 
     // Check if taken
     const { data: existing } = await sb.from('hosts').select('username').eq('username', newUsername).single();
@@ -1351,10 +1351,10 @@
 
     await sb.from('hosts').update({ username: newUsername }).eq('id', currentUser.id);
     currentHost.username = newUsername;
-    document.getElementById('sidebarUrl').textContent = newUsername + '.hostiehub.com';
-    document.getElementById('storeUrlDisplay').textContent = newUsername + '.hostiehub.com';
-    document.getElementById('viewStoreBtn').href = '/guest-store.html?store=' + newUsername;
-    showToast('✅ Store URL updated to ' + newUsername + '.hostiehub.com');
+    document.getElementById('sidebarUrl').textContent = 'hostiehub.com.au/store/' + newUsername;
+    document.getElementById('storeUrlDisplay').textContent = 'hostiehub.com.au/store/' + newUsername;
+    document.getElementById('viewStoreBtn').href = 'https://hostiehub.com.au/store/' + newUsername;
+    showToast('✅ Store URL updated to hostiehub.com.au/store/' + newUsername);
   }
 
   async function handleLogout() { await sb.auth.signOut(); window.location.href = 'signup.html'; }

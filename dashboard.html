@@ -1402,6 +1402,8 @@
     }
   }
 
+  async function handleLogout() { await sb.auth.signOut(); window.location.href = 'signup.html'; }
+
   // ── HELPERS ──
   function tickCheck(id) {
     const el = document.getElementById(id);

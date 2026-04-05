@@ -599,6 +599,23 @@
   </div>
 </div>
 
+<!-- UPGRADE MODAL -->
+<div class="modal-overlay" id="upgradeModal">
+  <div class="modal" style="max-width:480px;text-align:center">
+    <div style="font-size:48px;margin-bottom:16px">🏠</div>
+    <div class="modal-title" style="font-size:22px;margin-bottom:12px" id="upgradeModalTitle">Property limit reached</div>
+    <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px" id="upgradeModalText">You've reached the maximum number of properties on your current plan.</p>
+    <div style="background:var(--bg);border-radius:12px;padding:16px;margin-bottom:24px">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Would you like someone to contact you about upgrading?</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="plans.html" class="btn btn-primary" style="justify-content:center;padding:12px">View plans & upgrade →</a>
+        <button class="btn btn-outline" onclick="requestUpgradeContact()" id="upgradeContactBtn">✉️ Yes, contact me about upgrading</button>
+      </div>
+    </div>
+    <button class="modal-close-text" onclick="document.getElementById('upgradeModal').classList.remove('open')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer">Maybe later</button>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"><span id="toastMsg">Saved!</span></div>
 
@@ -920,9 +937,11 @@
       const plan = currentHost.plan || 'host';
       const limit = plan === 'pro' ? 10 : plan === 'enterprise' ? Infinity : 3;
       if (properties.length >= limit) {
-        showToast(`⚠️ Your ${plan === 'host' ? 'Host' : 'Pro'} plan allows up to ${limit} properties. Upgrade to add more.`);
         closePropertyModal();
-        showPage('account', document.querySelector('[onclick*=account]'));
+        const planName = plan === 'pro' ? 'Pro' : 'Host';
+        document.getElementById('upgradeModalTitle').textContent = `Property limit reached`;
+        document.getElementById('upgradeModalText').textContent = `You've reached the ${limit} property limit on your ${planName} plan. Upgrade your subscription to add more properties.`;
+        document.getElementById('upgradeModal').classList.add('open');
         return;
       }
     }
@@ -1357,7 +1376,30 @@
     showToast('✅ Store URL updated to hostiehub.com.au/store/' + newUsername);
   }
 
-  async function handleLogout() { await sb.auth.signOut(); window.location.href = 'signup.html'; }
+  async function requestUpgradeContact() {
+    const btn = document.getElementById('upgradeContactBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Sending...';
+    try {
+      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+        body: JSON.stringify({
+          from: 'Hostie Hub <hello@hostiehub.com.au>',
+          to: 'hello@hostiehub.com.au',
+          subject: `Upgrade request from ${currentHost.full_name || currentHost.username}`,
+          html: `<p><strong>${currentHost.full_name || currentHost.username}</strong> (${currentHost.email}) has hit their property limit and would like to be contacted about upgrading their plan.</p><p>Current plan: ${currentHost.plan || 'trial'}</p><p>Properties: ${properties.length}</p>`
+        })
+      });
+      btn.textContent = '✅ Request sent!';
+      showToast('✅ We\'ll be in touch shortly about upgrading your plan!');
+      setTimeout(() => { document.getElementById('upgradeModal').classList.remove('open'); }, 2000);
+    } catch (err) {
+      btn.textContent = '✉️ Yes, contact me about upgrading';
+      btn.disabled = false;
+      showToast('⚠️ Something went wrong. Please email hello@hostiehub.com.au');
+    }
+  }
 
   // ── HELPERS ──
   function tickCheck(id) {

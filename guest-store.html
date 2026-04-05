@@ -325,7 +325,13 @@
 
   function getUsername() {
     const host = window.location.hostname;
+    // Check subdomain format: stayable.hostiehub.com.au
+    if (host.endsWith('.hostiehub.com.au') && host !== 'www.hostiehub.com.au') return host.replace('.hostiehub.com.au', '');
     if (host.endsWith('.hostiehub.com') && host !== 'www.hostiehub.com') return host.replace('.hostiehub.com', '');
+    // Check path format: hostiehub.com.au/store/stayable
+    const pathMatch = window.location.pathname.match(/^\/store\/([a-z0-9-]+)/);
+    if (pathMatch) return pathMatch[1];
+    // Check query param format: ?store=stayable
     return new URLSearchParams(window.location.search).get('store');
   }
 

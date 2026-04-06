@@ -1543,9 +1543,9 @@
 
   // ── COLOUR ──
   function buildSwatches() {
-    document.getElementById('swatches').innerHTML = swatchColours.map(c =>
-      `<div class="swatch" style="background:${c}" onclick="document.getElementById('brandColour').value='${c}';updateColourPreview('${c}')"></div>`
-    ).join('');
+    document.getElementById('swatches').innerHTML = swatchColours.map(function(c) {
+      return '<div class="swatch" style="background:' + c + '" onclick="document.getElementById(\'brandColour\').value=\'' + c + '\';updateColourPreview(\'' + c + '\')"></div>';
+    }).join('');
   }
 
   function updateColourPreview(val) { document.getElementById('colourPreview').style.background = val; }

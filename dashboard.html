@@ -226,30 +226,30 @@
     .card { padding: 16px; }
     .content { padding: 12px; }
     .topbar { padding: 0 12px; height: 56px; }
-    /* Store settings - single column */
-    #page-store > div:last-child { grid-template-columns: 1fr !important; }
-    /* Account - single column */
-    #page-account > div:last-child { grid-template-columns: 1fr !important; }
-    /* Properties header */
-    #page-properties > div:first-child { flex-wrap: wrap; gap: 10px; }
-    /* Products header buttons stack */
-    #page-products > div:first-child > div:last-child { flex-wrap: wrap; }
-    /* Overview checklist */
-    .checklist-item { flex-wrap: nowrap; }
-    .checklist-item span { font-size: 13px; }
+    /* Store settings grid - single column on mobile */
+    #page-store .two-col-grid { grid-template-columns: 1fr !important; }
     /* Property rows mobile */
-    .property-row { flex-wrap: nowrap; gap: 8px; padding: 12px; }
+    .property-row { flex-wrap: nowrap; gap: 8px; padding: 12px; overflow: hidden; }
+    .property-icon { width: 32px; height: 32px; font-size: 16px; flex-shrink: 0; }
     .property-info { min-width: 0; flex: 1; }
     .property-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .property-address { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .property-row > div:last-child { flex-shrink: 0; }
-    /* Product rows mobile */
-    .product-row { flex-wrap: nowrap; gap: 8px; padding: 12px; overflow: hidden; }
+    .property-row > div:last-child { flex-shrink: 0; display: flex; gap: 6px; }
+    .property-row .btn-sm { padding: 6px 10px; font-size: 12px; }
+    /* Product rows mobile — hide emoji, shrink buttons */
+    .product-row { flex-wrap: nowrap; gap: 6px; padding: 10px 12px; overflow: hidden; }
+    .product-emoji { display: none; }
     .product-info { min-width: 0; flex: 1; }
     .product-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .product-meta { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .product-actions { flex-shrink: 0; }
-    .product-actions .btn-sm { padding: 6px 10px; font-size: 12px; }
+    .toggle { flex-shrink: 0; }
+    .product-actions { flex-shrink: 0; gap: 4px; }
+    .product-actions .btn-sm { padding: 5px 8px; font-size: 12px; }
+    /* Overview checklist */
+    .checklist-item { flex-wrap: nowrap; }
+    .checklist-item span { font-size: 13px; }
+    /* Account - single column */
+    #page-account .two-col-grid { grid-template-columns: 1fr !important; }
     .stripe-banner { flex-direction: column; gap: 12px; }
     .stripe-banner-info { flex-wrap: wrap; }
     /* Voucher cards */

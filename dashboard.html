@@ -660,12 +660,14 @@
       <div class="field"><label>Email address</label><input type="email" id="userEmail" placeholder="e.g. sarah@email.com"></div>
       <div class="field">
         <label>Notify for</label>
-        <select id="userPropertyScope" onchange="toggleUserPropertyList(this.value)">
-          <option value="all">All properties</option>
-          <option value="selected">Selected properties only</option>
-        </select>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px" id="userPropertyList">
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--brand-light);border-radius:8px;border:1.5px solid var(--brand);cursor:pointer">
+            <input type="checkbox" id="userAllProperties" onchange="toggleAllUserProps(this.checked)" style="width:16px;height:16px;accent-color:var(--brand)">
+            <span style="font-size:14px;font-weight:600;color:var(--brand)">All properties</span>
+          </label>
+          <div id="userIndividualProps" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
       </div>
-      <div id="userPropertyList" style="display:none;flex-direction:column;gap:8px;margin-top:8px"></div>
     </div>
     <div class="modal-footer" style="justify-content:space-between">
       <button class="btn btn-danger btn-sm" id="deleteUserBtn" style="display:none" onclick="deleteNotifUser()">Delete</button>
@@ -1735,10 +1737,8 @@
     document.getElementById('userFirstName').value = '';
     document.getElementById('userLastName').value = '';
     document.getElementById('userEmail').value = '';
-    document.getElementById('userPropertyScope').value = 'all';
     document.getElementById('deleteUserBtn').style.display = 'none';
-    document.getElementById('userPropertyList').style.display = 'none';
-    document.getElementById('userPropertyList').innerHTML = '';
+    buildUserPropertyList('all', []);
     document.getElementById('addUserModal').classList.add('open');
   }
 
@@ -1752,33 +1752,15 @@
     document.getElementById('userLastName').value = u.lastName || '';
     document.getElementById('userEmail').value = u.email || '';
     const isAll = u.properties === 'all';
-    document.getElementById('userPropertyScope').value = isAll ? 'all' : 'selected';
     const selectedProps = isAll ? [] : (Array.isArray(u.properties) ? u.properties : []);
-    buildUserPropertyList(selectedProps);
-    document.getElementById('userPropertyList').style.display = isAll ? 'none' : 'flex';
+    buildUserPropertyList(isAll ? 'all' : 'selected', selectedProps);
     document.getElementById('deleteUserBtn').style.display = 'inline-flex';
     document.getElementById('addUserModal').classList.add('open');
   }
 
-  function closeAddUserModal() { document.getElementById('addUserModal').classList.remove('open'); }
-
-  function toggleUserPropertyList(val) {
-    const list = document.getElementById('userPropertyList');
-    if (val === 'selected') {
-      buildUserPropertyList([]);
-      list.style.display = 'flex';
-    } else {
-      list.style.display = 'none';
-    }
-  }
-
-  function buildUserPropertyList(selected) {
-    const container = document.getElementById('userPropertyList');
-    container.style.flexDirection = 'column';
-    if (!properties.length) {
-      container.innerHTML = '<div style="font-size:13px;color:var(--muted)">No properties added yet.</div>';
-      return;
-    }
+  function buildUserPropertyList(scope, selected) {
+    document.getElementById('userAllProperties').checked = scope === 'all';
+    const container = document.getElementById('userIndividualProps');
     container.innerHTML = properties.map(p =>
       '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);cursor:pointer">' +
         '<input type="checkbox" class="user-prop-check" value="' + p.nickname + '" ' + (selected.includes(p.nickname) ? 'checked' : '') + ' style="width:16px;height:16px;accent-color:var(--brand)">' +
@@ -1787,16 +1769,26 @@
     ).join('');
   }
 
+  function toggleAllUserProps(checked) {
+    document.querySelectorAll('.user-prop-check').forEach(cb => {
+      cb.checked = false;
+      cb.disabled = checked;
+      cb.closest('label').style.opacity = checked ? '0.4' : '1';
+    });
+  }
+
+  function toggleUserPropertyList(val) {} // kept for compat
+
   async function saveNotifUser() {
     const firstName = document.getElementById('userFirstName').value.trim();
     const lastName = document.getElementById('userLastName').value.trim();
     const email = document.getElementById('userEmail').value.trim().toLowerCase();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('⚠️ Please enter a valid email address'); return; }
-    const scope = document.getElementById('userPropertyScope').value;
+    const allChecked = document.getElementById('userAllProperties').checked;
     let propValue = 'all';
-    if (scope === 'selected') {
+    if (!allChecked) {
       const checked = [...document.querySelectorAll('.user-prop-check:checked')].map(c => c.value);
-      if (!checked.length) { showToast('⚠️ Please select at least one property'); return; }
+      if (!checked.length) { showToast('⚠️ Please select at least one property or choose All properties'); return; }
       propValue = checked;
     }
     const users = getNotifUsers();
@@ -1883,6 +1875,7 @@
   window.editNotifUser = editNotifUser;
   window.saveNotifUser = saveNotifUser;
   window.deleteNotifUser = deleteNotifUser;
+  window.toggleAllUserProps = toggleAllUserProps;
   window.toggleUserPropertyList = toggleUserPropertyList;
 
   init();

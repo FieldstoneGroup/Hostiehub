@@ -662,10 +662,10 @@
         <label>Notify for</label>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px" id="userPropertyList">
           <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--brand-light);border-radius:8px;border:1.5px solid var(--brand);cursor:pointer">
-            <input type="checkbox" id="userAllProperties" onchange="toggleAllUserProps(this.checked)" style="width:16px;height:16px;accent-color:var(--brand)">
+            <input type="checkbox" id="userAllProperties" checked onchange="toggleAllUserProps(this.checked)" style="width:16px;height:16px;accent-color:var(--brand)">
             <span style="font-size:14px;font-weight:600;color:var(--brand)">All properties</span>
           </label>
-          <div id="userIndividualProps" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div id="userIndividualProps" style="display:none;flex-direction:column;gap:8px"></div>
         </div>
       </div>
     </div>
@@ -969,13 +969,20 @@
 
   function populateUI() {
     const initials = (currentHost.full_name || '?').split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
-    document.getElementById('sidebarAvatar').textContent = initials;
-    document.getElementById('sidebarName').textContent = currentHost.full_name || '';
-    document.getElementById('sidebarUrl').textContent = 'hostiehub.com.au/store/' + (currentHost.username || '');
-    document.getElementById('storeUrlDisplay').textContent = 'hostiehub.com.au/store/' + (currentHost.username || '');
-    document.getElementById('viewStoreBtn').href = 'https://hostiehub.com.au/store/' + (currentHost.username || '');
-    document.getElementById('accountName').value = currentHost.full_name || '';
-    document.getElementById('accountEmail').value = currentHost.email || '';
+    const avatar = document.getElementById('sidebarAvatar');
+    if (avatar) avatar.textContent = initials;
+    const nameEl = document.getElementById('sidebarName');
+    if (nameEl) nameEl.textContent = currentHost.full_name || '';
+    const urlEl = document.getElementById('sidebarUrl');
+    if (urlEl) urlEl.textContent = 'hostiehub.com.au/store/' + (currentHost.username || '');
+    const storeUrlEl = document.getElementById('storeUrlDisplay');
+    if (storeUrlEl) storeUrlEl.textContent = 'hostiehub.com.au/store/' + (currentHost.username || '');
+    const storeBtn = document.getElementById('viewStoreBtn');
+    if (storeBtn) storeBtn.href = 'https://hostiehub.com.au/store/' + (currentHost.username || '');
+    const nameField = document.getElementById('accountName');
+    if (nameField) nameField.value = currentHost.full_name || '';
+    const emailField = document.getElementById('accountEmail');
+    if (emailField) emailField.value = currentHost.email || '';
     const unField = document.getElementById('newUsername');
     if (unField) {
       unField.value = currentHost.username || '';
@@ -1738,7 +1745,9 @@
     document.getElementById('userLastName').value = '';
     document.getElementById('userEmail').value = '';
     document.getElementById('deleteUserBtn').style.display = 'none';
-    buildUserPropertyList('all', []);
+    document.getElementById('userAllProperties').checked = true;
+    document.getElementById('userIndividualProps').style.display = 'none';
+    document.getElementById('userIndividualProps').innerHTML = '';
     document.getElementById('addUserModal').classList.add('open');
   }
 

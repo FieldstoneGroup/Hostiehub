@@ -660,12 +660,12 @@
       <div class="field"><label>Email address</label><input type="email" id="userEmail" placeholder="e.g. sarah@email.com"></div>
       <div class="field">
         <label>Notify for</label>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px" id="userPropertyList">
+        <div id="userPropertyList" style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
           <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--brand-light);border-radius:8px;border:1.5px solid var(--brand);cursor:pointer">
             <input type="checkbox" id="userAllProperties" checked onchange="toggleAllUserProps(this.checked)" style="width:16px;height:16px;accent-color:var(--brand)">
             <span style="font-size:14px;font-weight:600;color:var(--brand)">All properties</span>
           </label>
-          <div id="userIndividualProps" style="display:none;flex-direction:column;gap:8px"></div>
+          <div id="userIndividualProps" style="display:flex;flex-direction:column;gap:8px"></div>
         </div>
       </div>
     </div>
@@ -1746,8 +1746,7 @@
     document.getElementById('userEmail').value = '';
     document.getElementById('deleteUserBtn').style.display = 'none';
     document.getElementById('userAllProperties').checked = true;
-    document.getElementById('userIndividualProps').style.display = 'none';
-    document.getElementById('userIndividualProps').innerHTML = '';
+    buildIndividualProps([], true);
     document.getElementById('addUserModal').classList.add('open');
   }
 
@@ -1762,44 +1761,27 @@
     document.getElementById('userEmail').value = u.email || '';
     const isAll = u.properties === 'all';
     const selectedProps = isAll ? [] : (Array.isArray(u.properties) ? u.properties : []);
-    buildUserPropertyList(isAll ? 'all' : 'selected', selectedProps);
+    document.getElementById('userAllProperties').checked = isAll;
+    buildIndividualProps(selectedProps, isAll);
     document.getElementById('deleteUserBtn').style.display = 'inline-flex';
     document.getElementById('addUserModal').classList.add('open');
   }
 
-  function buildUserPropertyList(scope, selected) {
-    const allCb = document.getElementById('userAllProperties');
+  function buildIndividualProps(selected, disabled) {
     const container = document.getElementById('userIndividualProps');
-    allCb.checked = scope === 'all';
-    container.style.display = scope === 'all' ? 'none' : 'flex';
-    container.style.flexDirection = 'column';
-    container.style.gap = '8px';
-    container.innerHTML = properties.map(p =>
-      '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);cursor:pointer">' +
-        '<input type="checkbox" class="user-prop-check" value="' + p.nickname + '" ' + (selected.includes(p.nickname) ? 'checked' : '') + ' style="width:16px;height:16px;accent-color:var(--brand)">' +
+    container.innerHTML = properties.sort((a, b) => a.nickname.localeCompare(b.nickname)).map(p =>
+      '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);cursor:pointer;opacity:' + (disabled ? '0.4' : '1') + '">' +
+        '<input type="checkbox" class="user-prop-check" value="' + p.nickname + '" ' + (selected.includes(p.nickname) ? 'checked' : '') + ' ' + (disabled ? 'disabled' : '') + ' style="width:16px;height:16px;accent-color:var(--brand)">' +
         '<span style="font-size:14px;font-weight:500">🏠 ' + p.nickname + '</span>' +
       '</label>'
     ).join('');
   }
 
   function toggleAllUserProps(checked) {
-    const container = document.getElementById('userIndividualProps');
-    if (checked) {
-      container.style.display = 'none';
-      document.querySelectorAll('.user-prop-check').forEach(cb => cb.checked = false);
-    } else {
-      // Rebuild from current properties array every time
-      container.innerHTML = properties.sort((a,b) => a.nickname.localeCompare(b.nickname)).map(p =>
-        '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);cursor:pointer">' +
-          '<input type="checkbox" class="user-prop-check" value="' + p.nickname + '" style="width:16px;height:16px;accent-color:var(--brand)">' +
-          '<span style="font-size:14px;font-weight:500">🏠 ' + p.nickname + '</span>' +
-        '</label>'
-      ).join('');
-      container.style.display = 'flex';
-      container.style.flexDirection = 'column';
-      container.style.gap = '8px';
-    }
+    buildIndividualProps([], checked);
   }
+
+  function buildUserPropertyList(scope, selected) {} // kept for compat
 
   function closeAddUserModal() { document.getElementById('addUserModal').classList.remove('open'); }
 

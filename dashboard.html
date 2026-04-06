@@ -171,7 +171,7 @@
   /* COLOUR */
   .colour-pick { display: flex; align-items: center; gap: 10px; }
   .colour-pick input[type="color"] { width: 44px; height: 44px; padding: 2px; border-radius: 10px; cursor: pointer; flex-shrink: 0; border: 1.5px solid var(--border); }
-  .colour-swatches { display: flex; gap: 6px; }
+  .colour-swatches { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
   .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: transform 0.15s, border-color 0.15s; }
   .swatch:hover { transform: scale(1.15); border-color: var(--border); }
 
@@ -920,6 +920,7 @@
     if (isPaid) {
       document.getElementById('paidStatusCard').style.display = 'block';
       document.getElementById('trialStatusCard').style.display = 'none';
+      if (document.getElementById('subscriptionBtns')) document.getElementById('subscriptionBtns').style.display = 'none';
       const planNames = { host: 'Host Plan · $99/yr', pro: 'Pro Plan · $199/yr', enterprise: 'Enterprise Plan · Custom' };
       const planProps = { host: 'Up to 3 properties', pro: 'Up to 10 properties', enterprise: 'Unlimited properties' };
       document.getElementById('planName').textContent = planNames[currentHost.plan] || planNames.host;
@@ -930,7 +931,8 @@
       return;
     }
 
-    // On trial
+    // On trial — show upgrade buttons
+    if (document.getElementById('subscriptionBtns')) document.getElementById('subscriptionBtns').style.display = 'flex';
     document.getElementById('trialStatusCard').style.display = 'block';
     document.getElementById('paidStatusCard').style.display = 'none';
     if (daysLeft > 0) {

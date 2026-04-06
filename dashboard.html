@@ -192,6 +192,9 @@
   .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
   .empty-state p { font-size: 14px; line-height: 1.5; }
 
+  /* TWO COL GRID */
+  .two-col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
   /* STRIPE BANNER */
   .stripe-banner { background: linear-gradient(135deg, #635bff15, #635bff08); border: 1.5px solid #635bff30; border-radius: var(--radius); padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
   .stripe-banner-info { display: flex; align-items: center; gap: 14px; }
@@ -206,6 +209,7 @@
     .main { margin-left: 64px; }
     .stats-grid { grid-template-columns: 1fr 1fr; }
     .overview-grid { grid-template-columns: 1fr; }
+    .two-col-grid { grid-template-columns: 1fr !important; }
     .store-settings-grid, #page-store > div:last-child { grid-template-columns: 1fr !important; }
     .account-grid, #page-account > div:last-child { grid-template-columns: 1fr !important; }
     .field-row { grid-template-columns: 1fr; }
@@ -230,6 +234,7 @@
     .content { padding: 12px; }
     .topbar { padding: 0 12px; height: 56px; }
     /* Store settings - single column, no overflow */
+    .two-col-grid { grid-template-columns: 1fr !important; }
     #page-store > div:last-child { grid-template-columns: 1fr !important; }
     .store-settings-grid { grid-template-columns: 1fr !important; }
     /* Account - single column */

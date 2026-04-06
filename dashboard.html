@@ -94,7 +94,7 @@
   /* PRODUCTS */
   .products-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
   .products-list { display: flex; flex-direction: column; gap: 12px; }
-  .product-row { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px 20px; display: flex; align-items: center; gap: 14px; transition: border-color 0.2s; }
+  .product-row { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px; transition: border-color 0.2s; overflow: hidden; }
   .product-row:hover { border-color: var(--brand-light); }
   .product-emoji { font-size: 28px; width: 44px; height: 44px; background: var(--brand-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .product-info { flex: 1; }
@@ -1071,28 +1071,28 @@
   function renderProducts() {
     const list = document.getElementById('productsList');
     if (!products.length) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><h3>No products yet</h3><p>Add your first product or click "Add presets" to get started quickly.</p></div>`;
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><h3>No products yet</h3><p>Add your first product or click "Browse presets" to get started quickly.</p></div>';
       return;
     }
-    list.innerHTML = products.map(p => `
-      <div class="product-row">
-        <div class="product-emoji" style="${p.image_url ? 'padding:0;overflow:hidden;' : ''}">
-          ${p.image_url ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">` : (p.emoji || '✨')}
-        </div>
-        <div class="product-info">
-          <div class="product-name">${p.name} ${p.active === false ? '<span style="font-size:11px;color:var(--muted);font-weight:400">(inactive)</span>' : ''}</div>
-          <div class="product-meta">${p.category || ''} · $${p.price}${p.unit ? ' / ' + p.unit : ''}${p.notes_prompt ? ' · 📝 Has guest prompt' : ''}</div>
-        </div>
-        <label class="toggle" title="${p.active !== false ? 'Active' : 'Inactive'}">
-          <input type="checkbox" ${p.active !== false ? 'checked' : ''} onchange="toggleProduct('${p.id}', this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
-        <div class="product-actions">
-          <button class="btn btn-outline btn-sm" onclick="editProduct('${p.id}')">Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">Delete</button>
-        </div>
-      </div>
-    `).join('');
+    list.innerHTML = products.map(p =>
+      '<div class="product-row">' +
+        '<div class="product-emoji" style="' + (p.image_url ? 'padding:0;overflow:hidden;' : '') + '">' +
+          (p.image_url ? '<img src="' + p.image_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">' : (p.emoji || '✨')) +
+        '</div>' +
+        '<div class="product-info" style="min-width:0;flex:1">' +
+          '<div class="product-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + p.name + (p.active === false ? ' <span style="font-size:11px;color:var(--muted);font-weight:400">(inactive)</span>' : '') + '</div>' +
+          '<div class="product-meta" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (p.category || '') + ' · $' + p.price + (p.unit ? ' / ' + p.unit : '') + (p.notes_prompt ? ' · 📝' : '') + '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-top:8px">' +
+            '<label class="toggle" title="' + (p.active !== false ? 'Active' : 'Inactive') + '">' +
+              '<input type="checkbox" ' + (p.active !== false ? 'checked' : '') + ' onchange="toggleProduct(\'' + p.id + '\', this.checked)">' +
+              '<span class="toggle-slider"></span>' +
+            '</label>' +
+            '<button class="btn btn-outline btn-sm" onclick="editProduct(\'' + p.id + '\')">Edit</button>' +
+            '<button class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + p.id + '\')">Delete</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    ).join('');
   }
 
   function buildPropertyChecks() {

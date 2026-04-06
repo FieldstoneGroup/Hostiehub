@@ -1621,6 +1621,198 @@
     setTimeout(() => { t.style.display = 'none'; }, 3000);
   }
 
+  // ── NOTIFICATION USERS ──
+  let editingNotifUserId = null;
+
+  function getNotifUsers() {
+    try {
+      const raw = currentHost.notif_emails;
+      if (!raw) return [];
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      return parsed.map(u => typeof u === 'string' ? { id: u, firstName: '', lastName: '', email: u, properties: 'all' } : u);
+    } catch { return []; }
+  }
+
+  function loadNotifEmails() { renderNotifUsers(); }
+
+  function renderNotifUsers() {
+    const list = document.getElementById('notifUsersList');
+    if (!list) return;
+    const users = getNotifUsers();
+    if (!users.length) {
+      list.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:10px 0">No notification users yet. Add a cleaner, co-host or property manager above.</div>';
+      return;
+    }
+    list.innerHTML = users.map(u => {
+      const name = [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+      const propLabel = u.properties === 'all' ? 'All properties' : (Array.isArray(u.properties) ? u.properties.join(', ') : u.properties);
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">' +
+        '<div style="min-width:0">' +
+          '<div style="font-size:14px;font-weight:600">' + name + '</div>' +
+          '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + u.email + ' · ' + propLabel + '</div>' +
+        '</div>' +
+        '<button onclick="editNotifUser(\'' + u.id + '\')" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--muted);white-space:nowrap;flex-shrink:0">Edit</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  function openAddUserModal() {
+    editingNotifUserId = null;
+    document.getElementById('addUserModalTitle').textContent = 'Add notification user';
+    document.getElementById('userFirstName').value = '';
+    document.getElementById('userLastName').value = '';
+    document.getElementById('userEmail').value = '';
+    document.getElementById('deleteUserBtn').style.display = 'none';
+    document.getElementById('userAllProperties').checked = true;
+    buildIndividualProps([], true);
+    document.getElementById('addUserModal').classList.add('open');
+  }
+
+  function editNotifUser(id) {
+    const users = getNotifUsers();
+    const u = users.find(x => x.id === id);
+    if (!u) return;
+    editingNotifUserId = id;
+    document.getElementById('addUserModalTitle').textContent = 'Edit notification user';
+    document.getElementById('userFirstName').value = u.firstName || '';
+    document.getElementById('userLastName').value = u.lastName || '';
+    document.getElementById('userEmail').value = u.email || '';
+    const isAll = u.properties === 'all';
+    const selectedProps = isAll ? [] : (Array.isArray(u.properties) ? u.properties : []);
+    document.getElementById('userAllProperties').checked = isAll;
+    buildIndividualProps(selectedProps, isAll);
+    document.getElementById('deleteUserBtn').style.display = 'inline-flex';
+    document.getElementById('addUserModal').classList.add('open');
+  }
+
+  function buildIndividualProps(selected, disabled) {
+    const container = document.getElementById('userIndividualProps');
+    if (!container) return;
+    container.style.opacity = disabled ? '0.4' : '1';
+    container.style.pointerEvents = disabled ? 'none' : 'auto';
+    if (!properties.length) {
+      container.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px">No properties added yet.</div>';
+      return;
+    }
+    container.innerHTML = properties.sort((a,b) => a.nickname.localeCompare(b.nickname)).map(p =>
+      '<label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);cursor:pointer;">' +
+        '<input type="checkbox" class="user-prop-check" value="' + p.nickname + '" ' + (selected.includes(p.nickname) ? 'checked' : '') + ' style="width:18px;height:18px;accent-color:var(--brand);flex-shrink:0">' +
+        '<div><div style="font-size:14px;font-weight:500">🏠 ' + p.nickname + '</div>' +
+        (p.address ? '<div style="font-size:12px;color:var(--muted)">' + p.address + '</div>' : '') + '</div>' +
+      '</label>'
+    ).join('');
+  }
+
+  function toggleAllUserProps(checked) {
+    const container = document.getElementById('userIndividualProps');
+    if (!container) return;
+    container.style.opacity = checked ? '0.4' : '1';
+    container.style.pointerEvents = checked ? 'none' : 'auto';
+    if (!checked && !container.querySelector('.user-prop-check')) buildIndividualProps([], false);
+  }
+
+  function closeAddUserModal() { document.getElementById('addUserModal').classList.remove('open'); }
+
+  async function saveNotifUser() {
+    const firstName = document.getElementById('userFirstName').value.trim();
+    const lastName = document.getElementById('userLastName').value.trim();
+    const email = document.getElementById('userEmail').value.trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('⚠️ Please enter a valid email address'); return; }
+    const allChecked = document.getElementById('userAllProperties').checked;
+    let propValue = 'all';
+    if (!allChecked) {
+      const checked = [...document.querySelectorAll('.user-prop-check:checked')].map(c => c.value);
+      if (!checked.length) { showToast('⚠️ Please select at least one property or choose All properties'); return; }
+      propValue = checked;
+    }
+    const users = getNotifUsers();
+    if (editingNotifUserId) {
+      const idx = users.findIndex(u => u.id === editingNotifUserId);
+      if (idx > -1) users[idx] = { id: editingNotifUserId, firstName, lastName, email, properties: propValue };
+    } else {
+      if (users.find(u => u.email === email)) { showToast('⚠️ That email is already added'); return; }
+      users.push({ id: email + '_' + Date.now(), firstName, lastName, email, properties: propValue });
+    }
+    await sb.from('hosts').update({ notif_emails: users }).eq('id', currentUser.id);
+    currentHost.notif_emails = users;
+    renderNotifUsers();
+    closeAddUserModal();
+    showToast(editingNotifUserId ? '✅ User updated' : '✅ User added');
+  }
+
+  async function deleteNotifUser() {
+    if (!editingNotifUserId) return;
+    if (!confirm('Remove this notification user?')) return;
+    const users = getNotifUsers().filter(u => u.id !== editingNotifUserId);
+    await sb.from('hosts').update({ notif_emails: users }).eq('id', currentUser.id);
+    currentHost.notif_emails = users;
+    renderNotifUsers();
+    closeAddUserModal();
+    showToast('🗑 User removed');
+  }
+
+  // ── CALENDAR MODAL ──
+  const calInstructions = {
+    google: { title: 'Connect Google Calendar', steps: '<ol style="padding-left:20px;display:flex;flex-direction:column;gap:10px"><li>Click <strong>Copy link</strong> above</li><li>Open <strong>Google Calendar</strong> on desktop</li><li>Click <strong>+</strong> next to "Other calendars" → <strong>"From URL"</strong></li><li>Paste your link → <strong>Add calendar</strong></li><li>Orders appear automatically 🎉</li></ol>' },
+    apple: { title: 'Connect Apple Calendar', steps: '<ol style="padding-left:20px;display:flex;flex-direction:column;gap:10px"><li>Click <strong>Copy link</strong> above</li><li><strong>iPhone/iPad:</strong> Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar → paste link</li><li><strong>Mac:</strong> Calendar → File → New Calendar Subscription → paste link → Subscribe</li><li>Orders appear automatically 🎉</li></ol>' },
+    outlook: { title: 'Connect Outlook Calendar', steps: '<ol style="padding-left:20px;display:flex;flex-direction:column;gap:10px"><li>Click <strong>Copy link</strong> above</li><li>Open <strong>Outlook</strong> → Calendar view</li><li>Click <strong>Add calendar</strong> → <strong>Subscribe from web</strong></li><li>Paste link → <strong>Import</strong></li><li>Orders appear automatically 🎉</li></ol>' }
+  };
+
+  function openCalModal(type) {
+    const cfg = calInstructions[type];
+    const feedUrl = 'https://hostiehub.com.au/ical/' + (currentHost.username || currentUser.id);
+    document.getElementById('calModalTitle').textContent = cfg.title;
+    document.getElementById('calFeedUrl').textContent = feedUrl;
+    document.getElementById('calSteps').innerHTML = cfg.steps;
+    document.getElementById('calModal').classList.add('open');
+  }
+
+  function copyCalUrl() {
+    navigator.clipboard.writeText(document.getElementById('calFeedUrl').textContent).then(() => showToast('📋 Calendar link copied!'));
+  }
+
+  // ── WINDOW EXPORTS ──
+  window.showPage = showPage;
+  window.openPropertyModal = openPropertyModal;
+  window.closePropertyModal = closePropertyModal;
+  window.saveProperty = saveProperty;
+  window.editProperty = editProperty;
+  window.deleteProperty = deleteProperty;
+  window.deletePropertyFromModal = deletePropertyFromModal;
+  window.openProductModal = openProductModal;
+  window.closeProductModal = closeProductModal;
+  window.saveProduct = saveProduct;
+  window.editProduct = editProduct;
+  window.deleteProduct = deleteProduct;
+  window.toggleProduct = toggleProduct;
+  window.openPresetModal = openPresetModal;
+  window.closePresetModal = closePresetModal;
+  window.addSelectedPresets = addSelectedPresets;
+  window.toggleOrderDetail = toggleOrderDetail;
+  window.fulfillOrder = fulfillOrder;
+  window.filterOrders = filterOrders;
+  window.addVoucherToStore = addVoucherToStore;
+  window.connectStripe = connectStripe;
+  window.saveProfile = saveProfile;
+  window.changeUsername = changeUsername;
+  window.saveStoreSettings = saveStoreSettings;
+  window.copyStoreUrl = copyStoreUrl;
+  window.updateColourPreview = updateColourPreview;
+  window.selectEmoji = selectEmoji;
+  window.toggleAllProperties = toggleAllProperties;
+  window.removeImage = removeImage;
+  window.previewImage = previewImage;
+  window.requestUpgradeContact = requestUpgradeContact;
+  window.handleLogout = handleLogout;
+  window.openAddUserModal = openAddUserModal;
+  window.closeAddUserModal = closeAddUserModal;
+  window.editNotifUser = editNotifUser;
+  window.saveNotifUser = saveNotifUser;
+  window.deleteNotifUser = deleteNotifUser;
+  window.toggleAllUserProps = toggleAllUserProps;
+  window.openCalModal = openCalModal;
+  window.copyCalUrl = copyCalUrl;
+
   init();
 </script>
 <script src="support-widget.js"></script>

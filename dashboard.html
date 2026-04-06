@@ -665,7 +665,7 @@
           <option value="selected">Selected properties only</option>
         </select>
       </div>
-      <div id="userPropertyList" style="display:none;display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
+      <div id="userPropertyList" style="display:none;flex-direction:column;gap:8px;margin-top:8px"></div>
     </div>
     <div class="modal-footer" style="justify-content:space-between">
       <button class="btn btn-danger btn-sm" id="deleteUserBtn" style="display:none" onclick="deleteNotifUser()">Delete</button>
@@ -1737,8 +1737,8 @@
     document.getElementById('userEmail').value = '';
     document.getElementById('userPropertyScope').value = 'all';
     document.getElementById('deleteUserBtn').style.display = 'none';
-    buildUserPropertyList([]);
     document.getElementById('userPropertyList').style.display = 'none';
+    document.getElementById('userPropertyList').innerHTML = '';
     document.getElementById('addUserModal').classList.add('open');
   }
 
@@ -1764,13 +1764,21 @@
 
   function toggleUserPropertyList(val) {
     const list = document.getElementById('userPropertyList');
-    list.style.display = val === 'selected' ? 'flex' : 'none';
-    if (val === 'selected') buildUserPropertyList([]);
+    if (val === 'selected') {
+      buildUserPropertyList([]);
+      list.style.display = 'flex';
+    } else {
+      list.style.display = 'none';
+    }
   }
 
   function buildUserPropertyList(selected) {
     const container = document.getElementById('userPropertyList');
     container.style.flexDirection = 'column';
+    if (!properties.length) {
+      container.innerHTML = '<div style="font-size:13px;color:var(--muted)">No properties added yet.</div>';
+      return;
+    }
     container.innerHTML = properties.map(p =>
       '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);cursor:pointer">' +
         '<input type="checkbox" class="user-prop-check" value="' + p.nickname + '" ' + (selected.includes(p.nickname) ? 'checked' : '') + ' style="width:16px;height:16px;accent-color:var(--brand)">' +

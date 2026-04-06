@@ -253,17 +253,17 @@
   </div>
   <nav class="sidebar-nav">
     <div class="nav-section-label">Main</div>
-    <button class="nav-item active" onclick="showPage('overview', this)"><div class="nav-icon">🏠</div><span>Overview</span></button>
-    <button class="nav-item" onclick="showPage('orders', this)"><div class="nav-icon">📋</div><span>Orders</span></button>
+    <button class="nav-item active" data-page="overview" onclick="showPage('overview', this)"><div class="nav-icon">🏠</div><span>Overview</span></button>
+    <button class="nav-item" data-page="orders" onclick="showPage('orders', this)"><div class="nav-icon">📋</div><span>Orders</span></button>
     <div class="nav-section-label">My Store</div>
-    <button class="nav-item" onclick="showPage('store', this)"><div class="nav-icon">🎨</div><span>Store Settings</span></button>
-    <button class="nav-item" onclick="showPage('properties', this)"><div class="nav-icon">🏠</div><span>Properties</span></button>
-    <button class="nav-item" onclick="showPage('products', this)"><div class="nav-icon">📦</div><span>Products</span></button>
-    <button class="nav-item" onclick="showPage('vouchers', this)"><div class="nav-icon">🎟️</div><span>Local Vouchers</span></button>
-    <button class="nav-item" onclick="showPage('stripe', this)"><div class="nav-icon">💳</div><span>Stripe Connect</span></button>
+    <button class="nav-item" data-page="store" onclick="showPage('store', this)"><div class="nav-icon">🎨</div><span>Store Settings</span></button>
+    <button class="nav-item" data-page="properties" onclick="showPage('properties', this)"><div class="nav-icon">🏠</div><span>Properties</span></button>
+    <button class="nav-item" data-page="products" onclick="showPage('products', this)"><div class="nav-icon">📦</div><span>Products</span></button>
+    <button class="nav-item" data-page="vouchers" onclick="showPage('vouchers', this)"><div class="nav-icon">🎟️</div><span>Local Vouchers</span></button>
+    <button class="nav-item" data-page="stripe" onclick="showPage('stripe', this)"><div class="nav-icon">💳</div><span>Stripe Connect</span></button>
     <div class="nav-section-label">Account</div>
-    <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account & Billing</span></button>
-    <div class="nav-section-label">My Store</div>
+    <button class="nav-item" data-page="account" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account & Billing</span></button>
+    <div class="nav-section-label">Store</div>
     <a class="nav-item store-nav-link" id="viewStoreBtn" href="#" target="_blank"><div class="nav-icon nav-icon-accent">🔗</div><span>View my store</span></a>
   </nav>
   <div class="sidebar-bottom">
@@ -331,9 +331,9 @@
           <div class="card-title">Quick actions</div>
           <div class="card-desc">Get your store ready to share.</div>
           <div style="display:flex;flex-direction:column;gap:10px">
-            <button class="btn btn-primary" onclick="showPage('properties', document.querySelector('[onclick*=properties]'))">🏠 &nbsp;Add a property</button>
-            <button class="btn btn-outline" onclick="showPage('products', document.querySelector('[onclick*=products]'))">📦 &nbsp;Add a product</button>
-            <button class="btn btn-outline" onclick="showPage('stripe', document.querySelector('[onclick*=stripe]'))">💳 &nbsp;Connect Stripe</button>
+            <button class="btn btn-primary" onclick="showPage('properties', document.querySelector('[data-page=properties]'))">🏠 &nbsp;Add a property</button>
+            <button class="btn btn-outline" onclick="showPage('products', document.querySelector('[data-page=products]'))">📦 &nbsp;Add a product</button>
+            <button class="btn btn-outline" onclick="showPage('stripe', document.querySelector('[data-page=stripe]'))">💳 &nbsp;Connect Stripe</button>
           </div>
         </div>
       </div>
@@ -939,10 +939,13 @@
   function showPage(name, btn) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-' + name).classList.add('active');
+    const page = document.getElementById('page-' + name);
+    if (!page) return;
+    page.classList.add('active');
     if (btn) btn.classList.add('active');
     document.getElementById('topbarTitle').textContent = pageTitles[name] || name;
   }
+  window.showPage = showPage;
 
   // ── PROPERTIES ──
   async function loadProperties() {
@@ -1540,6 +1543,39 @@
     t.style.display = 'flex';
     setTimeout(() => { t.style.display = 'none'; }, 3000);
   }
+
+  // Expose all functions used in inline onclick attributes as globals
+  window.showPage = showPage;
+  window.openPropertyModal = openPropertyModal;
+  window.closePropertyModal = closePropertyModal;
+  window.saveProperty = saveProperty;
+  window.editProperty = editProperty;
+  window.deleteProperty = deleteProperty;
+  window.openProductModal = openProductModal;
+  window.closeProductModal = closeProductModal;
+  window.saveProduct = saveProduct;
+  window.editProduct = editProduct;
+  window.deleteProduct = deleteProduct;
+  window.toggleProduct = toggleProduct;
+  window.openPresetModal = openPresetModal;
+  window.closePresetModal = closePresetModal;
+  window.addSelectedPresets = addSelectedPresets;
+  window.openOrderDetail = openOrderDetail;
+  window.fulfillOrder = fulfillOrder;
+  window.filterOrders = filterOrders;
+  window.addVoucherToStore = addVoucherToStore;
+  window.connectStripe = connectStripe;
+  window.saveProfile = saveProfile;
+  window.changeUsername = changeUsername;
+  window.saveStoreSettings = saveStoreSettings;
+  window.copyStoreUrl = copyStoreUrl;
+  window.updateColourPreview = updateColourPreview;
+  window.selectEmoji = selectEmoji;
+  window.toggleAllProperties = toggleAllProperties;
+  window.removeImage = removeImage;
+  window.previewImage = previewImage;
+  window.requestUpgradeContact = requestUpgradeContact;
+  window.handleLogout = handleLogout;
 
   init();
 </script>

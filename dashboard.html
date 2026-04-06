@@ -235,8 +235,21 @@
     /* Products header buttons stack */
     #page-products > div:first-child > div:last-child { flex-wrap: wrap; }
     /* Overview checklist */
-    .checklist-item { flex-wrap: wrap; }
-    /* Stripe banner */
+    .checklist-item { flex-wrap: nowrap; }
+    .checklist-item span { font-size: 13px; }
+    /* Property rows mobile */
+    .property-row { flex-wrap: nowrap; gap: 8px; padding: 12px; }
+    .property-info { min-width: 0; flex: 1; }
+    .property-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .property-address { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .property-row > div:last-child { flex-shrink: 0; }
+    /* Product rows mobile */
+    .product-row { flex-wrap: nowrap; gap: 8px; padding: 12px; overflow: hidden; }
+    .product-info { min-width: 0; flex: 1; }
+    .product-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-meta { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-actions { flex-shrink: 0; }
+    .product-actions .btn-sm { padding: 6px 10px; font-size: 12px; }
     .stripe-banner { flex-direction: column; gap: 12px; }
     .stripe-banner-info { flex-wrap: wrap; }
     /* Voucher cards */
@@ -384,10 +397,6 @@
 
     <!-- STORE SETTINGS -->
     <div class="page" id="page-store">
-      <div style="margin-bottom:24px">
-        <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Store Settings</h2>
-        <p style="font-size:13px;color:var(--muted);margin-top:2px">Customise how your store looks to guests</p>
-      </div>
       <div class="two-col-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div>
           <div class="card" style="margin-bottom:20px">
@@ -422,11 +431,7 @@
 
     <!-- PROPERTIES -->
     <div class="page" id="page-properties">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <div>
-          <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Properties</h2>
-          <p style="font-size:13px;color:var(--muted);margin-top:2px">The properties you manage</p>
-        </div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:20px">
         <button class="btn btn-primary" onclick="openPropertyModal()">+ Add property</button>
       </div>
       <div id="propertiesList">
@@ -436,15 +441,9 @@
 
     <!-- PRODUCTS -->
     <div class="page" id="page-products">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div>
-          <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Products</h2>
-          <p style="font-size:13px;color:var(--muted);margin-top:2px">What guests can buy from your store</p>
-        </div>
-        <div style="display:flex;gap:10px">
-          <button class="btn btn-outline btn-sm" onclick="openPresetModal()">✨ Browse presets</button>
-          <button class="btn btn-primary" onclick="openProductModal()">+ Add product</button>
-        </div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:12px">
+        <button class="btn btn-outline btn-sm" onclick="openPresetModal()">✨ Browse presets</button>
+        <button class="btn btn-primary" onclick="openProductModal()">+ Add product</button>
       </div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:20px;background:var(--accent-light);border-radius:8px;padding:10px 14px;border-left:3px solid var(--accent);">💡 Click <strong>Browse presets</strong> to pick and choose popular products to add to your store.</p>
       <div class="products-list" id="productsList">
@@ -553,8 +552,10 @@
             </div>
 
             <div id="subscriptionBtns" style="display:flex;gap:10px;flex-wrap:wrap">
-              <a href="plans.html" class="btn btn-primary btn-sm">🏠 Activate Host Plan $99/yr</a>
-              <a href="plans.html" class="btn btn-outline btn-sm">⭐ Pro Plan $199/yr</a>
+              <div id="trialLabel" style="display:none;width:100%;font-size:12px;color:#92600a;background:var(--accent-light);border-radius:8px;padding:8px 12px;margin-bottom:4px">⏳ You're currently on a free trial — choose a plan to keep your store live after it ends.</div>
+              <a href="plans.html" class="btn btn-primary btn-sm">🏠 Host Plan · $99/yr</a>
+              <a href="plans.html" class="btn btn-outline btn-sm">⭐ Pro Plan · $199/yr</a>
+              <a href="mailto:hello@hostiehub.com.au" class="btn btn-outline btn-sm">🏢 Enterprise · Contact us</a>
             </div>
           </div>
           <div class="card">
@@ -1010,11 +1011,11 @@
     if (isPaid) {
       document.getElementById('paidStatusCard').style.display = 'block';
       document.getElementById('trialStatusCard').style.display = 'none';
+      document.getElementById('subscriptionBtns').style.display = 'none';
       const planNames = { host: 'Host Plan · $99/yr', pro: 'Pro Plan · $199/yr', enterprise: 'Enterprise Plan · Custom' };
       const planProps = { host: 'Up to 3 properties', pro: 'Up to 10 properties', enterprise: 'Unlimited properties' };
       document.getElementById('planName').textContent = planNames[currentHost.plan] || planNames.host;
       document.getElementById('planProperties').textContent = planProps[currentHost.plan] || planProps.host;
-      // Hide trial banner and overlay for paid users
       document.getElementById('trialBanner').style.display = 'none';
       document.getElementById('trialExpiredOverlay').style.display = 'none';
       return;
@@ -1023,6 +1024,8 @@
     // On trial
     document.getElementById('trialStatusCard').style.display = 'block';
     document.getElementById('paidStatusCard').style.display = 'none';
+    document.getElementById('subscriptionBtns').style.display = 'flex';
+    document.getElementById('trialLabel').style.display = 'block';
     if (daysLeft > 0) {
       document.getElementById('trialDaysLeft').textContent = daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' remaining';
     } else {

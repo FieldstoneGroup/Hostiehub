@@ -686,6 +686,7 @@
     // No Stripe — just confirm order and send emails
     await sendHostNotification({
       hostEmail: hostData.email,
+      notifEmails: Array.isArray(hostData.notif_emails) ? hostData.notif_emails : (hostData.notif_emails ? JSON.parse(hostData.notif_emails) : []),
       hostName: hostData.full_name || hostData.store_name || 'Host',
       storeName: hostData.store_name || hostData.username,
       guestName,
@@ -724,7 +725,7 @@
       <p style="margin-top:12px;opacity:0.85">Your order is confirmed. Your host will have everything ready for your arrival${propName ? ' at ' + propName : ''}.</p>`;
   }
 
-  async function sendHostNotification({ hostEmail, hostName, storeName, guestName, checkin, checkout, propName, notes, productNotes, items, total }) {
+  async function sendHostNotification({ hostEmail, notifEmails = [], hostName, storeName, guestName, checkin, checkout, propName, notes, productNotes, items, total }) {
     const itemsHtml = items.map(i => `
       <tr>
         <td style="padding:10px 0;border-bottom:1px solid #e8e4df;font-size:15px">${i.icon} ${i.name}${i.note ? `<div style="font-size:12px;color:#6b7280;margin-top:3px;font-style:italic">📝 ${i.note}</div>` : ''}</td>
@@ -822,6 +823,25 @@
           html: emailHtml,
         }),
       });
+
+      // Send to all additional notification emails
+      for (const email of notifEmails) {
+        if (email && email !== hostEmail) {
+          await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Service': 'resend',
+            },
+            body: JSON.stringify({
+              from: 'Hostie Hub <hello@hostiehub.com.au>',
+              to: email,
+              subject: `🛎️ New order from ${guestName} — ${storeName}`,
+              html: emailHtml,
+            }),
+          });
+        }
+      }
     } catch (err) {
       console.error('Email notification failed:', err);
     }

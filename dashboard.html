@@ -591,19 +591,18 @@
     <div class="page" id="page-users">
       <div style="margin-bottom:20px">
         <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Users & Calendar</h2>
-        <p style="font-size:13px;color:var(--muted);margin-top:2px">Manage notifications and calendar sync</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:2px">Manage notification users and calendar sync</p>
       </div>
       <div style="display:flex;flex-direction:column;gap:16px;width:100%">
 
-        <!-- Notification Emails -->
+        <!-- Notification Users -->
         <div class="card">
-          <div class="card-title">Order notifications</div>
-          <div class="card-desc">Add email addresses to be notified when a new order comes in — perfect for cleaners, co-hosts or property managers. Everyone on this list gets an email the moment a guest places an order.</div>
-          <div id="notifEmailsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <input type="email" id="notifEmailInput" placeholder="e.g. cleaner@email.com" style="flex:1;min-width:200px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'">
-            <button class="btn btn-primary btn-sm" onclick="addNotifEmail()">Add email</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <div class="card-title" style="margin-bottom:0">Order notifications</div>
+            <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add user</button>
           </div>
+          <div class="card-desc">Add people to be notified when a new order comes in — cleaners, co-hosts or property managers. You can choose which properties each person is notified for.</div>
+          <div id="notifUsersList" style="display:flex;flex-direction:column;gap:8px;margin-top:16px"></div>
         </div>
 
         <!-- Calendar Sync -->
@@ -616,43 +615,27 @@
           </div>
 
           <div style="display:flex;flex-direction:column;gap:12px">
-
-            <!-- Google Calendar -->
             <div class="cal-option-row">
               <div style="display:flex;align-items:center;gap:12px;flex:1">
                 <div style="width:40px;height:40px;border-radius:10px;background:#fff;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📅</div>
-                <div>
-                  <div style="font-size:14px;font-weight:600">Google Calendar</div>
-                  <div style="font-size:12px;color:var(--muted)">Gmail, Google Workspace</div>
-                </div>
+                <div><div style="font-size:14px;font-weight:600">Google Calendar</div><div style="font-size:12px;color:var(--muted)">Gmail, Google Workspace</div></div>
               </div>
               <button class="btn btn-outline btn-sm" onclick="openCalModal('google')">Connect →</button>
             </div>
-
-            <!-- Apple Calendar -->
             <div class="cal-option-row">
               <div style="display:flex;align-items:center;gap:12px;flex:1">
                 <div style="width:40px;height:40px;border-radius:10px;background:#fff;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🍎</div>
-                <div>
-                  <div style="font-size:14px;font-weight:600">Apple Calendar</div>
-                  <div style="font-size:12px;color:var(--muted)">iPhone, iPad, Mac</div>
-                </div>
+                <div><div style="font-size:14px;font-weight:600">Apple Calendar</div><div style="font-size:12px;color:var(--muted)">iPhone, iPad, Mac</div></div>
               </div>
               <button class="btn btn-outline btn-sm" onclick="openCalModal('apple')">Connect →</button>
             </div>
-
-            <!-- Outlook -->
             <div class="cal-option-row">
               <div style="display:flex;align-items:center;gap:12px;flex:1">
                 <div style="width:40px;height:40px;border-radius:10px;background:#fff;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📧</div>
-                <div>
-                  <div style="font-size:14px;font-weight:600">Outlook Calendar</div>
-                  <div style="font-size:12px;color:var(--muted)">Microsoft 365, Outlook.com</div>
-                </div>
+                <div><div style="font-size:14px;font-weight:600">Outlook Calendar</div><div style="font-size:12px;color:var(--muted)">Microsoft 365, Outlook.com</div></div>
               </div>
               <button class="btn btn-outline btn-sm" onclick="openCalModal('outlook')">Connect →</button>
             </div>
-
           </div>
         </div>
 
@@ -662,7 +645,37 @@
   </div>
 </div>
 
-<!-- CALENDAR MODAL -->
+<!-- ADD USER MODAL -->
+<div class="modal-overlay" id="addUserModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title" id="addUserModalTitle">Add notification user</div>
+      <button class="modal-close" onclick="closeAddUserModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field"><label>First name</label><input type="text" id="userFirstName" placeholder="e.g. Sarah"></div>
+        <div class="field"><label>Last name</label><input type="text" id="userLastName" placeholder="e.g. Jones"></div>
+      </div>
+      <div class="field"><label>Email address</label><input type="email" id="userEmail" placeholder="e.g. sarah@email.com"></div>
+      <div class="field">
+        <label>Notify for</label>
+        <select id="userPropertyScope" onchange="toggleUserPropertyList(this.value)">
+          <option value="all">All properties</option>
+          <option value="selected">Selected properties only</option>
+        </select>
+      </div>
+      <div id="userPropertyList" style="display:none;display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn btn-danger btn-sm" id="deleteUserBtn" style="display:none" onclick="deleteNotifUser()">Delete</button>
+      <div style="display:flex;gap:10px;margin-left:auto">
+        <button class="btn btn-outline" onclick="closeAddUserModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveNotifUser()">Save user</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="calModal">
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
@@ -1680,48 +1693,128 @@
   window.requestUpgradeContact = requestUpgradeContact;
   window.handleLogout = handleLogout;
 
-  // ── NOTIFICATION EMAILS ──
-  async function loadNotifEmails() {
-    const emails = currentHost.notif_emails ? (Array.isArray(currentHost.notif_emails) ? currentHost.notif_emails : JSON.parse(currentHost.notif_emails)) : [];
-    renderNotifEmails(emails);
+  // ── NOTIFICATION USERS ──
+  let editingNotifUserId = null;
+
+  function getNotifUsers() {
+    try {
+      const raw = currentHost.notif_emails;
+      if (!raw) return [];
+      const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      // Support both old format (array of strings) and new format (array of objects)
+      return parsed.map(u => typeof u === 'string' ? { id: u, firstName: '', lastName: '', email: u, properties: 'all' } : u);
+    } catch { return []; }
   }
 
-  function renderNotifEmails(emails) {
-    const list = document.getElementById('notifEmailsList');
+  function loadNotifEmails() { renderNotifUsers(); }
+
+  function renderNotifUsers() {
+    const list = document.getElementById('notifUsersList');
     if (!list) return;
-    if (!emails.length) {
-      list.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:10px 0">No notification emails added yet.</div>';
+    const users = getNotifUsers();
+    if (!users.length) {
+      list.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:10px 0">No notification users added yet. Add a cleaner, co-host or property manager above.</div>';
       return;
     }
-    list.innerHTML = emails.map(email =>
-      '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border)">' +
-        '<span style="font-size:14px">' + email + '</span>' +
-        '<button onclick="removeNotifEmail(\'' + email + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 4px" title="Remove">×</button>' +
-      '</div>'
+    list.innerHTML = users.map(u => {
+      const name = [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email;
+      const propLabel = u.properties === 'all' ? 'All properties' : (Array.isArray(u.properties) ? u.properties.join(', ') : u.properties);
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">' +
+        '<div style="min-width:0">' +
+          '<div style="font-size:14px;font-weight:600">' + name + '</div>' +
+          '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + u.email + ' · ' + propLabel + '</div>' +
+        '</div>' +
+        '<button onclick="editNotifUser(\'' + u.id + '\')" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--muted);white-space:nowrap">Edit</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  function openAddUserModal() {
+    editingNotifUserId = null;
+    document.getElementById('addUserModalTitle').textContent = 'Add notification user';
+    document.getElementById('userFirstName').value = '';
+    document.getElementById('userLastName').value = '';
+    document.getElementById('userEmail').value = '';
+    document.getElementById('userPropertyScope').value = 'all';
+    document.getElementById('deleteUserBtn').style.display = 'none';
+    buildUserPropertyList([]);
+    document.getElementById('userPropertyList').style.display = 'none';
+    document.getElementById('addUserModal').classList.add('open');
+  }
+
+  function editNotifUser(id) {
+    const users = getNotifUsers();
+    const u = users.find(x => x.id === id);
+    if (!u) return;
+    editingNotifUserId = id;
+    document.getElementById('addUserModalTitle').textContent = 'Edit notification user';
+    document.getElementById('userFirstName').value = u.firstName || '';
+    document.getElementById('userLastName').value = u.lastName || '';
+    document.getElementById('userEmail').value = u.email || '';
+    const isAll = u.properties === 'all';
+    document.getElementById('userPropertyScope').value = isAll ? 'all' : 'selected';
+    const selectedProps = isAll ? [] : (Array.isArray(u.properties) ? u.properties : []);
+    buildUserPropertyList(selectedProps);
+    document.getElementById('userPropertyList').style.display = isAll ? 'none' : 'flex';
+    document.getElementById('deleteUserBtn').style.display = 'inline-flex';
+    document.getElementById('addUserModal').classList.add('open');
+  }
+
+  function closeAddUserModal() { document.getElementById('addUserModal').classList.remove('open'); }
+
+  function toggleUserPropertyList(val) {
+    const list = document.getElementById('userPropertyList');
+    list.style.display = val === 'selected' ? 'flex' : 'none';
+    if (val === 'selected') buildUserPropertyList([]);
+  }
+
+  function buildUserPropertyList(selected) {
+    const container = document.getElementById('userPropertyList');
+    container.style.flexDirection = 'column';
+    container.innerHTML = properties.map(p =>
+      '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);cursor:pointer">' +
+        '<input type="checkbox" class="user-prop-check" value="' + p.nickname + '" ' + (selected.includes(p.nickname) ? 'checked' : '') + ' style="width:16px;height:16px;accent-color:var(--brand)">' +
+        '<span style="font-size:14px;font-weight:500">🏠 ' + p.nickname + '</span>' +
+      '</label>'
     ).join('');
   }
 
-  async function addNotifEmail() {
-    const input = document.getElementById('notifEmailInput');
-    const email = (input.value || '').trim().toLowerCase();
+  async function saveNotifUser() {
+    const firstName = document.getElementById('userFirstName').value.trim();
+    const lastName = document.getElementById('userLastName').value.trim();
+    const email = document.getElementById('userEmail').value.trim().toLowerCase();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('⚠️ Please enter a valid email address'); return; }
-    const emails = currentHost.notif_emails ? (Array.isArray(currentHost.notif_emails) ? currentHost.notif_emails : JSON.parse(currentHost.notif_emails)) : [];
-    if (emails.includes(email)) { showToast('⚠️ That email is already added'); return; }
-    emails.push(email);
-    await sb.from('hosts').update({ notif_emails: emails }).eq('id', currentUser.id);
-    currentHost.notif_emails = emails;
-    renderNotifEmails(emails);
-    input.value = '';
-    showToast('✅ Email added');
+    const scope = document.getElementById('userPropertyScope').value;
+    let propValue = 'all';
+    if (scope === 'selected') {
+      const checked = [...document.querySelectorAll('.user-prop-check:checked')].map(c => c.value);
+      if (!checked.length) { showToast('⚠️ Please select at least one property'); return; }
+      propValue = checked;
+    }
+    const users = getNotifUsers();
+    if (editingNotifUserId) {
+      const idx = users.findIndex(u => u.id === editingNotifUserId);
+      if (idx > -1) users[idx] = { id: editingNotifUserId, firstName, lastName, email, properties: propValue };
+    } else {
+      if (users.find(u => u.email === email)) { showToast('⚠️ That email is already added'); return; }
+      users.push({ id: email + '_' + Date.now(), firstName, lastName, email, properties: propValue });
+    }
+    await sb.from('hosts').update({ notif_emails: users }).eq('id', currentUser.id);
+    currentHost.notif_emails = users;
+    renderNotifUsers();
+    closeAddUserModal();
+    showToast(editingNotifUserId ? '✅ User updated' : '✅ User added');
   }
 
-  async function removeNotifEmail(email) {
-    const emails = currentHost.notif_emails ? (Array.isArray(currentHost.notif_emails) ? currentHost.notif_emails : JSON.parse(currentHost.notif_emails)) : [];
-    const updated = emails.filter(e => e !== email);
-    await sb.from('hosts').update({ notif_emails: updated }).eq('id', currentUser.id);
-    currentHost.notif_emails = updated;
-    renderNotifEmails(updated);
-    showToast('🗑 Email removed');
+  async function deleteNotifUser() {
+    if (!editingNotifUserId) return;
+    if (!confirm('Remove this notification user?')) return;
+    const users = getNotifUsers().filter(u => u.id !== editingNotifUserId);
+    await sb.from('hosts').update({ notif_emails: users }).eq('id', currentUser.id);
+    currentHost.notif_emails = users;
+    renderNotifUsers();
+    closeAddUserModal();
+    showToast('🗑 User removed');
   }
 
   // ── CALENDAR MODAL ──
@@ -1777,6 +1870,12 @@
   window.removeNotifEmail = removeNotifEmail;
   window.openCalModal = openCalModal;
   window.copyCalUrl = copyCalUrl;
+  window.openAddUserModal = openAddUserModal;
+  window.closeAddUserModal = closeAddUserModal;
+  window.editNotifUser = editNotifUser;
+  window.saveNotifUser = saveNotifUser;
+  window.deleteNotifUser = deleteNotifUser;
+  window.toggleUserPropertyList = toggleUserPropertyList;
 
   init();
 </script>

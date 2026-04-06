@@ -824,23 +824,24 @@
         }),
       });
 
-      // Send to all additional notification emails
-      for (const email of notifEmails) {
-        if (email && email !== hostEmail) {
-          await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Service': 'resend',
-            },
-            body: JSON.stringify({
-              from: 'Hostie Hub <hello@hostiehub.com.au>',
-              to: email,
-              subject: `🛎️ New order from ${guestName} — ${storeName}`,
-              html: emailHtml,
-            }),
-          });
+      // Send to all additional notification users (filtered by property)
+      for (const user of notifEmails) {
+        const email = typeof user === 'string' ? user : user.email;
+        if (!email || email === hostEmail) continue;
+        // Check property filter
+        if (typeof user === 'object' && user.properties !== 'all' && Array.isArray(user.properties)) {
+          if (propName && !user.properties.includes(propName)) continue;
         }
+        await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+          body: JSON.stringify({
+            from: 'Hostie Hub <hello@hostiehub.com.au>',
+            to: email,
+            subject: '🛎️ New order from ' + guestName + ' — ' + storeName,
+            html: emailHtml,
+          }),
+        });
       }
     } catch (err) {
       console.error('Email notification failed:', err);

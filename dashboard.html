@@ -1775,12 +1775,20 @@
 
   function toggleAllUserProps(checked) {
     const container = document.getElementById('userIndividualProps');
-    container.style.display = checked ? 'none' : 'flex';
-    container.style.flexDirection = 'column';
-    container.style.gap = '8px';
-    // Uncheck individual props when all is selected
     if (checked) {
+      container.style.display = 'none';
       document.querySelectorAll('.user-prop-check').forEach(cb => cb.checked = false);
+    } else {
+      // Rebuild from current properties array every time
+      container.innerHTML = properties.sort((a,b) => a.nickname.localeCompare(b.nickname)).map(p =>
+        '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);cursor:pointer">' +
+          '<input type="checkbox" class="user-prop-check" value="' + p.nickname + '" style="width:16px;height:16px;accent-color:var(--brand)">' +
+          '<span style="font-size:14px;font-weight:500">🏠 ' + p.nickname + '</span>' +
+        '</label>'
+      ).join('');
+      container.style.display = 'flex';
+      container.style.flexDirection = 'column';
+      container.style.gap = '8px';
     }
   }
 

@@ -510,13 +510,16 @@
         <p style="font-size:13px;color:var(--muted);margin-top:2px">Your account details and subscription</p>
       </div>
       <div class="two-col-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-          <div class="card-desc">Update your name and email address.</div>
-          <div class="field"><label>Full name</label><input type="text" id="accountName" placeholder="Your name"></div>
-          <div class="field"><label>Email address</label><input type="email" id="accountEmail" placeholder="you@example.com" disabled style="background:var(--bg);color:var(--muted)"><div class="field-hint">Email cannot be changed here. Contact support.</div></div>
-          <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
-        </div>
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">Profile</div>
+            <div class="card-desc">Update your name and email address.</div>
+            <div class="field"><label>Full name</label><input type="text" id="accountName" placeholder="Your name"></div>
+            <div class="field"><label>Email address</label><input type="email" id="accountEmail" placeholder="you@example.com" disabled style="background:var(--bg);color:var(--muted)"><div class="field-hint">Email cannot be changed here. Contact support.</div></div>
+            <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
+          </div>
 
-        <div class="card" style="margin-top:16px">
+          <div class="card">
           <div class="card-title">Store URL</div>
           <div class="card-desc">Change your store's unique web address. ⚠️ Your old URL will stop working immediately.</div>
           <div class="field">

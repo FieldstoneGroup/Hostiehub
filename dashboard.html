@@ -1759,8 +1759,12 @@
   }
 
   function buildUserPropertyList(scope, selected) {
-    document.getElementById('userAllProperties').checked = scope === 'all';
+    const allCb = document.getElementById('userAllProperties');
     const container = document.getElementById('userIndividualProps');
+    allCb.checked = scope === 'all';
+    container.style.display = scope === 'all' ? 'none' : 'flex';
+    container.style.flexDirection = 'column';
+    container.style.gap = '8px';
     container.innerHTML = properties.map(p =>
       '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);cursor:pointer">' +
         '<input type="checkbox" class="user-prop-check" value="' + p.nickname + '" ' + (selected.includes(p.nickname) ? 'checked' : '') + ' style="width:16px;height:16px;accent-color:var(--brand)">' +
@@ -1770,11 +1774,14 @@
   }
 
   function toggleAllUserProps(checked) {
-    document.querySelectorAll('.user-prop-check').forEach(cb => {
-      cb.checked = false;
-      cb.disabled = checked;
-      cb.closest('label').style.opacity = checked ? '0.4' : '1';
-    });
+    const container = document.getElementById('userIndividualProps');
+    container.style.display = checked ? 'none' : 'flex';
+    container.style.flexDirection = 'column';
+    container.style.gap = '8px';
+    // Uncheck individual props when all is selected
+    if (checked) {
+      document.querySelectorAll('.user-prop-check').forEach(cb => cb.checked = false);
+    }
   }
 
   function toggleUserPropertyList(val) {} // kept for compat

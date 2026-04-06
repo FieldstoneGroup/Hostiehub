@@ -821,7 +821,7 @@
 
   async function uploadProductImage(file, productId) {
     const ext = file.name.split('.').pop().toLowerCase();
-    const path = `${currentUser.id}/${productId}.${ext}`;
+    const path = currentUser.id + '/' + productId + '.' + ext;
     const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
     if (error) { console.error(error); return null; }
     const { data } = sb.storage.from('product-images').getPublicUrl(path);
@@ -1061,22 +1061,16 @@
   function renderProperties() {
     const list = document.getElementById('propertiesList');
     if (!properties.length) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-icon">🏠</div><h3>No properties yet</h3><p>Add your properties so guests can select which one they're staying at.</p></div>`;
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏠</div><h3>No properties yet</h3><p>Add your properties so guests can select which one they\'re staying at.</p></div>';
       return;
     }
-    list.innerHTML = properties.map(p => `
-      <div class="property-row">
-        <div class="property-icon">🏠</div>
-        <div class="property-info">
-          <div class="property-name">${p.nickname}</div>
-          <div class="property-address">${p.address || ''}${p.postcode ? ' · ' + p.postcode : ''}</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-outline btn-sm" onclick="editProperty('${p.id}')">Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteProperty('${p.id}')">Delete</button>
-        </div>
-      </div>
-    `).join('');
+    list.innerHTML = properties.sort((a,b) => a.nickname.localeCompare(b.nickname)).map(function(p) {
+      return '<div class="prop-row" onclick="editProperty(\'' + p.id + '\')" style="cursor:pointer">' +
+        '<span style="font-size:16px;flex-shrink:0">🏠</span>' +
+        '<div class="prop-row-name">' + p.nickname + '</div>' +
+        '<span style="color:var(--muted);font-size:13px;flex-shrink:0">›</span>' +
+      '</div>';
+    }).join('');
   }
 
   function openPropertyModal(id) {
@@ -1151,38 +1145,39 @@
   function renderProducts() {
     const list = document.getElementById('productsList');
     if (!products.length) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><h3>No products yet</h3><p>Add your first product or click "Add presets" to get started quickly.</p></div>`;
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><h3>No products yet</h3><p>Add your first product or click "Add presets" to get started quickly.</p></div>';
       return;
     }
-    list.innerHTML = products.map(p => `
-      <div class="product-row">
-        <div class="product-emoji" style="${p.image_url ? 'padding:0;overflow:hidden;' : ''}">
-          ${p.image_url ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">` : (p.emoji || '✨')}
-        </div>
-        <div class="product-info">
-          <div class="product-name">${p.name} ${p.active === false ? '<span style="font-size:11px;color:var(--muted);font-weight:400">(inactive)</span>' : ''}</div>
-          <div class="product-meta">${p.category || ''} · $${p.price}${p.unit ? ' / ' + p.unit : ''}${p.notes_prompt ? ' · 📝 Has guest prompt' : ''}</div>
-        </div>
-        <label class="toggle" title="${p.active !== false ? 'Active' : 'Inactive'}">
-          <input type="checkbox" ${p.active !== false ? 'checked' : ''} onchange="toggleProduct('${p.id}', this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
-        <div class="product-actions">
-          <button class="btn btn-outline btn-sm" onclick="editProduct('${p.id}')">Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">Delete</button>
-        </div>
-      </div>
-    `).join('');
+    list.innerHTML = products.map(function(p) {
+      var imgHtml = p.image_url ? '<img src="' + p.image_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">' : (p.emoji || '✨');
+      var inactiveHtml = p.active === false ? '<span style="font-size:11px;color:var(--muted);font-weight:400">(inactive)</span>' : '';
+      var metaHtml = (p.category || '') + ' · $' + p.price + (p.unit ? ' / ' + p.unit : '') + (p.notes_prompt ? ' · 📝' : '');
+      return '<div class="product-row">' +
+        '<div class="product-emoji" style="' + (p.image_url ? 'padding:0;overflow:hidden;' : '') + '">' + imgHtml + '</div>' +
+        '<div class="product-info" style="min-width:0;flex:1">' +
+          '<div class="product-name">' + p.name + ' ' + inactiveHtml + '</div>' +
+          '<div class="product-meta">' + metaHtml + '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-top:8px">' +
+            '<label class="toggle" title="' + (p.active !== false ? 'Active' : 'Inactive') + '">' +
+              '<input type="checkbox" ' + (p.active !== false ? 'checked' : '') + ' onchange="toggleProduct(\'' + p.id + '\', this.checked)">' +
+              '<span class="toggle-slider"></span>' +
+            '</label>' +
+            '<button class="btn btn-outline btn-sm" onclick="editProduct(\'' + p.id + '\')">Edit</button>' +
+            '<button class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + p.id + '\')">Delete</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
   }
 
   function buildPropertyChecks() {
     const container = document.getElementById('propertyChecks');
-    container.innerHTML = properties.map(p => `
-      <label class="property-check">
-        <input type="checkbox" class="prop-check" value="${p.id}" checked>
-        <span class="property-check-label">🏠 ${p.nickname}</span>
-      </label>
-    `).join('');
+    container.innerHTML = properties.map(function(p) {
+      return '<label class="property-check">' +
+        '<input type="checkbox" class="prop-check" value="' + p.id + '" checked>' +
+        '<span class="property-check-label">🏠 ' + p.nickname + '</span>' +
+      '</label>';
+    }).join('');
   }
 
   function toggleAllProperties(cb) {
@@ -1192,9 +1187,9 @@
   function buildEmojiGrid() {
     const el = document.getElementById('emojiGrid');
     if (!el) return;
-    el.innerHTML = emojis.map(e => `
-      <button class="emoji-opt ${e === selectedEmoji ? 'selected' : ''}" onclick="selectEmoji('${e}', this)">${e}</button>
-    `).join('');
+    el.innerHTML = emojis.map(function(e) {
+      return '<button class="emoji-opt ' + (e === selectedEmoji ? 'selected' : '') + '" onclick="selectEmoji(\'' + e + '\', this)">' + e + '</button>';
+    }).join('');
   }
 
   function selectEmoji(emoji, btn) {
@@ -1322,16 +1317,16 @@
 
   function openPresetModal() {
     const list = document.getElementById('presetList');
-    list.innerHTML = PRESET_PRODUCTS.map((p, i) => `
-      <label style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
-        <input type="checkbox" class="preset-check" value="${i}" style="width:18px;height:18px;accent-color:var(--brand);flex-shrink:0">
-        <div style="font-size:24px;flex-shrink:0">${p.emoji}</div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:600;margin-bottom:2px">${p.name}</div>
-          <div style="font-size:12px;color:var(--muted)">$${p.price} / ${p.unit} · ${p.category}</div>
-        </div>
-      </label>
-    `).join('');
+    list.innerHTML = PRESET_PRODUCTS.map(function(p, i) {
+      return '<label style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);cursor:pointer;" onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'">' +
+        '<input type="checkbox" class="preset-check" value="' + i + '" style="width:18px;height:18px;accent-color:var(--brand);flex-shrink:0">' +
+        '<div style="font-size:24px;flex-shrink:0">' + p.emoji + '</div>' +
+        '<div style="flex:1">' +
+          '<div style="font-size:14px;font-weight:600;margin-bottom:2px">' + p.name + '</div>' +
+          '<div style="font-size:12px;color:var(--muted)">$' + p.price + ' / ' + p.unit + ' · ' + p.category + '</div>' +
+        '</div>' +
+      '</label>';
+    }).join('');
     document.getElementById('presetModal').classList.add('open');
   }
 
@@ -1370,8 +1365,8 @@
 
     if (!filtered.length) {
       list.innerHTML = filter
-        ? `<div class="empty-state"><div class="empty-icon">🔍</div><h3>No results</h3><p>No orders found for "${filter}".</p></div>`
-        : `<div class="empty-state"><div class="empty-icon">📋</div><h3>No orders yet</h3><p>Orders will appear here when guests purchase from your store.</p></div>`;
+        ? '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No results</h3><p>No orders found for "' + filter + '".</p></div>'
+        : '<div class="empty-state"><div class="empty-icon">📋</div><h3>No orders yet</h3><p>Orders will appear here when guests purchase from your store.</p></div>';
       return;
     }
     list.innerHTML = filtered.map((o, idx) => {
@@ -1381,34 +1376,31 @@
       const statusClass = o.status === 'fulfilled' ? 'status-fulfilled' : o.status === 'paid' ? 'status-paid' : 'status-pending';
       const itemSummary = items.map(i => i.name).join(', ');
       const dateStr = o.checkin_date ? o.checkin_date.replace('2026-', '').replace('2025-', '') : '';
-      return `
-        <div style="margin-bottom:6px">
-          <div class="order-row" onclick="toggleOrderDetail('order-detail-${idx}')">
-            <div class="order-row-left">
-              <div class="order-row-name">${o.guest_name || 'Guest'}</div>
-              <div class="order-row-meta">${dateStr}${dateStr && itemSummary ? ' · ' : ''}${itemSummary}</div>
-            </div>
-            <div class="order-row-right">
-              <div class="order-amount" style="font-size:16px">$${o.total || 0}</div>
-              <div class="order-status ${statusClass}">● ${o.status || 'pending'}</div>
-              <span style="font-size:11px;color:var(--muted)">▾</span>
-            </div>
-          </div>
-          <div class="order-detail" id="order-detail-${idx}">
-            <div style="font-size:13px;color:var(--muted);margin-bottom:10px">
-              📅 ${o.checkin_date || ''} → ${o.checkout_date || ''}
-              ${o.property_name ? `<br>🏠 ${o.property_name}` : ''}
-              ${o.guest_email ? `<br>✉️ ${o.guest_email}` : ''}
-            </div>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${items.map(i => `<span class="order-item-tag">${i.name} $${i.price}</span>`).join('')}</div>
-            ${o.notes ? `<div class="order-notes">💬 "${o.notes}"</div>` : ''}
-            ${noteEntries.length ? `<div class="order-notes" style="margin-top:6px">📝 ${noteEntries.map(([k,v]) => `<strong>${k}:</strong> ${v}`).join(' · ')}</div>` : ''}
-            <div style="display:flex;justify-content:flex-end;margin-top:12px">
-              ${o.status !== 'fulfilled' ? `<button class="btn btn-success btn-sm" onclick="fulfillOrder('${o.id}')">✓ Mark as fulfilled</button>` : '<span style="font-size:13px;color:var(--brand);font-weight:500">✓ Fulfilled</span>'}
-            </div>
-          </div>
-        </div>
-      `;
+      var propHtml = o.property_name ? '<br>🏠 ' + o.property_name : '';
+      var emailHtml = o.guest_email ? '<br>✉️ ' + o.guest_email : '';
+      var itemTagsHtml = items.map(function(i) { return '<span class="order-item-tag">' + i.name + ' $' + i.price + '</span>'; }).join('');
+      var notesHtml = o.notes ? '<div class="order-notes">💬 "' + o.notes + '"</div>' : '';
+      var noteEntriesHtml = noteEntries.length ? '<div class="order-notes" style="margin-top:6px">📝 ' + noteEntries.map(function(e) { return '<strong>' + e[0] + ':</strong> ' + e[1]; }).join(' · ') + '</div>' : '';
+      var fulfillHtml = o.status !== 'fulfilled' ? '<button class="btn btn-success btn-sm" onclick="fulfillOrder(\'' + o.id + '\')">✓ Mark as fulfilled</button>' : '<span style="font-size:13px;color:var(--brand);font-weight:500">✓ Fulfilled</span>';
+      return '<div style="margin-bottom:6px">' +
+        '<div class="order-row" onclick="toggleOrderDetail(\'order-detail-' + idx + '\')">' +
+          '<div class="order-row-left">' +
+            '<div class="order-row-name">' + (o.guest_name || 'Guest') + '</div>' +
+            '<div class="order-row-meta">' + dateStr + (dateStr && itemSummary ? ' · ' : '') + itemSummary + '</div>' +
+          '</div>' +
+          '<div class="order-row-right">' +
+            '<div class="order-amount" style="font-size:16px">$' + (o.total || 0) + '</div>' +
+            '<div class="order-status ' + statusClass + '">● ' + (o.status || 'pending') + '</div>' +
+            '<span style="font-size:11px;color:var(--muted)">▾</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="order-detail" id="order-detail-' + idx + '">' +
+          '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">📅 ' + (o.checkin_date || '') + ' → ' + (o.checkout_date || '') + propHtml + emailHtml + '</div>' +
+          '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' + itemTagsHtml + '</div>' +
+          notesHtml + noteEntriesHtml +
+          '<div style="display:flex;justify-content:flex-end;margin-top:12px">' + fulfillHtml + '</div>' +
+        '</div>' +
+      '</div>';
     }).join('');
   }
 
@@ -1444,20 +1436,20 @@
   function renderVouchers(vouchers) {
     const list = document.getElementById('vouchersList');
     if (!vouchers.length) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-icon">🎟️</div><h3>No vouchers in your area yet</h3><p>Local businesses will appear here once they sign up.<br>Make sure your postcode is set in Store Settings.</p></div>`;
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎟️</div><h3>No vouchers in your area yet</h3><p>Local businesses will appear here once they sign up.<br>Make sure your postcode is set in Store Settings.</p></div>';
       return;
     }
-    list.innerHTML = vouchers.map(v => `
-      <div class="voucher-card">
-        <div class="voucher-icon">🎟️</div>
-        <div class="voucher-info">
-          <div class="voucher-name">${v.title}</div>
-          <div class="voucher-meta">${v.partners?.business_name || ''} · ${v.value || ''} · Expires ${v.expiry_date || 'N/A'}</div>
-          <div style="font-size:13px;color:var(--muted);margin-top:4px">${v.description || ''}</div>
-        </div>
-        <button class="btn btn-accent btn-sm" onclick="addVoucherToStore('${v.id}', '${v.title}')">Add to store</button>
-      </div>
-    `).join('');
+    list.innerHTML = vouchers.map(function(v) {
+      return '<div class="voucher-card">' +
+        '<div class="voucher-icon">🎟️</div>' +
+        '<div class="voucher-info">' +
+          '<div class="voucher-name">' + v.title + '</div>' +
+          '<div class="voucher-meta">' + (v.partners && v.partners.business_name ? v.partners.business_name : '') + ' · ' + (v.value || '') + ' · Expires ' + (v.expiry_date || 'N/A') + '</div>' +
+          '<div style="font-size:13px;color:var(--muted);margin-top:4px">' + (v.description || '') + '</div>' +
+        '</div>' +
+        '<button class="btn btn-accent btn-sm" onclick="addVoucherToStore(\'' + v.id + '\', \'' + v.title + '\')">Add to store</button>' +
+      '</div>';
+    }).join('');
   }
 
   async function addVoucherToStore(voucherId, title) {
@@ -1498,7 +1490,7 @@
   // ── COLOUR ──
   function buildSwatches() {
     document.getElementById('swatches').innerHTML = swatchColours.map(c =>
-      `<div class="swatch" style="background:${c}" onclick="document.getElementById('brandColour').value='${c}';updateColourPreview('${c}')"></div>`
+      '<div class="swatch" style="background:' + c + '" onclick="document.getElementById(\'brandColour\').value=\'' + c + '\';updateColourPreview(\'' + c + '\')"></div>'
     ).join('');
   }
 

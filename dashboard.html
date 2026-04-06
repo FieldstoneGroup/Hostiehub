@@ -223,40 +223,45 @@
     .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
     .stat-card { padding: 14px; }
     .stat-value { font-size: 24px; }
-    .card { padding: 16px; }
+    .card { padding: 14px; }
     .content { padding: 12px; }
     .topbar { padding: 0 12px; height: 56px; }
-    /* Store settings grid - single column on mobile */
-    #page-store .two-col-grid { grid-template-columns: 1fr !important; }
-    /* Property rows mobile */
-    .property-row { flex-wrap: nowrap; gap: 8px; padding: 12px; overflow: hidden; }
-    .property-icon { width: 32px; height: 32px; font-size: 16px; flex-shrink: 0; }
-    .property-info { min-width: 0; flex: 1; }
-    .property-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .property-address { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .property-row > div:last-child { flex-shrink: 0; display: flex; gap: 6px; }
-    .property-row .btn-sm { padding: 6px 10px; font-size: 12px; }
-    /* Product rows mobile — hide emoji, shrink buttons */
-    .product-row { flex-wrap: nowrap; gap: 6px; padding: 10px 12px; overflow: hidden; }
-    .product-emoji { display: none; }
-    .product-info { min-width: 0; flex: 1; }
-    .product-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .product-meta { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .toggle { flex-shrink: 0; }
-    .product-actions { flex-shrink: 0; gap: 4px; }
-    .product-actions .btn-sm { padding: 5px 8px; font-size: 12px; }
+
+    /* All two-col-grids go single column */
+    .two-col-grid { grid-template-columns: 1fr !important; }
+
+    /* Colour swatches wrap */
+    .colour-pick { flex-wrap: wrap; }
+    .colour-swatches { flex-wrap: wrap; }
+
     /* Overview checklist */
-    .checklist-item { flex-wrap: nowrap; }
+    .checklist-item { flex-wrap: nowrap; padding: 10px 12px; }
     .checklist-item span { font-size: 13px; }
-    /* Account - single column */
-    #page-account .two-col-grid { grid-template-columns: 1fr !important; }
+
+    /* Property rows — hide icon, truncate info, keep buttons */
+    .property-row { gap: 8px; padding: 12px; }
+    .property-icon { display: none; }
+    .property-info { min-width: 0; flex: 1; }
+    .property-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .property-address { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .property-row > div:last-child { flex-shrink: 0; }
+    .property-row .btn-sm { padding: 6px 10px; font-size: 12px; }
+
+    /* Product rows — two-row layout on mobile */
+    .product-row { flex-wrap: wrap; gap: 6px; padding: 12px; }
+    .product-emoji { display: none; }
+    .product-info { order: 1; flex: 1; min-width: 0; }
+    .product-name { font-size: 14px; }
+    .product-meta { font-size: 12px; white-space: normal; }
+    .toggle { order: 2; flex-shrink: 0; }
+    .product-actions { order: 3; width: 100%; display: flex; justify-content: flex-end; gap: 6px; margin-top: 2px; }
+    .product-actions .btn-sm { padding: 6px 12px; font-size: 13px; }
+
+    /* Stripe banner */
     .stripe-banner { flex-direction: column; gap: 12px; }
     .stripe-banner-info { flex-wrap: wrap; }
     /* Voucher cards */
     .voucher-card { flex-wrap: wrap; }
-    /* Product rows */
-    .product-actions { gap: 4px; }
-    .product-price { font-size: 15px; }
     /* Order filter row */
     .order-filter-row { flex-direction: column !important; gap: 8px !important; }
     .order-filter-row select { width: 100%; }

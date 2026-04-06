@@ -287,7 +287,6 @@
     <button class="nav-item" onclick="showPage('stripe', this)"><div class="nav-icon">💳</div><span>Stripe Connect</span></button>
     <div class="nav-section-label">Account</div>
     <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account & Billing</span></button>
-    <button class="nav-item" onclick="showPage('users', this)"><div class="nav-icon">👥</div><span>Users & Calendar</span></button>
   </nav>
   <div class="sidebar-bottom">
     <a class="store-link-btn" id="viewStoreBtn" href="#" target="_blank"><span>🔗</span><span>View my store</span></a>
@@ -563,117 +562,6 @@
       </div>
     </div>
 
-    <!-- USERS & CALENDAR -->
-    <div class="page" id="page-users">
-      <div style="margin-bottom:20px">
-        <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Users & Calendar</h2>
-        <p style="font-size:13px;color:var(--muted);margin-top:2px">Manage notification users and calendar sync</p>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px">
-
-        <!-- Notification Users -->
-        <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <div class="card-title" style="margin-bottom:0">Order notifications</div>
-            <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add user</button>
-          </div>
-          <div class="card-desc">Add people to be notified when a new order comes in — cleaners, co-hosts or property managers. Choose which properties each person is notified for.</div>
-          <div id="notifUsersList" style="display:flex;flex-direction:column;gap:8px;margin-top:16px"></div>
-        </div>
-
-        <!-- Calendar Sync -->
-        <div class="card">
-          <div class="card-title">Calendar sync</div>
-          <div class="card-desc">Subscribe to your orders calendar so every confirmed order automatically appears in your calendar app with the guest name, property and dates.</div>
-          <div style="background:var(--bg);border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:var(--muted);line-height:1.6">
-            📅 <strong style="color:var(--text)">How it works:</strong> We generate a unique calendar feed for your store. Subscribe to it once in your calendar app and new orders appear automatically.
-          </div>
-          <div style="display:flex;flex-direction:column;gap:12px">
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);">
-              <div style="display:flex;align-items:center;gap:12px;flex:1">
-                <div style="width:40px;height:40px;border-radius:10px;background:#fff;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📅</div>
-                <div><div style="font-size:14px;font-weight:600">Google Calendar</div><div style="font-size:12px;color:var(--muted)">Gmail, Google Workspace</div></div>
-              </div>
-              <button class="btn btn-outline btn-sm" onclick="openCalModal('google')">Connect →</button>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);">
-              <div style="display:flex;align-items:center;gap:12px;flex:1">
-                <div style="width:40px;height:40px;border-radius:10px;background:#fff;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🍎</div>
-                <div><div style="font-size:14px;font-weight:600">Apple Calendar</div><div style="font-size:12px;color:var(--muted)">iPhone, iPad, Mac</div></div>
-              </div>
-              <button class="btn btn-outline btn-sm" onclick="openCalModal('apple')">Connect →</button>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);">
-              <div style="display:flex;align-items:center;gap:12px;flex:1">
-                <div style="width:40px;height:40px;border-radius:10px;background:#fff;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📧</div>
-                <div><div style="font-size:14px;font-weight:600">Outlook Calendar</div><div style="font-size:12px;color:var(--muted)">Microsoft 365, Outlook.com</div></div>
-              </div>
-              <button class="btn btn-outline btn-sm" onclick="openCalModal('outlook')">Connect →</button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ADD USER MODAL -->
-<div class="modal-overlay" id="addUserModal">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header">
-      <div class="modal-title" id="addUserModalTitle">Add notification user</div>
-      <button class="modal-close" onclick="closeAddUserModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field-row">
-        <div class="field"><label>First name</label><input type="text" id="userFirstName" placeholder="e.g. Sarah"></div>
-        <div class="field"><label>Last name</label><input type="text" id="userLastName" placeholder="e.g. Jones"></div>
-      </div>
-      <div class="field"><label>Email address</label><input type="email" id="userEmail" placeholder="e.g. sarah@email.com"></div>
-      <div class="field">
-        <label>Notify for which properties?</label>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
-          <label style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;cursor:pointer;">
-            <input type="checkbox" id="userAllProperties" checked onchange="toggleAllUserProps(this.checked)" style="width:18px;height:18px;accent-color:var(--brand);flex-shrink:0">
-            <div>
-              <div style="font-size:14px;font-weight:600;color:var(--brand)">All properties</div>
-              <div style="font-size:12px;color:var(--brand-dark)">Notified for every property, including ones added later</div>
-            </div>
-          </label>
-          <div id="userIndividualProps" style="display:flex;flex-direction:column;gap:8px;opacity:0.4;pointer-events:none"></div>
-        </div>
-        <div style="font-size:12px;color:var(--muted);margin-top:8px">Uncheck "All properties" to select specific ones.</div>
-      </div>
-    </div>
-    <div class="modal-footer" style="justify-content:space-between">
-      <button class="btn btn-danger btn-sm" id="deleteUserBtn" style="display:none" onclick="deleteNotifUser()">Delete</button>
-      <div style="display:flex;gap:10px;margin-left:auto">
-        <button class="btn btn-outline" onclick="closeAddUserModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveNotifUser()">Save user</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- CAL MODAL -->
-<div class="modal-overlay" id="calModal">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header">
-      <div class="modal-title" id="calModalTitle">Connect Calendar</div>
-      <button class="modal-close" onclick="document.getElementById('calModal').classList.remove('open')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:12px 16px;margin-bottom:20px">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:6px">Your calendar feed URL</div>
-        <div id="calFeedUrl" style="font-size:13px;color:var(--brand-dark);word-break:break-all;font-family:monospace"></div>
-      </div>
-      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:20px" onclick="copyCalUrl()">📋 Copy link</button>
-      <div id="calSteps" style="font-size:14px;color:var(--text);line-height:1.8"></div>
-    </div>
-  </div>
-</div>
 
 <!-- PRODUCT MODAL -->
 <div class="modal-overlay" id="productModal">
@@ -831,7 +719,7 @@
 
   const emojis = ['🌸','🧺','🍾','🕐','🏄','🚗','🎁','🌿','☕','🍫','🧁','🎂','🌊','🏠','🧴','🛁','🎵','🐾','🎉','🍕','🥗','🍷','🎈','🍫','🛎️','🧹'];
   const swatchColours = ['#2C6E6A','#1d4d4a','#E8A838','#e74c3c','#8e44ad','#2980b9','#27ae60','#e67e22','#1a1a1a'];
-  const pageTitles = { overview:'Overview', orders:'Orders', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', stripe:'Stripe Connect', account:'Account & Billing', users:'Users & Calendar' };
+  const pageTitles = { overview:'Overview', orders:'Orders', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', stripe:'Stripe Connect', account:'Account & Billing' };
 
   const PRESET_PRODUCTS = [
     // STAY SERVICES
@@ -916,7 +804,6 @@
     if (host) { currentHost = host; populateUI(); }
     await Promise.all([loadProducts(), loadProperties(), loadOrders()]);
     loadVouchers();
-    loadNotifEmails();
     buildEmojiGrid();
     buildSwatches();
 
@@ -1613,6 +1500,134 @@
     setTimeout(() => { t.style.display = 'none'; }, 3000);
   }
 
+
+
+  // ── COLOUR ──
+  function buildSwatches() {
+    document.getElementById('swatches').innerHTML = swatchColours.map(c =>
+      '<div class="swatch" style="background:' + c + '" onclick="document.getElementById(\'brandColour\').value=\'' + c + '\';updateColourPreview(\'' + c + '\')"></div>'
+    ).join('');
+  }
+
+  function updateColourPreview(val) { document.getElementById('colourPreview').style.background = val; }
+
+  function copyStoreUrl() {
+    navigator.clipboard.writeText('https://hostiehub.com.au/store/' + (currentHost?.username || '')).then(() => showToast('📋 Link copied!'));
+  }
+
+  // ── STRIPE ──
+  async function connectStripe() {
+    showToast('⏳ Setting up Stripe Connect...');
+    try {
+      // Create a Stripe Connect Express account for this host
+      const createRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-create-account' },
+        body: JSON.stringify({ email: currentHost.email })
+      });
+      const account = await createRes.json();
+      console.log('Stripe account response:', JSON.stringify(account));
+      if (!account.id) { showToast('⚠️ Stripe error: ' + (account.error?.message || JSON.stringify(account))); return; }
+
+      // Save account ID to database
+      await sb.from('hosts').update({ stripe_account_id: account.id }).eq('id', currentUser.id);
+
+      // Get onboarding URL
+      const linkRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-connect-url' },
+        body: JSON.stringify({
+          account_id: account.id,
+          return_url: 'https://hostiehub.com.au/dashboard.html?stripe=success',
+          refresh_url: 'https://hostiehub.com.au/dashboard.html?stripe=refresh',
+        })
+      });
+      const link = await linkRes.json();
+      if (!link.url) { showToast('⚠️ Error getting Stripe link. Please try again.'); return; }
+
+      // Redirect host to Stripe onboarding
+      window.location.href = link.url;
+
+    } catch (err) {
+      console.error(err);
+      showToast('⚠️ Something went wrong. Please try again.');
+    }
+  }
+
+  // ── PROFILE ──
+  async function saveProfile() {
+    const name = document.getElementById('accountName').value.trim();
+    await sb.from('hosts').update({ full_name: name }).eq('id', currentUser.id);
+    document.getElementById('sidebarName').textContent = name;
+    showToast('✅ Profile saved');
+  }
+
+  async function changeUsername() {
+    const newUsername = document.getElementById('newUsername').value.trim();
+    if (!newUsername || !/^[a-z0-9-]{3,30}$/.test(newUsername)) {
+      showToast('⚠️ Username must be 3–30 lowercase letters, numbers or hyphens');
+      return;
+    }
+    if (newUsername === currentHost.username) {
+      showToast('⚠️ That\'s already your current username');
+      return;
+    }
+    if (!confirm('Are you sure?\n\nYour store URL will change to:\nhostiehub.com.au/store/' + newUsername + '\n\nYour old URL (hostiehub.com.au/store/' + currentHost.username + ') will stop working immediately.')) return;
+
+    // Check if taken
+    const { data: existing } = await sb.from('hosts').select('username').eq('username', newUsername).single();
+    if (existing) { showToast('⚠️ That username is already taken'); return; }
+
+    await sb.from('hosts').update({ username: newUsername }).eq('id', currentUser.id);
+    currentHost.username = newUsername;
+    document.getElementById('sidebarUrl').textContent = 'hostiehub.com.au/store/' + newUsername;
+    document.getElementById('storeUrlDisplay').textContent = 'hostiehub.com.au/store/' + newUsername;
+    document.getElementById('viewStoreBtn').href = 'https://hostiehub.com.au/store/' + newUsername;
+    showToast('✅ Store URL updated to hostiehub.com.au/store/' + newUsername);
+  }
+
+  async function requestUpgradeContact() {
+    const btn = document.getElementById('upgradeContactBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Sending...';
+    try {
+      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+        body: JSON.stringify({
+          from: 'Hostie Hub <hello@hostiehub.com.au>',
+          to: 'hello@hostiehub.com.au',
+          subject: 'Upgrade request from ' + (currentHost.full_name || currentHost.username),
+          html: '<p><strong>' + (currentHost.full_name || currentHost.username) + '</strong> (' + currentHost.email + ') has hit their property limit and would like to be contacted about upgrading their plan.</p><p>Current plan: ' + (currentHost.plan || 'trial') + '</p><p>Properties: ' + properties.length + '</p>'
+        })
+      });
+      btn.textContent = '✅ Request sent!';
+      showToast('✅ We\'ll be in touch shortly about upgrading your plan!');
+      setTimeout(() => { document.getElementById('upgradeModal').classList.remove('open'); }, 2000);
+    } catch (err) {
+      btn.textContent = '✉️ Yes, contact me about upgrading';
+      btn.disabled = false;
+      showToast('⚠️ Something went wrong. Please email hello@hostiehub.com.au');
+    }
+  }
+
+  async function handleLogout() { await sb.auth.signOut(); window.location.href = 'signup.html'; }
+
+  // ── HELPERS ──
+  function tickCheck(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.querySelector('.check-circle').className = 'check-circle check-done';
+    el.querySelector('.check-circle').textContent = '✓';
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.style.display = 'flex';
+    setTimeout(() => { t.style.display = 'none'; }, 3000);
+  }
+
   // ── NOTIFICATION USERS ──
   let editingNotifUserId = null;
 
@@ -1796,14 +1811,6 @@
   window.previewImage = previewImage;
   window.requestUpgradeContact = requestUpgradeContact;
   window.handleLogout = handleLogout;
-  window.openAddUserModal = openAddUserModal;
-  window.closeAddUserModal = closeAddUserModal;
-  window.editNotifUser = editNotifUser;
-  window.saveNotifUser = saveNotifUser;
-  window.deleteNotifUser = deleteNotifUser;
-  window.toggleAllUserProps = toggleAllUserProps;
-  window.openCalModal = openCalModal;
-  window.copyCalUrl = copyCalUrl;
 
   init();
 </script>

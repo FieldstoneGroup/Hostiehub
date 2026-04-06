@@ -691,7 +691,7 @@
 <!-- TOAST -->
 <div class="toast" id="toast"><span id="toastMsg">Saved!</span></div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false">
+<script src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   const { createClient } = supabase;
   const sb = createClient(
     'https://hjwkycknjiyvrxbcejet.supabase.co',
@@ -951,7 +951,6 @@
     if (btn) btn.classList.add('active');
     document.getElementById('topbarTitle').textContent = pageTitles[name] || name;
   }
-  window.showPage = showPage;
 
   // ── PROPERTIES ──
   async function loadProperties() {

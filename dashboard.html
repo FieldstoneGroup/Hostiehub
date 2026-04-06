@@ -226,27 +226,40 @@
     .card { padding: 16px; }
     .content { padding: 12px; }
     .topbar { padding: 0 12px; height: 56px; }
-    /* Store settings - single column */
+    /* Store settings - single column, no overflow */
     #page-store > div:last-child { grid-template-columns: 1fr !important; }
+    .store-settings-grid { grid-template-columns: 1fr !important; }
     /* Account - single column */
     #page-account > div:last-child { grid-template-columns: 1fr !important; }
+    .account-grid { grid-template-columns: 1fr !important; }
     /* Properties header */
     #page-properties > div:first-child { flex-wrap: wrap; gap: 10px; }
     /* Products header buttons stack */
+    #page-products > div:first-child { flex-wrap: wrap; gap: 8px; }
     #page-products > div:first-child > div:last-child { flex-wrap: wrap; }
-    /* Overview checklist */
-    .checklist-item { flex-wrap: wrap; }
+    /* Product rows - compact on mobile */
+    .product-row { padding: 12px; gap: 10px; flex-wrap: nowrap; overflow: hidden; }
+    .product-emoji { width: 36px; height: 36px; font-size: 20px; flex-shrink: 0; }
+    .product-info { flex: 1; min-width: 0; overflow: hidden; }
+    .product-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-meta { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-actions { flex-direction: column; gap: 4px; flex-shrink: 0; }
+    .product-actions .btn-sm { padding: 5px 8px; font-size: 11px; }
+    .toggle { width: 34px; height: 20px; flex-shrink: 0; }
+    /* Overview checklist - fix alignment */
+    .checklist-item { flex-wrap: nowrap; align-items: center; gap: 10px; padding: 10px 12px; }
+    .check-circle { flex-shrink: 0; }
+    .checklist-item span { font-size: 13px; line-height: 1.3; }
     /* Stripe banner */
     .stripe-banner { flex-direction: column; gap: 12px; }
     .stripe-banner-info { flex-wrap: wrap; }
     /* Voucher cards */
     .voucher-card { flex-wrap: wrap; }
-    /* Product rows */
-    .product-actions { gap: 4px; }
-    .product-price { font-size: 15px; }
     /* Order filter row */
     .order-filter-row { flex-direction: column !important; gap: 8px !important; }
     .order-filter-row select { width: 100%; }
+    /* Prop rows */
+    .prop-row { padding: 12px 14px; }
   }
 
   /* Order list compact styles */
@@ -636,9 +649,12 @@
       <div class="field"><label>Full address</label><input type="text" id="propAddress" placeholder="e.g. 12 Ocean Drive, Newcastle NSW 2300"></div>
       <div class="field"><label>Postcode</label><input type="text" id="propPostcode" placeholder="e.g. 2300"></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closePropertyModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveProperty()">Save property</button>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn btn-danger btn-sm" id="propDeleteBtn" onclick="deletePropertyFromModal()" style="display:none">Delete</button>
+      <div style="display:flex;gap:10px;margin-left:auto">
+        <button class="btn btn-outline" onclick="closePropertyModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProperty()">Save property</button>
+      </div>
     </div>
   </div>
 </div>
@@ -681,7 +697,7 @@
 <!-- TOAST -->
 <div class="toast" id="toast"><span id="toastMsg">Saved!</span></div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false">
+<script src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   const { createClient } = supabase;
   const sb = createClient(
     'https://hjwkycknjiyvrxbcejet.supabase.co',
@@ -950,22 +966,16 @@
   function renderProperties() {
     const list = document.getElementById('propertiesList');
     if (!properties.length) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-icon">🏠</div><h3>No properties yet</h3><p>Add your properties so guests can select which one they're staying at.</p></div>`;
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏠</div><h3>No properties yet</h3><p>Add your properties so guests can select which one they\'re staying at.</p></div>';
       return;
     }
-    list.innerHTML = properties.map(p => `
-      <div class="property-row">
-        <div class="property-icon">🏠</div>
-        <div class="property-info">
-          <div class="property-name">${p.nickname}</div>
-          <div class="property-address">${p.address || ''}${p.postcode ? ' · ' + p.postcode : ''}</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-outline btn-sm" onclick="editProperty('${p.id}')">Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteProperty('${p.id}')">Delete</button>
-        </div>
-      </div>
-    `).join('');
+    list.innerHTML = properties.map(p =>
+      '<div class="prop-row" onclick="editProperty(\'' + p.id + '\')" style="cursor:pointer">' +
+        '<span style="font-size:16px;flex-shrink:0">🏠</span>' +
+        '<div class="prop-row-name">' + p.nickname + '</div>' +
+        '<span style="color:var(--muted);font-size:13px;flex-shrink:0">›</span>' +
+      '</div>'
+    ).join('');
   }
 
   function openPropertyModal(id) {
@@ -974,6 +984,7 @@
     document.getElementById('propNickname').value = '';
     document.getElementById('propAddress').value = '';
     document.getElementById('propPostcode').value = '';
+    document.getElementById('propDeleteBtn').style.display = 'none';
     document.getElementById('propertyModal').classList.add('open');
   }
 
@@ -985,10 +996,20 @@
     document.getElementById('propNickname').value = p.nickname || '';
     document.getElementById('propAddress').value = p.address || '';
     document.getElementById('propPostcode').value = p.postcode || '';
+    document.getElementById('propDeleteBtn').style.display = 'inline-flex';
     document.getElementById('propertyModal').classList.add('open');
   }
 
   function closePropertyModal() { document.getElementById('propertyModal').classList.remove('open'); }
+
+  async function deletePropertyFromModal() {
+    if (!editingPropertyId) return;
+    if (!confirm('Delete this property?')) return;
+    await sb.from('properties').delete().eq('id', editingPropertyId);
+    showToast('🗑 Property deleted');
+    closePropertyModal();
+    loadProperties();
+  }
 
   async function saveProperty() {
     const nickname = document.getElementById('propNickname').value.trim();
@@ -1509,6 +1530,40 @@
     t.style.display = 'flex';
     setTimeout(() => { t.style.display = 'none'; }, 3000);
   }
+
+  // Expose all onclick functions as globals (required for inline HTML handlers)
+  window.showPage = showPage;
+  window.openPropertyModal = openPropertyModal;
+  window.closePropertyModal = closePropertyModal;
+  window.saveProperty = saveProperty;
+  window.editProperty = editProperty;
+  window.deleteProperty = deleteProperty;
+  window.deletePropertyFromModal = deletePropertyFromModal;
+  window.openProductModal = openProductModal;
+  window.closeProductModal = closeProductModal;
+  window.saveProduct = saveProduct;
+  window.editProduct = editProduct;
+  window.deleteProduct = deleteProduct;
+  window.toggleProduct = toggleProduct;
+  window.openPresetModal = openPresetModal;
+  window.closePresetModal = closePresetModal;
+  window.addSelectedPresets = addSelectedPresets;
+  window.openOrderDetail = openOrderDetail;
+  window.fulfillOrder = fulfillOrder;
+  window.filterOrders = filterOrders;
+  window.addVoucherToStore = addVoucherToStore;
+  window.connectStripe = connectStripe;
+  window.saveProfile = saveProfile;
+  window.changeUsername = changeUsername;
+  window.saveStoreSettings = saveStoreSettings;
+  window.copyStoreUrl = copyStoreUrl;
+  window.updateColourPreview = updateColourPreview;
+  window.selectEmoji = selectEmoji;
+  window.toggleAllProperties = toggleAllProperties;
+  window.removeImage = removeImage;
+  window.previewImage = previewImage;
+  window.requestUpgradeContact = requestUpgradeContact;
+  window.handleLogout = handleLogout;
 
   init();
 </script>

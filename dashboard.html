@@ -288,7 +288,7 @@
   </div>
 
   <!-- TRIAL BANNER -->
-  <div id="trialBanner" style="display:none;background:linear-gradient(135deg,#E8A838,#d4952e);color:white;padding:12px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+  <div id="trialBanner" style="display:none;background:linear-gradient(135deg,#E8A838,#d4952e);color:white;padding:12px 32px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
     <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500">
       <span>⏳</span>
       <span id="trialBannerText">Your free trial is active</span>
@@ -1417,7 +1417,7 @@
   // ── COLOUR ──
   function buildSwatches() {
     document.getElementById('swatches').innerHTML = swatchColours.map(c =>
-      `<div class="swatch" style="background:${c}" onclick="document.getElementById('brandColour').value='${c}';updateColourPreview('${c}')"></div>`
+      '<div class="swatch" style="background:' + c + '" onclick="document.getElementById(\'brandColour\').value=\'' + c + '\';updateColourPreview(\'' + c + '\')"></div>'
     ).join('');
   }
 
@@ -1484,7 +1484,7 @@
       showToast('⚠️ That\'s already your current username');
       return;
     }
-    if (!confirm(`⚠️ Are you sure?\n\nYour store URL will change to:\nhostiehub.com.au/store/${newUsername}\n\nYour old URL (hostiehub.com.au/store/${currentHost.username}) will stop working immediately.`)) return;
+    if (!confirm('Are you sure?\n\nYour store URL will change to:\nhostiehub.com.au/store/' + newUsername + '\n\nYour old URL (hostiehub.com.au/store/' + currentHost.username + ') will stop working immediately.')) return;
 
     // Check if taken
     const { data: existing } = await sb.from('hosts').select('username').eq('username', newUsername).single();

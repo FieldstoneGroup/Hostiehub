@@ -306,7 +306,7 @@
   </div>
 
   <!-- TRIAL BANNER -->
-  <div id="trialBanner" style="display:none;background:linear-gradient(135deg,#E8A838,#d4952e);color:white;padding:12px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+  <div id="trialBanner" style="display:none;background:linear-gradient(135deg,#E8A838,#d4952e);color:white;padding:12px 32px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
     <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500">
       <span>⏳</span>
       <span id="trialBannerText">Your free trial is active</span>
@@ -1029,8 +1029,8 @@
       const text = daysLeft === 1
         ? '⚠️ Your free trial ends tomorrow — activate your plan to keep your store live'
         : daysLeft <= 7
-        ? `⚠️ Your free trial ends in ${daysLeft} days — activate your plan to keep your store live`
-        : `Your free trial is active — ${daysLeft} days remaining`;
+        ? '⚠️ Your free trial ends in ' + daysLeft + ' days — activate your plan to keep your store live'
+        : 'Your free trial is active — ' + daysLeft + ' days remaining';
       document.getElementById('trialBannerText').textContent = text;
       if (daysLeft <= 3) document.getElementById('trialBanner').style.background = 'linear-gradient(135deg,#e53e3e,#c53030)';
     } else if (trialExpired) {
@@ -1112,8 +1112,8 @@
       if (properties.length >= limit) {
         closePropertyModal();
         const planName = plan === 'pro' ? 'Pro' : 'Host';
-        document.getElementById('upgradeModalTitle').textContent = `Property limit reached`;
-        document.getElementById('upgradeModalText').textContent = `You've reached the ${limit} property limit on your ${planName} plan. Upgrade your subscription to add more properties.`;
+        document.getElementById('upgradeModalTitle').textContent = 'Property limit reached';
+        document.getElementById('upgradeModalText').textContent = 'You\'ve reached the ' + limit + ' property limit on your ' + planName + ' plan. Upgrade your subscription to add more properties.';
         document.getElementById('upgradeModal').classList.add('open');
         return;
       }
@@ -1565,7 +1565,7 @@
       showToast('⚠️ That\'s already your current username');
       return;
     }
-    if (!confirm(`⚠️ Are you sure?\n\nYour store URL will change to:\nhostiehub.com.au/store/${newUsername}\n\nYour old URL (hostiehub.com.au/store/${currentHost.username}) will stop working immediately.`)) return;
+    if (!confirm('Are you sure?\n\nYour store URL will change to:\nhostiehub.com.au/store/' + newUsername + '\n\nYour old URL (hostiehub.com.au/store/' + currentHost.username + ') will stop working immediately.')) return;
 
     // Check if taken
     const { data: existing } = await sb.from('hosts').select('username').eq('username', newUsername).single();

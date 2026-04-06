@@ -518,20 +518,20 @@
             <div class="field"><label>Email address</label><input type="email" id="accountEmail" placeholder="you@example.com" disabled style="background:var(--bg);color:var(--muted)"><div class="field-hint">Email cannot be changed here. Contact support.</div></div>
             <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
           </div>
-
           <div class="card">
-          <div class="card-title">Store URL</div>
-          <div class="card-desc">Change your store's unique web address. ⚠️ Your old URL will stop working immediately.</div>
-          <div class="field">
-            <label>Username</label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <span style="font-size:14px;color:var(--muted);white-space:nowrap">hostiehub.com.au/store/</span>
-              <input type="text" id="newUsername" placeholder="e.g. stayable" style="flex:1;text-transform:lowercase">
+            <div class="card-title">Store URL</div>
+            <div class="card-desc">Change your store's unique web address. ⚠️ Your old URL will stop working immediately.</div>
+            <div class="field">
+              <label>Username</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span style="font-size:14px;color:var(--muted);white-space:nowrap">hostiehub.com.au/store/</span>
+                <input type="text" id="newUsername" placeholder="e.g. stayable" style="flex:1;text-transform:lowercase">
+              </div>
+              <div class="field-hint">Only lowercase letters, numbers and hyphens. Minimum 3 characters.</div>
             </div>
-            <div class="field-hint">Only lowercase letters, numbers and hyphens. Minimum 3 characters.</div>
+            <div id="usernameChangePreview" style="display:none;background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;color:var(--brand);margin-bottom:12px"></div>
+            <button class="btn btn-outline btn-sm" onclick="changeUsername()">Update store URL</button>
           </div>
-          <div id="usernameChangePreview" style="display:none;background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;color:var(--brand);margin-bottom:12px"></div>
-          <button class="btn btn-outline btn-sm" onclick="changeUsername()">Update store URL</button>
         </div>
         <div>
           <div class="card" style="margin-bottom:16px">

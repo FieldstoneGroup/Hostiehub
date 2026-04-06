@@ -521,61 +521,64 @@
 
     <!-- ACCOUNT -->
     <div class="page" id="page-account">
-      <div style="margin-bottom:24px">
+      <div style="margin-bottom:20px">
         <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Account & Billing</h2>
         <p style="font-size:13px;color:var(--muted);margin-top:2px">Your account details and subscription</p>
       </div>
-      <div class="two-col-grid">
+      <div style="display:flex;flex-direction:column;gap:16px;width:100%">
+
+        <!-- Profile -->
+        <div class="card">
+          <div class="card-title">Profile</div>
           <div class="card-desc">Update your name and email address.</div>
           <div class="field"><label>Full name</label><input type="text" id="accountName" placeholder="Your name"></div>
           <div class="field"><label>Email address</label><input type="email" id="accountEmail" placeholder="you@example.com" disabled style="background:var(--bg);color:var(--muted)"><div class="field-hint">Email cannot be changed here. Contact support.</div></div>
           <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
         </div>
 
-        <div class="card" style="margin-top:16px">
+        <!-- Store URL -->
+        <div class="card">
           <div class="card-title">Store URL</div>
           <div class="card-desc">Change your store's unique web address. ⚠️ Your old URL will stop working immediately.</div>
           <div class="field">
             <label>Username</label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <span style="font-size:14px;color:var(--muted);white-space:nowrap">hostiehub.com.au/store/</span>
-              <input type="text" id="newUsername" placeholder="e.g. stayable" style="flex:1;text-transform:lowercase">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <span style="font-size:13px;color:var(--muted);white-space:nowrap">hostiehub.com.au/store/</span>
+              <input type="text" id="newUsername" placeholder="e.g. stayable" style="flex:1;min-width:120px;text-transform:lowercase">
             </div>
             <div class="field-hint">Only lowercase letters, numbers and hyphens. Minimum 3 characters.</div>
           </div>
-          <div id="usernameChangePreview" style="display:none;background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;color:var(--brand);margin-bottom:12px"></div>
+          <div id="usernameChangePreview" style="display:none;background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;color:var(--brand);margin-bottom:12px;word-break:break-all"></div>
           <button class="btn btn-outline btn-sm" onclick="changeUsername()">Update store URL</button>
         </div>
-        <div>
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-title">Subscription</div>
-            <div class="card-desc">Your current Hostie Hub plan.</div>
 
-            <!-- Trial status -->
-            <div id="trialStatusCard" style="background:var(--accent-light);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:16px;display:none">
-              <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#92600a;margin-bottom:6px">🟡 Free Trial Active</div>
-              <div style="font-size:22px;font-weight:700;color:#92600a;font-family:'Playfair Display',serif;margin-bottom:4px" id="trialDaysLeft">30 days remaining</div>
-              <div style="font-size:12px;color:#a16207;line-height:1.5">No credit card required. When your trial ends your store will pause until you activate a plan.</div>
-            </div>
-
-            <!-- Paid status -->
-            <div id="paidStatusCard" style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:12px;padding:16px;margin-bottom:16px;display:none">
-              <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:6px">✅ Active Plan</div>
-              <div style="font-size:22px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif;margin-bottom:4px" id="planName">Host Plan · $99/yr</div>
-              <div style="font-size:12px;color:var(--brand-dark)" id="planProperties">Up to 3 properties</div>
-            </div>
-
-            <div id="subscriptionBtns" style="display:flex;gap:10px;flex-wrap:wrap">
-              <a href="plans.html" class="btn btn-primary btn-sm">🏠 Activate Host Plan $99/yr</a>
-              <a href="plans.html" class="btn btn-outline btn-sm">⭐ Pro Plan $199/yr</a>
-            </div>
+        <!-- Subscription -->
+        <div class="card">
+          <div class="card-title">Subscription</div>
+          <div class="card-desc">Your current Hostie Hub plan.</div>
+          <div id="trialStatusCard" style="background:var(--accent-light);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:16px;display:none">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#92600a;margin-bottom:6px">🟡 Free Trial Active</div>
+            <div style="font-size:22px;font-weight:700;color:#92600a;font-family:'Playfair Display',serif;margin-bottom:4px" id="trialDaysLeft">30 days remaining</div>
+            <div style="font-size:12px;color:#a16207;line-height:1.5">No credit card required. When your trial ends your store will pause until you activate a plan.</div>
           </div>
-          <div class="card">
-            <div class="card-title">Danger zone</div>
-            <div class="card-desc">These actions are permanent.</div>
-            <button class="btn btn-danger btn-sm">Cancel subscription</button>
+          <div id="paidStatusCard" style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:12px;padding:16px;margin-bottom:16px;display:none">
+            <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:6px">✅ Active Plan</div>
+            <div style="font-size:22px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif;margin-bottom:4px" id="planName">Host Plan · $99/yr</div>
+            <div style="font-size:12px;color:var(--brand-dark)" id="planProperties">Up to 3 properties</div>
+          </div>
+          <div id="subscriptionBtns" style="display:flex;gap:10px;flex-wrap:wrap">
+            <a href="plans.html" class="btn btn-primary btn-sm">🏠 Activate Host Plan $99/yr</a>
+            <a href="plans.html" class="btn btn-outline btn-sm">⭐ Pro Plan $199/yr</a>
           </div>
         </div>
+
+        <!-- Danger zone -->
+        <div class="card">
+          <div class="card-title">Danger zone</div>
+          <div class="card-desc">These actions are permanent.</div>
+          <button class="btn btn-danger btn-sm">Cancel subscription</button>
+        </div>
+
       </div>
     </div>
 

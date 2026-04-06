@@ -707,6 +707,12 @@
   let currentImageUrl = null;
   let editingPropertyId = null;
   let editingProductId = null;
+  let currentHost = null;
+  let currentUser = null;
+  let properties = [];
+  let products = [];
+  let orders = [];
+  let vouchers = [];
   function previewImage(input) {
     const file = input.files[0];
     if (!file) return;
@@ -1552,7 +1558,8 @@
   window.openPresetModal = openPresetModal;
   window.closePresetModal = closePresetModal;
   window.addSelectedPresets = addSelectedPresets;
-  window.openOrderDetail = openOrderDetail;
+  window.openOrderDetail = toggleOrderDetail;
+  window.toggleOrderDetail = toggleOrderDetail;
   window.fulfillOrder = fulfillOrder;
   window.filterOrders = filterOrders;
   window.addVoucherToStore = addVoucherToStore;

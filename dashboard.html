@@ -1343,7 +1343,7 @@
     const inserts = selected.map(i => ({ ...PRESET_PRODUCTS[i], host_id: currentUser.id, available_all_properties: true, active: true }));
     const { error } = await sb.from('products').insert(inserts);
     if (error) { showToast('⚠️ Error adding presets'); console.error(error); return; }
-    showToast(`✅ ${selected.length} product${selected.length > 1 ? 's' : ''} added!`);
+    showToast('✅ ' + selected.length + ' product' + (selected.length > 1 ? 's' : '') + ' added!');
     closePresetModal();
     loadProducts();
   }
@@ -1590,8 +1590,8 @@
         body: JSON.stringify({
           from: 'Hostie Hub <hello@hostiehub.com.au>',
           to: 'hello@hostiehub.com.au',
-          subject: `Upgrade request from ${currentHost.full_name || currentHost.username}`,
-          html: `<p><strong>${currentHost.full_name || currentHost.username}</strong> (${currentHost.email}) has hit their property limit and would like to be contacted about upgrading their plan.</p><p>Current plan: ${currentHost.plan || 'trial'}</p><p>Properties: ${properties.length}</p>`
+          subject: 'Upgrade request from ' + (currentHost.full_name || currentHost.username),
+          html: '<p><strong>' + (currentHost.full_name || currentHost.username) + '</strong> (' + currentHost.email + ') has hit their property limit and would like to be contacted about upgrading their plan.</p><p>Current plan: ' + (currentHost.plan || 'trial') + '</p><p>Properties: ' + properties.length + '</p>'
         })
       });
       btn.textContent = '✅ Request sent!';

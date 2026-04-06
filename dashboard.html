@@ -192,6 +192,10 @@
   .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
   .empty-state p { font-size: 14px; line-height: 1.5; }
 
+  /* CALENDAR */
+  .cal-option-row { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);transition:border-color 0.2s; }
+  .cal-option-row:hover { border-color:var(--brand); }
+
   /* TWO COL GRID */
   .two-col-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
@@ -308,6 +312,7 @@
     <button class="nav-item" onclick="showPage('stripe', this)"><div class="nav-icon">💳</div><span>Stripe Connect</span></button>
     <div class="nav-section-label">Account</div>
     <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account & Billing</span></button>
+    <button class="nav-item" onclick="showPage('users', this)"><div class="nav-icon">👥</div><span>Users & Calendar</span></button>
   </nav>
   <div class="sidebar-bottom">
     <a class="store-link-btn" id="viewStoreBtn" href="#" target="_blank"><span>🔗</span><span>View my store</span></a>
@@ -582,10 +587,98 @@
       </div>
     </div>
 
+    <!-- USERS & CALENDAR -->
+    <div class="page" id="page-users">
+      <div style="margin-bottom:20px">
+        <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Users & Calendar</h2>
+        <p style="font-size:13px;color:var(--muted);margin-top:2px">Manage notifications and calendar sync</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;width:100%">
+
+        <!-- Notification Emails -->
+        <div class="card">
+          <div class="card-title">Order notifications</div>
+          <div class="card-desc">Add email addresses to be notified when a new order comes in — perfect for cleaners, co-hosts or property managers. Everyone on this list gets an email the moment a guest places an order.</div>
+          <div id="notifEmailsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input type="email" id="notifEmailInput" placeholder="e.g. cleaner@email.com" style="flex:1;min-width:200px;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'">
+            <button class="btn btn-primary btn-sm" onclick="addNotifEmail()">Add email</button>
+          </div>
+        </div>
+
+        <!-- Calendar Sync -->
+        <div class="card">
+          <div class="card-title">Calendar sync</div>
+          <div class="card-desc">Subscribe to your orders calendar so every confirmed order automatically appears in your calendar app with the guest name, property and dates. Your calendar stays up to date automatically.</div>
+
+          <div style="background:var(--bg);border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:var(--muted);line-height:1.6">
+            📅 <strong style="color:var(--text)">How it works:</strong> We generate a unique calendar feed for your store. You subscribe to it once in your calendar app, and it automatically shows new orders as they come in — no manual updates needed.
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+
+            <!-- Google Calendar -->
+            <div class="cal-option-row">
+              <div style="display:flex;align-items:center;gap:12px;flex:1">
+                <div style="width:40px;height:40px;border-radius:10px;background:#fff;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📅</div>
+                <div>
+                  <div style="font-size:14px;font-weight:600">Google Calendar</div>
+                  <div style="font-size:12px;color:var(--muted)">Gmail, Google Workspace</div>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openCalModal('google')">Connect →</button>
+            </div>
+
+            <!-- Apple Calendar -->
+            <div class="cal-option-row">
+              <div style="display:flex;align-items:center;gap:12px;flex:1">
+                <div style="width:40px;height:40px;border-radius:10px;background:#fff;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🍎</div>
+                <div>
+                  <div style="font-size:14px;font-weight:600">Apple Calendar</div>
+                  <div style="font-size:12px;color:var(--muted)">iPhone, iPad, Mac</div>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openCalModal('apple')">Connect →</button>
+            </div>
+
+            <!-- Outlook -->
+            <div class="cal-option-row">
+              <div style="display:flex;align-items:center;gap:12px;flex:1">
+                <div style="width:40px;height:40px;border-radius:10px;background:#fff;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📧</div>
+                <div>
+                  <div style="font-size:14px;font-weight:600">Outlook Calendar</div>
+                  <div style="font-size:12px;color:var(--muted)">Microsoft 365, Outlook.com</div>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="openCalModal('outlook')">Connect →</button>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 </div>
 
-<!-- PRODUCT MODAL -->
+<!-- CALENDAR MODAL -->
+<div class="modal-overlay" id="calModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title" id="calModalTitle">Connect Calendar</div>
+      <button class="modal-close" onclick="document.getElementById('calModal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:12px 16px;margin-bottom:20px">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:6px">Your calendar feed URL</div>
+        <div id="calFeedUrl" style="font-size:13px;color:var(--brand-dark);word-break:break-all;font-family:monospace"></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:20px" onclick="copyCalUrl()">📋 Copy link</button>
+      <div id="calSteps" style="font-size:14px;color:var(--text);line-height:1.8"></div>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="productModal">
   <div class="modal">
     <div class="modal-header">
@@ -752,7 +845,7 @@
 
   const emojis = ['🌸','🧺','🍾','🕐','🏄','🚗','🎁','🌿','☕','🍫','🧁','🎂','🌊','🏠','🧴','🛁','🎵','🐾','🎉','🍕','🥗','🍷','🎈','🍫','🛎️','🧹'];
   const swatchColours = ['#2C6E6A','#1d4d4a','#E8A838','#e74c3c','#8e44ad','#2980b9','#27ae60','#e67e22','#1a1a1a'];
-  const pageTitles = { overview:'Overview', orders:'Orders', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', stripe:'Stripe Connect', account:'Account & Billing' };
+  const pageTitles = { overview:'Overview', orders:'Orders', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', stripe:'Stripe Connect', account:'Account & Billing', users:'Users & Calendar' };
 
   const PRESET_PRODUCTS = [
     // STAY SERVICES
@@ -837,6 +930,7 @@
     if (host) { currentHost = host; populateUI(); }
     await Promise.all([loadProducts(), loadProperties(), loadOrders()]);
     loadVouchers();
+    loadNotifEmails();
     buildEmojiGrid();
     buildSwatches();
 
@@ -1585,6 +1679,104 @@
   window.previewImage = previewImage;
   window.requestUpgradeContact = requestUpgradeContact;
   window.handleLogout = handleLogout;
+
+  // ── NOTIFICATION EMAILS ──
+  async function loadNotifEmails() {
+    const emails = currentHost.notif_emails ? (Array.isArray(currentHost.notif_emails) ? currentHost.notif_emails : JSON.parse(currentHost.notif_emails)) : [];
+    renderNotifEmails(emails);
+  }
+
+  function renderNotifEmails(emails) {
+    const list = document.getElementById('notifEmailsList');
+    if (!list) return;
+    if (!emails.length) {
+      list.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:10px 0">No notification emails added yet.</div>';
+      return;
+    }
+    list.innerHTML = emails.map(email =>
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border)">' +
+        '<span style="font-size:14px">' + email + '</span>' +
+        '<button onclick="removeNotifEmail(\'' + email + '\')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;padding:0 4px" title="Remove">×</button>' +
+      '</div>'
+    ).join('');
+  }
+
+  async function addNotifEmail() {
+    const input = document.getElementById('notifEmailInput');
+    const email = (input.value || '').trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('⚠️ Please enter a valid email address'); return; }
+    const emails = currentHost.notif_emails ? (Array.isArray(currentHost.notif_emails) ? currentHost.notif_emails : JSON.parse(currentHost.notif_emails)) : [];
+    if (emails.includes(email)) { showToast('⚠️ That email is already added'); return; }
+    emails.push(email);
+    await sb.from('hosts').update({ notif_emails: emails }).eq('id', currentUser.id);
+    currentHost.notif_emails = emails;
+    renderNotifEmails(emails);
+    input.value = '';
+    showToast('✅ Email added');
+  }
+
+  async function removeNotifEmail(email) {
+    const emails = currentHost.notif_emails ? (Array.isArray(currentHost.notif_emails) ? currentHost.notif_emails : JSON.parse(currentHost.notif_emails)) : [];
+    const updated = emails.filter(e => e !== email);
+    await sb.from('hosts').update({ notif_emails: updated }).eq('id', currentUser.id);
+    currentHost.notif_emails = updated;
+    renderNotifEmails(updated);
+    showToast('🗑 Email removed');
+  }
+
+  // ── CALENDAR MODAL ──
+  const calInstructions = {
+    google: {
+      title: 'Connect Google Calendar',
+      steps: '<ol style="padding-left:20px;display:flex;flex-direction:column;gap:10px">' +
+        '<li>Click <strong>Copy link</strong> above to copy your calendar feed URL</li>' +
+        '<li>Open <strong>Google Calendar</strong> on your computer</li>' +
+        '<li>On the left sidebar, click the <strong>+</strong> next to "Other calendars"</li>' +
+        '<li>Select <strong>"From URL"</strong></li>' +
+        '<li>Paste your link and click <strong>Add calendar</strong></li>' +
+        '<li>Your Hostie Hub orders will now appear automatically 🎉</li>' +
+        '</ol>'
+    },
+    apple: {
+      title: 'Connect Apple Calendar',
+      steps: '<ol style="padding-left:20px;display:flex;flex-direction:column;gap:10px">' +
+        '<li>Click <strong>Copy link</strong> above to copy your calendar feed URL</li>' +
+        '<li><strong>On iPhone/iPad:</strong> Go to Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar → paste the link</li>' +
+        '<li><strong>On Mac:</strong> Open Calendar → File → New Calendar Subscription → paste the link → click Subscribe</li>' +
+        '<li>Your Hostie Hub orders will now appear automatically 🎉</li>' +
+        '</ol>'
+    },
+    outlook: {
+      title: 'Connect Outlook Calendar',
+      steps: '<ol style="padding-left:20px;display:flex;flex-direction:column;gap:10px">' +
+        '<li>Click <strong>Copy link</strong> above to copy your calendar feed URL</li>' +
+        '<li>Open <strong>Outlook</strong> (desktop or web)</li>' +
+        '<li>Go to your Calendar view</li>' +
+        '<li>Click <strong>Add calendar</strong> → <strong>Subscribe from web</strong></li>' +
+        '<li>Paste your link and click <strong>Import</strong></li>' +
+        '<li>Your Hostie Hub orders will now appear automatically 🎉</li>' +
+        '</ol>'
+    }
+  };
+
+  function openCalModal(type) {
+    const cfg = calInstructions[type];
+    const feedUrl = 'https://hostie-hub-ai.still-feather-9559.workers.dev/ical/' + (currentHost.username || currentUser.id);
+    document.getElementById('calModalTitle').textContent = cfg.title;
+    document.getElementById('calFeedUrl').textContent = feedUrl;
+    document.getElementById('calSteps').innerHTML = cfg.steps;
+    document.getElementById('calModal').classList.add('open');
+  }
+
+  function copyCalUrl() {
+    const url = document.getElementById('calFeedUrl').textContent;
+    navigator.clipboard.writeText(url).then(() => showToast('📋 Calendar link copied!'));
+  }
+
+  window.addNotifEmail = addNotifEmail;
+  window.removeNotifEmail = removeNotifEmail;
+  window.openCalModal = openCalModal;
+  window.copyCalUrl = copyCalUrl;
 
   init();
 </script>

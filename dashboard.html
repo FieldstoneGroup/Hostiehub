@@ -1761,7 +1761,7 @@
 
   function openCalModal(type) {
     const cfg = calInstructions[type];
-    const feedUrl = 'https://hostie-hub-ai.still-feather-9559.workers.dev/ical/' + (currentHost.username || currentUser.id);
+    const feedUrl = 'https://hostie-hub-ical.still-feather-9559.workers.dev/ical/' + (currentHost.username || currentUser.id);
     document.getElementById('calModalTitle').textContent = cfg.title;
     document.getElementById('calFeedUrl').textContent = feedUrl;
     document.getElementById('calSteps').innerHTML = cfg.steps;

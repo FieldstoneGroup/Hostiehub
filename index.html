@@ -99,6 +99,8 @@
   }
 
   .nav-cta:hover { background: var(--brand-dark) !important; color: white !important; }
+  .nav-mobile-login { display: none; align-items: center; padding: 8px 16px; border-radius: 50px; border: 1.5px solid var(--brand); color: var(--brand); font-size: 13px; font-weight: 600; text-decoration: none; transition: background 0.2s; }
+  .nav-mobile-login:hover { background: var(--brand); color: white; }
 
   /* ─── HERO ─── */
   .hero {
@@ -907,6 +909,7 @@
     section { padding: 72px 20px; }
     nav { padding: 0 20px; }
     .nav-links { display: none; }
+    .nav-mobile-login { display: inline-flex; }
 
     .hero-inner { grid-template-columns: 1fr; gap: 48px; }
     .hero-mockup { display: none; }
@@ -946,6 +949,7 @@
       <li><a href="signup.html" class="nav-cta">Get started →</a></li>
       <li><a href="signup.html" style="font-size:14px;font-weight:500;color:var(--muted);text-decoration:none;" onmouseover="this.style.color='var(--brand)'" onmouseout="this.style.color='var(--muted)'">Host login</a></li>
     </ul>
+    <a href="signup.html" class="nav-mobile-login">Host login</a>
   </div>
 </nav>
 

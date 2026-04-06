@@ -198,12 +198,40 @@
   .stripe-banner h3 { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
   .stripe-banner p { font-size: 13px; color: var(--muted); }
 
+  /* STORE NAV LINK */
+  .store-nav-link { text-decoration: none; }
+  .store-nav-link:hover { background: rgba(232,168,56,0.12); color: var(--accent) !important; }
+  .nav-icon-accent { background: rgba(232,168,56,0.18) !important; }
+
+  /* RESPONSIVE GRIDS */
+  .store-settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .account-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* ORDER LIST */
+  .order-row { background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; margin-bottom: 8px; }
+  .order-row:hover { border-color: var(--brand); box-shadow: 0 2px 8px rgba(44,110,106,0.08); }
+  .order-row-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+  .order-row-avatar { width: 34px; height: 34px; background: var(--brand-light); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--brand); flex-shrink: 0; }
+  .order-row-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .order-row-dates { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .order-row-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .order-row-amount { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--brand); }
+  .order-row-chevron { color: var(--muted); font-size: 13px; }
+
+  /* PROPERTY ROW - nickname only */
+  .prop-row { background: var(--card); border: 1.5px solid var(--border); border-radius: 10px; padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; transition: border-color 0.2s; }
+  .prop-row:hover { border-color: var(--brand); }
+  .prop-row-name { font-size: 14px; font-weight: 600; flex: 1; }
+  .prop-row-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
   @media (max-width: 900px) {
     .sidebar { width: 64px; }
-    .sidebar-logo span, .host-info-name, .host-info-url, .nav-item span, .nav-section-label, .store-link-btn span, .logout-btn span { display: none; }
+    .sidebar-logo span, .host-info-name, .host-info-url, .nav-item span, .nav-section-label, .logout-btn span { display: none; }
     .main { margin-left: 64px; }
     .stats-grid { grid-template-columns: 1fr 1fr; }
     .overview-grid { grid-template-columns: 1fr; }
+    .store-settings-grid { grid-template-columns: 1fr; }
+    .account-grid { grid-template-columns: 1fr; }
     .field-row { grid-template-columns: 1fr; }
   }
 </style>
@@ -235,9 +263,10 @@
     <button class="nav-item" onclick="showPage('stripe', this)"><div class="nav-icon">💳</div><span>Stripe Connect</span></button>
     <div class="nav-section-label">Account</div>
     <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account & Billing</span></button>
+    <div class="nav-section-label">My Store</div>
+    <a class="nav-item store-nav-link" id="viewStoreBtn" href="#" target="_blank"><div class="nav-icon nav-icon-accent">🔗</div><span>View my store</span></a>
   </nav>
   <div class="sidebar-bottom">
-    <a class="store-link-btn" id="viewStoreBtn" href="#" target="_blank"><span>🔗</span><span>View my store</span></a>
     <button class="logout-btn" onclick="handleLogout()"><span>↩</span><span>Log out</span></button>
   </div>
 </aside>
@@ -310,17 +339,30 @@
       </div>
     </div>
 
-    <!-- ORDERS -->
+    <!-- ORDERS LIST -->
     <div class="page" id="page-orders">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <div>
           <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Orders</h2>
           <p style="font-size:13px;color:var(--muted);margin-top:2px">Guest purchases from your store</p>
         </div>
       </div>
-      <div class="orders-list" id="ordersList">
+      <div style="margin-bottom:16px;position:relative">
+        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px">🔍</span>
+        <input type="text" id="ordersSearch" placeholder="Search by guest name or property..." oninput="filterOrders()" style="width:100%;padding:11px 14px 11px 38px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div id="ordersListWrap">
         <div class="empty-state"><div class="empty-icon">📋</div><h3>No orders yet</h3><p>Orders will appear here when guests purchase from your store.</p></div>
       </div>
+    </div>
+
+    <!-- ORDER DETAIL -->
+    <div class="page" id="page-order-detail">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <button onclick="showPage('orders', document.querySelector('[onclick*=orders]'))" style="background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--muted);display:flex;align-items:center;gap:6px">← Back</button>
+        <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Order Detail</h2>
+      </div>
+      <div id="orderDetailContent" class="card" style="max-width:600px"></div>
     </div>
 
     <!-- STORE SETTINGS -->
@@ -329,7 +371,7 @@
         <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Store Settings</h2>
         <p style="font-size:13px;color:var(--muted);margin-top:2px">Customise how your store looks to guests</p>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="store-settings-grid">
         <div>
           <div class="card" style="margin-bottom:20px">
             <div class="card-title">Store identity</div>
@@ -368,7 +410,7 @@
           <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Properties</h2>
           <p style="font-size:13px;color:var(--muted);margin-top:2px">The properties you manage</p>
         </div>
-        <button class="btn btn-primary" onclick="openPropertyModal()">+ Add property</button>
+        <button class="btn btn-primary btn-sm" onclick="openPropertyModal()">+ Add property</button>
       </div>
       <div id="propertiesList">
         <div class="empty-state"><div class="empty-icon">🏠</div><h3>No properties yet</h3><p>Add your properties so guests can select which one they're staying at.</p></div>
@@ -395,15 +437,14 @@
 
     <!-- LOCAL VOUCHERS -->
     <div class="page" id="page-vouchers">
-      <div style="margin-bottom:24px">
-        <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Local Vouchers</h2>
-        <p style="font-size:13px;color:var(--muted);margin-top:2px">Partner business vouchers available in your area</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Local Vouchers</h2>
+          <p style="font-size:13px;color:var(--muted);margin-top:2px">Partner business vouchers available in your area</p>
+        </div>
       </div>
-      <div style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;font-size:14px;color:var(--brand-dark);">
-        🎟️ <strong>How it works:</strong> Local businesses add vouchers for guests in your area. Add them to your store and guests can purchase and download them at checkout.
-        <br><span style="font-size:12px;color:var(--muted);margin-top:4px;display:block">Make sure your postcode is set in Store Settings to see relevant vouchers.</span>
-      </div>
-      <div id="vouchersList">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;background:var(--brand-light);border-radius:8px;padding:10px 14px;border-left:3px solid var(--brand);">🎟️ <strong>How it works:</strong> Local businesses add vouchers for guests in your area. Add them to your store and guests can purchase and download them at checkout. <span style="display:block;margin-top:4px">Make sure your postcode is set in Store Settings to see relevant vouchers.</span></p>
+      <div class="products-list" id="vouchersList">
         <div class="empty-state"><div class="empty-icon">🎟️</div><h3>No vouchers in your area yet</h3><p>Local businesses will appear here once they sign up.<br>Make sure your postcode is set in Store Settings.</p></div>
       </div>
     </div>
@@ -450,7 +491,7 @@
         <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Account & Billing</h2>
         <p style="font-size:13px;color:var(--muted);margin-top:2px">Your account details and subscription</p>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="account-grid">
         <div class="card">
           <div class="card-title">Profile</div>
           <div class="card-desc">Update your name and email address.</div>
@@ -459,13 +500,13 @@
           <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
         </div>
 
-        <div class="card" style="margin-top:16px">
+        <div class="card">
           <div class="card-title">Store URL</div>
           <div class="card-desc">Change your store's unique web address. ⚠️ Your old URL will stop working immediately.</div>
           <div class="field">
             <label>Username</label>
             <div style="display:flex;gap:8px;align-items:center">
-              <span style="font-size:14px;color:var(--muted);white-space:nowrap">hostiehub.com.au/store/</span>
+              <span style="font-size:13px;color:var(--muted);white-space:nowrap">hostiehub.com.au/store/</span>
               <input type="text" id="newUsername" placeholder="e.g. stayable" style="flex:1;text-transform:lowercase">
             </div>
             <div class="field-hint">Only lowercase letters, numbers and hyphens. Minimum 3 characters.</div>
@@ -473,30 +514,54 @@
           <div id="usernameChangePreview" style="display:none;background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:600;color:var(--brand);margin-bottom:12px"></div>
           <button class="btn btn-outline btn-sm" onclick="changeUsername()">Update store URL</button>
         </div>
-        <div>
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-title">Subscription</div>
-            <div class="card-desc">Your current Hostie Hub plan.</div>
-            <div id="trialStatusCard" style="background:var(--accent-light);border:1.5px solid var(--accent);border-radius:10px;padding:14px;margin-bottom:14px;display:none">
-              <div style="font-size:13px;color:#92600a;margin-bottom:4px">Free Trial</div>
-              <div style="font-size:18px;font-weight:700;color:#92600a;font-family:'Playfair Display',serif" id="trialDaysLeft">30 days remaining</div>
-              <div style="font-size:12px;color:#92600a;margin-top:4px">No credit card required — your store pauses after trial ends</div>
+
+        <div class="card">
+          <div class="card-title">Subscription</div>
+          <div class="card-desc">Your current Hostie Hub plan.</div>
+
+          <!-- Trial active -->
+          <div id="trialStatusCard" style="display:none;background:var(--accent-light);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:18px">⏳</span>
+              <span style="font-size:12px;font-weight:600;color:#92600a;text-transform:uppercase;letter-spacing:0.5px">Free Trial Active</span>
             </div>
-            <div id="paidStatusCard" style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:14px;margin-bottom:14px;display:none">
-              <div style="font-size:13px;color:var(--muted);margin-bottom:4px">Current plan</div>
-              <div style="font-size:20px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif" id="planName">Host Plan · $99/yr</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:4px" id="planProperties">Up to 3 properties</div>
-            </div>
-            <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <a href="plans.html" class="btn btn-primary btn-sm">🏠 Activate Host Plan $99/yr</a>
-              <a href="plans.html" class="btn btn-outline btn-sm">⭐ Pro Plan $199/yr</a>
+            <div style="font-size:22px;font-weight:700;color:#92600a;font-family:'Playfair Display',serif" id="trialDaysLeft">30 days remaining</div>
+            <div style="font-size:12px;color:#92600a;margin-top:6px">No credit card required — your store pauses when the trial ends</div>
+            <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+              <a href="plans.html" class="btn btn-primary btn-sm">🏠 Host Plan — $99/yr</a>
+              <a href="plans.html" class="btn btn-outline btn-sm">⭐ Pro Plan — $199/yr</a>
             </div>
           </div>
-          <div class="card">
-            <div class="card-title">Danger zone</div>
-            <div class="card-desc">These actions are permanent.</div>
-            <button class="btn btn-danger btn-sm">Cancel subscription</button>
+
+          <!-- Trial expired -->
+          <div id="trialExpiredCard" style="display:none;background:#fef2f2;border:1.5px solid #fecaca;border-radius:12px;padding:16px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:18px">⏰</span>
+              <span style="font-size:12px;font-weight:600;color:var(--error);text-transform:uppercase;letter-spacing:0.5px">Trial Expired</span>
+            </div>
+            <div style="font-size:16px;font-weight:600;color:var(--error);margin-bottom:4px">Your store is currently inactive</div>
+            <div style="font-size:13px;color:#991b1b;line-height:1.5">Choose a plan below to reactivate your store. Your products, properties and settings are all saved.</div>
+            <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+              <a href="plans.html" class="btn btn-primary btn-sm">🏠 Host Plan — $99/yr</a>
+              <a href="plans.html" class="btn btn-outline btn-sm">⭐ Pro Plan — $199/yr</a>
+            </div>
           </div>
+
+          <!-- Paid plan -->
+          <div id="paidStatusCard" style="display:none;background:var(--brand-light);border:2px solid var(--brand);border-radius:12px;padding:16px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:18px">✅</span>
+              <span style="font-size:12px;font-weight:600;color:var(--brand);text-transform:uppercase;letter-spacing:0.5px">Active Plan</span>
+            </div>
+            <div style="font-size:22px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif" id="planName">Host Plan · $99/yr</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px" id="planProperties">Up to 3 properties</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Danger zone</div>
+          <div class="card-desc">These actions are permanent.</div>
+          <button class="btn btn-danger btn-sm">Cancel subscription</button>
         </div>
       </div>
     </div>
@@ -660,7 +725,7 @@
 
   const emojis = ['🌸','🧺','🍾','🕐','🏄','🚗','🎁','🌿','☕','🍫','🧁','🎂','🌊','🏠','🧴','🛁','🎵','🐾','🎉','🍕','🥗','🍷','🎈','🍫','🛎️','🧹'];
   const swatchColours = ['#2C6E6A','#1d4d4a','#E8A838','#e74c3c','#8e44ad','#2980b9','#27ae60','#e67e22','#1a1a1a'];
-  const pageTitles = { overview:'Overview', orders:'Orders', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', stripe:'Stripe Connect', account:'Account & Billing' };
+  const pageTitles = { overview:'Overview', orders:'Orders', 'order-detail':'Order Detail', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', stripe:'Stripe Connect', account:'Account & Billing' };
 
   const PRESET_PRODUCTS = [
     // STAY SERVICES
@@ -844,6 +909,7 @@
     // On trial
     document.getElementById('trialStatusCard').style.display = 'block';
     document.getElementById('paidStatusCard').style.display = 'none';
+    if (document.getElementById('trialExpiredCard')) document.getElementById('trialExpiredCard').style.display = 'none';
     if (daysLeft > 0) {
       document.getElementById('trialDaysLeft').textContent = daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' remaining';
     } else {
@@ -862,8 +928,10 @@
       document.getElementById('trialBannerText').textContent = text;
       if (daysLeft <= 3) document.getElementById('trialBanner').style.background = 'linear-gradient(135deg,#e53e3e,#c53030)';
     } else if (trialExpired) {
-      // Trial expired — show overlay
+      // Trial expired — show overlay + inline card
       document.getElementById('trialExpiredOverlay').style.display = 'flex';
+      document.getElementById('trialStatusCard').style.display = 'none';
+      if (document.getElementById('trialExpiredCard')) document.getElementById('trialExpiredCard').style.display = 'block';
       sb.from('hosts').update({ is_active: false }).eq('id', currentUser.id);
     }
   }
@@ -893,13 +961,10 @@
       return;
     }
     list.innerHTML = properties.map(p => `
-      <div class="property-row">
-        <div class="property-icon">🏠</div>
-        <div class="property-info">
-          <div class="property-name">${p.nickname}</div>
-          <div class="property-address">${p.address || ''}${p.postcode ? ' · ' + p.postcode : ''}</div>
-        </div>
-        <div style="display:flex;gap:8px">
+      <div class="prop-row">
+        <span style="font-size:18px;flex-shrink:0">🏠</span>
+        <div class="prop-row-name">${p.nickname}</div>
+        <div class="prop-row-actions">
           <button class="btn btn-outline btn-sm" onclick="editProperty('${p.id}')">Edit</button>
           <button class="btn btn-danger btn-sm" onclick="deleteProperty('${p.id}')">Delete</button>
         </div>
@@ -1187,44 +1252,88 @@
     document.getElementById('statOrders').textContent = orders.length;
   }
 
-  function renderOrders() {
-    const list = document.getElementById('ordersList');
-    if (!orders.length) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><h3>No orders yet</h3><p>Orders will appear here when guests purchase from your store.</p></div>`;
+  function filterOrders() {
+    const q = (document.getElementById('ordersSearch')?.value || '').toLowerCase();
+    const filtered = orders.filter(o =>
+      (o.guest_name || '').toLowerCase().includes(q) ||
+      (o.property_name || '').toLowerCase().includes(q)
+    );
+    renderOrders(filtered);
+  }
+
+  function renderOrders(list) {
+    const data = list !== undefined ? list : orders;
+    const wrap = document.getElementById('ordersListWrap');
+    if (!data.length) {
+      wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><h3>No orders yet</h3><p>Orders will appear here when guests purchase from your store.</p></div>`;
       return;
     }
-    list.innerHTML = orders.map(o => {
-      const items = Array.isArray(o.items) ? o.items : JSON.parse(o.items || '[]');
-      const notes = o.product_notes ? (typeof o.product_notes === 'string' ? JSON.parse(o.product_notes) : o.product_notes) : {};
-      const noteEntries = Object.entries(notes).filter(([,v]) => v);
+    // Sort by check-in date descending
+    const sorted = [...data].sort((a, b) => new Date(b.checkin_date || b.created_at) - new Date(a.checkin_date || a.created_at));
+    wrap.innerHTML = sorted.map(o => {
+      const initials = (o.guest_name || 'G').split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+      const checkin = o.checkin_date ? o.checkin_date.slice(0,10) : '';
+      const checkout = o.checkout_date ? o.checkout_date.slice(0,10) : '';
+      const statusDot = o.status === 'fulfilled' ? '🟢' : o.status === 'paid' ? '🔵' : '🟡';
       return `
-        <div class="order-card">
-          <div class="order-header">
+        <div class="order-row" onclick="openOrderDetail('${o.id}')">
+          <div class="order-row-left">
+            <div class="order-row-avatar">${initials}</div>
             <div>
-              <div class="order-guest">${o.guest_name || 'Guest'}</div>
-              <div class="order-dates">📅 ${o.checkin_date || ''} → ${o.checkout_date || ''}</div>
-              ${o.property_name ? `<div class="order-property">🏠 ${o.property_name}</div>` : ''}
-            </div>
-            <div style="text-align:right">
-              <div class="order-amount">$${o.total || 0}</div>
-              <div class="order-status ${o.status === 'fulfilled' ? 'status-fulfilled' : o.status === 'paid' ? 'status-paid' : 'status-pending'}">● ${o.status || 'pending'}</div>
+              <div class="order-row-name">${o.guest_name || 'Guest'}</div>
+              <div class="order-row-dates">${checkin}${checkout ? ' → ' + checkout : ''}${o.property_name ? ' · ' + o.property_name : ''}</div>
             </div>
           </div>
-          <div class="order-items">${items.map(i => `<span class="order-item-tag">${i.name} $${i.price}</span>`).join('')}</div>
-          ${o.notes ? `<div class="order-notes">💬 "${o.notes}"</div>` : ''}
-          ${noteEntries.length ? `<div class="order-notes" style="margin-top:8px">📝 ${noteEntries.map(([k,v]) => `<strong>${k}:</strong> ${v}`).join(' · ')}</div>` : ''}
-          <div style="display:flex;justify-content:flex-end;margin-top:10px">
-            ${o.status !== 'fulfilled' ? `<button class="btn btn-success btn-sm" onclick="fulfillOrder('${o.id}')">✓ Mark as fulfilled</button>` : '<span style="font-size:13px;color:var(--brand);font-weight:500">✓ Fulfilled</span>'}
+          <div class="order-row-right">
+            <span title="${o.status || 'pending'}">${statusDot}</span>
+            <span class="order-row-amount">$${o.total || 0}</span>
+            <span class="order-row-chevron">›</span>
           </div>
         </div>
       `;
     }).join('');
   }
 
+  function openOrderDetail(id) {
+    const o = orders.find(x => x.id === id);
+    if (!o) return;
+    const items = Array.isArray(o.items) ? o.items : JSON.parse(o.items || '[]');
+    const notes = o.product_notes ? (typeof o.product_notes === 'string' ? JSON.parse(o.product_notes) : o.product_notes) : {};
+    const noteEntries = Object.entries(notes).filter(([,v]) => v);
+    const statusClass = o.status === 'fulfilled' ? 'status-fulfilled' : o.status === 'paid' ? 'status-paid' : 'status-pending';
+    document.getElementById('orderDetailContent').innerHTML = `
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;margin-bottom:4px">${o.guest_name || 'Guest'}</div>
+          <div style="font-size:13px;color:var(--muted)">📅 ${o.checkin_date || ''} → ${o.checkout_date || ''}</div>
+          ${o.property_name ? `<div style="font-size:13px;color:var(--brand);font-weight:500;margin-top:2px">🏠 ${o.property_name}</div>` : ''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--brand)">$${o.total || 0}</div>
+          <div class="order-status ${statusClass}" style="margin-top:4px;display:inline-flex">● ${o.status || 'pending'}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px">Items ordered</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">${items.map(i => `<span class="order-item-tag">${i.name} · $${i.price}</span>`).join('')}</div>
+      </div>
+      ${o.notes ? `<div class="order-notes" style="margin-bottom:12px">💬 "${o.notes}"</div>` : ''}
+      ${noteEntries.length ? `<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px">Guest notes</div>${noteEntries.map(([k,v]) => `<div class="order-notes" style="margin-bottom:6px"><strong>${k}:</strong> ${v}</div>`).join('')}</div>` : ''}
+      <div style="display:flex;justify-content:flex-end;padding-top:16px;border-top:1.5px solid var(--border)">
+        ${o.status !== 'fulfilled' ? `<button class="btn btn-success btn-sm" onclick="fulfillOrder('${o.id}')">✓ Mark as fulfilled</button>` : '<span style="font-size:13px;color:var(--brand);font-weight:500">✓ Fulfilled</span>'}
+      </div>
+    `;
+    // Navigate to detail page without resetting nav active state
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-order-detail').classList.add('active');
+    document.getElementById('topbarTitle').textContent = 'Order Detail';
+  }
+
   async function fulfillOrder(id) {
     await sb.from('orders').update({ status: 'fulfilled' }).eq('id', id);
     showToast('✅ Order marked as fulfilled');
-    loadOrders();
+    await loadOrders();
+    openOrderDetail(id);
   }
 
   // ── VOUCHERS ──
@@ -1246,15 +1355,19 @@
       return;
     }
     list.innerHTML = vouchers.map(v => `
-      <div class="voucher-card">
-        <div class="voucher-icon">🎟️</div>
-        <div class="voucher-info">
-          <div class="voucher-name">${v.title}</div>
-          <div class="voucher-meta">${v.partners?.business_name || ''} · ${v.value || ''} · Expires ${v.expiry_date || 'N/A'}</div>
-          <div style="font-size:13px;color:var(--muted);margin-top:4px">${v.description || ''}</div>
+      <div class="product-row">
+        <div class="product-emoji" style="background:var(--accent-light)">🎟️</div>
+        <div class="product-info">
+          <div class="product-name">${v.title}</div>
+          <div class="product-meta">${v.partners?.business_name || ''} · ${v.value || ''} · Expires ${v.expiry_date || 'N/A'}</div>
+          ${v.description ? `<div style="font-size:12px;color:var(--muted);margin-top:2px">${v.description}</div>` : ''}
         </div>
-        <button class="btn btn-accent btn-sm" onclick="addVoucherToStore('${v.id}', '${v.title}')">Add to store</button>
+        <div class="product-actions">
+          <button class="btn btn-accent btn-sm" onclick="addVoucherToStore('${v.id}', '${v.title}')">Add to store</button>
+        </div>
       </div>
+    `).join('');
+  }
     `).join('');
   }
 
@@ -1410,6 +1523,15 @@
     if (!el) return;
     el.querySelector('.check-circle').className = 'check-circle check-done';
     el.querySelector('.check-circle').textContent = '✓';
+    // Hide the checklist card if all steps are complete
+    const allDone = ['checkStore','checkProperties','checkProducts','checkStripe'].every(cid => {
+      const item = document.getElementById(cid);
+      return item && item.querySelector('.check-circle.check-done');
+    });
+    if (allDone) {
+      const card = document.querySelector('.setup-checklist')?.closest('.card');
+      if (card) card.style.display = 'none';
+    }
   }
 
   function showToast(msg) {

@@ -226,7 +226,13 @@
 
   @media (max-width: 900px) {
     .sidebar { width: 64px; }
-    .sidebar-logo span, .host-info-name, .host-info-url, .nav-item span, .nav-section-label, .logout-btn span { display: none; }
+    .sidebar-logo { justify-content: center; padding: 16px 0; }
+    .sidebar-logo span, .host-info-name, .host-info-url, .nav-item span, .nav-section-label, .logout-btn span, .store-nav-link span { display: none; }
+    .sidebar-host { justify-content: center; padding: 12px 0; }
+    .nav-item { justify-content: center; padding: 10px 0; gap: 0; }
+    .nav-icon { flex-shrink: 0; }
+    .logout-btn { justify-content: center; padding: 10px 0; }
+    .sidebar-bottom { padding: 12px 0; }
     .main { margin-left: 64px; }
     .stats-grid { grid-template-columns: 1fr 1fr; }
     .overview-grid { grid-template-columns: 1fr; }

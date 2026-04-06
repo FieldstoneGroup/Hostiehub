@@ -41,18 +41,19 @@
   .logout-btn:hover { color: rgba(255,255,255,0.8); }
 
   /* MAIN */
-  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; min-width: 0; overflow-x: hidden; }
   .topbar { background: var(--card); border-bottom: 1.5px solid var(--border); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
   .topbar-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; }
   .topbar-actions { display: flex; align-items: center; gap: 12px; }
   .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 50px; font-size: 12px; font-weight: 600; }
   .badge-success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
   .badge-warn { background: var(--accent-light); color: #92600a; border: 1px solid #fde68a; }
-  .content { padding: 32px; flex: 1; }
+  .content { padding: 32px; flex: 1; min-width: 0; overflow-x: hidden; }
 
   /* PAGES */
-  .page { display: none; }
+  .page { display: none; max-width: 100%; }
   .page.active { display: block; animation: fadeIn 0.3s ease; }
+  .field input, .field textarea, .field select { width: 100%; max-width: 100%; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
   /* CARDS */
@@ -205,6 +206,8 @@
     .main { margin-left: 64px; }
     .stats-grid { grid-template-columns: 1fr 1fr; }
     .overview-grid { grid-template-columns: 1fr; }
+    .store-settings-grid, #page-store > div:last-child { grid-template-columns: 1fr !important; }
+    .account-grid, #page-account > div:last-child { grid-template-columns: 1fr !important; }
     .field-row { grid-template-columns: 1fr; }
     .nav-item { padding: 10px 8px; justify-content: center; }
     .nav-icon { width: 36px; height: 36px; font-size: 16px; }

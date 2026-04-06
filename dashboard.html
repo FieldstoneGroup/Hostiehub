@@ -408,7 +408,7 @@
         <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Store Settings</h2>
         <p style="font-size:13px;color:var(--muted);margin-top:2px">Customise how your store looks to guests</p>
       </div>
-      <div class="two-col-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="two-col-grid">
         <div>
           <div class="card" style="margin-bottom:20px">
             <div class="card-title">Store identity</div>
@@ -529,7 +529,7 @@
         <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Account & Billing</h2>
         <p style="font-size:13px;color:var(--muted);margin-top:2px">Your account details and subscription</p>
       </div>
-      <div class="two-col-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="two-col-grid">
           <div class="card-desc">Update your name and email address.</div>
           <div class="field"><label>Full name</label><input type="text" id="accountName" placeholder="Your name"></div>
           <div class="field"><label>Email address</label><input type="email" id="accountEmail" placeholder="you@example.com" disabled style="background:var(--bg);color:var(--muted)"><div class="field-hint">Email cannot be changed here. Contact support.</div></div>
@@ -985,7 +985,8 @@
       list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏠</div><h3>No properties yet</h3><p>Add your properties so guests can select which one they\'re staying at.</p></div>';
       return;
     }
-    list.innerHTML = properties.map(p =>
+    const sorted = [...properties].sort((a, b) => (a.nickname || '').localeCompare(b.nickname || ''));
+    list.innerHTML = sorted.map(p =>
       '<div class="prop-row" onclick="editProperty(\'' + p.id + '\')" style="cursor:pointer">' +
         '<span style="font-size:16px;flex-shrink:0">🏠</span>' +
         '<div class="prop-row-name">' + p.nickname + '</div>' +

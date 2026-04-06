@@ -113,6 +113,7 @@
 
   /* PROPERTIES */
   .property-row { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .property-actions { display: flex; gap: 8px; flex-shrink: 0; }
   .property-icon { width: 44px; height: 44px; background: var(--brand-light); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
   .property-info { flex: 1; }
   .property-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
@@ -238,14 +239,13 @@
     .checklist-item { flex-wrap: nowrap; padding: 10px 12px; }
     .checklist-item span { font-size: 13px; }
 
-    /* Property rows — hide icon, truncate info, keep buttons */
-    .property-row { gap: 8px; padding: 12px; }
+    /* Property rows — stack vertically on mobile */
+    .property-row { flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; }
     .property-icon { display: none; }
-    .property-info { min-width: 0; flex: 1; }
-    .property-name { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .property-address { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .property-row > div:last-child { flex-shrink: 0; }
-    .property-row .btn-sm { padding: 6px 10px; font-size: 12px; }
+    .property-info { width: 100%; }
+    .property-name { font-size: 14px; font-weight: 600; }
+    .property-address { font-size: 12px; }
+    .property-actions { width: 100%; justify-content: flex-end; }
 
     /* Product rows — two-row layout on mobile */
     .product-row { flex-wrap: wrap; gap: 6px; padding: 12px; }
@@ -1086,7 +1086,7 @@
           <div class="property-name">${p.nickname}</div>
           <div class="property-address">${p.address || ''}${p.postcode ? ' · ' + p.postcode : ''}</div>
         </div>
-        <div style="display:flex;gap:8px">
+        <div class="property-actions">
           <button class="btn btn-outline btn-sm" onclick="editProperty('${p.id}')">Edit</button>
           <button class="btn btn-danger btn-sm" onclick="deleteProperty('${p.id}')">Delete</button>
         </div>

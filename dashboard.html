@@ -307,6 +307,7 @@
     <button class="nav-item" onclick="showPage('properties', this)"><div class="nav-icon">🏠</div><span>Properties</span></button>
     <button class="nav-item" onclick="showPage('products', this)"><div class="nav-icon">📦</div><span>Products</span></button>
     <button class="nav-item" onclick="showPage('vouchers', this)"><div class="nav-icon">🎟️</div><span>Local Vouchers</span></button>
+    <button class="nav-item" onclick="showPage('localproducts', this)"><div class="nav-icon">🤝</div><span>Local Products</span></button>
     <button class="nav-item" onclick="showPage('stripe', this)"><div class="nav-icon">💳</div><span>Stripe Connect</span></button>
     <div class="nav-section-label">Account</div>
     <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account & Billing</span></button>
@@ -473,6 +474,17 @@
       </div>
       <div id="vouchersList">
         <div class="empty-state"><div class="empty-icon">🎟️</div><h3>No vouchers in your area yet</h3><p>Local businesses will appear here once they sign up.<br>Make sure your postcode is set in Store Settings.</p></div>
+      </div>
+    </div>
+
+    <!-- LOCAL PRODUCTS -->
+    <div class="page" id="page-localproducts">
+      <div style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;font-size:14px;color:var(--brand-dark);">
+        🤝 <strong>How it works:</strong> Local businesses list their products here. Add them to your store, set your own retail price, and earn the margin. You arrange payment directly with the supplier.
+        <br><span style="font-size:12px;color:var(--muted);margin-top:4px;display:block">Make sure your postcode is set in Store Settings to see relevant products.</span>
+      </div>
+      <div id="localProductsList">
+        <div class="empty-state"><div class="empty-icon">🤝</div><h3>No local products in your area yet</h3><p>Local businesses will appear here once they sign up.<br>Make sure your postcode is set in Store Settings.</p></div>
       </div>
     </div>
 
@@ -798,6 +810,30 @@
   </div>
 </div>
 
+<!-- LOCAL PRODUCT MODAL -->
+<div class="modal-overlay" id="localProductModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title" id="localProductModalTitle">Add to your store</div>
+      <button class="modal-close" onclick="closeLocalProductModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="localProductInfo" style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px"></div>
+      <div id="localProductPriceField">
+        <div class="field">
+          <label>Your retail price ($)</label>
+          <input type="number" id="localProductRetailPrice" placeholder="e.g. 65" min="0">
+          <div class="field-hint" id="localProductPriceHint">This is what guests pay. You keep everything above the wholesale price.</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeLocalProductModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAddLocalProduct()">Add to my store →</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"><span id="toastMsg">Saved!</span></div>
 
@@ -849,7 +885,7 @@
 
   const emojis = ['🌸','🧺','🍾','🕐','🏄','🚗','🎁','🌿','☕','🍫','🧁','🎂','🌊','🏠','🧴','🛁','🎵','🐾','🎉','🍕','🥗','🍷','🎈','🍫','🛎️','🧹'];
   const swatchColours = ['#2C6E6A','#1d4d4a','#E8A838','#e74c3c','#8e44ad','#2980b9','#27ae60','#e67e22','#1a1a1a'];
-  const pageTitles = { overview:'Overview', orders:'Orders', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', stripe:'Stripe Connect', account:'Account & Billing', users:'Users & Calendar' };
+  const pageTitles = { overview:'Overview', orders:'Orders', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', localproducts:'Local Products', stripe:'Stripe Connect', account:'Account & Billing', users:'Users & Calendar' };
 
   const PRESET_PRODUCTS = [
     // STAY SERVICES
@@ -934,6 +970,7 @@
     if (host) { currentHost = host; populateUI(); }
     await Promise.all([loadProducts(), loadProperties(), loadOrders()]);
     loadVouchers();
+    loadLocalProducts();
     loadNotifEmails();
     buildEmojiGrid();
     buildSwatches();
@@ -1598,6 +1635,145 @@
     loadProducts();
   }
 
+  // ── LOCAL PARTNER PRODUCTS ──
+  let localPartnerProducts = [];
+  let pendingLocalProduct = null;
+  let addedPartnerProductIds = new Set();
+
+  async function loadLocalProducts() {
+    const postcode = currentHost?.postcode;
+    if (!postcode) return;
+
+    // Load all active partner products
+    const { data } = await sb.from('partner_products')
+      .select('*, partners(business_name, phone)')
+      .eq('active', true);
+
+    localPartnerProducts = (data || []).filter(p => {
+      const codes = Array.isArray(p.postcodes) ? p.postcodes : JSON.parse(p.postcodes || '[]');
+      return codes.includes(postcode);
+    });
+
+    // Check which ones are already in the host's store
+    const { data: existing } = await sb.from('products')
+      .select('partner_product_id')
+      .eq('host_id', currentUser.id)
+      .not('partner_product_id', 'is', null);
+
+    addedPartnerProductIds = new Set((existing || []).map(p => p.partner_product_id));
+    renderLocalProducts();
+  }
+
+  function renderLocalProducts() {
+    const list = document.getElementById('localProductsList');
+    if (!localPartnerProducts.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🤝</div><h3>No local products in your area yet</h3><p>Local businesses will appear here once they sign up.<br>Make sure your postcode is set in Store Settings.</p></div>';
+      return;
+    }
+
+    list.innerHTML = localPartnerProducts.map(p => {
+      const isAdded = addedPartnerProductIds.has(p.id);
+      const isBooking = p.type === 'booking';
+      const businessName = p.partners ? p.partners.business_name : 'Local Business';
+      const thumb = p.image_url
+        ? '<img src="' + p.image_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">'
+        : (isBooking ? '🔗' : '📦');
+
+      return '<div class="product-row" style="' + (isAdded ? 'opacity:0.7' : '') + '">' +
+        '<div class="product-emoji" style="' + (p.image_url ? 'padding:0;overflow:hidden' : '') + '">' + thumb + '</div>' +
+        '<div class="product-info">' +
+          '<div class="product-name">' + p.name + '</div>' +
+          '<div class="product-meta">' +
+            businessName +
+            (isBooking ? ' · 🔗 Booking link · Free' : ' · 📦 Physical · Wholesale $' + (p.wholesale_price || 0)) +
+            (p.notes ? ' · 💡 ' + p.notes : '') +
+          '</div>' +
+          (p.description ? '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + p.description + '</div>' : '') +
+        '</div>' +
+        (isAdded
+          ? '<span style="font-size:13px;color:var(--brand);font-weight:600;white-space:nowrap">✓ Added</span>'
+          : '<button class="btn btn-primary btn-sm" onclick="openLocalProductModal(\'' + p.id + '\')">Add to store</button>'
+        ) +
+      '</div>';
+    }).join('');
+  }
+
+  function openLocalProductModal(productId) {
+    const p = localPartnerProducts.find(x => x.id === productId);
+    if (!p) return;
+    pendingLocalProduct = p;
+    const isBooking = p.type === 'booking';
+    const businessName = p.partners ? p.partners.business_name : 'Local Business';
+
+    document.getElementById('localProductModalTitle').textContent = 'Add to your store — ' + p.name;
+    document.getElementById('localProductInfo').innerHTML =
+      '<div style="font-size:14px;font-weight:600;margin-bottom:6px">' + p.name + '</div>' +
+      '<div style="font-size:13px;color:var(--muted);margin-bottom:8px">By ' + businessName + '</div>' +
+      (isBooking
+        ? '<div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;font-size:13px;color:var(--brand-dark)">🔗 This is a booking link product. Guests click "Book now" and go straight to the business website. No payment taken through your store.</div>'
+        : '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 Wholesale price: <strong>$' + (p.wholesale_price || 0) + '</strong> — you pay this to ' + businessName + '. Set your retail price below and keep the margin.</div>'
+      );
+
+    const priceField = document.getElementById('localProductPriceField');
+    if (isBooking) {
+      priceField.style.display = 'none';
+    } else {
+      priceField.style.display = 'block';
+      document.getElementById('localProductRetailPrice').value = '';
+      document.getElementById('localProductRetailPrice').placeholder = 'e.g. ' + ((p.wholesale_price || 0) + 20);
+      document.getElementById('localProductPriceHint').textContent =
+        'Wholesale: $' + (p.wholesale_price || 0) + ' · Guests pay your retail price · You keep the difference.';
+    }
+
+    document.getElementById('localProductModal').classList.add('open');
+  }
+
+  function closeLocalProductModal() {
+    document.getElementById('localProductModal').classList.remove('open');
+    pendingLocalProduct = null;
+  }
+
+  async function confirmAddLocalProduct() {
+    if (!pendingLocalProduct) return;
+    const p = pendingLocalProduct;
+    const isBooking = p.type === 'booking';
+    const retailPrice = isBooking ? 0 : parseFloat(document.getElementById('localProductRetailPrice').value);
+
+    if (!isBooking && (!retailPrice || retailPrice <= 0)) {
+      showToast('⚠️ Please enter a retail price');
+      return;
+    }
+
+    const businessName = p.partners ? p.partners.business_name : 'Local Business';
+
+    const { error } = await sb.from('products').insert({
+      host_id: currentUser.id,
+      name: p.name,
+      description: p.description || '',
+      price: retailPrice,
+      unit: 'per stay',
+      category: 'other',
+      emoji: isBooking ? '🔗' : '📦',
+      image_url: p.image_url || null,
+      available_all_properties: true,
+      active: true,
+      partner_product_id: p.id,
+      partner_id: p.partner_id,
+      partner_product_type: p.type,
+      partner_booking_url: isBooking ? p.booking_url : null,
+      partner_notes: p.notes || null,
+      wholesale_price: p.wholesale_price || 0,
+    });
+
+    if (error) { showToast('⚠️ Error: ' + error.message); return; }
+
+    addedPartnerProductIds.add(p.id);
+    closeLocalProductModal();
+    showToast('✅ ' + p.name + ' added to your store!');
+    loadProducts();
+    renderLocalProducts();
+  }
+
   // ── STORE SETTINGS ──
   // ── LOGO ──
   let currentLogoUrl = null;
@@ -1619,6 +1795,7 @@
     showToast('✅ Store settings saved');
     tickCheck('checkStore');
     loadVouchers();
+    loadLocalProducts();
   }
 
   // ── COLOUR ──
@@ -1918,6 +2095,9 @@
   window.fulfillOrder = fulfillOrder;
   window.filterOrders = filterOrders;
   window.addVoucherToStore = addVoucherToStore;
+  window.openLocalProductModal = openLocalProductModal;
+  window.closeLocalProductModal = closeLocalProductModal;
+  window.confirmAddLocalProduct = confirmAddLocalProduct;
   window.connectStripe = connectStripe;
   window.saveProfile = saveProfile;
   window.changeUsername = changeUsername;

@@ -46,19 +46,19 @@
   .card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); padding: 24px; }
   .card-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; margin-bottom: 4px; }
   .card-desc { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
-  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
   .stat-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); padding: 20px; }
   .stat-label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
   .stat-value { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; color: var(--partner); line-height: 1; margin-bottom: 4px; }
   .stat-sub { font-size: 12px; color: var(--muted); }
-  .btn { padding: 10px 20px; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .btn { padding: 10px 20px; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; text-decoration: none; }
   .btn-primary { background: var(--partner); color: white; }
   .btn-primary:hover { background: #0a2540; }
   .btn-outline { background: white; color: var(--text); border: 1.5px solid var(--border); }
   .btn-outline:hover { border-color: var(--partner); color: var(--partner); }
   .btn-danger { background: #fef2f2; color: var(--error); border: 1.5px solid #fecaca; }
-  .btn-danger:hover { background: #fee2e2; }
   .btn-sm { padding: 7px 14px; font-size: 13px; }
+  .btn-accent { background: var(--accent); color: white; }
   .field { margin-bottom: 16px; }
   .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
   .field input, .field textarea, .field select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); background: white; outline: none; transition: border-color 0.2s; }
@@ -91,6 +91,31 @@
   .image-preview-wrap { position: relative; width: 100%; height: 180px; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border); margin-bottom: 10px; }
   .image-preview-wrap img { width: 100%; height: 100%; object-fit: cover; }
   .image-remove-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  /* ANALYTICS */
+  .analytics-stat { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; }
+  .analytics-stat-val { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--partner); }
+  .analytics-stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .analytics-table { width: 100%; border-collapse: collapse; }
+  .analytics-table th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); padding: 10px 12px; text-align: left; border-bottom: 1.5px solid var(--border); }
+  .analytics-table td { padding: 12px; font-size: 14px; border-bottom: 1px solid var(--bg); vertical-align: middle; }
+  .analytics-table tr:last-child td { border-bottom: none; }
+  .bar-wrap { background: var(--bg); border-radius: 4px; height: 8px; min-width: 60px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; background: var(--partner); transition: width 0.6s ease; }
+  .period-btn { padding: 6px 14px; border-radius: 50px; border: 1.5px solid var(--border); background: white; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+  .period-btn.active { background: var(--partner); color: white; border-color: var(--partner); }
+  /* TRIAL BANNER */
+  .trial-banner { color: white; padding: 12px 32px; display: none; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  /* PLAN CARDS */
+  .plan-card { border: 1.5px solid var(--border); border-radius: var(--radius); padding: 24px; position: relative; transition: border-color 0.2s; }
+  .plan-card:hover { border-color: var(--partner); }
+  .plan-card.featured { border-color: var(--partner); background: var(--partner-light); }
+  .plan-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--partner); color: white; font-size: 11px; font-weight: 700; padding: 3px 12px; border-radius: 50px; white-space: nowrap; }
+  .plan-price { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--partner); margin: 12px 0 4px; }
+  .plan-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .plan-features { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 16px 0 20px; }
+  .plan-features li { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .plan-features li::before { content: '✓'; color: var(--success); font-weight: 700; flex-shrink: 0; }
+  /* TOAST */
   .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 999; display: none; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
   .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
   .empty-icon { font-size: 48px; margin-bottom: 12px; }
@@ -120,6 +145,7 @@
     #page-account > div { grid-template-columns: 1fr !important; }
     .item-row { flex-wrap: wrap; }
     .item-row > div:last-child { width: 100%; display: flex; justify-content: flex-end; gap: 6px; margin-top: 4px; }
+    .trial-banner { padding: 12px 16px; }
   }
 </style>
 </head>
@@ -137,6 +163,7 @@
   <nav class="sidebar-nav">
     <div class="nav-section-label">Main</div>
     <button class="nav-item active" onclick="showPage('overview', this)"><div class="nav-icon">🏠</div><span>Overview</span></button>
+    <button class="nav-item" onclick="showPage('analytics', this)"><div class="nav-icon">📊</div><span>Analytics</span></button>
     <div class="nav-section-label">Products & Services</div>
     <button class="nav-item" onclick="showPage('products', this)"><div class="nav-icon">📦</div><span>My Products</span></button>
     <button class="nav-item" onclick="showPage('newproduct', this)"><div class="nav-icon">➕</div><span>Add Product</span></button>
@@ -145,6 +172,7 @@
     <button class="nav-item" onclick="showPage('newvoucher', this)"><div class="nav-icon">➕</div><span>Add Voucher</span></button>
     <div class="nav-section-label">Account</div>
     <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account</span></button>
+    <button class="nav-item" onclick="showPage('billing', this)"><div class="nav-icon">💳</div><span>Billing</span></button>
   </nav>
   <div class="sidebar-bottom">
     <button class="logout-btn" onclick="handleLogout()"><span>↩</span><span>Log out</span></button>
@@ -156,6 +184,15 @@
     <div class="topbar-title" id="topbarTitle">Overview</div>
     <div class="partner-badge">🤝 Partner Business</div>
   </div>
+
+  <!-- TRIAL BANNER -->
+  <div id="trialBanner" class="trial-banner" style="background:linear-gradient(135deg,#E8A838,#d4952e)">
+    <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500">
+      <span>⏳</span><span id="trialBannerText">Your free trial is active</span>
+    </div>
+    <button onclick="showPage('billing', document.querySelector('[onclick*=billing]'))" style="background:white;color:#92600a;padding:8px 20px;border-radius:50px;font-size:13px;font-weight:700;border:none;cursor:pointer;white-space:nowrap;">Choose a plan →</button>
+  </div>
+
   <div class="content">
 
     <!-- OVERVIEW -->
@@ -163,6 +200,7 @@
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-label">Active Products</div><div class="stat-value" id="statProducts">0</div><div class="stat-sub">Live in stores</div></div>
         <div class="stat-card"><div class="stat-label">Active Vouchers</div><div class="stat-value" id="statVouchers">0</div><div class="stat-sub">Live in stores</div></div>
+        <div class="stat-card"><div class="stat-label">Views this month</div><div class="stat-value" id="statViews">0</div><div class="stat-sub">Guest impressions</div></div>
         <div class="stat-card"><div class="stat-label">Postcodes</div><div class="stat-value" id="statPostcodes">0</div><div class="stat-sub">Areas covered</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
@@ -180,7 +218,7 @@
           <div class="card-desc">Get your products & services in front of guests.</div>
           <div style="display:flex;flex-direction:column;gap:10px">
             <button class="btn btn-primary" onclick="showPage('newproduct', document.querySelector('[onclick*=newproduct]'))">📦 &nbsp;Add a product or service</button>
-            <button class="btn btn-outline" onclick="showPage('products', document.querySelector('[onclick*=products]'))">📋 &nbsp;View my products</button>
+            <button class="btn btn-outline" onclick="showPage('analytics', document.querySelector('[onclick*=analytics]'))">📊 &nbsp;View analytics</button>
             <button class="btn btn-outline" onclick="showPage('newvoucher', document.querySelector('[onclick*=newvoucher]'))">🎟️ &nbsp;Add a voucher</button>
             <button class="btn btn-outline" onclick="showPage('account', document.querySelector('[onclick*=account]'))">📍 &nbsp;Update my postcodes</button>
           </div>
@@ -191,6 +229,46 @@
         <div class="card-desc">Hosts in these postcodes can see and add your products & services.</div>
         <div class="postcode-tags" id="overviewPostcodes"></div>
         <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="showPage('account', document.querySelector('[onclick*=account]'))">Edit postcodes →</button>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <p style="font-size:13px;color:var(--muted);margin-top:2px">See how your products are performing across host stores</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="period-btn active" onclick="setAnalyticsPeriod(30, this)">This month</button>
+          <button class="period-btn" onclick="setAnalyticsPeriod(60, this)">Last 2 months</button>
+          <button class="period-btn" onclick="setAnalyticsPeriod(90, this)">Last 3 months</button>
+          <button class="period-btn" onclick="setAnalyticsPeriod(0, this)">All time</button>
+        </div>
+      </div>
+
+      <!-- Summary stats -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px" id="analyticsGrid">
+        <div class="analytics-stat"><div class="analytics-stat-val" id="aViews">–</div><div class="analytics-stat-label">👁 Total views</div></div>
+        <div class="analytics-stat"><div class="analytics-stat-val" id="aClicks">–</div><div class="analytics-stat-label">🖱 Clicks / Book now</div></div>
+        <div class="analytics-stat"><div class="analytics-stat-val" id="aCtr">–</div><div class="analytics-stat-label">% Click-through rate</div></div>
+        <div class="analytics-stat"><div class="analytics-stat-val" id="aPurchases">–</div><div class="analytics-stat-label">✅ Purchases</div></div>
+      </div>
+
+      <!-- Per-product breakdown -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">Performance by product</div>
+        <div id="analyticsTable">
+          <div class="empty-state" style="padding:40px 20px"><div class="empty-icon">📊</div><h3>No data yet</h3><p>Analytics will appear once your products are live in host stores and guests start viewing them.</p></div>
+        </div>
+      </div>
+
+      <!-- Email report button -->
+      <div style="margin-top:20px;background:var(--partner-light);border:1.5px solid var(--partner);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:15px;font-weight:600;color:var(--partner)">📧 Email me this report</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:2px">Send a performance summary to your email address</div>
+        </div>
+        <button class="btn btn-primary" onclick="emailAnalyticsReport()">Send report →</button>
       </div>
     </div>
 
@@ -212,17 +290,11 @@
             <label>What type of product or service is this?</label>
             <label class="type-option">
               <input type="radio" name="productType" value="physical" id="ptPhysical" onchange="toggleProductType()" checked>
-              <div>
-                <div class="type-option-label">📦 Physical product</div>
-                <div class="type-option-desc">e.g. flowers, hampers, firewood — guest pays host, host arranges payment to you</div>
-              </div>
+              <div><div class="type-option-label">📦 Physical product</div><div class="type-option-desc">e.g. flowers, hampers, firewood — guest pays host, host arranges payment to you</div></div>
             </label>
             <label class="type-option">
               <input type="radio" name="productType" value="booking" id="ptBooking" onchange="toggleProductType()">
-              <div>
-                <div class="type-option-label">🔗 Booking link</div>
-                <div class="type-option-desc">e.g. surf lessons, restaurant reservations — guest clicks through to your booking page directly</div>
-              </div>
+              <div><div class="type-option-label">🔗 Booking link</div><div class="type-option-desc">e.g. surf lessons, restaurant reservations — guest clicks through to your booking page directly</div></div>
             </label>
           </div>
           <div class="field"><label>Product / service name</label><input type="text" id="pName" placeholder="e.g. Fresh Flower Arrangement"></div>
@@ -362,6 +434,73 @@
       </div>
     </div>
 
+    <!-- BILLING -->
+    <div class="page" id="page-billing">
+
+      <!-- Current plan status -->
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-title">Your plan</div>
+        <div id="trialStatusCard" style="display:none;background:var(--accent-light);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#92600a;margin-bottom:6px">🟡 Free Trial Active</div>
+          <div style="font-size:22px;font-weight:700;color:#92600a;font-family:'Playfair Display',serif;margin-bottom:4px" id="trialDaysLeft">90 days remaining</div>
+          <div style="font-size:13px;color:#a16207;line-height:1.5">Your products & vouchers are live during your trial. Choose a plan before your trial ends to keep them visible to hosts.</div>
+        </div>
+        <div id="paidStatusCard" style="display:none;background:var(--brand-light);border:1.5px solid var(--brand);border-radius:12px;padding:16px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:6px">✅ Active Plan</div>
+          <div style="font-size:22px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif;margin-bottom:4px" id="currentPlanName">Basic Plan · $49/mo</div>
+          <div style="font-size:13px;color:var(--brand-dark)" id="currentPlanDesc">Up to 3 products & services</div>
+        </div>
+      </div>
+
+      <!-- Plans -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px">
+
+        <div class="plan-card">
+          <div class="plan-name">Starter</div>
+          <div class="plan-price">Free <span style="font-size:16px;font-weight:400;color:var(--muted)">3 months</span></div>
+          <ul class="plan-features">
+            <li>Up to 2 products & services</li>
+            <li>Up to 2 vouchers</li>
+            <li>Basic analytics</li>
+            <li>Email support</li>
+          </ul>
+          <div style="background:var(--bg);border-radius:10px;padding:12px;font-size:13px;color:var(--muted);text-align:center">Your current free trial — no action needed</div>
+        </div>
+
+        <div class="plan-card featured">
+          <div class="plan-badge">Most popular</div>
+          <div class="plan-name">Basic</div>
+          <div class="plan-price">$49 <span style="font-size:16px;font-weight:400;color:var(--muted)">/mo</span></div>
+          <ul class="plan-features">
+            <li>Up to 5 products & services</li>
+            <li>Unlimited vouchers</li>
+            <li>Full analytics + monthly report</li>
+            <li>Priority support</li>
+          </ul>
+          <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="requestUpgrade('basic')">Subscribe — $49/mo →</button>
+        </div>
+
+        <div class="plan-card">
+          <div class="plan-name">Pro</div>
+          <div class="plan-price">$99 <span style="font-size:16px;font-weight:400;color:var(--muted)">/mo</span></div>
+          <ul class="plan-features">
+            <li>Unlimited products & services</li>
+            <li>Unlimited vouchers</li>
+            <li>Full analytics + monthly report</li>
+            <li>Custom branding & priority listing</li>
+            <li>Dedicated account manager</li>
+          </ul>
+          <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="requestUpgrade('pro')">Subscribe — $99/mo →</button>
+        </div>
+
+      </div>
+
+      <div style="background:var(--bg);border-radius:var(--radius);padding:20px;font-size:13px;color:var(--muted);text-align:center">
+        All plans include a 3-month free trial. No credit card required to start.<br>
+        Questions? Email us at <a href="mailto:hello@hostiehub.com.au" style="color:var(--partner)">hello@hostiehub.com.au</a>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -374,9 +513,10 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8'
   );
 
-  let currentUser = null, partnerData = null, partnerProducts = [], vouchers = [];
+  let currentUser = null, partnerData = null, partnerProducts = [], vouchers = [], allEvents = [];
   let productPostcodes = [], voucherPostcodes = [], accountPostcodes = [];
-  const pageTitles = { overview:'Overview', products:'My Products & Services', newproduct:'Add Product or Service', vouchers:'My Vouchers', newvoucher:'Add Voucher', account:'Account' };
+  let analyticsDays = 30;
+  const pageTitles = { overview:'Overview', analytics:'Analytics', products:'My Products & Services', newproduct:'Add Product or Service', vouchers:'My Vouchers', newvoucher:'Add Voucher', account:'Account', billing:'Billing' };
 
   async function init() {
     const { data: { session } } = await sb.auth.getSession();
@@ -386,8 +526,10 @@
     if (!partner) { window.location.href = 'partner-signup.html'; return; }
     partnerData = partner;
     populateUI();
+    checkTrial();
     loadProducts();
     loadVouchers();
+    loadAnalytics();
   }
 
   function populateUI() {
@@ -403,6 +545,43 @@
     document.getElementById('statPostcodes').textContent = accountPostcodes.length;
   }
 
+  function checkTrial() {
+    const trialEndsAt = partnerData.trial_ends_at ? new Date(partnerData.trial_ends_at) : null;
+    const isPaid = partnerData.plan && ['basic', 'pro'].includes(partnerData.plan);
+    const now = new Date();
+    const daysLeft = trialEndsAt ? Math.ceil((trialEndsAt - now) / (1000 * 60 * 60 * 24)) : 0;
+    const trialExpired = trialEndsAt && now > trialEndsAt && !isPaid;
+
+    if (isPaid) {
+      document.getElementById('paidStatusCard').style.display = 'block';
+      document.getElementById('trialStatusCard').style.display = 'none';
+      document.getElementById('trialBanner').style.display = 'none';
+      const names = { basic: 'Basic Plan · $49/mo', pro: 'Pro Plan · $99/mo' };
+      const descs = { basic: 'Up to 5 products & services, unlimited vouchers', pro: 'Unlimited products, services & vouchers' };
+      document.getElementById('currentPlanName').textContent = names[partnerData.plan] || partnerData.plan;
+      document.getElementById('currentPlanDesc').textContent = descs[partnerData.plan] || '';
+      return;
+    }
+
+    document.getElementById('trialStatusCard').style.display = 'block';
+    document.getElementById('paidStatusCard').style.display = 'none';
+
+    if (!trialExpired && daysLeft > 0) {
+      const banner = document.getElementById('trialBanner');
+      banner.style.display = 'flex';
+      const text = daysLeft === 1
+        ? 'Your free trial ends tomorrow — choose a plan to keep your listings live'
+        : daysLeft <= 14
+        ? 'Your free trial ends in ' + daysLeft + ' days — choose a plan to keep your listings live'
+        : 'Your 3-month free trial is active — ' + daysLeft + ' days remaining';
+      document.getElementById('trialBannerText').textContent = text;
+      document.getElementById('trialDaysLeft').textContent = daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' remaining';
+      if (daysLeft <= 7) document.getElementById('trialBanner').style.background = 'linear-gradient(135deg,#e53e3e,#c53030)';
+    } else {
+      document.getElementById('trialDaysLeft').textContent = 'Trial ended';
+    }
+  }
+
   function showPage(name, btn) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -411,6 +590,132 @@
     document.getElementById('topbarTitle').textContent = pageTitles[name] || name;
     if (name === 'newproduct') clearProductForm();
     if (name === 'newvoucher') clearVoucherForm();
+    if (name === 'analytics') renderAnalytics();
+  }
+
+  // ── ANALYTICS ──
+  async function loadAnalytics() {
+    const { data } = await sb.from('partner_product_events')
+      .select('*, partner_products(name, type)')
+      .eq('partner_id', partnerData.id)
+      .order('created_at', { ascending: false });
+    allEvents = data || [];
+    renderAnalytics();
+  }
+
+  function setAnalyticsPeriod(days, btn) {
+    analyticsDays = days;
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderAnalytics();
+  }
+
+  function renderAnalytics() {
+    const cutoff = analyticsDays > 0 ? new Date(Date.now() - analyticsDays * 24 * 60 * 60 * 1000) : null;
+    const filtered = cutoff ? allEvents.filter(e => new Date(e.created_at) >= cutoff) : allEvents;
+
+    const views = filtered.filter(e => e.event_type === 'view').length;
+    const clicks = filtered.filter(e => e.event_type === 'click').length;
+    const purchases = filtered.filter(e => e.event_type === 'purchase').length;
+    const ctr = views > 0 ? ((clicks / views) * 100).toFixed(1) + '%' : '–';
+
+    document.getElementById('aViews').textContent = views;
+    document.getElementById('aClicks').textContent = clicks;
+    document.getElementById('aCtr').textContent = ctr;
+    document.getElementById('aPurchases').textContent = purchases;
+    document.getElementById('statViews').textContent = views;
+
+    // Per-product breakdown
+    const byProduct = {};
+    filtered.forEach(e => {
+      const pid = e.partner_product_id;
+      const name = e.partner_products ? e.partner_products.name : 'Unknown';
+      const type = e.partner_products ? e.partner_products.type : '';
+      if (!byProduct[pid]) byProduct[pid] = { name, type, views: 0, clicks: 0, purchases: 0 };
+      if (e.event_type === 'view') byProduct[pid].views++;
+      if (e.event_type === 'click') byProduct[pid].clicks++;
+      if (e.event_type === 'purchase') byProduct[pid].purchases++;
+    });
+
+    const rows = Object.values(byProduct);
+    const tableEl = document.getElementById('analyticsTable');
+
+    if (!rows.length) {
+      tableEl.innerHTML = '<div class="empty-state" style="padding:40px 20px"><div class="empty-icon">📊</div><h3>No data yet</h3><p>Analytics will appear once guests start viewing your products in host stores.</p></div>';
+      return;
+    }
+
+    const maxViews = Math.max(...rows.map(r => r.views), 1);
+    tableEl.innerHTML = '<table class="analytics-table"><thead><tr><th>Product</th><th>Type</th><th>Views</th><th>Clicks / Bookings</th><th>Purchases</th><th>CTR</th></tr></thead><tbody>' +
+      rows.sort((a, b) => b.views - a.views).map(r => {
+        const rowCtr = r.views > 0 ? ((r.clicks / r.views) * 100).toFixed(1) + '%' : '–';
+        const barWidth = Math.round((r.views / maxViews) * 100);
+        return '<tr>' +
+          '<td><strong>' + r.name + '</strong><div class="bar-wrap" style="margin-top:6px"><div class="bar-fill" style="width:' + barWidth + '%"></div></div></td>' +
+          '<td><span class="badge-type" style="font-size:11px">' + (r.type === 'booking' ? '🔗 Booking' : '📦 Physical') + '</span></td>' +
+          '<td>' + r.views + '</td>' +
+          '<td>' + r.clicks + '</td>' +
+          '<td>' + r.purchases + '</td>' +
+          '<td>' + rowCtr + '</td>' +
+          '</tr>';
+      }).join('') +
+      '</tbody></table>';
+  }
+
+  async function emailAnalyticsReport() {
+    const cutoff = analyticsDays > 0 ? new Date(Date.now() - analyticsDays * 24 * 60 * 60 * 1000) : null;
+    const filtered = cutoff ? allEvents.filter(e => new Date(e.created_at) >= cutoff) : allEvents;
+    const views = filtered.filter(e => e.event_type === 'view').length;
+    const clicks = filtered.filter(e => e.event_type === 'click').length;
+    const purchases = filtered.filter(e => e.event_type === 'purchase').length;
+    const period = analyticsDays > 0 ? 'last ' + analyticsDays + ' days' : 'all time';
+
+    try {
+      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+        body: JSON.stringify({
+          from: 'Hostie Hub <hello@hostiehub.com.au>',
+          to: currentUser.email,
+          subject: 'Your Hostie Hub performance report — ' + partnerData.business_name,
+          html: '<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px">' +
+            '<h2 style="font-family:Georgia,serif;color:#0f3460">Performance Report</h2>' +
+            '<p style="color:#6b7280">Hi ' + (partnerData.business_name || 'there') + ', here\'s your Hostie Hub performance summary for the ' + period + '.</p>' +
+            '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0">' +
+              '<div style="background:#e8eef7;border-radius:12px;padding:16px;text-align:center"><div style="font-size:32px;font-weight:700;color:#0f3460">' + views + '</div><div style="font-size:13px;color:#6b7280">Total views</div></div>' +
+              '<div style="background:#e8eef7;border-radius:12px;padding:16px;text-align:center"><div style="font-size:32px;font-weight:700;color:#0f3460">' + clicks + '</div><div style="font-size:13px;color:#6b7280">Clicks / Bookings</div></div>' +
+              '<div style="background:#e8eef7;border-radius:12px;padding:16px;text-align:center"><div style="font-size:32px;font-weight:700;color:#0f3460">' + purchases + '</div><div style="font-size:13px;color:#6b7280">Purchases</div></div>' +
+            '</div>' +
+            '<p style="color:#6b7280;font-size:13px">Log in to your <a href="https://hostiehub.com.au/partner-dashboard.html" style="color:#0f3460">partner dashboard</a> to see the full breakdown by product.</p>' +
+            '<hr style="border:none;border-top:1px solid #e8e4df;margin:24px 0">' +
+            '<p style="color:#6b7280;font-size:12px">Hostie Hub · hello@hostiehub.com.au</p>' +
+          '</div>'
+        })
+      });
+      showToast('Report sent to ' + currentUser.email);
+    } catch(e) {
+      showToast('Could not send report. Please try again.');
+    }
+  }
+
+  async function requestUpgrade(plan) {
+    const planNames = { basic: 'Basic ($49/mo)', pro: 'Pro ($99/mo)' };
+    showToast('Sending upgrade request...');
+    try {
+      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+        body: JSON.stringify({
+          from: 'Hostie Hub Partner <hello@hostiehub.com.au>',
+          to: 'hello@hostiehub.com.au',
+          subject: 'Partner upgrade request — ' + (partnerData.business_name || 'Unknown'),
+          html: '<p><strong>' + (partnerData.business_name || 'A partner') + '</strong> (' + currentUser.email + ') has requested to upgrade to the <strong>' + planNames[plan] + '</strong> plan.</p><p>Please contact them to process payment and update their plan in Supabase.</p>'
+        })
+      });
+      showToast('Request sent! We\'ll be in touch shortly to process your subscription.');
+    } catch(e) {
+      showToast('Something went wrong. Please email hello@hostiehub.com.au');
+    }
   }
 
   // ── PARTNER PRODUCTS ──
@@ -743,10 +1048,13 @@
     const t = document.getElementById('toast');
     document.getElementById('toastMsg').textContent = msg;
     t.style.display = 'flex';
-    setTimeout(() => { t.style.display = 'none'; }, 3000);
+    setTimeout(() => { t.style.display = 'none'; }, 3500);
   }
 
   window.showPage = showPage;
+  window.setAnalyticsPeriod = setAnalyticsPeriod;
+  window.emailAnalyticsReport = emailAnalyticsReport;
+  window.requestUpgrade = requestUpgrade;
   window.toggleProductType = toggleProductType;
   window.previewProductImage = previewProductImage;
   window.removeProductImage = removeProductImage;

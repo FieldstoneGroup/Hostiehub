@@ -494,6 +494,20 @@
     renderProducts(cat === 'all' ? base : base.filter(p => p.category === cat));
   }
 
+  // ── PARTNER EVENT TRACKING ──
+  const loggedViews = new Set();
+  async function logPartnerEvent(partnerProductId, partnerId, eventType) {
+    if (!partnerProductId || !partnerId) return;
+    try {
+      await sb.from('partner_product_events').insert({
+        partner_product_id: partnerProductId,
+        partner_id: partnerId,
+        event_type: eventType,
+        host_username: getUsername(),
+      });
+    } catch(e) {}
+  }
+
   function renderProducts(products) {
     const grid = document.getElementById('productsGrid');
     if (!products.length) {
@@ -504,6 +518,13 @@
       const isVoucher = p.is_voucher;
       const isFree = parseFloat(p.price) === 0;
       const isDemo = hostData && hostData.is_demo;
+      const isBookingLink = p.partner_product_type === 'booking' && p.partner_booking_url;
+
+      // Log view event for partner products (once per product per session)
+      if (p.partner_product_id && p.partner_id && !loggedViews.has(p.id)) {
+        loggedViews.add(p.id);
+        logPartnerEvent(p.partner_product_id, p.partner_id, 'view');
+      }
 
       if (isVoucher) {
         return `
@@ -524,13 +545,34 @@
         </div>`;
       }
 
+      // Booking link product — opens URL directly
+      if (isBookingLink) {
+        const pData = JSON.stringify(p).replace(/"/g, '&quot;');
+        return `
+        <div class="product-card" style="animation-delay:${i * 0.06}s">
+          <div class="product-img">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '🔗')}</div>
+          <div class="product-body">
+            <div class="product-category">${categoryLabels[p.category] || ''}</div>
+            <div class="product-name">${p.name}</div>
+            <div class="product-desc">${p.description || ''}${p.partner_notes ? '<div style="font-size:12px;color:var(--brand);margin-top:6px;font-style:italic">💡 ' + p.partner_notes + '</div>' : ''}</div>
+            <div class="product-footer">
+              <span class="free-badge">FREE</span>
+              ${isDemo
+                ? `<button class="add-btn" onclick="handleDemoAdd()">Book now →</button>`
+                : `<button class="add-btn" onclick="handleBookingLink('${p.partner_booking_url}','${p.partner_product_id || ''}','${p.partner_id || ''}')">Book now →</button>`
+              }
+            </div>
+          </div>
+        </div>`;
+      }
+
       return `
       <div class="product-card" style="animation-delay:${i * 0.06}s">
         <div class="product-img">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '✨')}</div>
         <div class="product-body">
           <div class="product-category">${categoryLabels[p.category] || ''}</div>
           <div class="product-name">${p.name}</div>
-          <div class="product-desc">${p.description || ''}</div>
+          <div class="product-desc">${p.description || ''}${p.partner_notes ? '<div style="font-size:12px;color:var(--brand);margin-top:6px;font-style:italic">💡 ' + p.partner_notes + '</div>' : ''}</div>
           <div class="product-footer">
             <div class="product-price">$${p.price} <small>${p.unit ? '/ ' + p.unit : ''}</small></div>
             ${isDemo
@@ -541,6 +583,11 @@
         </div>
       </div>`;
     }).join('');
+  }
+
+  function handleBookingLink(url, partnerProductId, partnerId) {
+    if (partnerProductId && partnerId) logPartnerEvent(partnerProductId, partnerId, 'click');
+    window.open(url, '_blank');
   }
 
   let demoClickCount = 0;
@@ -590,9 +637,10 @@
   }
 
   function addToCart(product, btn, note) {
-    cart.push({ id: product.id, name: product.name, price: product.price, icon: product.emoji || '✨', note });
+    cart.push({ id: product.id, name: product.name, price: product.price, icon: product.emoji || '✨', note, partner_product_id: product.partner_product_id || null, partner_id: product.partner_id || null });
     btn.textContent = '✓ Added';
     btn.classList.add('added');
+    if (product.partner_product_id && product.partner_id) logPartnerEvent(product.partner_product_id, product.partner_id, 'cart');
     updateCartUI();
   }
 
@@ -676,6 +724,9 @@
     });
 
     if (error) { console.error(error); alert('Something went wrong. Please try again.'); return; }
+
+    // Log purchase events for partner products
+    cart.forEach(i => { if (i.partner_product_id && i.partner_id) logPartnerEvent(i.partner_product_id, i.partner_id, 'purchase'); });
 
     // If host has Stripe connected, redirect to Stripe checkout
     if (hostData.stripe_account_id && hostData.stripe_connected) {
@@ -966,6 +1017,8 @@
   }
 
   loadStore();
+
+  window.handleBookingLink = handleBookingLink;
 
   // Handle Stripe payment success return
   const urlParams = new URLSearchParams(window.location.search);

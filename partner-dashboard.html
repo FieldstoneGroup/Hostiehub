@@ -17,7 +17,6 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
-
   .sidebar { width: var(--sidebar-w); background: var(--partner); min-height: 100vh; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 50; }
   .sidebar-logo { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 8px; }
   .sidebar-logo span { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: white; }
@@ -26,7 +25,7 @@
   .host-avatar { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; color: white; font-size: 15px; font-weight: 700; flex-shrink: 0; }
   .host-info-name { font-size: 13px; font-weight: 600; color: white; line-height: 1.3; }
   .host-info-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
-  .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
   .nav-section-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 12px 8px 6px; }
   .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.2s; color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 500; border: none; background: none; width: 100%; text-align: left; }
   .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
@@ -36,27 +35,22 @@
   .sidebar-bottom { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
   .logout-btn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; color: rgba(255,255,255,0.4); font-size: 13px; font-weight: 500; border: none; background: none; width: 100%; text-align: left; transition: color 0.2s; }
   .logout-btn:hover { color: rgba(255,255,255,0.8); }
-
   .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
   .topbar { background: var(--card); border-bottom: 1.5px solid var(--border); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
   .topbar-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; }
   .partner-badge { background: var(--partner-light); color: var(--partner); font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 50px; border: 1px solid #c5d3e8; }
   .content { padding: 32px; flex: 1; }
-
   .page { display: none; }
   .page.active { display: block; animation: fadeIn 0.3s ease; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
   .card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); padding: 24px; }
   .card-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; margin-bottom: 4px; }
   .card-desc { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
-
   .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
   .stat-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); padding: 20px; }
   .stat-label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
   .stat-value { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; color: var(--partner); line-height: 1; margin-bottom: 4px; }
   .stat-sub { font-size: 12px; color: var(--muted); }
-
   .btn { padding: 10px 20px; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
   .btn-primary { background: var(--partner); color: white; }
   .btn-primary:hover { background: #0a2540; }
@@ -65,62 +59,48 @@
   .btn-danger { background: #fef2f2; color: var(--error); border: 1.5px solid #fecaca; }
   .btn-danger:hover { background: #fee2e2; }
   .btn-sm { padding: 7px 14px; font-size: 13px; }
-  .btn-accent { background: var(--accent); color: white; }
-
   .field { margin-bottom: 16px; }
   .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
   .field input, .field textarea, .field select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); background: white; outline: none; transition: border-color 0.2s; }
-  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--partner); box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
+  .field input:focus, .field textarea:focus { border-color: var(--partner); box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
   .field textarea { resize: vertical; min-height: 80px; }
   .field-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
   .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
-  /* POSTCODE TAGS */
   .postcode-input-wrap { display: flex; gap: 8px; }
   .postcode-input-wrap input { flex: 1; }
   .add-postcode-btn { padding: 11px 16px; background: var(--partner); color: white; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
   .postcode-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .postcode-tag { background: var(--partner-light); color: var(--partner); font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 50px; display: flex; align-items: center; gap: 6px; }
   .postcode-tag button { background: none; border: none; color: var(--partner); cursor: pointer; font-size: 14px; padding: 0; }
-
-  /* VOUCHER ROWS */
-  .vouchers-list { display: flex; flex-direction: column; gap: 12px; }
-  .voucher-row { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 18px 20px; display: flex; align-items: center; gap: 16px; transition: border-color 0.2s; }
-  .voucher-row:hover { border-color: var(--partner-light); }
-  .voucher-icon { width: 48px; height: 48px; background: var(--accent-light); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
-  .voucher-info { flex: 1; }
-  .voucher-name { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
-  .voucher-meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; }
-  .voucher-meta span { display: flex; align-items: center; gap: 4px; }
-  .voucher-active { background: #f0fdf4; color: var(--success); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 50px; }
-  .voucher-inactive { background: #fef2f2; color: var(--error); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 50px; }
-
-  /* MODAL */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: white; border-radius: 20px; width: min(540px, 100%); max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.2); animation: fadeIn 0.25s ease; }
-  .modal-header { padding: 24px 24px 0; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-  .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; }
-  .modal-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--bg); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; color: var(--muted); }
-  .modal-close:hover { background: var(--border); }
-  .modal-body { padding: 0 24px 24px; }
-  .modal-footer { padding: 16px 24px; border-top: 1.5px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
-
-  /* TOAST */
+  .items-list { display: flex; flex-direction: column; gap: 12px; }
+  .item-row { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px 20px; display: flex; align-items: center; gap: 16px; }
+  .item-thumb { width: 52px; height: 52px; border-radius: 12px; flex-shrink: 0; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden; }
+  .item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .item-meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; }
+  .badge-active { background: #f0fdf4; color: var(--success); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 50px; }
+  .badge-inactive { background: #fef2f2; color: var(--error); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 50px; }
+  .badge-type { background: var(--partner-light); color: var(--partner); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 50px; }
+  .type-option { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: var(--bg); border-radius: 10px; border: 1.5px solid var(--border); cursor: pointer; margin-bottom: 10px; }
+  .type-option input[type="radio"] { accent-color: var(--partner); width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+  .type-option-label { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .type-option-desc { font-size: 12px; color: var(--muted); }
+  .image-upload-label { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; border: 2px dashed var(--border); border-radius: 10px; cursor: pointer; font-size: 14px; color: var(--muted); transition: border-color 0.2s; }
+  .image-upload-label:hover { border-color: var(--partner); }
+  .image-preview-wrap { position: relative; width: 100%; height: 180px; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border); margin-bottom: 10px; }
+  .image-preview-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .image-remove-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
   .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 999; display: none; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
-
   .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
   .empty-icon { font-size: 48px; margin-bottom: 12px; }
   .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
   .empty-state p { font-size: 14px; line-height: 1.5; }
-
-  /* HOW IT WORKS */
   .how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
   .how-step { background: var(--bg); border-radius: 12px; padding: 20px; text-align: center; }
   .how-step-num { width: 36px; height: 36px; background: var(--partner); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; margin: 0 auto 12px; }
   .how-step h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
   .how-step p { font-size: 13px; color: var(--muted); line-height: 1.5; }
-
   @media (max-width: 900px) {
     .sidebar { width: 64px; }
     .sidebar-logo span, .host-info-name, .host-info-sub, .nav-item span, .nav-section-label, .logout-btn span { display: none; }
@@ -129,21 +109,17 @@
     .how-steps { grid-template-columns: 1fr; }
     .field-row { grid-template-columns: 1fr; }
   }
-
   @media (max-width: 600px) {
-    .main { margin-left: 64px; }
     .content { padding: 12px; }
     .topbar { padding: 0 12px; height: 56px; }
     .card { padding: 14px; }
     .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
     .stat-card { padding: 12px; }
     .stat-value { font-size: 22px; }
-    /* All two-column grids stack */
-    [style*="grid-template-columns:1fr 1fr"], [style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
-    /* Overview how-it-works + quick actions stack */
     #page-overview > div:nth-child(2) { grid-template-columns: 1fr !important; }
-    /* Account grid stacks */
-    #page-account > div:first-child { grid-template-columns: 1fr !important; }
+    #page-account > div { grid-template-columns: 1fr !important; }
+    .item-row { flex-wrap: wrap; }
+    .item-row > div:last-child { width: 100%; display: flex; justify-content: flex-end; gap: 6px; margin-top: 4px; }
   }
 </style>
 </head>
@@ -161,6 +137,9 @@
   <nav class="sidebar-nav">
     <div class="nav-section-label">Main</div>
     <button class="nav-item active" onclick="showPage('overview', this)"><div class="nav-icon">🏠</div><span>Overview</span></button>
+    <div class="nav-section-label">Products & Services</div>
+    <button class="nav-item" onclick="showPage('products', this)"><div class="nav-icon">📦</div><span>My Products</span></button>
+    <button class="nav-item" onclick="showPage('newproduct', this)"><div class="nav-icon">➕</div><span>Add Product</span></button>
     <div class="nav-section-label">Vouchers</div>
     <button class="nav-item" onclick="showPage('vouchers', this)"><div class="nav-icon">🎟️</div><span>My Vouchers</span></button>
     <button class="nav-item" onclick="showPage('newvoucher', this)"><div class="nav-icon">➕</div><span>Add Voucher</span></button>
@@ -177,96 +156,158 @@
     <div class="topbar-title" id="topbarTitle">Overview</div>
     <div class="partner-badge">🤝 Partner Business</div>
   </div>
-
   <div class="content">
 
     <!-- OVERVIEW -->
     <div class="page active" id="page-overview">
       <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Active Products</div><div class="stat-value" id="statProducts">0</div><div class="stat-sub">Live in stores</div></div>
         <div class="stat-card"><div class="stat-label">Active Vouchers</div><div class="stat-value" id="statVouchers">0</div><div class="stat-sub">Live in stores</div></div>
         <div class="stat-card"><div class="stat-label">Postcodes</div><div class="stat-value" id="statPostcodes">0</div><div class="stat-sub">Areas covered</div></div>
-        <div class="stat-card"><div class="stat-label">Status</div><div class="stat-value" style="font-size:18px;margin-top:4px">✅ Live</div><div class="stat-sub">Visible to hosts</div></div>
       </div>
-
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
         <div class="card">
           <div class="card-title">How it works</div>
-          <div class="card-desc">Your vouchers reach guests through local hosts.</div>
+          <div class="card-desc">Your products & services reach guests through local hosts.</div>
           <div class="how-steps">
-            <div class="how-step"><div class="how-step-num">1</div><h4>Add a voucher</h4><p>Create your offer with a title, value and expiry date.</p></div>
-            <div class="how-step"><div class="how-step-num">2</div><h4>Hosts add it</h4><p>Hosts in your postcode area see and add it to their stores.</p></div>
-            <div class="how-step"><div class="how-step-num">3</div><h4>Guests buy it</h4><p>Guests purchase your voucher before they arrive.</p></div>
+            <div class="how-step"><div class="how-step-num">1</div><h4>Add a product</h4><p>Create your offer with a name, description and wholesale price.</p></div>
+            <div class="how-step"><div class="how-step-num">2</div><h4>Hosts add it</h4><p>Hosts in your postcode area add it to their guest store.</p></div>
+            <div class="how-step"><div class="how-step-num">3</div><h4>Guests buy it</h4><p>You get notified with the host and guest details to arrange delivery.</p></div>
           </div>
         </div>
         <div class="card">
           <div class="card-title">Quick actions</div>
-          <div class="card-desc">Get your vouchers in front of guests.</div>
+          <div class="card-desc">Get your products & services in front of guests.</div>
           <div style="display:flex;flex-direction:column;gap:10px">
-            <button class="btn btn-primary" onclick="showPage('newvoucher', document.querySelector('[onclick*=newvoucher]'))">🎟️ &nbsp;Add a voucher</button>
-            <button class="btn btn-outline" onclick="showPage('vouchers', document.querySelector('[onclick*=vouchers]'))">📋 &nbsp;View my vouchers</button>
+            <button class="btn btn-primary" onclick="showPage('newproduct', document.querySelector('[onclick*=newproduct]'))">📦 &nbsp;Add a product or service</button>
+            <button class="btn btn-outline" onclick="showPage('products', document.querySelector('[onclick*=products]'))">📋 &nbsp;View my products</button>
+            <button class="btn btn-outline" onclick="showPage('newvoucher', document.querySelector('[onclick*=newvoucher]'))">🎟️ &nbsp;Add a voucher</button>
             <button class="btn btn-outline" onclick="showPage('account', document.querySelector('[onclick*=account]'))">📍 &nbsp;Update my postcodes</button>
           </div>
         </div>
       </div>
-
       <div class="card">
         <div class="card-title">Your service areas</div>
-        <div class="card-desc">Hosts in these postcodes can see and add your vouchers.</div>
+        <div class="card-desc">Hosts in these postcodes can see and add your products & services.</div>
         <div class="postcode-tags" id="overviewPostcodes"></div>
         <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="showPage('account', document.querySelector('[onclick*=account]'))">Edit postcodes →</button>
       </div>
     </div>
 
+    <!-- MY PRODUCTS -->
+    <div class="page" id="page-products">
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:20px">
+        <button class="btn btn-primary" onclick="showPage('newproduct', document.querySelector('[onclick*=newproduct]'))">+ Add product or service</button>
+      </div>
+      <div class="items-list" id="productsList">
+        <div class="empty-state"><div class="empty-icon">📦</div><h3>No products yet</h3><p>Add your first product or service and hosts in your area will start sharing it with guests.</p></div>
+      </div>
+    </div>
+
+    <!-- ADD PRODUCT -->
+    <div class="page" id="page-newproduct">
+      <div style="max-width:600px">
+        <div class="card">
+          <div class="field">
+            <label>What type of product or service is this?</label>
+            <label class="type-option">
+              <input type="radio" name="productType" value="physical" id="ptPhysical" onchange="toggleProductType()" checked>
+              <div>
+                <div class="type-option-label">📦 Physical product</div>
+                <div class="type-option-desc">e.g. flowers, hampers, firewood — guest pays host, host arranges payment to you</div>
+              </div>
+            </label>
+            <label class="type-option">
+              <input type="radio" name="productType" value="booking" id="ptBooking" onchange="toggleProductType()">
+              <div>
+                <div class="type-option-label">🔗 Booking link</div>
+                <div class="type-option-desc">e.g. surf lessons, restaurant reservations — guest clicks through to your booking page directly</div>
+              </div>
+            </label>
+          </div>
+          <div class="field"><label>Product / service name</label><input type="text" id="pName" placeholder="e.g. Fresh Flower Arrangement"></div>
+          <div class="field"><label>Description</label><textarea id="pDesc" placeholder="What does this include? Any details guests should know?"></textarea></div>
+          <div class="field">
+            <label>Notes for guests <span style="font-weight:300;font-size:12px">(optional)</span></label>
+            <input type="text" id="pNotes" placeholder="e.g. Please arrive 10 mins before your lesson">
+            <div class="field-hint">Appears as a tip on the product listing in the host's store.</div>
+          </div>
+          <div id="physicalFields">
+            <div class="field">
+              <label>Wholesale price ($) — what the host pays you</label>
+              <input type="number" id="pWholesalePrice" placeholder="e.g. 45" min="0">
+              <div class="field-hint">Hosts set their own retail price on top. They keep the difference as their margin.</div>
+            </div>
+          </div>
+          <div id="bookingFields" style="display:none">
+            <div class="field">
+              <label>Booking link URL</label>
+              <input type="url" id="pBookingUrl" placeholder="e.g. https://yourbusiness.com/book">
+              <div class="field-hint">Guests click "Book now" and go straight to this link in a new tab.</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Product photo <span style="font-weight:300;font-size:12px">(recommended)</span></label>
+            <div id="pImagePreviewWrap" style="display:none" class="image-preview-wrap">
+              <img id="pImagePreview" src="">
+              <button class="image-remove-btn" onclick="removeProductImage()">✕</button>
+            </div>
+            <label id="pImageUploadLabel" class="image-upload-label">
+              📷 Click to upload a photo
+              <input type="file" id="pImageFile" accept="image/*" style="display:none" onchange="previewProductImage(this)">
+            </label>
+            <div class="field-hint">Recommended: square image, at least 400x400px. JPG or PNG.</div>
+          </div>
+          <div class="field">
+            <label>Postcodes for this product</label>
+            <div class="field-hint" style="margin-bottom:8px">By default uses your account postcodes. Add specific ones here to override.</div>
+            <div class="postcode-input-wrap">
+              <input type="text" id="pPostcodeInput" placeholder="e.g. 2300" maxlength="4" onkeydown="if(event.key==='Enter'){event.preventDefault();addProductPostcode()}">
+              <button class="add-postcode-btn" onclick="addProductPostcode()">+ Add</button>
+            </div>
+            <div class="postcode-tags" id="pPostcodeTags"></div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="saveProduct()">Publish product →</button>
+        </div>
+      </div>
+    </div>
+
     <!-- MY VOUCHERS -->
     <div class="page" id="page-vouchers">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <div><h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">My Vouchers</h2><p style="font-size:13px;color:var(--muted);margin-top:2px">Manage your offers for guests</p></div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:20px">
         <button class="btn btn-primary" onclick="showPage('newvoucher', document.querySelector('[onclick*=newvoucher]'))">+ Add voucher</button>
       </div>
-      <div class="vouchers-list" id="vouchersList">
+      <div class="items-list" id="vouchersList">
         <div class="empty-state"><div class="empty-icon">🎟️</div><h3>No vouchers yet</h3><p>Add your first voucher and hosts in your area will start sharing it with guests.</p></div>
       </div>
     </div>
 
     <!-- ADD VOUCHER -->
     <div class="page" id="page-newvoucher">
-      <div style="margin-bottom:24px"><h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Add a Voucher</h2><p style="font-size:13px;color:var(--muted);margin-top:2px">Create an offer for guests staying nearby</p></div>
       <div style="max-width:600px">
         <div class="card">
           <div class="field"><label>Voucher title</label><input type="text" id="vTitle" placeholder="e.g. 2 Free Drinks at The Harbour Restaurant"></div>
-          <div class="field"><label>Description</label><textarea id="vDesc" placeholder="What does this include? Any conditions? e.g. Valid Mon–Thu, dine-in only, one per table."></textarea></div>
+          <div class="field"><label>Description</label><textarea id="vDesc" placeholder="What does this include? Any conditions?"></textarea></div>
           <div class="field-row">
-            <div class="field"><label>Value</label><input type="text" id="vValue" placeholder="e.g. 2 free drinks, 10% off, $20 voucher"></div>
-            <div class="field"><label>Price to guest ($) — enter 0 for FREE</label><input type="number" id="vPrice" placeholder="0" min="0"></div>
+            <div class="field"><label>Value</label><input type="text" id="vValue" placeholder="e.g. 2 free drinks, 10% off"></div>
+            <div class="field"><label>Price to guest ($) — 0 for FREE</label><input type="number" id="vPrice" placeholder="0" min="0"></div>
           </div>
           <div class="field">
             <label>Expiry date</label>
             <input type="date" id="vExpiry">
-            <div class="field-hint">Vouchers will stop showing to guests after this date.</div>
+            <div class="field-hint">Vouchers stop showing to guests after this date.</div>
           </div>
-
-          <!-- VOUCHER DELIVERY -->
           <div class="field">
             <label>How do guests receive this voucher?</label>
-            <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">
-              <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:border-color 0.2s" id="pdfOptionLabel">
-                <input type="radio" name="voucherType" value="pdf" id="vTypePdf" onchange="toggleVoucherType()" checked style="accent-color:var(--partner)">
-                <div>
-                  <div style="font-size:14px;font-weight:600">📄 Upload a PDF voucher</div>
-                  <div style="font-size:12px;color:var(--muted);margin-top:2px">Guests download your PDF after purchase</div>
-                </div>
-              </label>
-              <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:border-color 0.2s" id="linkOptionLabel">
-                <input type="radio" name="voucherType" value="link" id="vTypeLink" onchange="toggleVoucherType()" style="accent-color:var(--partner)">
-                <div>
-                  <div style="font-size:14px;font-weight:600">🔗 Provide a link</div>
-                  <div style="font-size:12px;color:var(--muted);margin-top:2px">Guests are sent to a URL to redeem their voucher</div>
-                </div>
-              </label>
-            </div>
+            <label class="type-option" style="margin-top:8px">
+              <input type="radio" name="voucherType" value="pdf" id="vTypePdf" onchange="toggleVoucherType()" checked>
+              <div><div class="type-option-label">📄 Upload a PDF voucher</div><div class="type-option-desc">Guests download your PDF after purchase</div></div>
+            </label>
+            <label class="type-option">
+              <input type="radio" name="voucherType" value="link" id="vTypeLink" onchange="toggleVoucherType()">
+              <div><div class="type-option-label">🔗 Provide a link</div><div class="type-option-desc">Guests are sent to a URL to redeem their voucher</div></div>
+            </label>
           </div>
-
-          <!-- PDF UPLOAD -->
           <div class="field" id="pdfUploadField">
             <label>Upload voucher PDF</label>
             <div id="pdfPreviewWrap" style="display:none;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;align-items:center;gap:10px;">
@@ -274,23 +315,18 @@
               <span id="pdfFileName" style="font-size:14px;font-weight:500;flex:1"></span>
               <button onclick="removePdf()" style="background:none;border:none;color:var(--error);cursor:pointer;font-size:13px;">Remove</button>
             </div>
-            <label id="pdfUploadLabel" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;color:var(--muted);" onmouseover="this.style.borderColor='var(--partner)'" onmouseout="this.style.borderColor='var(--border)'">
+            <label id="pdfUploadLabel" class="image-upload-label">
               📄 Click to upload PDF
               <input type="file" id="vPdfFile" accept=".pdf" style="display:none" onchange="previewPdf(this)">
             </label>
-            <div class="field-hint">Upload your voucher as a PDF. Guests will be able to download it after purchase.</div>
           </div>
-
-          <!-- LINK -->
           <div class="field" id="linkField" style="display:none">
             <label>Voucher link URL</label>
             <input type="url" id="vLink" placeholder="e.g. https://yourbusiness.com/voucher">
-            <div class="field-hint">Guests will be redirected to this URL after purchase.</div>
           </div>
-
           <div class="field">
             <label>Postcodes for this voucher</label>
-            <div class="field-hint" style="margin-bottom:8px">By default this voucher uses your account postcodes. Add specific ones here to override.</div>
+            <div class="field-hint" style="margin-bottom:8px">By default uses your account postcodes. Add specific ones here to override.</div>
             <div class="postcode-input-wrap">
               <input type="text" id="vPostcodeInput" placeholder="e.g. 2300" maxlength="4" onkeydown="if(event.key==='Enter'){event.preventDefault();addVoucherPostcode()}">
               <button class="add-postcode-btn" onclick="addVoucherPostcode()">+ Add</button>
@@ -310,11 +346,12 @@
           <div class="card-desc">Update your business information.</div>
           <div class="field"><label>Business name</label><input type="text" id="accountName" placeholder="Your business name"></div>
           <div class="field"><label>Description</label><textarea id="accountDesc" placeholder="Tell hosts and guests about your business..."></textarea></div>
+          <div class="field"><label>Phone number</label><input type="tel" id="accountPhone" placeholder="e.g. 0412 345 678"><div class="field-hint">Shared with hosts when a guest purchases one of your products.</div></div>
           <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
         </div>
         <div class="card">
           <div class="card-title">Service postcodes</div>
-          <div class="card-desc">Hosts in these areas can add your vouchers.</div>
+          <div class="card-desc">Hosts in these areas can add your products & services.</div>
           <div class="postcode-input-wrap" style="margin-bottom:8px">
             <input type="text" id="accountPostcodeInput" placeholder="e.g. 2300" maxlength="4" onkeydown="if(event.key==='Enter'){event.preventDefault();addAccountPostcode()}">
             <button class="add-postcode-btn" onclick="addAccountPostcode()">+ Add</button>
@@ -328,7 +365,6 @@
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"><span id="toastMsg"></span></div>
 
 <script>
@@ -338,9 +374,9 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8'
   );
 
-  let currentUser = null, partnerData = null, vouchers = [];
-  let voucherPostcodes = [], accountPostcodes = [];
-  const pageTitles = { overview:'Overview', vouchers:'My Vouchers', newvoucher:'Add Voucher', account:'Account' };
+  let currentUser = null, partnerData = null, partnerProducts = [], vouchers = [];
+  let productPostcodes = [], voucherPostcodes = [], accountPostcodes = [];
+  const pageTitles = { overview:'Overview', products:'My Products & Services', newproduct:'Add Product or Service', vouchers:'My Vouchers', newvoucher:'Add Voucher', account:'Account' };
 
   async function init() {
     const { data: { session } } = await sb.auth.getSession();
@@ -350,6 +386,7 @@
     if (!partner) { window.location.href = 'partner-signup.html'; return; }
     partnerData = partner;
     populateUI();
+    loadProducts();
     loadVouchers();
   }
 
@@ -359,7 +396,7 @@
     document.getElementById('sidebarName').textContent = partnerData.business_name || '';
     document.getElementById('accountName').value = partnerData.business_name || '';
     document.getElementById('accountDesc').value = partnerData.description || '';
-
+    document.getElementById('accountPhone').value = partnerData.phone || '';
     accountPostcodes = Array.isArray(partnerData.postcodes) ? partnerData.postcodes : JSON.parse(partnerData.postcodes || '[]');
     renderAccountPostcodes();
     renderOverviewPostcodes();
@@ -372,7 +409,151 @@
     document.getElementById('page-' + name).classList.add('active');
     if (btn) btn.classList.add('active');
     document.getElementById('topbarTitle').textContent = pageTitles[name] || name;
-    if (name === 'newvoucher') { clearVoucherForm(); }
+    if (name === 'newproduct') clearProductForm();
+    if (name === 'newvoucher') clearVoucherForm();
+  }
+
+  // ── PARTNER PRODUCTS ──
+  async function loadProducts() {
+    const { data } = await sb.from('partner_products').select('*').eq('partner_id', partnerData.id).order('created_at', { ascending: false });
+    partnerProducts = data || [];
+    renderProducts();
+    document.getElementById('statProducts').textContent = partnerProducts.filter(p => p.active).length;
+  }
+
+  function renderProducts() {
+    const list = document.getElementById('productsList');
+    if (!partnerProducts.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><h3>No products yet</h3><p>Add your first product or service and hosts in your area will start sharing it with guests.</p></div>';
+      return;
+    }
+    list.innerHTML = partnerProducts.map(p => {
+      const codes = Array.isArray(p.postcodes) ? p.postcodes : JSON.parse(p.postcodes || '[]');
+      const typeLabel = p.type === 'booking' ? '🔗 Booking link' : '📦 Physical';
+      const priceLabel = p.type === 'booking' ? 'Free — booking link' : '$' + (p.wholesale_price || 0) + ' wholesale';
+      return '<div class="item-row">' +
+        '<div class="item-thumb">' + (p.image_url ? '<img src="' + p.image_url + '">' : (p.type === 'booking' ? '🔗' : '📦')) + '</div>' +
+        '<div class="item-info"><div class="item-name">' + p.name +
+          ' <span class="' + (p.active ? 'badge-active' : 'badge-inactive') + '">' + (p.active ? 'Active' : 'Inactive') + '</span>' +
+          ' <span class="badge-type">' + typeLabel + '</span></div>' +
+          '<div class="item-meta"><span>💰 ' + priceLabel + '</span><span>📍 ' + (codes.length ? codes.join(', ') : 'All areas') + '</span></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-shrink:0">' +
+          '<button class="btn btn-outline btn-sm" onclick="toggleProduct(\'' + p.id + '\',' + !p.active + ')">' + (p.active ? 'Deactivate' : 'Activate') + '</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + p.id + '\')">Delete</button>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  function toggleProductType() {
+    const isPhysical = document.getElementById('ptPhysical').checked;
+    document.getElementById('physicalFields').style.display = isPhysical ? 'block' : 'none';
+    document.getElementById('bookingFields').style.display = isPhysical ? 'none' : 'block';
+  }
+
+  function previewProductImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('pImagePreview').src = e.target.result;
+      document.getElementById('pImagePreviewWrap').style.display = 'block';
+      document.getElementById('pImageUploadLabel').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeProductImage() {
+    document.getElementById('pImageFile').value = '';
+    document.getElementById('pImagePreview').src = '';
+    document.getElementById('pImagePreviewWrap').style.display = 'none';
+    document.getElementById('pImageUploadLabel').style.display = 'flex';
+  }
+
+  async function uploadProductImage(file, productId) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const path = 'partner-products/' + partnerData.id + '/' + productId + '.' + ext;
+    const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
+    if (error) { console.error(error); return null; }
+    const { data } = sb.storage.from('product-images').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  function clearProductForm() {
+    document.getElementById('pName').value = '';
+    document.getElementById('pDesc').value = '';
+    document.getElementById('pNotes').value = '';
+    document.getElementById('pWholesalePrice').value = '';
+    document.getElementById('pBookingUrl').value = '';
+    document.getElementById('ptPhysical').checked = true;
+    document.getElementById('physicalFields').style.display = 'block';
+    document.getElementById('bookingFields').style.display = 'none';
+    removeProductImage();
+    productPostcodes = [];
+    renderProductPostcodes();
+  }
+
+  async function saveProduct() {
+    const name = document.getElementById('pName').value.trim();
+    if (!name) { showToast('Please enter a product name'); return; }
+    const isPhysical = document.getElementById('ptPhysical').checked;
+    const bookingUrl = document.getElementById('pBookingUrl').value.trim();
+    if (!isPhysical && !bookingUrl) { showToast('Please enter a booking URL'); return; }
+    const codes = productPostcodes.length > 0 ? productPostcodes : accountPostcodes;
+
+    const { data: inserted, error } = await sb.from('partner_products').insert({
+      partner_id: partnerData.id,
+      name,
+      description: document.getElementById('pDesc').value.trim(),
+      notes: document.getElementById('pNotes').value.trim(),
+      type: isPhysical ? 'physical' : 'booking',
+      wholesale_price: isPhysical ? (parseFloat(document.getElementById('pWholesalePrice').value) || 0) : 0,
+      booking_url: isPhysical ? null : bookingUrl,
+      postcodes: codes,
+      active: true,
+    }).select().single();
+
+    if (error) { showToast('Error: ' + error.message); return; }
+
+    const imageFile = document.getElementById('pImageFile').files[0];
+    if (imageFile) {
+      showToast('Uploading image...');
+      const url = await uploadProductImage(imageFile, inserted.id);
+      if (url) await sb.from('partner_products').update({ image_url: url }).eq('id', inserted.id);
+    }
+
+    showToast('Product published!');
+    loadProducts();
+    showPage('products', document.querySelector('[onclick*=products]'));
+  }
+
+  async function toggleProduct(id, active) {
+    await sb.from('partner_products').update({ active }).eq('id', id);
+    showToast(active ? 'Product activated' : 'Product deactivated');
+    loadProducts();
+  }
+
+  async function deleteProduct(id) {
+    if (!confirm('Delete this product? This cannot be undone.')) return;
+    await sb.from('partner_products').delete().eq('id', id);
+    showToast('Product deleted');
+    loadProducts();
+  }
+
+  function addProductPostcode() {
+    const input = document.getElementById('pPostcodeInput');
+    const val = input.value.trim();
+    if (!val || !/^\d{4}$/.test(val)) return;
+    if (!productPostcodes.includes(val)) { productPostcodes.push(val); renderProductPostcodes(); }
+    input.value = '';
+  }
+
+  function removeProductPostcode(code) { productPostcodes = productPostcodes.filter(p => p !== code); renderProductPostcodes(); }
+
+  function renderProductPostcodes() {
+    document.getElementById('pPostcodeTags').innerHTML = productPostcodes.map(p =>
+      '<div class="postcode-tag">' + p + ' <button onclick="removeProductPostcode(\'' + p + '\')">✕</button></div>'
+    ).join('');
   }
 
   // ── VOUCHERS ──
@@ -386,28 +567,21 @@
   function renderVouchers() {
     const list = document.getElementById('vouchersList');
     if (!vouchers.length) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-icon">🎟️</div><h3>No vouchers yet</h3><p>Add your first voucher and hosts in your area will start sharing it with guests.</p></div>`;
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎟️</div><h3>No vouchers yet</h3><p>Add your first voucher and hosts in your area will start sharing it with guests.</p></div>';
       return;
     }
     list.innerHTML = vouchers.map(v => {
       const codes = Array.isArray(v.postcodes) ? v.postcodes : JSON.parse(v.postcodes || '[]');
-      return `
-        <div class="voucher-row">
-          <div class="voucher-icon">🎟️</div>
-          <div class="voucher-info">
-            <div class="voucher-name">${v.title} <span class="${v.active ? 'voucher-active' : 'voucher-inactive'}">${v.active ? 'Active' : 'Inactive'}</span></div>
-            <div class="voucher-meta">
-              <span>💰 ${v.value || 'No value set'}</span>
-              <span>🏷️ $${v.price || 0}</span>
-              <span>📅 Expires ${v.expiry_date || 'N/A'}</span>
-              <span>📍 ${codes.length ? codes.join(', ') : 'All areas'}</span>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;flex-shrink:0">
-            <button class="btn btn-outline btn-sm" onclick="toggleVoucher('${v.id}', ${!v.active})">${v.active ? 'Deactivate' : 'Activate'}</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteVoucher('${v.id}')">Delete</button>
-          </div>
-        </div>`;
+      return '<div class="item-row">' +
+        '<div class="item-thumb">🎟️</div>' +
+        '<div class="item-info"><div class="item-name">' + v.title +
+          ' <span class="' + (v.active ? 'badge-active' : 'badge-inactive') + '">' + (v.active ? 'Active' : 'Inactive') + '</span></div>' +
+          '<div class="item-meta"><span>💰 ' + (v.value || 'No value') + '</span><span>🏷️ $' + (v.price || 0) + '</span><span>📅 Expires ' + (v.expiry_date || 'N/A') + '</span><span>📍 ' + (codes.length ? codes.join(', ') : 'All areas') + '</span></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-shrink:0">' +
+          '<button class="btn btn-outline btn-sm" onclick="toggleVoucher(\'' + v.id + '\',' + !v.active + ')">' + (v.active ? 'Deactivate' : 'Activate') + '</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="deleteVoucher(\'' + v.id + '\')">Delete</button>' +
+        '</div></div>';
     }).join('');
   }
 
@@ -449,7 +623,7 @@
   }
 
   async function uploadVoucherPdf(file, voucherId) {
-    const path = `vouchers/${partnerData.id}/${voucherId}.pdf`;
+    const path = 'vouchers/' + partnerData.id + '/' + voucherId + '.pdf';
     const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
     if (error) { console.error(error); return null; }
     const { data } = sb.storage.from('product-images').getPublicUrl(path);
@@ -458,13 +632,12 @@
 
   async function saveVoucher() {
     const title = document.getElementById('vTitle').value.trim();
-    if (!title) { showToast('⚠️ Please enter a voucher title'); return; }
+    if (!title) { showToast('Please enter a voucher title'); return; }
     const isPdf = document.getElementById('vTypePdf').checked;
     const pdfFile = document.getElementById('vPdfFile').files[0];
     const link = document.getElementById('vLink').value.trim();
-    if (isPdf && !pdfFile) { showToast('⚠️ Please upload a PDF voucher'); return; }
-    if (!isPdf && !link) { showToast('⚠️ Please enter a voucher link'); return; }
-
+    if (isPdf && !pdfFile) { showToast('Please upload a PDF voucher'); return; }
+    if (!isPdf && !link) { showToast('Please enter a voucher link'); return; }
     const codes = voucherPostcodes.length > 0 ? voucherPostcodes : accountPostcodes;
     const price = parseFloat(document.getElementById('vPrice').value) || 0;
 
@@ -480,22 +653,20 @@
       active: true,
     }).select().single();
 
-    if (error) { showToast('⚠️ ' + (error.message || 'Error saving voucher')); console.error(error); return; }
+    if (error) { showToast('Error: ' + (error.message || 'Could not save voucher')); console.error(error); return; }
 
-    // Upload PDF if selected
     if (isPdf && pdfFile) {
-      showToast('⏳ Uploading PDF...');
+      showToast('Uploading PDF...');
       const pdfUrl = await uploadVoucherPdf(pdfFile, inserted.id);
       if (pdfUrl) await sb.from('vouchers').update({ pdf_url: pdfUrl }).eq('id', inserted.id);
     }
 
-    showToast(`✅ Voucher published${price === 0 ? ' — marked as FREE' : ''}!`);
+    showToast('Voucher published' + (price === 0 ? ' — FREE' : '') + '!');
     clearVoucherForm();
     loadVouchers();
-    showPage('vouchers', document.querySelector('[onclick*="vouchers"]'));
+    showPage('vouchers', document.querySelector('[onclick*=vouchers]'));
   }
 
-  // VOUCHER POSTCODES
   function addVoucherPostcode() {
     const input = document.getElementById('vPostcodeInput');
     const val = input.value.trim();
@@ -508,20 +679,20 @@
 
   function renderVoucherPostcodes() {
     document.getElementById('vPostcodeTags').innerHTML = voucherPostcodes.map(p =>
-      `<div class="postcode-tag">${p} <button onclick="removeVoucherPostcode('${p}')">✕</button></div>`
+      '<div class="postcode-tag">' + p + ' <button onclick="removeVoucherPostcode(\'' + p + '\')">✕</button></div>'
     ).join('');
   }
 
   async function toggleVoucher(id, active) {
     await sb.from('vouchers').update({ active }).eq('id', id);
-    showToast(active ? '✅ Voucher activated' : '⏸ Voucher deactivated');
+    showToast(active ? 'Voucher activated' : 'Voucher deactivated');
     loadVouchers();
   }
 
   async function deleteVoucher(id) {
-    if (!confirm('Delete this voucher? This cannot be undone.')) return;
+    if (!confirm('Delete this voucher?')) return;
     await sb.from('vouchers').delete().eq('id', id);
-    showToast('🗑 Voucher deleted');
+    showToast('Voucher deleted');
     loadVouchers();
   }
 
@@ -538,27 +709,32 @@
 
   function renderAccountPostcodes() {
     document.getElementById('accountPostcodeTags').innerHTML = accountPostcodes.map(p =>
-      `<div class="postcode-tag">${p} <button onclick="removeAccountPostcode('${p}')">✕</button></div>`
+      '<div class="postcode-tag">' + p + ' <button onclick="removeAccountPostcode(\'' + p + '\')">✕</button></div>'
     ).join('');
   }
 
   function renderOverviewPostcodes() {
     document.getElementById('overviewPostcodes').innerHTML = accountPostcodes.length
-      ? accountPostcodes.map(p => `<div class="postcode-tag">${p}</div>`).join('')
+      ? accountPostcodes.map(p => '<div class="postcode-tag">' + p + '</div>').join('')
       : '<span style="font-size:14px;color:var(--muted)">No postcodes set yet.</span>';
   }
 
   async function savePostcodes() {
     await sb.from('partners').update({ postcodes: accountPostcodes }).eq('id', partnerData.id);
     document.getElementById('statPostcodes').textContent = accountPostcodes.length;
-    showToast('✅ Postcodes saved');
+    showToast('Postcodes saved');
   }
 
   async function saveProfile() {
-    const updates = { business_name: document.getElementById('accountName').value.trim(), description: document.getElementById('accountDesc').value.trim() };
+    const updates = {
+      business_name: document.getElementById('accountName').value.trim(),
+      description: document.getElementById('accountDesc').value.trim(),
+      phone: document.getElementById('accountPhone').value.trim(),
+    };
     await sb.from('partners').update(updates).eq('id', partnerData.id);
+    Object.assign(partnerData, updates);
     document.getElementById('sidebarName').textContent = updates.business_name;
-    showToast('✅ Profile saved');
+    showToast('Profile saved');
   }
 
   async function handleLogout() { await sb.auth.signOut(); window.location.href = 'partner-signup.html'; }
@@ -569,6 +745,29 @@
     t.style.display = 'flex';
     setTimeout(() => { t.style.display = 'none'; }, 3000);
   }
+
+  window.showPage = showPage;
+  window.toggleProductType = toggleProductType;
+  window.previewProductImage = previewProductImage;
+  window.removeProductImage = removeProductImage;
+  window.saveProduct = saveProduct;
+  window.toggleProduct = toggleProduct;
+  window.deleteProduct = deleteProduct;
+  window.addProductPostcode = addProductPostcode;
+  window.removeProductPostcode = removeProductPostcode;
+  window.toggleVoucherType = toggleVoucherType;
+  window.previewPdf = previewPdf;
+  window.removePdf = removePdf;
+  window.saveVoucher = saveVoucher;
+  window.toggleVoucher = toggleVoucher;
+  window.deleteVoucher = deleteVoucher;
+  window.addVoucherPostcode = addVoucherPostcode;
+  window.removeVoucherPostcode = removeVoucherPostcode;
+  window.addAccountPostcode = addAccountPostcode;
+  window.removeAccountPostcode = removeAccountPostcode;
+  window.savePostcodes = savePostcodes;
+  window.saveProfile = saveProfile;
+  window.handleLogout = handleLogout;
 
   init();
 </script>

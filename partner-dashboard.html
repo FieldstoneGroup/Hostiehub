@@ -270,6 +270,20 @@
         </div>
         <button class="btn btn-primary" onclick="emailAnalyticsReport()">Send report →</button>
       </div>
+
+      <!-- Voucher redemptions -->
+      <div class="card" style="margin-top:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <div class="card-title" style="margin-bottom:2px">🎟️ Voucher Redemptions</div>
+            <div style="font-size:13px;color:var(--muted)">Guest emails collected when vouchers were claimed</div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="exportRedemptions()">Export CSV</button>
+        </div>
+        <div id="redemptionsList">
+          <div class="empty-state" style="padding:30px 20px"><div class="empty-icon" style="font-size:32px">🎟️</div><h3>No redemptions yet</h3><p>Guest emails will appear here when they claim your vouchers.</p></div>
+        </div>
+      </div>
     </div>
 
     <!-- MY PRODUCTS -->
@@ -634,6 +648,49 @@
       .order('created_at', { ascending: false });
     allEvents = data || [];
     renderAnalytics();
+    loadRedemptions();
+  }
+
+  let allRedemptions = [];
+
+  async function loadRedemptions() {
+    const { data } = await sb.from('partner_voucher_redemptions')
+      .select('*')
+      .eq('partner_id', partnerData.id)
+      .order('created_at', { ascending: false });
+    allRedemptions = data || [];
+    renderRedemptions();
+  }
+
+  function renderRedemptions() {
+    const el = document.getElementById('redemptionsList');
+    if (!allRedemptions.length) {
+      el.innerHTML = '<div class="empty-state" style="padding:30px 20px"><div class="empty-icon" style="font-size:32px">🎟️</div><h3>No redemptions yet</h3><p>Guest emails will appear here when they claim your vouchers.</p></div>';
+      return;
+    }
+    el.innerHTML = '<table class="analytics-table"><thead><tr><th>Date</th><th>Guest Email</th><th>Voucher</th></tr></thead><tbody>' +
+      allRedemptions.map(r => {
+        const date = new Date(r.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+        return '<tr><td style="color:var(--muted)">' + date + '</td><td><strong>' + (r.guest_email || '—') + '</strong></td><td style="color:var(--muted)">' + (r.voucher_title || '—') + '</td></tr>';
+      }).join('') +
+      '</tbody></table>';
+  }
+
+  function exportRedemptions() {
+    if (!allRedemptions.length) { showToast('No redemptions to export yet'); return; }
+    const rows = [['Date', 'Email', 'Voucher']].concat(
+      allRedemptions.map(r => [
+        new Date(r.created_at).toLocaleDateString('en-AU'),
+        r.guest_email || '',
+        r.voucher_title || ''
+      ])
+    );
+    const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'voucher-redemptions.csv';
+    a.click();
+    showToast('CSV downloaded!');
   }
 
   function setAnalyticsPeriod(days, btn) {
@@ -1342,6 +1399,7 @@
   window.showPage = showPage;
   window.setAnalyticsPeriod = setAnalyticsPeriod;
   window.emailAnalyticsReport = emailAnalyticsReport;
+  window.exportRedemptions = exportRedemptions;
   window.requestUpgrade = requestUpgrade;
   window.editProduct = editProduct;
   window.suggestSuburbs = suggestSuburbs;

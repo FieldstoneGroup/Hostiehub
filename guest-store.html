@@ -623,6 +623,8 @@
   let pendingVoucherUrl = null;
   let pendingBookingUrl = null;
   let pendingVoucherProductName = null;
+  let pendingPartnerId = null;
+  let pendingPartnerProductId = null;
 
   function handleBookingLink(url, partnerProductId, partnerId, voucherPdfUrl, productName, voucherTitle) {
     if (partnerProductId && partnerId) logPartnerEvent(partnerProductId, partnerId, 'click');
@@ -630,6 +632,8 @@
       pendingBookingUrl = url;
       pendingVoucherUrl = voucherPdfUrl;
       pendingVoucherProductName = voucherTitle || productName || 'your booking';
+      pendingPartnerId = partnerId || null;
+      pendingPartnerProductId = partnerProductId || null;
       document.getElementById('voucherModalProductName').textContent = 'Claim your voucher — ' + (voucherTitle || productName || 'your booking');
       document.getElementById('voucherEmailInput').value = '';
       document.getElementById('voucherModalError').style.display = 'none';
@@ -654,8 +658,19 @@
     const isImage = /\.(png|jpg|jpeg|webp|gif)(\?|$)/i.test(pendingVoucherUrl);
     const storeName = hostData ? (hostData.store_name || hostData.username) : 'Your Host';
 
+    // Save redemption to Supabase for partner marketing list
     try {
-      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+      await sb.from('partner_voucher_redemptions').insert({
+        partner_product_id: pendingPartnerProductId || null,
+        partner_id: pendingPartnerId || null,
+        guest_email: email,
+        voucher_title: pendingVoucherProductName,
+      });
+    } catch(e) { console.warn('Redemption save error:', e); }
+
+    // Send email via Resend
+    try {
+      const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
         body: JSON.stringify({
@@ -679,7 +694,19 @@
             '</div>'
         })
       });
-    } catch(e) { console.error('Voucher email error:', e); }
+      const result = await res.json();
+      console.log('[Hostie] Resend result:', result);
+      if (result.error || (result.statusCode && result.statusCode >= 400)) {
+        console.error('[Hostie] Resend error:', result);
+        document.getElementById('voucherModalError').textContent = '⚠️ Could not send email. Please try again.';
+        document.getElementById('voucherModalError').style.display = 'block';
+        btn.textContent = origText;
+        btn.disabled = false;
+        return;
+      }
+    } catch(e) {
+      console.error('[Hostie] Email fetch error:', e);
+    }
 
     document.getElementById('voucherModalOverlay').classList.remove('open');
     btn.textContent = origText;

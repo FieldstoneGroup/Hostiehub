@@ -1198,33 +1198,29 @@
   // ── PRODUCTS ──
   async function loadProducts() {
     if (!currentUser) return;
-    const { data } = await sb.from('products').select('*').eq('host_id', currentUser.id).order('created_at');
+    const { data } = await sb.from('products').select('*').eq('host_id', currentUser.id).order('sort_order', { ascending: true }).order('created_at', { ascending: true });
     products = data || [];
-    applyProductOrder();
     renderProducts();
     document.getElementById('statProducts').textContent = products.length;
     if (products.length > 0) tickCheck('checkProducts');
   }
 
   function applyProductOrder() {
-    try {
-      const saved = localStorage.getItem('product_order_' + currentUser.id);
-      if (!saved) return;
-      const order = JSON.parse(saved);
-      products.sort((a, b) => {
-        const ai = order.indexOf(a.id);
-        const bi = order.indexOf(b.id);
-        if (ai === -1) return 1;
-        if (bi === -1) return -1;
-        return ai - bi;
-      });
-    } catch(e) {}
+    // Legacy localStorage fallback — no longer needed with DB sort_order
   }
 
-  function saveProductOrder() {
+  async function saveProductOrder() {
     try {
-      localStorage.setItem('product_order_' + currentUser.id, JSON.stringify(products.map(p => p.id)));
-    } catch(e) {}
+      const updates = products.map((p, i) => sb.from('products').update({ sort_order: i }).eq('id', p.id));
+      const results = await Promise.all(updates);
+      const errors = results.filter(r => r.error);
+      if (errors.length) {
+        console.error('Sort order save errors:', errors);
+        showToast('⚠️ Could not save order — is sort_order column added?');
+        return;
+      }
+    } catch(e) { console.error('saveProductOrder error:', e); }
+    try { localStorage.setItem('product_order_' + currentUser.id, JSON.stringify(products.map(p => p.id))); } catch(e) {}
   }
 
   function reorderProducts(srcId, tgtId) {

@@ -389,7 +389,7 @@
     applyBranding(host);
 
     const [{ data: prods }, { data: props }] = await Promise.all([
-      sb.from('products').select('*').eq('host_id', host.id).eq('active', true).order('created_at'),
+      sb.from('products').select('*').eq('host_id', host.id).eq('active', true).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
       sb.from('properties').select('*').eq('host_id', host.id).order('nickname'),
     ]);
 
@@ -554,7 +554,7 @@
           <div class="product-body">
             <div class="product-category">${categoryLabels[p.category] || ''}</div>
             <div class="product-name">${p.name}</div>
-            <div class="product-desc">${p.description || ''}${p.partner_notes ? '<div style="font-size:12px;color:var(--brand);margin-top:6px;font-style:italic">💡 ' + p.partner_notes + '</div>' : ''}</div>
+            <div class="product-desc">${p.description || ''}${p.partner_notes ? '<div style="font-size:12px;color:var(--brand);margin-top:6px;font-style:italic">💡 ' + p.partner_notes + '</div>' : ''}${p.partner_voucher_pdf_url ? '<div style="font-size:12px;color:var(--brand);margin-top:6px;font-weight:500">🎁 Your voucher will open automatically</div>' : ''}</div>
             <div class="product-footer">
               <span class="free-badge">FREE</span>
               ${isDemo
@@ -589,26 +589,23 @@
     if (partnerProductId && partnerId) logPartnerEvent(partnerProductId, partnerId, 'click');
     window.open(url, '_blank');
     if (voucherPdfUrl) {
-      // Use blob fetch to force download cross-origin files (Supabase Storage)
-      const ext = voucherPdfUrl.split('?')[0].split('.').pop().toLowerCase() || 'pdf';
-      const filename = 'voucher.' + ext;
-      fetch(voucherPdfUrl)
-        .then(r => r.blob())
-        .then(blob => {
-          const blobUrl = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = blobUrl;
-          a.download = filename;
-          a.style.display = 'none';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-        })
-        .catch(() => {
-          // Fallback — open in new tab if blob fetch fails
-          window.open(voucherPdfUrl, '_blank');
-        });
+      setTimeout(() => {
+        // Append Supabase's ?download= param to force browser download
+        const downloadUrl = voucherPdfUrl + (voucherPdfUrl.includes('?') ? '&' : '?') + 'download=voucher';
+        const ext = voucherPdfUrl.split('?')[0].split('.').pop().toLowerCase() || 'png';
+        // Blob fetch — works cross-origin once CORS allows it
+        fetch(downloadUrl)
+          .then(r => r.blob())
+          .then(blob => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'voucher.' + ext;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          })
+          .catch(() => window.open(voucherPdfUrl, '_blank'));
+      }, 500);
     }
   }
 

@@ -345,16 +345,10 @@
           </div>
           <div class="field">
             <label>Service area</label>
-            <div class="field-hint" style="margin-bottom:12px">Enter your suburb and choose a radius — we'll automatically cover all postcodes within that area.</div>
+            <div class="field-hint" style="margin-bottom:12px">Enter your suburb — we'll automatically cover all postcodes within 30km.</div>
             <div style="display:flex;gap:8px;margin-bottom:10px">
-              <input type="text" id="pSuburbInput" placeholder="e.g. Newcastle, Honeysuckle, Maitland" style="flex:1;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px" oninput="suggestSuburbs(this.value)" autocomplete="off">
-              <select id="pRadiusSelect" style="padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;cursor:pointer;min-width:120px">
-                <option value="10">10 km</option>
-                <option value="20" selected>20 km</option>
-                <option value="30">30 km</option>
-                <option value="50">50 km</option>
-              </select>
-              <button class="add-postcode-btn" onclick="applyRadius()">Apply</button>
+              <input type="text" id="pSuburbInput" placeholder="e.g. Newcastle, Honeysuckle, Maitland" style="flex:1;padding:14px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px" oninput="suggestSuburbs(this.value)" autocomplete="off">
+              <button class="add-postcode-btn" onclick="applyRadius()">Apply →</button>
             </div>
             <div id="suburbSuggestions" style="display:none;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,0.08)"></div>
             <div id="radiusResult" style="display:none;background:var(--partner-light);border:1.5px solid var(--partner);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--partner);margin-bottom:8px"></div>
@@ -1105,7 +1099,7 @@
 
   function applyRadius() {
     if (!selectedSuburb) { showToast('Please select a suburb first'); return; }
-    const radius = parseInt(document.getElementById('pRadiusSelect').value);
+    const radius = 30;
     const found = NSW_SUBURBS.filter(s => {
       const dist = getDistance(selectedSuburb.lat, selectedSuburb.lng, s[2], s[3]);
       return dist <= radius;
@@ -1115,7 +1109,7 @@
     renderProductPostcodes();
     const result = document.getElementById('radiusResult');
     result.style.display = 'block';
-    result.textContent = '✓ Found ' + unique.length + ' postcodes within ' + radius + 'km of ' + selectedSuburb.name;
+    result.textContent = '✓ Found ' + unique.length + ' postcodes within 30km of ' + selectedSuburb.name;
   }
 
   function addProductPostcode() {

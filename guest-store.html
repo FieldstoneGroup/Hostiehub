@@ -650,71 +650,60 @@
       return;
     }
     document.getElementById('voucherModalError').style.display = 'none';
-    const btn = document.querySelector('#voucherModalOverlay .btn-primary');
-    const origText = btn.textContent;
-    btn.textContent = 'Sending...';
-    btn.disabled = true;
 
-    const isImage = /\.(png|jpg|jpeg|webp|gif)(\?|$)/i.test(pendingVoucherUrl);
-    const storeName = hostData ? (hostData.store_name || hostData.username) : 'Your Host';
-
-    // Save redemption to Supabase for partner marketing list
-    try {
-      await sb.from('partner_voucher_redemptions').insert({
-        partner_product_id: pendingPartnerProductId || null,
-        partner_id: pendingPartnerId || null,
-        guest_email: email,
-        voucher_title: pendingVoucherProductName,
-      });
-    } catch(e) { console.warn('Redemption save error:', e); }
-
-    // Send email via Resend
-    try {
-      const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
-        body: JSON.stringify({
-          from: 'Hostie Hub <hello@hostiehub.com.au>',
-          to: email,
-          subject: 'Hostie Hub Voucher — ' + pendingVoucherProductName,
-          html:
-            '<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px">' +
-            '<div style="text-align:center;margin-bottom:24px">' +
-            '<div style="font-size:48px">🎁</div>' +
-            '<h2 style="font-family:Georgia,serif;color:#1d4d4a;margin:12px 0 4px">' + pendingVoucherProductName + '</h2>' +
-            '<p style="color:#6b7280;font-size:14px;margin:0">via ' + storeName + ' · Powered by Hostie Hub</p>' +
-            '</div>' +
-            (isImage
-              ? '<div style="text-align:center;margin-bottom:24px"><img src="' + pendingVoucherUrl + '" style="max-width:100%;border-radius:12px;border:1px solid #e8e4df" alt="Your voucher"></div>'
-              : '<div style="text-align:center;margin-bottom:24px"><a href="' + pendingVoucherUrl + '" style="background:#2C6E6A;color:white;padding:14px 32px;border-radius:50px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block">View your voucher →</a></div>'
-            ) +
-            '<div style="background:#f4f6f5;border-radius:10px;padding:16px;text-align:center">' +
-            '<p style="color:#6b7280;font-size:13px;margin:0">Present this voucher when you arrive.<br>Valid with a confirmed reservation only.</p>' +
-            '</div>' +
-            '</div>'
-        })
-      });
-      const result = await res.json();
-      console.log('[Hostie] Resend result:', result);
-      if (result.error || (result.statusCode && result.statusCode >= 400)) {
-        console.error('[Hostie] Resend error:', result);
-        document.getElementById('voucherModalError').textContent = '⚠️ Could not send email. Please try again.';
-        document.getElementById('voucherModalError').style.display = 'block';
-        btn.textContent = origText;
-        btn.disabled = false;
-        return;
-      }
-    } catch(e) {
-      console.error('[Hostie] Email fetch error:', e);
-    }
-
-    document.getElementById('voucherModalOverlay').classList.remove('open');
-    btn.textContent = origText;
-    btn.disabled = false;
+    // Capture all pending values before clearing
     const bookingUrl = pendingBookingUrl;
+    const voucherUrl = pendingVoucherUrl;
+    const voucherTitle = pendingVoucherProductName;
+    const partnerId = pendingPartnerId;
+    const partnerProductId = pendingPartnerProductId;
+    const storeName = hostData ? (hostData.store_name || hostData.username) : 'Your Host';
+    const isImage = /\.(png|jpg|jpeg|webp|gif)(\?|$)/i.test(voucherUrl);
+
+    // Close modal immediately
+    document.getElementById('voucherModalOverlay').classList.remove('open');
     pendingBookingUrl = null;
     pendingVoucherUrl = null;
+    pendingPartnerId = null;
+    pendingPartnerProductId = null;
+
+    // Open booking page immediately (must be in sync click context)
     window.open(bookingUrl, '_blank');
+
+    // Save redemption to DB (fire and forget)
+    sb.from('partner_voucher_redemptions').insert({
+      partner_product_id: partnerProductId || null,
+      partner_id: partnerId || null,
+      guest_email: email,
+      voucher_title: voucherTitle,
+    }).then(() => {}).catch(e => console.warn('Redemption save:', e));
+
+    // Send email via Resend (fire and forget — don't await)
+    fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+      body: JSON.stringify({
+        from: 'Hostie Hub <hello@hostiehub.com.au>',
+        to: email,
+        subject: 'Hostie Hub Voucher — ' + voucherTitle,
+        html:
+          '<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px">' +
+          '<div style="text-align:center;margin-bottom:24px">' +
+          '<div style="font-size:48px">🎁</div>' +
+          '<h2 style="font-family:Georgia,serif;color:#1d4d4a;margin:12px 0 4px">' + voucherTitle + '</h2>' +
+          '<p style="color:#6b7280;font-size:14px;margin:0">via ' + storeName + ' · Powered by Hostie Hub</p>' +
+          '</div>' +
+          (isImage
+            ? '<div style="text-align:center;margin-bottom:24px"><img src="' + voucherUrl + '" style="max-width:100%;border-radius:12px;border:1px solid #e8e4df" alt="Your voucher"></div>'
+            : '<div style="text-align:center;margin-bottom:24px"><a href="' + voucherUrl + '" style="background:#2C6E6A;color:white;padding:14px 32px;border-radius:50px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block">View your voucher →</a></div>'
+          ) +
+          '<div style="background:#f4f6f5;border-radius:10px;padding:16px;text-align:center">' +
+          '<p style="color:#6b7280;font-size:13px;margin:0">Present this voucher when you arrive.<br>Valid with a confirmed reservation only.</p>' +
+          '</div></div>'
+      })
+    }).then(r => r.json()).then(result => {
+      console.log('[Hostie] Resend result:', result);
+    }).catch(e => console.error('[Hostie] Email error:', e));
   }
 
   function skipVoucherEmail() {

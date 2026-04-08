@@ -1394,6 +1394,10 @@
     document.getElementById('pUnit').value = '';
     document.getElementById('pNotesPrompt').value = '';
     document.getElementById('pCategory').value = 'arrival';
+    // Always show price/category for own products
+    const priceRow = document.getElementById('pPrice').closest('.field-row');
+    if (priceRow) priceRow.style.display = '';
+    document.getElementById('pCategory').closest('.field').style.display = '';
     document.getElementById('pAllProperties').checked = true;
     document.getElementById('propertyChecks').style.display = 'none';
     selectedEmoji = '✨';
@@ -1411,13 +1415,23 @@
     const p = products.find(x => x.id === id);
     if (!p) return;
     editingProductId = id;
-    document.getElementById('productModalTitle').textContent = 'Edit product';
+
+    const isPartner = !!p.partner_product_id;
+    const isBookingLink = p.partner_product_type === 'booking';
+
+    document.getElementById('productModalTitle').textContent = isPartner ? 'Edit listing' : 'Edit product';
     document.getElementById('pName').value = p.name || '';
     document.getElementById('pDesc').value = p.description || '';
     document.getElementById('pPrice').value = p.price || '';
     document.getElementById('pUnit').value = p.unit || '';
     document.getElementById('pNotesPrompt').value = p.notes_prompt || '';
     document.getElementById('pCategory').value = p.category || 'arrival';
+
+    // Hide price & category for partner products — they can't be changed
+    const priceRow = document.getElementById('pPrice').closest('.field-row');
+    if (priceRow) priceRow.style.display = (isPartner && isBookingLink) ? 'none' : '';
+    document.getElementById('pCategory').closest('.field').style.display = isPartner ? 'none' : '';
+
     selectedEmoji = p.emoji || '✨';
     currentImageUrl = p.image_url || null;
     if (p.image_url) {

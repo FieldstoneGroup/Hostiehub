@@ -355,6 +355,20 @@
   let pendingCartItem = null;
   const categoryLabels = { arrival:'🌅 Arrival', food:'🥂 Food & Drink', experiences:'🏄 Experiences', transport:'🚗 Transport', other:'✨ Other' };
 
+  // ── STORE EVENT TRACKING ──
+  const loggedStoreViews = new Set();
+  async function logStoreEvent(eventType, productId, productName) {
+    if (!hostData || hostData.is_demo) return;
+    try {
+      await sb.from('store_events').insert({
+        host_id: hostData.id,
+        event_type: eventType,
+        product_id: productId || null,
+        product_name: productName || null,
+      });
+    } catch(e) {}
+  }
+
   function getUsername() {
     const host = window.location.hostname;
     // Check subdomain format: stayable.hostiehub.com.au
@@ -441,6 +455,8 @@
     renderProducts(allProducts);
     document.getElementById('storeContent').style.display = 'block';
     hideLoading();
+    // Log store open event
+    if (!hostData.is_demo) logStoreEvent('open', null, null);
 
     // Restore saved property selection
     const saved = sessionStorage.getItem('selectedProperty_' + username);
@@ -767,6 +783,7 @@
     btn.textContent = '✓ Added';
     btn.classList.add('added');
     if (product.partner_product_id && product.partner_id) logPartnerEvent(product.partner_product_id, product.partner_id, 'cart');
+    logStoreEvent('click', product.id, product.name);
     updateCartUI();
   }
 
@@ -853,6 +870,8 @@
 
     // Log purchase events for partner products
     cart.forEach(i => { if (i.partner_product_id && i.partner_id) logPartnerEvent(i.partner_product_id, i.partner_id, 'purchase'); });
+    // Log purchase events for store analytics
+    cart.forEach(i => logStoreEvent('purchase', i.id, i.name));
 
     // If host has Stripe connected, redirect to Stripe checkout
     if (hostData.stripe_account_id && hostData.stripe_connected) {

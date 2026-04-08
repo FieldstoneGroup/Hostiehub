@@ -1117,6 +1117,8 @@
     result.style.display = 'block';
     result.textContent = '✓ Found ' + unique.length + ' postcodes within ' + radius + 'km of ' + selectedSuburb.name;
   }
+
+  function addProductPostcode() {
     const input = document.getElementById('pPostcodeInput');
     const val = input.value.trim();
     if (!val || !/^\d{4}$/.test(val)) return;

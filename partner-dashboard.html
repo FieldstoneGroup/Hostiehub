@@ -317,6 +317,19 @@
               <input type="url" id="pBookingUrl" placeholder="e.g. https://yourbusiness.com/book">
               <div class="field-hint">Guests click "Book now" and go straight to this link in a new tab.</div>
             </div>
+            <div class="field">
+              <label>Attach a voucher PDF <span style="font-weight:300;font-size:12px">(optional)</span></label>
+              <div id="pVoucherPreviewWrap" style="display:none;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;align-items:center;gap:10px;">
+                <span style="font-size:20px">📄</span>
+                <span id="pVoucherFileName" style="font-size:14px;font-weight:500;flex:1;color:var(--text)"></span>
+                <button onclick="removeVoucherPdf()" style="background:none;border:none;color:var(--error);cursor:pointer;font-size:13px;">Remove</button>
+              </div>
+              <label id="pVoucherUploadLabel" class="image-upload-label">
+                📄 Click to upload voucher PDF
+                <input type="file" id="pVoucherFile" accept=".pdf" style="display:none" onchange="previewVoucherPdf(this)">
+              </label>
+              <div class="field-hint">When guests click "Book now", this PDF will download automatically alongside the booking link — great for welcome drink vouchers, discounts etc.</div>
+            </div>
           </div>
           <div class="field">
             <label>Product photo <span style="font-weight:300;font-size:12px">(recommended)</span></label>
@@ -331,8 +344,21 @@
             <div class="field-hint">Recommended: square image, at least 400x400px. JPG or PNG.</div>
           </div>
           <div class="field">
-            <label>Postcodes for this product</label>
-            <div class="field-hint" style="margin-bottom:8px">By default uses your account postcodes. Add specific ones here to override.</div>
+            <label>Service area</label>
+            <div class="field-hint" style="margin-bottom:12px">Enter your suburb and choose a radius — we'll automatically cover all postcodes within that area.</div>
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+              <input type="text" id="pSuburbInput" placeholder="e.g. Newcastle, Honeysuckle, Maitland" style="flex:1;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px" oninput="suggestSuburbs(this.value)" autocomplete="off">
+              <select id="pRadiusSelect" style="padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;cursor:pointer;min-width:120px">
+                <option value="10">10 km</option>
+                <option value="20" selected>20 km</option>
+                <option value="30">30 km</option>
+                <option value="50">50 km</option>
+              </select>
+              <button class="add-postcode-btn" onclick="applyRadius()">Apply</button>
+            </div>
+            <div id="suburbSuggestions" style="display:none;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,0.08)"></div>
+            <div id="radiusResult" style="display:none;background:var(--partner-light);border:1.5px solid var(--partner);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--partner);margin-bottom:8px"></div>
+            <div style="margin-bottom:6px;font-size:12px;color:var(--muted)">Or add individual postcodes:</div>
             <div class="postcode-input-wrap">
               <input type="text" id="pPostcodeInput" placeholder="e.g. 2300" maxlength="4" onkeydown="if(event.key==='Enter'){event.preventDefault();addProductPostcode()}">
               <button class="add-postcode-btn" onclick="addProductPostcode()">+ Add</button>
@@ -516,6 +542,7 @@
   let currentUser = null, partnerData = null, partnerProducts = [], vouchers = [], allEvents = [];
   let productPostcodes = [], voucherPostcodes = [], accountPostcodes = [];
   let analyticsDays = 30;
+  let editingProductId = null;
   const pageTitles = { overview:'Overview', analytics:'Analytics', products:'My Products & Services', newproduct:'Add Product or Service', vouchers:'My Vouchers', newvoucher:'Add Voucher', account:'Account', billing:'Billing' };
 
   async function init() {
@@ -588,7 +615,7 @@
     document.getElementById('page-' + name).classList.add('active');
     if (btn) btn.classList.add('active');
     document.getElementById('topbarTitle').textContent = pageTitles[name] || name;
-    if (name === 'newproduct') clearProductForm();
+    if (name === 'newproduct') { editingProductId = null; clearProductForm(); }
     if (name === 'newvoucher') clearVoucherForm();
     if (name === 'analytics') renderAnalytics();
   }
@@ -744,6 +771,7 @@
           '<div class="item-meta"><span>💰 ' + priceLabel + '</span><span>📍 ' + (codes.length ? codes.join(', ') : 'All areas') + '</span></div>' +
         '</div>' +
         '<div style="display:flex;gap:8px;flex-shrink:0">' +
+          '<button class="btn btn-outline btn-sm" onclick="editProduct(\'' + p.id + '\')">Edit</button>' +
           '<button class="btn btn-outline btn-sm" onclick="toggleProduct(\'' + p.id + '\',' + !p.active + ')">' + (p.active ? 'Deactivate' : 'Activate') + '</button>' +
           '<button class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + p.id + '\')">Delete</button>' +
         '</div></div>';
@@ -794,8 +822,34 @@
     document.getElementById('physicalFields').style.display = 'block';
     document.getElementById('bookingFields').style.display = 'none';
     removeProductImage();
+    removeVoucherPdf();
     productPostcodes = [];
     renderProductPostcodes();
+  }
+
+  function previewVoucherPdf(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('pVoucherFileName').textContent = file.name;
+    document.getElementById('pVoucherPreviewWrap').style.display = 'flex';
+    document.getElementById('pVoucherUploadLabel').style.display = 'none';
+  }
+
+  function removeVoucherPdf() {
+    const el = document.getElementById('pVoucherFile');
+    if (el) el.value = '';
+    const wrap = document.getElementById('pVoucherPreviewWrap');
+    if (wrap) wrap.style.display = 'none';
+    const label = document.getElementById('pVoucherUploadLabel');
+    if (label) label.style.display = 'flex';
+  }
+
+  async function uploadVoucherPdf(file, productId) {
+    const path = 'partner-vouchers/' + partnerData.id + '/' + productId + '.pdf';
+    const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
+    if (error) { console.error(error); return null; }
+    const { data } = sb.storage.from('product-images').getPublicUrl(path);
+    return data.publicUrl;
   }
 
   async function saveProduct() {
@@ -806,7 +860,7 @@
     if (!isPhysical && !bookingUrl) { showToast('Please enter a booking URL'); return; }
     const codes = productPostcodes.length > 0 ? productPostcodes : accountPostcodes;
 
-    const { data: inserted, error } = await sb.from('partner_products').insert({
+    const payload = {
       partner_id: partnerData.id,
       name,
       description: document.getElementById('pDesc').value.trim(),
@@ -816,18 +870,39 @@
       booking_url: isPhysical ? null : bookingUrl,
       postcodes: codes,
       active: true,
-    }).select().single();
+    };
 
-    if (error) { showToast('Error: ' + error.message); return; }
+    let productId = editingProductId;
+
+    if (editingProductId) {
+      // UPDATE
+      const { error } = await sb.from('partner_products').update(payload).eq('id', editingProductId);
+      if (error) { showToast('Error: ' + error.message); return; }
+    } else {
+      // INSERT
+      const { data: inserted, error } = await sb.from('partner_products').insert(payload).select().single();
+      if (error) { showToast('Error: ' + error.message); return; }
+      productId = inserted.id;
+    }
 
     const imageFile = document.getElementById('pImageFile').files[0];
     if (imageFile) {
       showToast('Uploading image...');
-      const url = await uploadProductImage(imageFile, inserted.id);
-      if (url) await sb.from('partner_products').update({ image_url: url }).eq('id', inserted.id);
+      const url = await uploadProductImage(imageFile, productId);
+      if (url) await sb.from('partner_products').update({ image_url: url }).eq('id', productId);
     }
 
-    showToast('Product published!');
+    if (!isPhysical) {
+      const voucherFile = document.getElementById('pVoucherFile') && document.getElementById('pVoucherFile').files[0];
+      if (voucherFile) {
+        showToast('Uploading voucher PDF...');
+        const voucherUrl = await uploadVoucherPdf(voucherFile, productId);
+        if (voucherUrl) await sb.from('partner_products').update({ voucher_pdf_url: voucherUrl }).eq('id', productId);
+      }
+    }
+
+    editingProductId = null;
+    showToast(editingProductId === null ? 'Product saved!' : 'Product updated!');
     loadProducts();
     showPage('products', document.querySelector('[onclick*=products]'));
   }
@@ -845,7 +920,203 @@
     loadProducts();
   }
 
-  function addProductPostcode() {
+  function editProduct(id) {
+    const p = partnerProducts.find(x => x.id === id);
+    if (!p) return;
+    editingProductId = id;
+
+    // Navigate to form
+    document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-newproduct').classList.add('active');
+    document.getElementById('topbarTitle').textContent = 'Edit Product or Service';
+
+    // Populate fields
+    document.getElementById('pName').value = p.name || '';
+    document.getElementById('pDesc').value = p.description || '';
+    document.getElementById('pNotes').value = p.notes || '';
+
+    const isBooking = p.type === 'booking';
+    document.getElementById('ptPhysical').checked = !isBooking;
+    document.getElementById('ptBooking').checked = isBooking;
+    document.getElementById('physicalFields').style.display = isBooking ? 'none' : 'block';
+    document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
+
+    if (!isBooking) document.getElementById('pWholesalePrice').value = p.wholesale_price || '';
+    if (isBooking) document.getElementById('pBookingUrl').value = p.booking_url || '';
+
+    // Image
+    if (p.image_url) {
+      document.getElementById('pImagePreview').src = p.image_url;
+      document.getElementById('pImagePreviewWrap').style.display = 'block';
+      document.getElementById('pImageUploadLabel').style.display = 'none';
+    } else {
+      removeProductImage();
+    }
+
+    // Postcodes
+    const codes = Array.isArray(p.postcodes) ? p.postcodes : JSON.parse(p.postcodes || '[]');
+    productPostcodes = [...codes];
+    renderProductPostcodes();
+  }
+
+  // ── RADIUS POSTCODE PICKER ──
+  // NSW suburb data: [postcode, suburb, lat, lng]
+  const NSW_SUBURBS = [
+    ['2000','Sydney CBD',-33.8688,151.2093],['2010','Surry Hills',-33.8882,151.2102],
+    ['2011','Kings Cross',-33.8743,151.2226],['2015','Alexandria',-33.9093,151.1964],
+    ['2020','Mascot',-33.9249,151.1901],['2031','Coogee',-33.9208,151.2546],
+    ['2032','Kingsford',-33.9249,151.2255],['2033','Randwick',-33.9138,151.2391],
+    ['2036','Matraville',-33.9646,151.2346],['2040','Leichhardt',-33.8835,151.1571],
+    ['2041','Balmain',-33.8605,151.1793],['2042','Newtown',-33.8977,151.1794],
+    ['2043','Erskineville',-33.8979,151.1937],['2044','St Peters',-33.9102,151.1813],
+    ['2045','Haberfield',-33.8815,151.1396],['2046','Concord',-33.8651,151.1009],
+    ['2048','Stanmore',-33.8972,151.1668],['2049','Petersham',-33.8979,151.1585],
+    ['2050','Camperdown',-33.8895,151.1856],['2060','North Sydney',-33.8397,151.2063],
+    ['2061','Kirribilli',-33.8477,151.2149],['2065','Chatswood',-33.7969,151.1824],
+    ['2066','Lane Cove',-33.8168,151.1664],['2067','Chatswood West',-33.8050,151.1722],
+    ['2068','Willoughby',-33.7975,151.2024],['2070','Lindfield',-33.7760,151.1664],
+    ['2071','Killara',-33.7729,151.1538],['2072','Gordon',-33.7607,151.1543],
+    ['2073','Pymble',-33.7552,151.1436],['2075','Turramurra',-33.7363,151.1351],
+    ['2076','Wahroonga',-33.7263,151.1147],['2077','Hornsby',-33.7032,151.0993],
+    ['2099','Dee Why',-33.7526,151.2877],['2100','Manly',-33.7968,151.2870],
+    ['2101','Manly Vale',-33.7884,151.2741],['2102','Brookvale',-33.7656,151.2683],
+    ['2110','Ryde',-33.8153,151.0899],['2111','Meadowbank',-33.8222,151.0899],
+    ['2112','Gladesville',-33.8300,151.1349],['2113','Meadowbank',-33.8138,151.0883],
+    ['2114','Eastwood',-33.7898,151.0812],['2115','Ermington',-33.8105,151.0528],
+    ['2116','Parramatta',-33.8150,151.0022],['2117','Granville',-33.8350,151.0119],
+    ['2118','Dundas',-33.7863,151.0365],['2119','Beecroft',-33.7547,151.0643],
+    ['2120','Pennant Hills',-33.7406,151.0660],['2121','Epping',-33.7721,151.0815],
+    ['2122','Eastwood',-33.7878,151.0804],['2123','Parramatta',-33.8167,150.9944],
+    ['2125','West Pennant Hills',-33.7443,151.0422],['2126','Cherrybrook',-33.7313,151.0430],
+    ['2127','Newington',-33.8365,151.0497],['2128','Silverwater',-33.8333,151.0333],
+    ['2130','Summer Hill',-33.8877,151.1404],['2131','Ashfield',-33.8882,151.1257],
+    ['2132','Strathfield',-33.8734,151.0985],['2133','Burwood',-33.8778,151.1042],
+    ['2134','Concord',-33.8651,151.0948],['2135','Strathfield South',-33.8833,151.0833],
+    ['2136','Flemington',-33.8743,151.0757],['2137','Homebush',-33.8683,151.0872],
+    ['2138','Rhodes',-33.8317,151.0833],['2139','Granville',-33.8400,151.0083],
+    ['2140','Lidcombe',-33.8650,151.0416],['2141','Berala',-33.8716,151.0333],
+    ['2142','Clyde',-33.8588,151.0150],['2143','Regents Park',-33.8900,151.0150],
+    ['2144','Auburn',-33.8494,151.0268],['2145','Westmead',-33.8066,150.9882],
+    ['2146','Old Toongabbie',-33.7900,150.9767],['2147','Seven Hills',-33.7713,150.9400],
+    ['2148','Blacktown',-33.7682,150.9061],['2150','Parramatta',-33.8150,151.0050],
+    ['2153','Baulkham Hills',-33.7571,150.9821],['2154','Castle Hill',-33.7300,151.0050],
+    ['2155','Rouse Hill',-33.7000,150.9167],['2156','Kenthurst',-33.6900,151.0000],
+    ['2157','Wisemans Ferry',-33.3783,150.9783],['2158','Dural',-33.6800,151.0067],
+    ['2159','Galston',-33.6533,151.0150],['2160','Merrylands',-33.8400,150.9900],
+    ['2161','Granville',-33.8383,151.0100],['2162','Merrylands West',-33.8450,150.9783],
+    ['2163','Lansvale',-33.8950,150.9917],['2164','Smithfield',-33.8583,150.9383],
+    ['2165','Fairfield',-33.8733,150.9567],['2166','Cabramatta',-33.8950,150.9433],
+    ['2167','Glenfield',-33.9800,150.8983],['2168','Miller',-33.9467,150.8900],
+    ['2170','Liverpool',-33.9200,150.9233],['2171','Cecil Hills',-33.8900,150.8450],
+    ['2172','Voyager Point',-33.9633,150.9833],['2173','Illawong',-34.0100,151.0283],
+    ['2176','Wetherill Park',-33.8517,150.9050],['2177','Bossley Park',-33.8567,150.8800],
+    ['2178','Horsley Park',-33.8267,150.8617],['2179','Luddenham',-33.8667,150.7450],
+    ['2190','Greenacre',-33.8983,151.0533],['2191','Earlwood',-33.9233,151.1083],
+    ['2192','Kingsgrove',-33.9367,151.1000],['2193','Hurlstone Park',-33.9100,151.1317],
+    ['2194','Marrickville',-33.9133,151.1567],['2195','Wiley Park',-33.9167,151.0683],
+    ['2196','Lakemba',-33.9200,151.0783],['2197','Yagoona',-33.9017,151.0317],
+    ['2198','Bass Hill',-33.9000,150.9983],['2199','Bankstown',-33.9183,151.0350],
+    ['2200','Bankstown',-33.9183,151.0350],['2203','Dulwich Hill',-33.9017,151.1417],
+    ['2204','Marrickville',-33.9100,151.1600],['2205','Arncliffe',-33.9433,151.1517],
+    ['2206','Bexley',-33.9450,151.1283],['2207','Brighton-Le-Sands',-33.9617,151.1517],
+    ['2208','Kingsgrove',-33.9367,151.1017],['2209','Beverly Hills',-33.9500,151.0750],
+    ['2210','Lugarno',-33.9917,151.0567],['2211','Riverwood',-33.9533,151.0567],
+    ['2212','Padstow',-33.9567,151.0400],['2213','Revesby',-33.9567,151.0117],
+    ['2214','East Hills',-33.9717,151.0067],['2216','Rockdale',-33.9567,151.1333],
+    ['2217','Beverley Park',-33.9683,151.1333],['2218','Kogarah',-33.9633,151.1350],
+    ['2219','Dolls Point',-33.9883,151.1433],['2220','Hurstville',-33.9683,151.0983],
+    ['2221','Blakehurst',-33.9883,151.1167],['2222','Penshurst',-33.9683,151.0817],
+    ['2223','Mortdale',-33.9783,151.0733],['2224','Como',-34.0000,151.0700],
+    ['2225','Sylvania',-34.0100,151.0817],['2226','Kirrawee',-34.0300,151.0733],
+    ['2227','Miranda',-34.0317,151.1017],['2228','Caringbah',-34.0433,151.1233],
+    ['2229','Cronulla',-34.0583,151.1500],['2230','Lilli Pilli',-34.0817,151.1083],
+    // Hunter / Newcastle region
+    ['2280','Pelican',-33.0633,151.5817],['2281','Swansea',-33.0850,151.6217],
+    ['2282','Warners Bay',-33.0383,151.6283],['2283','Blackalls Park',-33.0617,151.6083],
+    ['2284','Speers Point',-33.0283,151.6400],['2285','Kotara',-32.9733,151.6733],
+    ['2286','Glendale',-32.9633,151.6350],['2287','New Lambton',-32.9450,151.7000],
+    ['2289','Hamilton',-32.9167,151.7483],['2290','Wallsend',-32.9017,151.6667],
+    ['2291','Waratah',-32.9200,151.7133],['2292','Carrington',-32.9083,151.7567],
+    ['2293','Tighes Hill',-32.9017,151.7450],['2294','Broadmeadow',-32.9250,151.7250],
+    ['2295','Adamstown',-32.9350,151.7217],['2296','Bar Beach',-32.9417,151.7633],
+    ['2297','Cooks Hill',-32.9300,151.7700],['2298','Islington',-32.9067,151.7483],
+    ['2299','Jesmond',-32.9033,151.6833],['2300','Newcastle',-32.9267,151.7744],
+    ['2302','Merewether',-32.9467,151.7600],['2303','Hamilton South',-32.9217,151.7433],
+    ['2304','Mayfield',-32.9050,151.7317],['2305','Georgetown',-32.8983,151.7183],
+    ['2306','Lambton',-32.9183,151.6967],['2307','Rankin Park',-32.9400,151.6667],
+    ['2308','Newcastle University',-32.8983,151.7017],['2309','Callaghan',-32.8933,151.7000],
+    ['2310','Maitland',-32.7333,151.5583],['2311','Morpeth',-32.7317,151.6317],
+    ['2312','Seaham',-32.7750,151.6367],['2315','Nelson Bay',-32.7233,152.1450],
+    ['2316','Shoal Bay',-32.7183,152.1700],['2317','Corlette',-32.7267,152.1317],
+    ['2318','Medowie',-32.7517,151.8817],['2319','Tilligerry Creek',-32.7483,152.0683],
+    ['2320','Maitland',-32.7333,151.5583],['2321','Cessnock',-32.8333,151.3550],
+    ['2322','Kurri Kurri',-32.8183,151.4833],['2323','Paxton',-32.8417,151.2933],
+    ['2324','Raymond Terrace',-32.7617,151.7467],['2325','Cessnock',-32.8333,151.3550],
+    ['2326','Kurri Kurri',-32.8183,151.4833],['2327','Branxton',-32.6617,151.3717],
+    ['2328','Singleton',-32.5700,151.1800],['2329','Muswellbrook',-32.2650,150.8933],
+    ['2330','Singleton',-32.5700,151.1800],['2333','Scone',-32.0533,150.8683],
+    ['2334','Lochinvar',-32.7117,151.4583],['2335','Rutherford',-32.7417,151.5200],
+    ['2336','Merriwa',-32.1400,150.3533],['2337','Quirindi',-31.5133,150.6800],
+    ['2338','Tamworth',-31.0933,150.9267],['2340','Tamworth',-31.0933,150.9267],
+    ['2420','Dungog',-32.3967,151.7083],['2421','Paterson',-32.5817,151.5967],
+    ['2422','Gloucester',-31.9817,151.9633],['2423','Bulahdelah',-32.4083,152.2083],
+    ['2425','Stroud',-32.3817,151.9617],['2426','Taree',-31.9000,152.4567],
+    // Central Coast
+    ['2250','Gosford',-33.4333,151.3417],['2251','Avoca Beach',-33.4750,151.4367],
+    ['2257','Budgewoi',-33.2317,151.5683],['2258','Wyong',-33.2817,151.4333],
+    ['2259','Tuggerah',-33.3200,151.4117],['2260','Terrigal',-33.4483,151.4483],
+    ['2261','Wamberal',-33.4217,151.4500],['2262','Bateau Bay',-33.3800,151.4750],
+    ['2263','The Entrance',-33.3333,151.4967],['2264','Morisset',-33.1017,151.5283],
+    // Central West / Blue Mountains
+    ['2745','Penrith',-33.7511,150.7042],['2747','Kingswood',-33.7567,150.7217],
+    ['2750','Penrith',-33.7511,150.7042],['2760','St Marys',-33.7683,150.7733],
+    ['2770','Blacktown',-33.7682,150.9061],['2780','Katoomba',-33.7133,150.3117],
+    ['2785','Lithgow',-33.4833,150.1567],
+  ];
+
+  function getDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2-lat1) * Math.PI/180;
+    const dLng = (lng2-lng1) * Math.PI/180;
+    const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+              Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  let selectedSuburb = null;
+
+  function suggestSuburbs(val) {
+    const box = document.getElementById('suburbSuggestions');
+    if (!val || val.length < 2) { box.style.display = 'none'; return; }
+    const matches = NSW_SUBURBS.filter(s => s[1].toLowerCase().includes(val.toLowerCase())).slice(0, 6);
+    if (!matches.length) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    box.innerHTML = matches.map(s =>
+      '<div onclick="selectSuburb(\'' + s[0] + '\',\'' + s[1] + '\',' + s[2] + ',' + s[3] + ')" style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'\'"><strong>' + s[1] + '</strong> <span style="color:var(--muted);font-size:12px">' + s[0] + '</span></div>'
+    ).join('');
+  }
+
+  function selectSuburb(postcode, name, lat, lng) {
+    selectedSuburb = { postcode, name, lat, lng };
+    document.getElementById('pSuburbInput').value = name + ' (' + postcode + ')';
+    document.getElementById('suburbSuggestions').style.display = 'none';
+  }
+
+  function applyRadius() {
+    if (!selectedSuburb) { showToast('Please select a suburb first'); return; }
+    const radius = parseInt(document.getElementById('pRadiusSelect').value);
+    const found = NSW_SUBURBS.filter(s => {
+      const dist = getDistance(selectedSuburb.lat, selectedSuburb.lng, s[2], s[3]);
+      return dist <= radius;
+    }).map(s => s[0]);
+    const unique = [...new Set(found)];
+    productPostcodes = unique;
+    renderProductPostcodes();
+    const result = document.getElementById('radiusResult');
+    result.style.display = 'block';
+    result.textContent = '✓ Found ' + unique.length + ' postcodes within ' + radius + 'km of ' + selectedSuburb.name;
+  }
     const input = document.getElementById('pPostcodeInput');
     const val = input.value.trim();
     if (!val || !/^\d{4}$/.test(val)) return;
@@ -1055,9 +1326,15 @@
   window.setAnalyticsPeriod = setAnalyticsPeriod;
   window.emailAnalyticsReport = emailAnalyticsReport;
   window.requestUpgrade = requestUpgrade;
+  window.editProduct = editProduct;
+  window.suggestSuburbs = suggestSuburbs;
+  window.selectSuburb = selectSuburb;
+  window.applyRadius = applyRadius;
   window.toggleProductType = toggleProductType;
   window.previewProductImage = previewProductImage;
   window.removeProductImage = removeProductImage;
+  window.previewVoucherPdf = previewVoucherPdf;
+  window.removeVoucherPdf = removeVoucherPdf;
   window.saveProduct = saveProduct;
   window.toggleProduct = toggleProduct;
   window.deleteProduct = deleteProduct;

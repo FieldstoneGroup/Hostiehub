@@ -284,6 +284,23 @@
 
 <!-- CHECKOUT MODAL -->
 <div class="modal-overlay" id="checkoutOverlay" onclick="closeCheckout()"></div>
+
+<!-- VOUCHER EMAIL MODAL -->
+<div class="notes-modal-overlay" id="voucherModalOverlay">
+  <div class="notes-modal" style="max-width:420px">
+    <div style="font-size:40px;text-align:center;margin-bottom:12px">🎁</div>
+    <h3 style="text-align:center;margin-bottom:6px" id="voucherModalProductName">Claim your voucher</h3>
+    <p style="text-align:center">Enter your email and we'll send your voucher instantly. Then you'll be taken to the booking page.</p>
+    <div style="margin:16px 0">
+      <input type="email" id="voucherEmailInput" placeholder="your@email.com" style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')sendVoucherEmail()">
+    </div>
+    <div id="voucherModalError" style="color:#e53e3e;font-size:13px;margin-bottom:10px;display:none">⚠️ Please enter a valid email address.</div>
+    <div class="notes-modal-actions" style="justify-content:stretch;flex-direction:column;gap:8px">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="sendVoucherEmail()">Send my voucher & continue →</button>
+      <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="skipVoucherEmail()">Skip — take me to the booking page</button>
+    </div>
+  </div>
+</div>
 <div class="checkout-modal" id="checkoutModal">
   <div style="padding:28px 28px 0">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -399,16 +416,20 @@
     // Sync latest voucher URLs from partner_products (in case host added product before voucher was uploaded)
     const bookingPartnerIds = allProducts.filter(p => p.partner_product_id && p.partner_product_type === 'booking').map(p => p.partner_product_id);
     if (bookingPartnerIds.length > 0) {
-      const { data: partnerProds } = await sb.from('partner_products').select('id, voucher_pdf_url').in('id', bookingPartnerIds);
+      const { data: partnerProds } = await sb.from('partner_products').select('id, voucher_pdf_url, voucher_title').in('id', bookingPartnerIds);
+      console.log('[Hostie] partner_products voucher fetch:', partnerProds);
       if (partnerProds) {
         const voucherMap = {};
-        partnerProds.forEach(pp => { voucherMap[pp.id] = pp.voucher_pdf_url; });
-        allProducts = allProducts.map(p => p.partner_product_id && voucherMap[p.partner_product_id]
-          ? { ...p, partner_voucher_pdf_url: voucherMap[p.partner_product_id] }
-          : p
-        );
+        partnerProds.forEach(pp => { voucherMap[pp.id] = { url: pp.voucher_pdf_url, title: pp.voucher_title }; });
+        allProducts = allProducts.map(p => {
+          if (p.partner_product_id && voucherMap[p.partner_product_id]) {
+            return { ...p, partner_voucher_pdf_url: voucherMap[p.partner_product_id].url, partner_voucher_title: voucherMap[p.partner_product_id].title };
+          }
+          return p;
+        });
       }
     }
+    console.log('[Hostie] booking products after sync:', allProducts.filter(p => p.partner_product_type === 'booking').map(p => ({ name: p.name, voucher: p.partner_voucher_pdf_url })));
 
     if (properties.length > 0) {
       buildPropertySelector();
@@ -573,7 +594,7 @@
               <span class="free-badge">FREE</span>
               ${isDemo
                 ? `<button class="add-btn" onclick="handleDemoAdd()">Book now →</button>`
-                : `<button class="add-btn" onclick="handleBookingLink('${p.partner_booking_url}','${p.partner_product_id || ''}','${p.partner_id || ''}','${p.partner_voucher_pdf_url || ''}')">Book now →</button>`
+                : `<button class="add-btn" onclick="handleBookingLink('${p.partner_booking_url}','${p.partner_product_id || ''}','${p.partner_id || ''}','${p.partner_voucher_pdf_url || ''}','${(p.name || '').replace(/'/g, "\\'")}','${(p.partner_voucher_title || '').replace(/'/g, "\\'")}')">Book now →</button>`
               }
             </div>
           </div>
@@ -599,26 +620,85 @@
     }).join('');
   }
 
-  function handleBookingLink(url, partnerProductId, partnerId, voucherPdfUrl) {
+  let pendingVoucherUrl = null;
+  let pendingBookingUrl = null;
+  let pendingVoucherProductName = null;
+
+  function handleBookingLink(url, partnerProductId, partnerId, voucherPdfUrl, productName, voucherTitle) {
     if (partnerProductId && partnerId) logPartnerEvent(partnerProductId, partnerId, 'click');
-    window.open(url, '_blank');
-    if (voucherPdfUrl) showVoucherBanner(voucherPdfUrl);
+    if (voucherPdfUrl) {
+      pendingBookingUrl = url;
+      pendingVoucherUrl = voucherPdfUrl;
+      pendingVoucherProductName = voucherTitle || productName || 'your booking';
+      document.getElementById('voucherModalProductName').textContent = 'Claim your voucher — ' + (voucherTitle || productName || 'your booking');
+      document.getElementById('voucherEmailInput').value = '';
+      document.getElementById('voucherModalError').style.display = 'none';
+      document.getElementById('voucherModalOverlay').classList.add('open');
+    } else {
+      window.open(url, '_blank');
+    }
   }
 
-  function showVoucherBanner(url) {
-    const existing = document.getElementById('voucherBanner');
-    if (existing) existing.remove();
-    const banner = document.createElement('div');
-    banner.id = 'voucherBanner';
-    banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1d4d4a;color:white;padding:16px 20px;border-radius:14px;font-family:"DM Sans",sans-serif;font-size:14px;font-weight:500;z-index:9999;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:90vw';
-    banner.innerHTML =
-      '<span style="font-size:22px">🎁</span>' +
-      '<div><div style="font-weight:600;margin-bottom:2px">Your voucher is ready!</div>' +
-      '<a href="' + url + '" target="_blank" style="color:#E8A838;font-weight:600;text-decoration:underline">Tap here to open your voucher →</a></div>' +
-      '<button onclick="document.getElementById(\'voucherBanner\').remove()" style="background:rgba(255,255,255,0.15);border:none;color:white;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:14px;flex-shrink:0">✕</button>';
-    document.body.appendChild(banner);
-    setTimeout(() => { if (banner.parentNode) banner.remove(); }, 15000);
+  async function sendVoucherEmail() {
+    const email = document.getElementById('voucherEmailInput').value.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('voucherModalError').style.display = 'block';
+      return;
+    }
+    document.getElementById('voucherModalError').style.display = 'none';
+    const btn = document.querySelector('#voucherModalOverlay .btn-primary');
+    const origText = btn.textContent;
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+
+    const isImage = /\.(png|jpg|jpeg|webp|gif)(\?|$)/i.test(pendingVoucherUrl);
+    const storeName = hostData ? (hostData.store_name || hostData.username) : 'Your Host';
+
+    try {
+      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+        body: JSON.stringify({
+          from: 'Hostie Hub <hello@hostiehub.com.au>',
+          to: email,
+          subject: 'Hostie Hub Voucher — ' + pendingVoucherProductName,
+          html:
+            '<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px">' +
+            '<div style="text-align:center;margin-bottom:24px">' +
+            '<div style="font-size:48px">🎁</div>' +
+            '<h2 style="font-family:Georgia,serif;color:#1d4d4a;margin:12px 0 4px">' + pendingVoucherProductName + '</h2>' +
+            '<p style="color:#6b7280;font-size:14px;margin:0">via ' + storeName + ' · Powered by Hostie Hub</p>' +
+            '</div>' +
+            (isImage
+              ? '<div style="text-align:center;margin-bottom:24px"><img src="' + pendingVoucherUrl + '" style="max-width:100%;border-radius:12px;border:1px solid #e8e4df" alt="Your voucher"></div>'
+              : '<div style="text-align:center;margin-bottom:24px"><a href="' + pendingVoucherUrl + '" style="background:#2C6E6A;color:white;padding:14px 32px;border-radius:50px;text-decoration:none;font-weight:600;font-size:15px;display:inline-block">View your voucher →</a></div>'
+            ) +
+            '<div style="background:#f4f6f5;border-radius:10px;padding:16px;text-align:center">' +
+            '<p style="color:#6b7280;font-size:13px;margin:0">Present this voucher when you arrive.<br>Valid with a confirmed reservation only.</p>' +
+            '</div>' +
+            '</div>'
+        })
+      });
+    } catch(e) { console.error('Voucher email error:', e); }
+
+    document.getElementById('voucherModalOverlay').classList.remove('open');
+    btn.textContent = origText;
+    btn.disabled = false;
+    const bookingUrl = pendingBookingUrl;
+    pendingBookingUrl = null;
+    pendingVoucherUrl = null;
+    window.open(bookingUrl, '_blank');
   }
+
+  function skipVoucherEmail() {
+    document.getElementById('voucherModalOverlay').classList.remove('open');
+    const bookingUrl = pendingBookingUrl;
+    pendingBookingUrl = null;
+    pendingVoucherUrl = null;
+    if (bookingUrl) window.open(bookingUrl, '_blank');
+  }
+
+  function showVoucherBanner() {} // superseded by email flow
 
   let demoClickCount = 0;
   function handleDemoAdd() {
@@ -1049,6 +1129,8 @@
   loadStore();
 
   window.handleBookingLink = handleBookingLink;
+  window.sendVoucherEmail = sendVoucherEmail;
+  window.skipVoucherEmail = skipVoucherEmail;
   window.showVoucherBanner = showVoucherBanner;
 
   // Handle Stripe payment success return

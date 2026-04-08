@@ -328,7 +328,9 @@
               <div class="field-hint">Guests click "Book now" and go straight to this link in a new tab.</div>
             </div>
             <div class="field">
-              <label>Attach a voucher PDF <span style="font-weight:300;font-size:12px">(optional)</span></label>
+              <label>Attach a voucher <span style="font-weight:300;font-size:12px">(optional)</span></label>
+              <input type="text" id="pVoucherTitle" placeholder="e.g. 2 Free Beers or Wines on Arrival at Blanca" style="margin-bottom:10px">
+              <div class="field-hint" style="margin-top:-6px;margin-bottom:10px">This becomes the email subject: <em>Hostie Hub Voucher — [your title]</em></div>
               <div id="pVoucherPreviewWrap" style="display:none;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;align-items:center;gap:10px;">
                 <span style="font-size:20px">📄</span>
                 <span id="pVoucherFileName" style="font-size:14px;font-weight:500;flex:1;color:var(--text)"></span>
@@ -338,7 +340,7 @@
                 🎟️ Click to upload voucher (PDF or image)
                 <input type="file" id="pVoucherFile" accept=".pdf,image/*" style="display:none" onchange="previewVoucherPdf(this)">
               </label>
-              <div class="field-hint">Upload a PDF or image (PNG, JPG). When guests click "Book now", your voucher will appear for them to view and save.</div>
+              <div class="field-hint">Upload a PDF or image (PNG, JPG). When guests click "Book now", your voucher will be emailed to them.</div>
             </div>
           </div>
           <div class="field">
@@ -825,6 +827,7 @@
     document.getElementById('pNotes').value = '';
     document.getElementById('pWholesalePrice').value = '';
     document.getElementById('pBookingUrl').value = '';
+    document.getElementById('pVoucherTitle').value = '';
     document.getElementById('ptPhysical').checked = true;
     document.getElementById('physicalFields').style.display = 'block';
     document.getElementById('bookingFields').style.display = 'none';
@@ -877,6 +880,7 @@
       category: document.getElementById('pCategory').value,
       wholesale_price: isPhysical ? (parseFloat(document.getElementById('pWholesalePrice').value) || 0) : 0,
       booking_url: isPhysical ? null : bookingUrl,
+      voucher_title: isPhysical ? null : (document.getElementById('pVoucherTitle').value.trim() || null),
       postcodes: codes,
       active: true,
     };
@@ -954,6 +958,7 @@
 
     if (!isBooking) document.getElementById('pWholesalePrice').value = p.wholesale_price || '';
     if (isBooking) document.getElementById('pBookingUrl').value = p.booking_url || '';
+    if (isBooking) document.getElementById('pVoucherTitle').value = p.voucher_title || '';
 
     // Image
     if (p.image_url) {

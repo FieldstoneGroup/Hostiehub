@@ -389,12 +389,26 @@
     applyBranding(host);
 
     const [{ data: prods }, { data: props }] = await Promise.all([
-      sb.from('products').select('*').eq('host_id', host.id).eq('active', true).order('sort_order', { ascending: true }).order('created_at', { ascending: true }),
+      sb.from('products').select('*').eq('host_id', host.id).eq('active', true).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true }),
       sb.from('properties').select('*').eq('host_id', host.id).order('nickname'),
     ]);
 
     allProducts = prods || [];
     properties = props || [];
+
+    // Sync latest voucher URLs from partner_products (in case host added product before voucher was uploaded)
+    const bookingPartnerIds = allProducts.filter(p => p.partner_product_id && p.partner_product_type === 'booking').map(p => p.partner_product_id);
+    if (bookingPartnerIds.length > 0) {
+      const { data: partnerProds } = await sb.from('partner_products').select('id, voucher_pdf_url').in('id', bookingPartnerIds);
+      if (partnerProds) {
+        const voucherMap = {};
+        partnerProds.forEach(pp => { voucherMap[pp.id] = pp.voucher_pdf_url; });
+        allProducts = allProducts.map(p => p.partner_product_id && voucherMap[p.partner_product_id]
+          ? { ...p, partner_voucher_pdf_url: voucherMap[p.partner_product_id] }
+          : p
+        );
+      }
+    }
 
     if (properties.length > 0) {
       buildPropertySelector();

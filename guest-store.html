@@ -587,17 +587,28 @@
 
   function handleBookingLink(url, partnerProductId, partnerId, voucherPdfUrl) {
     if (partnerProductId && partnerId) logPartnerEvent(partnerProductId, partnerId, 'click');
-    // Open booking site in new tab
     window.open(url, '_blank');
-    // If there's a voucher PDF, trigger auto-download simultaneously
     if (voucherPdfUrl) {
-      const a = document.createElement('a');
-      a.href = voucherPdfUrl;
-      a.download = 'voucher.pdf';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      // Use blob fetch to force download cross-origin files (Supabase Storage)
+      const ext = voucherPdfUrl.split('?')[0].split('.').pop().toLowerCase() || 'pdf';
+      const filename = 'voucher.' + ext;
+      fetch(voucherPdfUrl)
+        .then(r => r.blob())
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = filename;
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+        })
+        .catch(() => {
+          // Fallback — open in new tab if blob fetch fails
+          window.open(voucherPdfUrl, '_blank');
+        });
     }
   }
 

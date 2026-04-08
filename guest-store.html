@@ -588,25 +588,22 @@
   function handleBookingLink(url, partnerProductId, partnerId, voucherPdfUrl) {
     if (partnerProductId && partnerId) logPartnerEvent(partnerProductId, partnerId, 'click');
     window.open(url, '_blank');
-    if (voucherPdfUrl) {
-      setTimeout(() => {
-        // Append Supabase's ?download= param to force browser download
-        const downloadUrl = voucherPdfUrl + (voucherPdfUrl.includes('?') ? '&' : '?') + 'download=voucher';
-        const ext = voucherPdfUrl.split('?')[0].split('.').pop().toLowerCase() || 'png';
-        // Blob fetch — works cross-origin once CORS allows it
-        fetch(downloadUrl)
-          .then(r => r.blob())
-          .then(blob => {
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'voucher.' + ext;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-          })
-          .catch(() => window.open(voucherPdfUrl, '_blank'));
-      }, 500);
-    }
+    if (voucherPdfUrl) showVoucherBanner(voucherPdfUrl);
+  }
+
+  function showVoucherBanner(url) {
+    const existing = document.getElementById('voucherBanner');
+    if (existing) existing.remove();
+    const banner = document.createElement('div');
+    banner.id = 'voucherBanner';
+    banner.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1d4d4a;color:white;padding:16px 20px;border-radius:14px;font-family:"DM Sans",sans-serif;font-size:14px;font-weight:500;z-index:9999;display:flex;align-items:center;gap:12px;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:90vw';
+    banner.innerHTML =
+      '<span style="font-size:22px">🎁</span>' +
+      '<div><div style="font-weight:600;margin-bottom:2px">Your voucher is ready!</div>' +
+      '<a href="' + url + '" target="_blank" style="color:#E8A838;font-weight:600;text-decoration:underline">Tap here to open your voucher →</a></div>' +
+      '<button onclick="document.getElementById(\'voucherBanner\').remove()" style="background:rgba(255,255,255,0.15);border:none;color:white;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:14px;flex-shrink:0">✕</button>';
+    document.body.appendChild(banner);
+    setTimeout(() => { if (banner.parentNode) banner.remove(); }, 15000);
   }
 
   let demoClickCount = 0;
@@ -1038,6 +1035,7 @@
   loadStore();
 
   window.handleBookingLink = handleBookingLink;
+  window.showVoucherBanner = showVoucherBanner;
 
   // Handle Stripe payment success return
   const urlParams = new URLSearchParams(window.location.search);

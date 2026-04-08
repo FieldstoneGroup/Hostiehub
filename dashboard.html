@@ -1223,15 +1223,16 @@
     try { localStorage.setItem('product_order_' + currentUser.id, JSON.stringify(products.map(p => p.id))); } catch(e) {}
   }
 
-  function reorderProducts(srcId, tgtId) {
+  async function reorderProducts(srcId, tgtId) {
     const srcIdx = products.findIndex(p => p.id === srcId);
     const tgtIdx = products.findIndex(p => p.id === tgtId);
     if (srcIdx === -1 || tgtIdx === -1) return;
     const [moved] = products.splice(srcIdx, 1);
     products.splice(tgtIdx, 0, moved);
-    saveProductOrder();
     renderProducts();
-    showToast('✅ Order saved');
+    showToast('Saving order...');
+    await saveProductOrder();
+    showToast('✅ Order saved — guests will see the new order');
   }
 
   // ── DRAG & DROP (desktop) ──

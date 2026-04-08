@@ -1675,6 +1675,8 @@
       const isAdded = addedPartnerProductIds.has(p.id);
       const isBooking = p.type === 'booking';
       const businessName = p.partners ? p.partners.business_name : 'Local Business';
+      const catLabels = { product: '📦 Product', service: '🛎️ Service', reservation: '🍽️ Reservation', experience: '🏄 Experience' };
+      const catLabel = catLabels[p.category] || '📦 Product';
       const thumb = p.image_url
         ? '<img src="' + p.image_url + '" style="width:100%;height:100%;object-fit:contain;padding:4px;border-radius:10px;background:white;">'
         : (isBooking ? '🔗' : '📦');
@@ -1684,8 +1686,8 @@
         '<div class="product-info">' +
           '<div class="product-name">' + p.name + '</div>' +
           '<div class="product-meta">' +
-            businessName +
-            (isBooking ? ' · 🔗 Booking link · Free' : ' · 📦 Physical · Wholesale $' + (p.wholesale_price || 0)) +
+            businessName + ' · ' + catLabel +
+            (isBooking ? ' · 🔗 Booking · Free' : ' · Wholesale $' + (p.wholesale_price || 0)) +
             (p.notes ? ' · 💡 ' + p.notes : '') +
           '</div>' +
           (p.description ? '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + p.description + '</div>' : '') +
@@ -1703,19 +1705,24 @@
     if (!p) return;
     pendingLocalProduct = p;
     const isBooking = p.type === 'booking';
+    const isProduct = (p.category || 'product') === 'product';
     const businessName = p.partners ? p.partners.business_name : 'Local Business';
+    const catLabels = { product: '📦 Product', service: '🛎️ Service', reservation: '🍽️ Reservation', experience: '🏄 Experience' };
+    const catLabel = catLabels[p.category] || '📦 Product';
 
     document.getElementById('localProductModalTitle').textContent = 'Add to your store — ' + p.name;
     document.getElementById('localProductInfo').innerHTML =
-      '<div style="font-size:14px;font-weight:600;margin-bottom:6px">' + p.name + '</div>' +
-      '<div style="font-size:13px;color:var(--muted);margin-bottom:8px">By ' + businessName + '</div>' +
+      '<div style="font-size:14px;font-weight:600;margin-bottom:4px">' + p.name + '</div>' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">By ' + businessName + ' · ' + catLabel + '</div>' +
       (isBooking
-        ? '<div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;font-size:13px;color:var(--brand-dark)">🔗 This is a booking link product. Guests click "Book now" and go straight to the business website. No payment taken through your store.</div>'
-        : '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 Wholesale price: <strong>$' + (p.wholesale_price || 0) + '</strong> — you pay this to ' + businessName + '. Set your retail price below and keep the margin.</div>'
+        ? '<div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;font-size:13px;color:var(--brand-dark)">🔗 Guests click "Book now" and go straight to the booking page. No payment through your store.</div>'
+        : isProduct
+          ? '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 Wholesale: <strong>$' + (p.wholesale_price || 0) + '</strong> — you pay ' + businessName + ' this amount. Set your retail price below and keep the difference.</div>'
+          : '<div style="background:var(--brand-light);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--brand-dark)">ℹ️ This listing will appear in your store at the partner\'s set price. You cannot edit the price for ' + (p.category || 'service') + 's.</div>'
       );
 
     const priceField = document.getElementById('localProductPriceField');
-    if (isBooking) {
+    if (isBooking || !isProduct) {
       priceField.style.display = 'none';
     } else {
       priceField.style.display = 'block';
@@ -1737,11 +1744,14 @@
     if (!pendingLocalProduct) return;
     const p = pendingLocalProduct;
     const isBooking = p.type === 'booking';
-    const retailPrice = isBooking ? 0 : parseFloat(document.getElementById('localProductRetailPrice').value);
+    const isProduct = (p.category || 'product') === 'product';
 
-    if (!isBooking && (!retailPrice || retailPrice <= 0)) {
-      showToast('⚠️ Please enter a retail price');
-      return;
+    let retailPrice;
+    if (isBooking || !isProduct) {
+      retailPrice = p.wholesale_price || 0;
+    } else {
+      retailPrice = parseFloat(document.getElementById('localProductRetailPrice').value);
+      if (!retailPrice || retailPrice <= 0) { showToast('⚠️ Please enter a retail price'); return; }
     }
 
     const businessName = p.partners ? p.partners.business_name : 'Local Business';

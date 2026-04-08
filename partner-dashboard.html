@@ -298,6 +298,16 @@
             </label>
           </div>
           <div class="field"><label>Product / service name</label><input type="text" id="pName" placeholder="e.g. Fresh Flower Arrangement"></div>
+          <div class="field">
+            <label>Category</label>
+            <select id="pCategory" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;outline:none">
+              <option value="product">📦 Product — physical item (flowers, hampers etc)</option>
+              <option value="service">🛎️ Service — ongoing or on-request (cleaning, chef, massage)</option>
+              <option value="reservation">🍽️ Reservation — table, venue or booking link</option>
+              <option value="experience">🏄 Experience — activity, tour, lesson</option>
+            </select>
+            <div class="field-hint">This tells hosts whether they can set their own price or not.</div>
+          </div>
           <div class="field"><label>Description</label><textarea id="pDesc" placeholder="What does this include? Any details guests should know?"></textarea></div>
           <div class="field">
             <label>Notes for guests <span style="font-weight:300;font-size:12px">(optional)</span></label>
@@ -756,12 +766,14 @@
     list.innerHTML = partnerProducts.map(p => {
       const codes = Array.isArray(p.postcodes) ? p.postcodes : JSON.parse(p.postcodes || '[]');
       const typeLabel = p.type === 'booking' ? '🔗 Booking link' : '📦 Physical';
+      const catLabels = { product: '📦 Product', service: '🛎️ Service', reservation: '🍽️ Reservation', experience: '🏄 Experience' };
+      const catLabel = catLabels[p.category] || '📦 Product';
       const priceLabel = p.type === 'booking' ? 'Free — booking link' : '$' + (p.wholesale_price || 0) + ' wholesale';
       return '<div class="item-row">' +
         '<div class="item-thumb">' + (p.image_url ? '<img src="' + p.image_url + '">' : (p.type === 'booking' ? '🔗' : '📦')) + '</div>' +
         '<div class="item-info"><div class="item-name">' + p.name +
           ' <span class="' + (p.active ? 'badge-active' : 'badge-inactive') + '">' + (p.active ? 'Active' : 'Inactive') + '</span>' +
-          ' <span class="badge-type">' + typeLabel + '</span></div>' +
+          ' <span class="badge-type">' + catLabel + '</span></div>' +
           '<div class="item-meta"><span>💰 ' + priceLabel + '</span><span>📍 ' + (codes.length ? codes.join(', ') : 'All areas') + '</span></div>' +
         '</div>' +
         '<div style="display:flex;gap:8px;flex-shrink:0">' +
@@ -808,6 +820,7 @@
 
   function clearProductForm() {
     document.getElementById('pName').value = '';
+    document.getElementById('pCategory').value = 'product';
     document.getElementById('pDesc').value = '';
     document.getElementById('pNotes').value = '';
     document.getElementById('pWholesalePrice').value = '';
@@ -860,6 +873,7 @@
       description: document.getElementById('pDesc').value.trim(),
       notes: document.getElementById('pNotes').value.trim(),
       type: isPhysical ? 'physical' : 'booking',
+      category: document.getElementById('pCategory').value,
       wholesale_price: isPhysical ? (parseFloat(document.getElementById('pWholesalePrice').value) || 0) : 0,
       booking_url: isPhysical ? null : bookingUrl,
       postcodes: codes,
@@ -927,6 +941,7 @@
 
     // Populate fields
     document.getElementById('pName').value = p.name || '';
+    document.getElementById('pCategory').value = p.category || 'product';
     document.getElementById('pDesc').value = p.description || '';
     document.getElementById('pNotes').value = p.notes || '';
 

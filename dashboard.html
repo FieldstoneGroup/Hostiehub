@@ -1311,8 +1311,8 @@
         ondrop="onDrop(event,'${p.id}')"
         ondragend="onDragEnd(event)">
         <div class="drag-handle" ontouchstart="onHandleTouchStart(event,'${p.id}')" title="Drag to reorder">⠿</div>
-        <div class="product-emoji" style="${p.image_url ? 'padding:0;overflow:hidden;' : ''}">
-          ${p.image_url ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">` : (p.emoji || '✨')}
+        <div class="product-emoji" style="${p.image_url ? 'padding:0;overflow:hidden;background:white;' : ''}">
+          ${p.image_url ? `<img src="${p.image_url}" style="width:100%;height:100%;object-fit:contain;padding:4px;border-radius:10px;background:white;">` : (p.emoji || '✨')}
         </div>
         <div class="product-info">
           <div class="product-name">${p.name} ${p.active === false ? '<span style="font-size:11px;color:var(--muted);font-weight:400">(inactive)</span>' : ''}</div>
@@ -1676,7 +1676,7 @@
       const isBooking = p.type === 'booking';
       const businessName = p.partners ? p.partners.business_name : 'Local Business';
       const thumb = p.image_url
-        ? '<img src="' + p.image_url + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">'
+        ? '<img src="' + p.image_url + '" style="width:100%;height:100%;object-fit:contain;padding:4px;border-radius:10px;background:white;">'
         : (isBooking ? '🔗' : '📦');
 
       return '<div class="product-row" style="' + (isAdded ? 'opacity:0.7' : '') + '">' +
@@ -1762,6 +1762,7 @@
       partner_product_type: p.type,
       partner_booking_url: isBooking ? p.booking_url : null,
       partner_notes: p.notes || null,
+      partner_voucher_pdf_url: isBooking ? (p.voucher_pdf_url || null) : null,
       wholesale_price: p.wholesale_price || 0,
     });
 

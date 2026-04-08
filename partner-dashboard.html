@@ -164,9 +164,9 @@
     <div class="nav-section-label">Main</div>
     <button class="nav-item active" onclick="showPage('overview', this)"><div class="nav-icon">🏠</div><span>Overview</span></button>
     <button class="nav-item" onclick="showPage('analytics', this)"><div class="nav-icon">📊</div><span>Analytics</span></button>
-    <div class="nav-section-label">Products & Services</div>
-    <button class="nav-item" onclick="showPage('products', this)"><div class="nav-icon">📦</div><span>My Products</span></button>
-    <button class="nav-item" onclick="showPage('newproduct', this)"><div class="nav-icon">➕</div><span>Add Product</span></button>
+    <div class="nav-section-label">Listings</div>
+    <button class="nav-item" onclick="showPage('products', this)"><div class="nav-icon">📦</div><span>My Listings</span></button>
+    <button class="nav-item" onclick="showPage('newproduct', this)"><div class="nav-icon">➕</div><span>Add Listing</span></button>
     <div class="nav-section-label">Vouchers</div>
     <button class="nav-item" onclick="showPage('vouchers', this)"><div class="nav-icon">🎟️</div><span>My Vouchers</span></button>
     <button class="nav-item" onclick="showPage('newvoucher', this)"><div class="nav-icon">➕</div><span>Add Voucher</span></button>
@@ -217,7 +217,7 @@
           <div class="card-title">Quick actions</div>
           <div class="card-desc">Get your products & services in front of guests.</div>
           <div style="display:flex;flex-direction:column;gap:10px">
-            <button class="btn btn-primary" onclick="showPage('newproduct', document.querySelector('[onclick*=newproduct]'))">📦 &nbsp;Add a product or service</button>
+            <button class="btn btn-primary" onclick="showPage('newproduct', document.querySelector('[onclick*=newproduct]'))">📦 &nbsp;Add a listing</button>
             <button class="btn btn-outline" onclick="showPage('analytics', document.querySelector('[onclick*=analytics]'))">📊 &nbsp;View analytics</button>
             <button class="btn btn-outline" onclick="showPage('newvoucher', document.querySelector('[onclick*=newvoucher]'))">🎟️ &nbsp;Add a voucher</button>
             <button class="btn btn-outline" onclick="showPage('account', document.querySelector('[onclick*=account]'))">📍 &nbsp;Update my postcodes</button>
@@ -256,7 +256,7 @@
 
       <!-- Per-product breakdown -->
       <div class="card">
-        <div class="card-title" style="margin-bottom:16px">Performance by product</div>
+        <div class="card-title" style="margin-bottom:16px">Performance by listing</div>
         <div id="analyticsTable">
           <div class="empty-state" style="padding:40px 20px"><div class="empty-icon">📊</div><h3>No data yet</h3><p>Analytics will appear once your products are live in host stores and guests start viewing them.</p></div>
         </div>
@@ -275,10 +275,10 @@
     <!-- MY PRODUCTS -->
     <div class="page" id="page-products">
       <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:20px">
-        <button class="btn btn-primary" onclick="showPage('newproduct', document.querySelector('[onclick*=newproduct]'))">+ Add product or service</button>
+        <button class="btn btn-primary" onclick="showPage('newproduct', document.querySelector('[onclick*=newproduct]'))">+ Add listing</button>
       </div>
       <div class="items-list" id="productsList">
-        <div class="empty-state"><div class="empty-icon">📦</div><h3>No products yet</h3><p>Add your first product or service and hosts in your area will start sharing it with guests.</p></div>
+        <div class="empty-state"><div class="empty-icon">📦</div><h3>No listings yet</h3><p>Add your first listing and hosts in your area will start sharing it with guests.</p></div>
       </div>
     </div>
 
@@ -287,7 +287,7 @@
       <div style="max-width:600px">
         <div class="card">
           <div class="field">
-            <label>What type of product or service is this?</label>
+            <label>What type of listing is this?</label>
             <label class="type-option">
               <input type="radio" name="productType" value="physical" id="ptPhysical" onchange="toggleProductType()" checked>
               <div><div class="type-option-label">📦 Physical product</div><div class="type-option-desc">e.g. flowers, hampers, firewood — guest pays host, host arranges payment to you</div></div>
@@ -369,7 +369,7 @@
             </div>
             <div class="postcode-tags" id="pPostcodeTags"></div>
           </div>
-          <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="saveProduct()">Publish product →</button>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="saveProduct()">Publish listing →</button>
         </div>
       </div>
     </div>
@@ -547,7 +547,7 @@
   let productPostcodes = [], voucherPostcodes = [], accountPostcodes = [];
   let analyticsDays = 30;
   let editingProductId = null;
-  const pageTitles = { overview:'Overview', analytics:'Analytics', products:'My Products & Services', newproduct:'Add Product or Service', vouchers:'My Vouchers', newvoucher:'Add Voucher', account:'Account', billing:'Billing' };
+  const pageTitles = { overview:'Overview', analytics:'Analytics', products:'My Listings', newproduct:'Add Listing', vouchers:'My Vouchers', newvoucher:'Add Voucher', account:'Account', billing:'Billing' };
 
   async function init() {
     const { data: { session } } = await sb.auth.getSession();
@@ -760,7 +760,7 @@
   function renderProducts() {
     const list = document.getElementById('productsList');
     if (!partnerProducts.length) {
-      list.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><h3>No products yet</h3><p>Add your first product or service and hosts in your area will start sharing it with guests.</p></div>';
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><h3>No listings yet</h3><p>Add your first listing and hosts in your area will start sharing it with guests.</p></div>';
       return;
     }
     list.innerHTML = partnerProducts.map(p => {

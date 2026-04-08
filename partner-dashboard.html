@@ -335,10 +335,10 @@
                 <button onclick="removeVoucherPdf()" style="background:none;border:none;color:var(--error);cursor:pointer;font-size:13px;">Remove</button>
               </div>
               <label id="pVoucherUploadLabel" class="image-upload-label">
-                📄 Click to upload voucher PDF
-                <input type="file" id="pVoucherFile" accept=".pdf" style="display:none" onchange="previewVoucherPdf(this)">
+                🎟️ Click to upload voucher (PDF or image)
+                <input type="file" id="pVoucherFile" accept=".pdf,image/*" style="display:none" onchange="previewVoucherPdf(this)">
               </label>
-              <div class="field-hint">When guests click "Book now", this PDF will download automatically alongside the booking link — great for welcome drink vouchers, discounts etc.</div>
+              <div class="field-hint">Upload a PDF or image (PNG, JPG). When guests click "Book now", your voucher will appear for them to view and save.</div>
             </div>
           </div>
           <div class="field">
@@ -852,7 +852,8 @@
   }
 
   async function uploadVoucherPdf(file, productId) {
-    const path = 'partner-vouchers/' + partnerData.id + '/' + productId + '.pdf';
+    const ext = file.name.split('.').pop().toLowerCase() || 'pdf';
+    const path = 'partner-vouchers/' + partnerData.id + '/' + productId + '.' + ext;
     const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
     if (error) { console.error(error); return null; }
     const { data } = sb.storage.from('product-images').getPublicUrl(path);

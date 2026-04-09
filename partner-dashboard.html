@@ -973,11 +973,17 @@
   }
 
   async function uploadVoucherPdf(file, productId) {
-    const ext = file.name.split('.').pop().toLowerCase() || 'pdf';
+    const ext = file.name.split('.').pop().toLowerCase() || 'png';
     const path = 'partner-vouchers/' + partnerData.id + '/' + productId + '.' + ext;
+    console.log('[HH] Uploading voucher to:', path, 'file size:', file.size);
     const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
-    if (error) { console.error(error); return null; }
+    if (error) {
+      console.error('[HH] Voucher upload error:', error);
+      showToast('⚠️ Voucher upload failed: ' + error.message);
+      return null;
+    }
     const { data } = sb.storage.from('product-images').getPublicUrl(path);
+    console.log('[HH] Voucher uploaded OK:', data.publicUrl);
     return data.publicUrl;
   }
 

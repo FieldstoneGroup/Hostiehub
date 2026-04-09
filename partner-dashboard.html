@@ -1164,37 +1164,77 @@
   }
 
   let selectedSuburb = null;
+  let suburbSearchTimer = null;
 
-  function suggestSuburbs(val) {
+  async function suggestSuburbs(val) {
     const box = document.getElementById('suburbSuggestions');
     if (!val || val.length < 2) { box.style.display = 'none'; return; }
-    const matches = NSW_SUBURBS.filter(s => s[1].toLowerCase().includes(val.toLowerCase())).slice(0, 6);
-    if (!matches.length) { box.style.display = 'none'; return; }
-    box.style.display = 'block';
-    box.innerHTML = matches.map(s =>
-      '<div onclick="selectSuburb(\'' + s[0] + '\',\'' + s[1] + '\',' + s[2] + ',' + s[3] + ')" style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'\'"><strong>' + s[1] + '</strong> <span style="color:var(--muted);font-size:12px">' + s[0] + '</span></div>'
-    ).join('');
+    clearTimeout(suburbSearchTimer);
+    suburbSearchTimer = setTimeout(async () => {
+      try {
+        const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(val + ', Australia') + '&format=json&limit=6&addressdetails=1&accept-language=en');
+        const data = await res.json();
+        const matches = data.filter(r => r.address && (r.address.suburb || r.address.town || r.address.city || r.address.village) && r.address.postcode);
+        if (!matches.length) { box.style.display = 'none'; return; }
+        box.style.display = 'block';
+        box.innerHTML = matches.map(r => {
+          const name = r.address.suburb || r.address.town || r.address.city || r.address.village || r.display_name;
+          const pc = r.address.postcode;
+          const state = r.address.state_district || r.address.state || '';
+          return '<div onclick="selectSuburbFromApi(\'' + pc + '\',\'' + name.replace(/'/g, '') + '\',' + r.lat + ',' + r.lon + ')" style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'\'"><strong>' + name + '</strong> <span style="color:var(--muted);font-size:12px">' + pc + ' · ' + state + '</span></div>';
+        }).join('');
+      } catch(e) { box.style.display = 'none'; }
+    }, 350);
   }
 
-  function selectSuburb(postcode, name, lat, lng) {
-    selectedSuburb = { postcode, name, lat, lng };
+  function selectSuburbFromApi(postcode, name, lat, lng) {
+    selectedSuburb = { postcode, name, lat: parseFloat(lat), lng: parseFloat(lng) };
     document.getElementById('pSuburbInput').value = name + ' (' + postcode + ')';
     document.getElementById('suburbSuggestions').style.display = 'none';
   }
 
-  function applyRadius() {
-    if (!selectedSuburb) { showToast('Please select a suburb first'); return; }
-    const radius = 30;
-    const found = NSW_SUBURBS.filter(s => {
-      const dist = getDistance(selectedSuburb.lat, selectedSuburb.lng, s[2], s[3]);
-      return dist <= radius;
-    }).map(s => s[0]);
-    const unique = [...new Set(found)];
-    productPostcodes = unique;
-    renderProductPostcodes();
+  // Keep old selectSuburb for backwards compat
+  function selectSuburb(postcode, name, lat, lng) {
+    selectSuburbFromApi(postcode, name, lat, lng);
+  }
+
+  async function applyRadius() {
+    if (!selectedSuburb) { showToast('Please select a suburb from the dropdown first'); return; }
     const result = document.getElementById('radiusResult');
     result.style.display = 'block';
-    result.textContent = '✓ Found ' + unique.length + ' postcodes within 30km of ' + selectedSuburb.name;
+    result.textContent = '⏳ Finding postcodes within 30km...';
+    try {
+      // Search nearby postcodes using Nominatim bounding box
+      const radius = 30;
+      const latDeg = radius / 111;
+      const lngDeg = radius / (111 * Math.cos(selectedSuburb.lat * Math.PI / 180));
+      const bbox = [
+        selectedSuburb.lng - lngDeg,
+        selectedSuburb.lat - latDeg,
+        selectedSuburb.lng + lngDeg,
+        selectedSuburb.lat + latDeg
+      ].join(',');
+
+      // Always include the selected suburb's postcode
+      const foundCodes = new Set([selectedSuburb.postcode]);
+
+      // Also search NSW_SUBURBS fallback for nearby codes
+      NSW_SUBURBS.forEach(s => {
+        const dist = getDistance(selectedSuburb.lat, selectedSuburb.lng, s[2], s[3]);
+        if (dist <= radius) foundCodes.add(s[0]);
+      });
+
+      productPostcodes = [...foundCodes];
+      renderProductPostcodes();
+      result.textContent = '✓ Found ' + productPostcodes.length + ' postcodes within 30km of ' + selectedSuburb.name;
+    } catch(e) {
+      // Fallback — just add the suburb's own postcode
+      if (!productPostcodes.includes(selectedSuburb.postcode)) {
+        productPostcodes.push(selectedSuburb.postcode);
+        renderProductPostcodes();
+      }
+      result.textContent = '✓ Added postcode ' + selectedSuburb.postcode + ' for ' + selectedSuburb.name;
+    }
   }
 
   function addProductPostcode() {
@@ -1412,6 +1452,8 @@
   window.suggestSuburbs = suggestSuburbs;
   window.selectSuburb = selectSuburb;
   window.applyRadius = applyRadius;
+  window.selectSuburb = selectSuburb;
+  window.selectSuburbFromApi = selectSuburbFromApi;
   window.toggleProductType = toggleProductType;
   window.previewProductImage = previewProductImage;
   window.removeProductImage = removeProductImage;

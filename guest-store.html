@@ -624,11 +624,10 @@
             <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--text);line-height:1.25;margin-bottom:6px">${p.name}</div>
             <div style="font-size:12px;color:var(--muted);line-height:1.5">${p.description || ''}</div>
           </div>
-          <!-- Notes + voucher pinned above button -->
-          <div style="position:absolute;bottom:62px;left:0;right:0;padding:0 14px 8px">
-            ${p.partner_notes ? `<div style="background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:7px 10px;font-size:12px;font-weight:600;color:#15803d;line-height:1.35${hasVoucher ? ';margin-bottom:6px' : ''}">🎁 ${p.partner_notes}</div>` : ''}
-            ${hasVoucher ? `<div style="display:flex;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:6px 9px;font-size:11px;font-weight:600;color:#92600a"><span>🎟️</span><span>Free voucher emailed on booking</span></div>` : ''}
-          </div>
+          <!-- Note pinned at fixed position -->
+          ${p.partner_notes ? `<div style="position:absolute;bottom:104px;left:0;right:0;padding:0 14px"><div style="background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:7px 10px;font-size:12px;font-weight:600;color:#15803d;line-height:1.35">🎁 ${p.partner_notes}</div></div>` : ''}
+          <!-- Voucher row pinned above button -->
+          ${hasVoucher ? `<div style="position:absolute;bottom:58px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:6px 9px;font-size:11px;font-weight:600;color:#92600a"><span>🎟️</span><span>Free voucher emailed on booking</span></div></div>` : ''}
           <!-- Book now button — absolute bottom -->
           <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:white;border-top:1px solid var(--border)">
             <button onclick="${bookingFn}" style="width:100%;border:none;border-radius:10px;padding:11px;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;color:#ffffff;background:linear-gradient(135deg,#2C6E6A,#1d4d4a);cursor:pointer;letter-spacing:0.3px">Book now →</button>
@@ -644,9 +643,9 @@
           <div class="product-name">${p.name}</div>
           <div class="product-desc">${p.description || ''}</div>
         </div>
-        ${p.partner_notes ? `<div style="position:absolute;bottom:62px;left:0;right:0;padding:0 16px"><div style="background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:6px 10px;font-size:11px;font-weight:600;color:#15803d;line-height:1.35">🎁 ${p.partner_notes}</div></div>` : ''}
+        ${p.partner_notes ? `<div style="position:absolute;bottom:104px;left:0;right:0;padding:0 16px"><div style="background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:6px 10px;font-size:11px;font-weight:600;color:#15803d;line-height:1.35">🎁 ${p.partner_notes}</div></div>` : ''}
         <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 16px;background:white;border-top:1px solid #f0ece8;display:flex;align-items:center;justify-content:space-between">
-          <div class="product-price">$${p.price} <small>${p.unit ? '/ ' + p.unit : ''}</small></div>
+          <div class="product-price">$${p.price} <small>${p.partner_product_id ? '' : (p.unit ? '/ ' + p.unit : '')}</small></div>
           ${isDemo
             ? `<button class="add-btn" onclick="handleDemoAdd()">Add +</button>`
             : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">Add</button>`

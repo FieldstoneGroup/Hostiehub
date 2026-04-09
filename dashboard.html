@@ -1042,30 +1042,32 @@
   ];
 
   async function init() {
-    // Try getSession first, fall back to onAuthStateChange for hard refresh
     let { data: { session } } = await sb.auth.getSession();
 
-    // If no session, wait briefly for auth state to load (handles Edge/Safari Tracking Prevention)
     if (!session) {
       session = await new Promise(resolve => {
         const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
-          subscription.unsubscribe();
-          resolve(s);
+          if (s) { subscription.unsubscribe(); resolve(s); }
         });
-        // Timeout after 3 seconds — truly not logged in
-        setTimeout(() => resolve(null), 3000);
+        setTimeout(() => resolve(null), 4000);
       });
     }
 
     if (!session) { window.location.href = 'signup.html'; return; }
     currentUser = session.user;
 
-    // Try finding host by id first, then by email as fallback
-    let { data: host } = await sb.from('hosts').select('*').eq('id', currentUser.id).maybeSingle();
-    if (!host && currentUser.email) {
-      const { data: hostByEmail } = await sb.from('hosts').select('*').eq('email', currentUser.email).maybeSingle();
-      host = hostByEmail;
+    // Retry host lookup up to 3 times — JWT may not be attached yet on hard refresh
+    let host = null;
+    for (let i = 0; i < 3; i++) {
+      const { data } = await sb.from('hosts').select('*').eq('id', currentUser.id).maybeSingle();
+      if (data) { host = data; break; }
+      if (!data && currentUser.email) {
+        const { data: byEmail } = await sb.from('hosts').select('*').eq('email', currentUser.email).maybeSingle();
+        if (byEmail) { host = byEmail; break; }
+      }
+      if (i < 2) await new Promise(r => setTimeout(r, 500));
     }
+
     if (host) { currentHost = host; populateUI(); }
     await Promise.all([loadProducts(), loadProperties(), loadOrders()]);
     loadVouchers();

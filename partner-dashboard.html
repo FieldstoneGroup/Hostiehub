@@ -617,16 +617,23 @@
     if (!session) {
       session = await new Promise(resolve => {
         const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
-          subscription.unsubscribe();
-          resolve(s);
+          if (s) { subscription.unsubscribe(); resolve(s); }
         });
-        setTimeout(() => resolve(null), 3000);
+        setTimeout(() => resolve(null), 4000);
       });
     }
 
     if (!session) { window.location.href = 'partner-signup.html'; return; }
     currentUser = session.user;
-    const { data: partner } = await sb.from('partners').select('*').eq('user_id', currentUser.id).single();
+
+    // Retry partner lookup up to 3 times — JWT may not be attached yet on hard refresh
+    let partner = null;
+    for (let i = 0; i < 3; i++) {
+      const { data } = await sb.from('partners').select('*').eq('user_id', currentUser.id).maybeSingle();
+      if (data) { partner = data; break; }
+      if (i < 2) await new Promise(r => setTimeout(r, 500));
+    }
+
     if (!partner) { window.location.href = 'partner-signup.html'; return; }
     partnerData = partner;
     populateUI();
@@ -1247,7 +1254,10 @@
       try {
         const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(val + ', Australia') + '&format=json&limit=6&addressdetails=1&accept-language=en');
         const data = await res.json();
-        const matches = data.filter(r => r.address && (r.address.suburb || r.address.town || r.address.city || r.address.village) && r.address.postcode);
+        const raw = data.filter(r => r.address && (r.address.suburb || r.address.town || r.address.city || r.address.village) && r.address.postcode);
+        // Deduplicate by postcode
+        const seen = new Set();
+        const matches = raw.filter(r => { if (seen.has(r.address.postcode)) return false; seen.add(r.address.postcode); return true; });
         if (!matches.length) { box.style.display = 'none'; return; }
         box.style.display = 'block';
         box.innerHTML = matches.map(r => {

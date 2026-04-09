@@ -926,12 +926,22 @@
   }
 
   async function saveProduct() {
+    // Auto-add any postcode typed but not yet clicked + Add
+    const pcInput = document.getElementById('pPostcodeInput');
+    if (pcInput && pcInput.value.trim() && /^\d{4}$/.test(pcInput.value.trim())) {
+      const val = pcInput.value.trim();
+      if (!productPostcodes.includes(val)) productPostcodes.push(val);
+      pcInput.value = '';
+      renderProductPostcodes();
+    }
+
     const name = document.getElementById('pName').value.trim();
     if (!name) { showToast('Please enter a product name'); return; }
     const isPhysical = document.getElementById('ptPhysical').checked;
     const bookingUrl = document.getElementById('pBookingUrl').value.trim();
     if (!isPhysical && !bookingUrl) { showToast('Please enter a booking URL'); return; }
     const codes = productPostcodes.length > 0 ? productPostcodes : accountPostcodes;
+    if (codes.length === 0) { showToast('⚠️ Please add at least one postcode or suburb area'); return; }
 
     const payload = {
       partner_id: partnerData.id,

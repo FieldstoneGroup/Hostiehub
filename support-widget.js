@@ -58,6 +58,7 @@
   // ── STATE ──
   const WORKER_URL = 'https://hostie-hub-ai.still-feather-9559.workers.dev';
   let messages = [];
+  let isOpen = false;
   let isLoading = false;
   let greeted = false;
 

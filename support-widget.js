@@ -58,7 +58,6 @@
   // ── STATE ──
   const WORKER_URL = 'https://hostie-hub-ai.still-feather-9559.workers.dev';
   let messages = [];
-  let isOpen = false;
   let isLoading = false;
   let greeted = false;
 
@@ -129,14 +128,14 @@
     showTyping();
 
     try {
-      const res = await fetch(WORKER_URL, {
+      const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Service': 'claude' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          system: "You are a friendly and knowledgeable support assistant for Hostie Hub — an Australian SaaS platform that helps short-term rental hosts create guest stores where guests can purchase add-ons, experiences, and local partner products. You help hosts with: setting up their store, adding products and properties, connecting Stripe, understanding analytics, managing orders, adding local partner listings, and any other platform questions. Be concise, warm, and practical. If something isn't possible in the platform yet, say so honestly. Don't make up features.",
-          messages: messages,
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 500
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 500,
+          system: "You are a friendly and knowledgeable support assistant for Hostie Hub — an Australian SaaS platform that helps short-term rental hosts create guest stores where guests can purchase add-ons, experiences, and local partner products. You help hosts with: setting up their store, adding products and properties, connecting Stripe, understanding analytics, managing orders, adding local partner listings, and any other platform questions. Be concise, warm, and practical. Keep replies short and clear — 2-4 sentences where possible. If something isn't possible in the platform yet, say so honestly.",
+          messages: messages
         })
       });
 

@@ -76,9 +76,9 @@
   .product-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; animation: fadeUp 0.5s ease both; height: 500px; overflow: hidden; }
   .product-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  .product-img { height: 120px; background: var(--brand-light); display: flex; align-items: center; justify-content: center; font-size: 52px; position: relative; overflow: hidden; border-radius: var(--radius) var(--radius) 0 0; }
+  .product-img { height: 152px; background: white; display: flex; align-items: center; justify-content: center; font-size: 52px; position: relative; overflow: hidden; border-radius: var(--radius) var(--radius) 0 0; border-bottom: 1px solid #f0ece8; }
   .product-img img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius) var(--radius) 0 0; }
-  .product-body { padding: 12px 16px 12px; flex: 1; display: flex; flex-direction: column; }
+  .product-body { padding: 12px 16px; flex: 1; display: flex; flex-direction: column; }
   .product-category { font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--brand); margin-bottom: 5px; }
   .product-name { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; line-height: 1.25; }
   .product-desc { font-size: 12px; color: var(--muted); line-height: 1.5; flex: 1; }
@@ -637,20 +637,20 @@
       }
 
       return `
-      <div class="product-card" style="animation-delay:${i * 0.06}s">
+      <div class="product-card" style="animation-delay:${i * 0.06}s;position:relative">
         <div class="product-img">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '✨')}</div>
-        <div class="product-body">
+        <div class="product-body" style="padding-bottom:${p.partner_notes ? '56px' : '12px'}">
           ${p.partner_product_id ? '' : `<div class="product-category">${categoryLabels[p.category] || ''}</div>`}
           <div class="product-name">${p.name}</div>
-          <div class="product-desc" style="flex:1">${p.description || ''}</div>
-          ${p.partner_notes ? `<div style="background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:6px 10px;font-size:11px;font-weight:600;color:#15803d;line-height:1.35;margin-bottom:10px">🎁 ${p.partner_notes}</div>` : ''}
-          <div class="product-footer">
-            <div class="product-price">$${p.price} <small>${p.unit ? '/ ' + p.unit : ''}</small></div>
-            ${isDemo
-              ? `<button class="add-btn" onclick="handleDemoAdd()">Add +</button>`
-              : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">Add</button>`
-            }
-          </div>
+          <div class="product-desc">${p.description || ''}</div>
+        </div>
+        ${p.partner_notes ? `<div style="position:absolute;bottom:62px;left:0;right:0;padding:0 16px"><div style="background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:6px 10px;font-size:11px;font-weight:600;color:#15803d;line-height:1.35">🎁 ${p.partner_notes}</div></div>` : ''}
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 16px;background:white;border-top:1px solid #f0ece8;display:flex;align-items:center;justify-content:space-between">
+          <div class="product-price">$${p.price} <small>${p.unit ? '/ ' + p.unit : ''}</small></div>
+          ${isDemo
+            ? `<button class="add-btn" onclick="handleDemoAdd()">Add +</button>`
+            : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">Add</button>`
+          }
         </div>
       </div>`;
     }).join('');

@@ -1042,7 +1042,21 @@
   ];
 
   async function init() {
-    const { data: { session } } = await sb.auth.getSession();
+    // Try getSession first, fall back to onAuthStateChange for hard refresh
+    let { data: { session } } = await sb.auth.getSession();
+
+    // If no session, wait briefly for auth state to load (handles Edge/Safari Tracking Prevention)
+    if (!session) {
+      session = await new Promise(resolve => {
+        const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
+          subscription.unsubscribe();
+          resolve(s);
+        });
+        // Timeout after 3 seconds — truly not logged in
+        setTimeout(() => resolve(null), 3000);
+      });
+    }
+
     if (!session) { window.location.href = 'signup.html'; return; }
     currentUser = session.user;
     const { data: host } = await sb.from('hosts').select('*').eq('id', currentUser.id).single();

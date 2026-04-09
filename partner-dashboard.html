@@ -612,7 +612,18 @@
   const pageTitles = { overview:'Overview', analytics:'Analytics', products:'My Listings', newproduct:'Add Listing', vouchers:'My Vouchers', newvoucher:'Add Voucher', account:'Account', billing:'Billing' };
 
   async function init() {
-    const { data: { session } } = await sb.auth.getSession();
+    let { data: { session } } = await sb.auth.getSession();
+
+    if (!session) {
+      session = await new Promise(resolve => {
+        const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
+          subscription.unsubscribe();
+          resolve(s);
+        });
+        setTimeout(() => resolve(null), 3000);
+      });
+    }
+
     if (!session) { window.location.href = 'partner-signup.html'; return; }
     currentUser = session.user;
     const { data: partner } = await sb.from('partners').select('*').eq('user_id', currentUser.id).single();

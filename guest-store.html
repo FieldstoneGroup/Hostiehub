@@ -638,7 +638,7 @@
         <div class="product-body">
           <div class="product-category">${categoryLabels[p.category] || ''}</div>
           <div class="product-name">${p.name}</div>
-          <div class="product-desc">${(p.description || '').length > 120 ? p.description.substring(0, 120) + '...' : (p.description || '')}${p.partner_notes ? '<div style="font-size:12px;color:var(--brand);margin-top:6px;font-style:italic">💡 ' + p.partner_notes + '</div>' : ''}</div>
+          <div class="product-desc">${p.description || ''}${p.partner_notes ? '<div style="font-size:12px;color:var(--brand);margin-top:6px;font-style:italic">💡 ' + p.partner_notes + '</div>' : ''}</div>
           <div class="product-footer">
             <div class="product-price">$${p.price} <small>${p.unit ? '/ ' + p.unit : ''}</small></div>
             ${isDemo

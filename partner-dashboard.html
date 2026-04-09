@@ -322,7 +322,11 @@
             </select>
             <div class="field-hint">This tells hosts whether they can set their own price or not.</div>
           </div>
-          <div class="field"><label>Description</label><textarea id="pDesc" placeholder="What does this include? Any details guests should know?"></textarea></div>
+          <div class="field">
+            <label>Description <span style="font-weight:300;font-size:12px" id="pDescCount">(0 / 120 characters)</span></label>
+            <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="120" oninput="document.getElementById('pDescCount').textContent = '(' + this.value.length + ' / 120 characters)'; document.getElementById('pDescCount').style.color = this.value.length > 100 ? '#e53e3e' : 'var(--muted)'"></textarea>
+            <div class="field-hint">Shown in the guest store — keep it punchy. Maximum 120 characters.</div>
+          </div>
           <div class="field">
             <label>Notes for guests <span style="font-weight:300;font-size:12px">(optional)</span></label>
             <input type="text" id="pNotes" placeholder="e.g. Please arrive 10 mins before your lesson">
@@ -359,6 +363,7 @@
           </div>
           <div class="field">
             <label>Product photo <span style="font-weight:300;font-size:12px">(recommended)</span></label>
+            <div class="field-hint" style="margin-bottom:8px">📐 Best size: <strong>800 × 400px</strong> landscape or <strong>600 × 600px</strong> square. PNG or JPG. Your logo on a white background works great.</div>
             <div id="pImagePreviewWrap" style="display:none" class="image-preview-wrap">
               <img id="pImagePreview" src="">
               <button class="image-remove-btn" onclick="removeProductImage()">✕</button>
@@ -1005,6 +1010,8 @@
     document.getElementById('pName').value = p.name || '';
     document.getElementById('pCategory').value = p.category || 'product';
     document.getElementById('pDesc').value = p.description || '';
+    const descCount = document.getElementById('pDescCount');
+    if (descCount) { const l = (p.description || '').length; descCount.textContent = '(' + l + ' / 120 characters)'; descCount.style.color = l > 100 ? '#e53e3e' : 'var(--muted)'; }
     document.getElementById('pNotes').value = p.notes || '';
 
     const isBooking = p.type === 'booking';

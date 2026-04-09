@@ -600,17 +600,35 @@
       if (isBookingLink) {
         const hasVoucher = !!p.partner_voucher_pdf_url;
         return `
-        <div class="product-card" style="animation-delay:${i * 0.06}s;${hasVoucher ? 'border:2.5px solid #16a34a;box-shadow:0 0 0 3px rgba(22,163,74,0.12);' : ''}">
-          <div class="product-img">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '🔗')}</div>
-          <div class="product-body">
+        <div class="product-card" style="animation-delay:${i * 0.06}s;padding:0;overflow:hidden;border:1.5px solid var(--border);${hasVoucher ? 'border-color:#E8A838;box-shadow:0 0 0 3px rgba(232,168,56,0.12);' : ''}">
+          <!-- Gold partner banner -->
+          <div style="background:linear-gradient(135deg,#E8A838,#d4952e);padding:7px 14px;display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:13px">🤝</span>
+              <span style="font-size:11px;font-weight:700;color:white;letter-spacing:0.8px;text-transform:uppercase">Local Partner</span>
+            </div>
+            ${hasVoucher ? '<span style="font-size:10px;font-weight:700;color:white;background:rgba(255,255,255,0.25);padding:2px 8px;border-radius:50px;letter-spacing:0.5px">🎁 Voucher included</span>' : ''}
+          </div>
+          <!-- Image -->
+          <div style="width:100%;height:160px;overflow:hidden;background:#f4f6f5;display:flex;align-items:center;justify-content:center">
+            ${p.image_url
+              ? `<img src="${p.image_url}" alt="${p.name}" style="width:100%;height:100%;object-fit:contain;padding:12px;background:white">`
+              : `<span style="font-size:52px">${p.emoji || '🏪'}</span>`
+            }
+          </div>
+          <!-- Body -->
+          <div class="product-body" style="padding:14px 16px 16px">
             <div class="product-category">${categoryLabels[p.category] || ''}</div>
-            <div class="product-name">${p.name}</div>
-            <div class="product-desc">${p.description || ''}</div>
-            ${p.partner_notes ? `<div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:8px;padding:10px 12px;margin:8px 0;font-size:13px;font-weight:600;color:#15803d;line-height:1.4">🎁 ${p.partner_notes}</div>` : ''}
-            <div class="product-footer" style="margin-top:auto">
+            <div class="product-name" style="font-size:17px;margin-bottom:6px">${p.name}</div>
+            <div class="product-desc" style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:${p.partner_notes ? '0' : '12px'}">${p.description || ''}</div>
+            ${p.partner_notes ? `
+            <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-left:3px solid #16a34a;border-radius:0 8px 8px 0;padding:10px 12px;margin:10px 0 12px;font-size:13px;font-weight:600;color:#15803d;line-height:1.4">
+              🎁 ${p.partner_notes}
+            </div>` : ''}
+            <div class="product-footer" style="margin-top:auto;padding-top:0">
               ${isDemo
-                ? `<button class="add-btn" onclick="handleDemoAdd()">Book now →</button>`
-                : `<button class="add-btn" onclick="handleBookingLink('${p.partner_booking_url}','${p.partner_product_id || ''}','${p.partner_id || ''}','${p.partner_voucher_pdf_url || ''}','${(p.name || '').replace(/'/g, "\\'")}','${(p.partner_voucher_title || '').replace(/'/g, "\\'")}')">Book now →</button>`
+                ? `<button class="add-btn" style="width:100%;justify-content:center;border-radius:10px;padding:12px" onclick="handleDemoAdd()">Book now →</button>`
+                : `<button class="add-btn" style="width:100%;justify-content:center;border-radius:10px;padding:12px;background:linear-gradient(135deg,var(--brand),var(--brand-dark))" onclick="handleBookingLink('${p.partner_booking_url}','${p.partner_product_id || ''}','${p.partner_id || ''}','${p.partner_voucher_pdf_url || ''}','${(p.name || '').replace(/'/g, "\\'")}','${(p.partner_voucher_title || '').replace(/'/g, "\\'")}')">Book now →</button>`
               }
             </div>
           </div>

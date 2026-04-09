@@ -300,17 +300,54 @@
 
     <!-- ADD PRODUCT -->
     <div class="page" id="page-newproduct">
-      <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
-        <div style="max-width:600px">
+      <div style="display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start">
+      <!-- LIVE PREVIEW — left side -->
+      <div style="position:sticky;top:24px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Live preview</div>
+        <div id="listingPreview" style="background:white;border-radius:14px;border:1.5px solid var(--border);overflow:hidden;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+          <!-- Banner -->
+          <div id="previewBanner" style="background:linear-gradient(135deg,#E8A838,#d4952e);padding:7px 12px;display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:5px">
+              <span style="font-size:11px">🤝</span>
+              <span style="font-size:10px;font-weight:700;color:white;letter-spacing:0.8px;text-transform:uppercase">Local Partner</span>
+            </div>
+            <span id="previewVoucherBadge" style="display:none;font-size:10px;font-weight:700;color:#92600a;background:white;padding:2px 8px;border-radius:50px">🎟️ Free voucher</span>
+          </div>
+          <!-- Image -->
+          <div id="previewImageWrap" style="width:100%;height:110px;background:#f4f6f5;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #f0ece8">
+            <span style="font-size:36px;color:var(--muted)">🏪</span>
+          </div>
+          <!-- Content -->
+          <div style="padding:12px 14px 0">
+            <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:2px" id="previewCategory">OTHER</div>
+            <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#1a1a1a;line-height:1.2;margin-bottom:6px" id="previewName">Your listing name</div>
+            <div style="font-size:14px;color:#6b7280;line-height:1.45;margin-bottom:8px;min-height:18px" id="previewDesc"></div>
+            <div id="previewNotes" style="display:none;background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:6px 9px;font-size:12px;font-weight:600;color:#15803d;line-height:1.35;margin-bottom:8px"></div>
+            <div id="previewVoucherRow" style="display:none;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:6px 9px;font-size:11px;font-weight:600;color:#92600a;margin-bottom:10px"><span>🎟️</span><span>Free voucher emailed on booking</span></div>
+            <div id="previewPriceRow" style="display:none;margin-bottom:10px">
+              <span id="previewPrice" style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#2C6E6A"></span>
+              <span style="font-size:12px;color:#6b7280"> / per stay</span>
+            </div>
+          </div>
+          <!-- Button -->
+          <div style="padding:10px 14px 14px;border-top:1px solid #f0ece8;margin-top:4px">
+            <div id="previewBtn" style="width:100%;border-radius:9px;padding:11px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;color:white;background:linear-gradient(135deg,#2C6E6A,#1d4d4a);text-align:center">Book now →</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">This is how guests will see your listing</div>
+      </div>
+
+      <!-- FORM — right side -->
+      <div style="max-width:600px">
         <div class="card">
           <div class="field">
             <label>What type of listing is this?</label>
             <label class="type-option">
-              <input type="radio" name="productType" value="physical" id="ptPhysical" onchange="toggleProductType()" checked>
+              <input type="radio" name="productType" value="physical" id="ptPhysical" onchange="toggleProductType();updatePreview()" checked>
               <div><div class="type-option-label">📦 Physical product</div><div class="type-option-desc">e.g. flowers, hampers, firewood — guest pays host, host arranges payment to you</div></div>
             </label>
             <label class="type-option">
-              <input type="radio" name="productType" value="booking" id="ptBooking" onchange="toggleProductType()">
+              <input type="radio" name="productType" value="booking" id="ptBooking" onchange="toggleProductType();updatePreview()">
               <div><div class="type-option-label">🔗 Booking link</div><div class="type-option-desc">e.g. surf lessons, restaurant reservations — guest clicks through to your booking page directly</div></div>
             </label>
           </div>
@@ -338,7 +375,7 @@
           <div id="physicalFields">
             <div class="field">
               <label>Wholesale price ($) — what the host pays you</label>
-              <input type="number" id="pWholesalePrice" placeholder="e.g. 45" min="0">
+              <input type="number" id="pWholesalePrice" placeholder="e.g. 45" min="0" oninput="updatePreview()">
               <div class="field-hint">Hosts set their own retail price on top. They keep the difference as their margin.</div>
             </div>
           </div>
@@ -395,38 +432,6 @@
           </div>
           <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="saveProduct()">Publish listing →</button>
         </div>
-      </div>
-
-      <!-- LIVE PREVIEW -->
-      <div style="position:sticky;top:24px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Live preview</div>
-        <div id="listingPreview" style="background:white;border-radius:14px;border:1.5px solid var(--border);overflow:hidden;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
-          <!-- Banner -->
-          <div id="previewBanner" style="background:linear-gradient(135deg,#E8A838,#d4952e);padding:7px 12px;display:flex;align-items:center;justify-content:space-between">
-            <div style="display:flex;align-items:center;gap:5px">
-              <span style="font-size:11px">🤝</span>
-              <span style="font-size:10px;font-weight:700;color:white;letter-spacing:0.8px;text-transform:uppercase">Local Partner</span>
-            </div>
-            <span id="previewVoucherBadge" style="display:none;font-size:10px;font-weight:700;color:#92600a;background:white;padding:2px 8px;border-radius:50px">🎟️ Free voucher</span>
-          </div>
-          <!-- Image -->
-          <div id="previewImageWrap" style="width:100%;height:110px;background:#f4f6f5;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #f0ece8">
-            <span style="font-size:36px;color:var(--muted)">🏪</span>
-          </div>
-          <!-- Content -->
-          <div style="padding:12px 14px 0">
-            <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:2px" id="previewCategory">OTHER</div>
-            <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#1a1a1a;line-height:1.2;margin-bottom:6px" id="previewName">Your listing name</div>
-            <div style="font-size:12px;color:#6b7280;line-height:1.45;margin-bottom:8px;min-height:18px" id="previewDesc"></div>
-            <div id="previewNotes" style="display:none;background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:6px 9px;font-size:12px;font-weight:600;color:#15803d;line-height:1.35;margin-bottom:8px"></div>
-            <div id="previewVoucherRow" style="display:none;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:6px 9px;font-size:11px;font-weight:600;color:#92600a;margin-bottom:10px"><span>🎟️</span><span>Free voucher emailed on booking</span></div>
-          </div>
-          <!-- Button -->
-          <div style="padding:10px 14px 14px;border-top:1px solid var(--border);margin-top:4px">
-            <div style="width:100%;border-radius:9px;padding:11px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;color:white;background:linear-gradient(135deg,#2C6E6A,#1d4d4a);text-align:center">Book now →</div>
-          </div>
-        </div>
-        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">This is how guests will see your listing</div>
       </div>
 
       </div><!-- close grid -->
@@ -1508,10 +1513,12 @@
     const desc = (document.getElementById('pDesc')?.value || '').trim();
     const notes = (document.getElementById('pNotes')?.value || '').trim();
     const category = document.getElementById('pCategory')?.value || 'other';
+    const isPhysical = document.getElementById('ptPhysical')?.checked;
+    const price = document.getElementById('pWholesalePrice')?.value || '';
     const hasVoucherFile = document.getElementById('pVoucherFile')?.files?.length > 0 ||
-                           (document.getElementById('pVoucherPreviewWrap')?.style.display !== 'none');
+                           (document.getElementById('pVoucherPreviewWrap')?.style.display === 'flex');
     const imagePreview = document.getElementById('pImagePreview')?.src;
-    const hasImage = imagePreview && !imagePreview.endsWith('partner-dashboard.html');
+    const hasImage = imagePreview && imagePreview.startsWith('data:') || (imagePreview && imagePreview.includes('supabase'));
 
     const catLabels = { product:'📦 Product', service:'🛎️ Service', reservation:'🍽️ Reservation', experience:'🏄 Experience', other:'✨ Other' };
 
@@ -1529,7 +1536,8 @@
       el('previewNotes').style.display = 'none';
     }
 
-    if (hasVoucherFile) {
+    // Voucher only for booking links
+    if (!isPhysical && hasVoucherFile) {
       el('previewVoucherBadge').style.display = 'inline';
       el('previewVoucherRow').style.display = 'flex';
     } else {
@@ -1537,6 +1545,18 @@
       el('previewVoucherRow').style.display = 'none';
     }
 
+    // Price row for physical products
+    if (isPhysical && price) {
+      el('previewPriceRow').style.display = 'block';
+      el('previewPrice').textContent = '$' + price;
+    } else {
+      el('previewPriceRow').style.display = 'none';
+    }
+
+    // Button label
+    el('previewBtn').textContent = isPhysical ? 'Add to cart +' : 'Book now →';
+
+    // Image
     if (hasImage) {
       el('previewImageWrap').innerHTML = '<img src="' + imagePreview + '" style="width:100%;height:100%;object-fit:contain;padding:10px">';
     } else {

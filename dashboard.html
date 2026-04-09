@@ -216,7 +216,7 @@
   .stripe-banner p { font-size: 13px; color: var(--muted); }
 
   @media (max-width: 900px) {
-    .sidebar { width: 64px; }
+    .sidebar { width: 64px; overflow-y: auto; overflow-x: hidden; }
     .sidebar-logo span, .host-info-name, .host-info-url, .nav-item span, .nav-section-label, .logout-btn span { display: none; }
     .store-link-btn span:last-child { display: none; }
     .main { margin-left: 64px; }
@@ -236,34 +236,26 @@
   }
 
   @media (max-width: 600px) {
-    .main { margin-left: 64px; }
+    /* Hide full sidebar on small mobile — use bottom bar instead */
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding-bottom: 64px; }
     .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
     .stat-card { padding: 14px; }
     .stat-value { font-size: 24px; }
     .card { padding: 14px; }
     .content { padding: 12px; }
     .topbar { padding: 0 12px; height: 56px; }
-
-    /* All two-col-grids go single column */
     .two-col-grid { grid-template-columns: 1fr !important; }
-
-    /* Colour swatches wrap */
     .colour-pick { flex-wrap: wrap; }
     .colour-swatches { flex-wrap: wrap; }
-
-    /* Overview checklist */
     .checklist-item { flex-wrap: nowrap; padding: 10px 12px; }
     .checklist-item span { font-size: 13px; }
-
-    /* Property rows — stack vertically on mobile */
     .property-row { flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; }
     .property-icon { display: none; }
     .property-info { width: 100%; }
     .property-name { font-size: 14px; font-weight: 600; }
     .property-address { font-size: 12px; }
     .property-actions { width: 100%; justify-content: flex-end; }
-
-    /* Product rows — two-row layout on mobile */
     .product-row { flex-wrap: wrap; gap: 6px; padding: 12px; }
     .drag-handle { font-size: 22px; padding: 0 6px; color: var(--muted); }
     .product-emoji { display: none; }
@@ -273,15 +265,53 @@
     .toggle { order: 2; flex-shrink: 0; }
     .product-actions { order: 3; width: 100%; display: flex; justify-content: flex-end; gap: 6px; margin-top: 2px; }
     .product-actions .btn-sm { padding: 6px 12px; font-size: 13px; }
-
-    /* Stripe banner */
     .stripe-banner { flex-direction: column; gap: 12px; }
     .stripe-banner-info { flex-wrap: wrap; }
-    /* Voucher cards */
     .voucher-card { flex-wrap: wrap; }
-    /* Order filter row */
     .order-filter-row { flex-direction: column !important; gap: 8px !important; }
     .order-filter-row select { width: 100%; }
+  }
+
+  /* Mobile bottom navigation bar */
+  .mobile-nav {
+    display: none;
+  }
+  @media (max-width: 600px) {
+    .mobile-nav {
+      display: flex;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: var(--brand-dark);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      height: 60px;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 4px;
+    }
+    .mobile-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 6px 8px;
+      border: none;
+      background: none;
+      color: rgba(255,255,255,0.55);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 9px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: color 0.15s;
+      text-decoration: none;
+      flex: 1;
+      max-width: 72px;
+    }
+    .mobile-nav-item:hover, .mobile-nav-item.active { color: white; }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
   }
 
   /* Order list compact styles */
@@ -1102,6 +1132,8 @@
     document.getElementById('sidebarUrl').textContent = 'hostiehub.com.au/store/' + (currentHost.username || '');
     document.getElementById('storeUrlDisplay').textContent = 'hostiehub.com.au/store/' + (currentHost.username || '');
     document.getElementById('viewStoreBtn').href = 'https://hostiehub.com.au/store/' + (currentHost.username || '');
+    const mobileStoreLink = document.getElementById('mobileViewStore');
+    if (mobileStoreLink) mobileStoreLink.href = 'https://hostiehub.com.au/store/' + (currentHost.username || '');
     document.getElementById('accountName').value = currentHost.full_name || '';
     document.getElementById('accountEmail').value = currentHost.email || '';
     const unField = document.getElementById('newUsername');
@@ -2427,6 +2459,58 @@
 
   init();
 </script>
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav">
+  <button class="mobile-nav-item" onclick="showPage('overview', this)">
+    <span class="mn-icon">🏠</span><span>Home</span>
+  </button>
+  <button class="mobile-nav-item" onclick="showPage('orders', this)">
+    <span class="mn-icon">📋</span><span>Orders</span>
+  </button>
+  <button class="mobile-nav-item" onclick="showPage('products', this)">
+    <span class="mn-icon">📦</span><span>Products</span>
+  </button>
+  <button class="mobile-nav-item" onclick="showPage('analytics', this)">
+    <span class="mn-icon">📊</span><span>Analytics</span>
+  </button>
+  <a class="mobile-nav-item" id="mobileViewStore" href="#" target="_blank">
+    <span class="mn-icon">🔗</span><span>My Store</span>
+  </a>
+  <button class="mobile-nav-item" onclick="showMobileMore()">
+    <span class="mn-icon">⋯</span><span>More</span>
+  </button>
+</nav>
+
+<!-- MOBILE MORE DRAWER -->
+<div id="mobileMoreDrawer" style="display:none;position:fixed;bottom:60px;left:0;right:0;z-index:99;background:var(--brand-dark);border-top:1px solid rgba(255,255,255,0.12);padding:12px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <button class="mobile-nav-item" style="max-width:100%;flex-direction:row;gap:8px;padding:12px;background:rgba(255,255,255,0.07);border-radius:10px;font-size:13px" onclick="showPage('properties',this);closeMobileMore()"><span>🏡</span><span>Properties</span></button>
+    <button class="mobile-nav-item" style="max-width:100%;flex-direction:row;gap:8px;padding:12px;background:rgba(255,255,255,0.07);border-radius:10px;font-size:13px" onclick="showPage('vouchers',this);closeMobileMore()"><span>🎟️</span><span>Vouchers</span></button>
+    <button class="mobile-nav-item" style="max-width:100%;flex-direction:row;gap:8px;padding:12px;background:rgba(255,255,255,0.07);border-radius:10px;font-size:13px" onclick="showPage('localproducts',this);closeMobileMore()"><span>🤝</span><span>Local</span></button>
+    <button class="mobile-nav-item" style="max-width:100%;flex-direction:row;gap:8px;padding:12px;background:rgba(255,255,255,0.07);border-radius:10px;font-size:13px" onclick="showPage('store',this);closeMobileMore()"><span>🎨</span><span>Store</span></button>
+    <button class="mobile-nav-item" style="max-width:100%;flex-direction:row;gap:8px;padding:12px;background:rgba(255,255,255,0.07);border-radius:10px;font-size:13px" onclick="showPage('account',this);closeMobileMore()"><span>👤</span><span>Account</span></button>
+    <button class="mobile-nav-item" style="max-width:100%;flex-direction:row;gap:8px;padding:12px;background:rgba(255,255,255,0.15);border-radius:10px;font-size:13px;color:rgba(255,100,100,0.9)" onclick="handleLogout()"><span>↩</span><span>Log out</span></button>
+  </div>
+</div>
+
+<script>
+  function showMobileMore() {
+    const d = document.getElementById('mobileMoreDrawer');
+    d.style.display = d.style.display === 'none' ? 'block' : 'none';
+  }
+  function closeMobileMore() {
+    document.getElementById('mobileMoreDrawer').style.display = 'none';
+  }
+  // Update mobile store link when host loads
+  const origPopulateUI = window.populateUI;
+  document.addEventListener('DOMContentLoaded', () => {
+    const mobileStore = document.getElementById('mobileViewStore');
+    if (mobileStore && window.currentHost) {
+      mobileStore.href = '/guest-store.html?host=' + (window.currentHost.username || window.currentHost.id);
+    }
+  });
+</script>
+
 <script src="support-widget.js"></script>
 </body>
 </html>

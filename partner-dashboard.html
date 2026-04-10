@@ -729,22 +729,23 @@
   function renderRedemptions() {
     const el = document.getElementById('redemptionsList');
     if (!allRedemptions.length) {
-      el.innerHTML = '<div class="empty-state" style="padding:30px 20px"><div class="empty-icon" style="font-size:32px">🎟️</div><h3>No redemptions yet</h3><p>Guest emails will appear here when they claim your vouchers.</p></div>';
+      el.innerHTML = '<div class="empty-state" style="padding:30px 20px"><div class="empty-icon" style="font-size:32px">🎟️</div><h3>No redemptions yet</h3><p>Guest details will appear here when they claim your vouchers.</p></div>';
       return;
     }
-    el.innerHTML = '<table class="analytics-table"><thead><tr><th>Date</th><th>Guest Email</th><th>Voucher</th></tr></thead><tbody>' +
+    el.innerHTML = '<table class="analytics-table"><thead><tr><th>Date</th><th>Surname</th><th>Email</th><th>Voucher</th></tr></thead><tbody>' +
       allRedemptions.map(r => {
         const date = new Date(r.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-        return '<tr><td style="color:var(--muted)">' + date + '</td><td><strong>' + (r.guest_email || '—') + '</strong></td><td style="color:var(--muted)">' + (r.voucher_title || '—') + '</td></tr>';
+        return '<tr><td style="color:var(--muted)">' + date + '</td><td><strong>' + (r.guest_surname || '—') + '</strong></td><td>' + (r.guest_email || '—') + '</td><td style="color:var(--muted)">' + (r.voucher_title || '—') + '</td></tr>';
       }).join('') +
       '</tbody></table>';
   }
 
   function exportRedemptions() {
     if (!allRedemptions.length) { showToast('No redemptions to export yet'); return; }
-    const rows = [['Date', 'Email', 'Voucher']].concat(
+    const rows = [['Date', 'Surname', 'Email', 'Voucher']].concat(
       allRedemptions.map(r => [
         new Date(r.created_at).toLocaleDateString('en-AU'),
+        r.guest_surname || '',
         r.guest_email || '',
         r.voucher_title || ''
       ])

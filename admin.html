@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hostie Hub Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --brand: #2C6E6A; --brand-dark: #1d4d4a; --accent: #E8A838;
+    --bg: #f5f3f0; --card: #ffffff; --border: #e8e4df;
+    --text: #1a1a1a; --muted: #6b7280;
+    --radius: 12px;
+    --admin: #1e293b; --admin-light: #334155;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar { width: 220px; background: var(--admin); flex-shrink: 0; display: flex; flex-direction: column; padding: 0; position: fixed; top: 0; bottom: 0; left: 0; z-index: 100; }
+  .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .sidebar-logo .logo-text { font-family: 'Playfair Display', serif; font-size: 18px; color: white; }
+  .sidebar-logo .admin-badge { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); background: rgba(232,168,56,0.15); padding: 2px 8px; border-radius: 50px; margin-top: 4px; display: inline-block; }
+  .nav-section { padding: 16px 12px 8px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.3); }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 500; border: none; background: none; width: 100%; text-align: left; margin-bottom: 2px; transition: all 0.15s; }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+  .nav-item.active { background: rgba(255,255,255,0.12); color: white; }
+  .nav-icon { font-size: 15px; width: 22px; text-align: center; }
+  .sidebar-footer { margin-top: auto; padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+
+  /* MAIN */
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
+  .topbar { background: var(--admin); color: white; padding: 0 28px; height: 52px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .topbar-title { font-size: 15px; font-weight: 600; }
+  .topbar-sub { font-size: 12px; color: rgba(255,255,255,0.4); }
+  .live-dot { width: 7px; height: 7px; background: #22c55e; border-radius: 50%; display: inline-block; margin-right: 6px; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+  .content { padding: 28px; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* STAT CARDS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); padding: 20px; }
+  .stat-label { font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; color: var(--text); line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .stat-up { color: #16a34a; }
+
+  /* TABLES */
+  .card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); overflow: hidden; margin-bottom: 20px; }
+  .card-header { padding: 16px 20px; border-bottom: 1.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 14px; font-weight: 700; }
+  .card-sub { font-size: 12px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); padding: 10px 16px; text-align: left; border-bottom: 1.5px solid var(--border); background: #fafaf9; }
+  td { font-size: 13px; padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafaf9; }
+  .badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 50px; display: inline-block; }
+  .badge-green { background: #f0fdf4; color: #16a34a; }
+  .badge-amber { background: #fff7e6; color: #92600a; }
+  .badge-blue { background: #eff6ff; color: #1d4ed8; }
+  .badge-grey { background: #f4f4f5; color: #71717a; }
+
+  /* DRILL DOWN */
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; margin-bottom: 20px; background: none; border: none; font-family: 'DM Sans', sans-serif; padding: 0; }
+  .back-btn:hover { color: var(--brand); }
+  .detail-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding: 20px; background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); }
+  .detail-avatar { width: 52px; height: 52px; border-radius: 12px; background: var(--brand); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 22px; color: white; font-weight: 700; flex-shrink: 0; }
+  .detail-avatar.partner { background: var(--admin); }
+
+  /* SEARCH */
+  .search-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .search-input { flex: 1; padding: 10px 16px; border: 1.5px solid var(--border); border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; background: var(--card); transition: border-color 0.2s; }
+  .search-input:focus { border-color: var(--brand); }
+  .btn { padding: 9px 18px; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--brand); color: white; }
+  .btn-outline { background: white; color: var(--text); border: 1.5px solid var(--border); }
+
+  /* LOGIN */
+  .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--admin); flex-direction: column; gap: 24px; }
+  .login-card { background: white; border-radius: 16px; padding: 40px; width: 360px; box-shadow: 0 24px 60px rgba(0,0,0,0.3); }
+  .login-logo { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--brand); margin-bottom: 6px; }
+  .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+  .login-field { margin-bottom: 14px; }
+  .login-field label { font-size: 12px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .login-field input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; }
+  .login-field input:focus { border-color: var(--brand); }
+  .login-error { color: #e53e3e; font-size: 13px; margin-bottom: 10px; display: none; }
+  .login-btn { width: 100%; padding: 13px; background: var(--brand); color: white; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 6px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--admin); color: white; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 500; z-index: 9999; transition: transform 0.3s; pointer-events: none; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .empty { text-align: center; padding: 48px 20px; color: var(--muted); font-size: 14px; }
+
+  /* MINI CHART BAR */
+  .sparkbar { display: flex; align-items: flex-end; gap: 2px; height: 24px; }
+  .sparkbar span { flex: 1; background: var(--brand); border-radius: 2px; opacity: 0.7; min-height: 2px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-wrap" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">Hostie Hub</div>
+    <div class="login-sub">Admin access only</div>
+    <div class="login-field">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="admin@hostiehub.com.au" onkeydown="if(event.key==='Enter')document.getElementById('loginPassword').focus()">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-error" id="loginError">Invalid credentials or not an admin account.</div>
+    <button class="login-btn" onclick="doLogin()">Sign in →</button>
+  </div>
+</div>
+
+<!-- ADMIN SHELL -->
+<div id="adminShell" style="display:none;width:100%;display:flex">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text">Hostie Hub</div>
+      <div class="admin-badge">⚡ Admin</div>
+    </div>
+    <div style="padding:8px;flex:1;overflow-y:auto">
+      <div class="nav-section">Overview</div>
+      <button class="nav-item active" id="nav-overview" onclick="showPage('overview',this)"><span class="nav-icon">📊</span>Dashboard</button>
+      <button class="nav-item" id="nav-activity" onclick="showPage('activity',this)"><span class="nav-icon">⚡</span>Live Activity</button>
+
+      <div class="nav-section">Accounts</div>
+      <button class="nav-item" id="nav-hosts" onclick="showPage('hosts',this)"><span class="nav-icon">🏠</span>Host Accounts</button>
+      <button class="nav-item" id="nav-partners" onclick="showPage('partners',this)"><span class="nav-icon">🤝</span>Partner Accounts</button>
+
+      <div class="nav-section">Data</div>
+      <button class="nav-item" id="nav-redemptions" onclick="showPage('redemptions',this)"><span class="nav-icon">🎟️</span>Voucher Redemptions</button>
+      <button class="nav-item" id="nav-orders" onclick="showPage('orders',this)"><span class="nav-icon">📦</span>All Orders</button>
+      <button class="nav-item" id="nav-events" onclick="showPage('events',this)"><span class="nav-icon">👁️</span>Store Events</button>
+    </div>
+    <div class="sidebar-footer">
+      <button class="nav-item" onclick="doLogout()" style="color:rgba(255,255,255,0.4)"><span class="nav-icon">→</span>Log out</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <span class="topbar-title" id="topbarTitle">Dashboard</span>
+        <span class="topbar-sub" id="topbarSub" style="margin-left:10px"></span>
+      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.5)"><span class="live-dot"></span>Live data</div>
+    </div>
+
+    <div class="content">
+
+      <!-- OVERVIEW PAGE -->
+      <div class="page active" id="page-overview">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Total Hosts</div><div class="stat-value" id="statHosts">—</div><div class="stat-sub">Registered accounts</div></div>
+          <div class="stat-card"><div class="stat-label">Total Partners</div><div class="stat-value" id="statPartners">—</div><div class="stat-sub">Partner businesses</div></div>
+          <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="statOrders">—</div><div class="stat-sub">All time</div></div>
+          <div class="stat-card"><div class="stat-label">Voucher Claims</div><div class="stat-value" id="statRedemptions">—</div><div class="stat-sub">Emails captured</div></div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Store Events</div><div class="stat-value" id="statEvents">—</div><div class="stat-sub">Opens + clicks</div></div>
+          <div class="stat-card"><div class="stat-label">Active Stores</div><div class="stat-value" id="statActiveStores">—</div><div class="stat-sub">Hosts with ≥1 product</div></div>
+          <div class="stat-card"><div class="stat-label">Partner Products</div><div class="stat-value" id="statPartnerProducts">—</div><div class="stat-sub">Live listings</div></div>
+          <div class="stat-card"><div class="stat-label">Total Products</div><div class="stat-value" id="statProducts">—</div><div class="stat-sub">Across all stores</div></div>
+        </div>
+
+        <!-- Recent hosts -->
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Recent Host Signups</div><div class="card-sub">Last 10 accounts created</div></div></div>
+          <table><thead><tr><th>Host</th><th>Email</th><th>Store</th><th>Joined</th><th>Stripe</th></tr></thead>
+          <tbody id="recentHostsTable"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody></table>
+        </div>
+
+        <!-- Recent orders -->
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Recent Orders</div><div class="card-sub">Last 10 orders across all stores</div></div></div>
+          <table><thead><tr><th>Guest</th><th>Total</th><th>Host</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody id="recentOrdersTable"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- HOSTS PAGE -->
+      <div class="page" id="page-hosts">
+        <div class="search-bar">
+          <input class="search-input" id="hostSearch" placeholder="Search by name or email..." oninput="filterHosts()">
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title" id="hostCount">All Hosts</div></div>
+          <table><thead><tr><th>Host</th><th>Email</th><th>Store Name</th><th>Properties</th><th>Products</th><th>Orders</th><th>Stripe</th><th>Joined</th></tr></thead>
+          <tbody id="hostsTable"><tr><td colspan="8" class="empty">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- HOST DETAIL PAGE -->
+      <div class="page" id="page-host-detail">
+        <button class="back-btn" onclick="showPage('hosts',document.getElementById('nav-hosts'))">← Back to Hosts</button>
+        <div class="detail-header">
+          <div class="detail-avatar" id="hostDetailAvatar">?</div>
+          <div>
+            <div style="font-size:20px;font-weight:700" id="hostDetailName">—</div>
+            <div style="font-size:13px;color:var(--muted)" id="hostDetailEmail">—</div>
+            <div style="margin-top:6px;display:flex;gap:8px" id="hostDetailBadges"></div>
+          </div>
+        </div>
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+          <div class="stat-card"><div class="stat-label">Products</div><div class="stat-value" id="hdProducts">—</div></div>
+          <div class="stat-card"><div class="stat-label">Orders</div><div class="stat-value" id="hdOrders">—</div></div>
+          <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value" id="hdRevenue">—</div></div>
+          <div class="stat-card"><div class="stat-label">Store Opens</div><div class="stat-value" id="hdOpens">—</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Products in Store</div></div>
+          <table><thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Type</th></tr></thead>
+          <tbody id="hdProductsTable"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Orders</div></div>
+          <table><thead><tr><th>Guest</th><th>Total</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody id="hdOrdersTable"></tbody></table>
+        </div>
+      </div>
+
+      <!-- PARTNERS PAGE -->
+      <div class="page" id="page-partners">
+        <div class="search-bar">
+          <input class="search-input" id="partnerSearch" placeholder="Search by business name or email..." oninput="filterPartners()">
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title" id="partnerCount">All Partners</div></div>
+          <table><thead><tr><th>Business</th><th>Email</th><th>Listings</th><th>Redemptions</th><th>Postcodes</th><th>Trial Ends</th><th>Joined</th></tr></thead>
+          <tbody id="partnersTable"><tr><td colspan="7" class="empty">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- PARTNER DETAIL PAGE -->
+      <div class="page" id="page-partner-detail">
+        <button class="back-btn" onclick="showPage('partners',document.getElementById('nav-partners'))">← Back to Partners</button>
+        <div class="detail-header">
+          <div class="detail-avatar partner" id="partnerDetailAvatar">?</div>
+          <div>
+            <div style="font-size:20px;font-weight:700" id="partnerDetailName">—</div>
+            <div style="font-size:13px;color:var(--muted)" id="partnerDetailEmail">—</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px" id="partnerDetailPostcodes">—</div>
+          </div>
+        </div>
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="stat-label">Active Listings</div><div class="stat-value" id="pdListings">—</div></div>
+          <div class="stat-card"><div class="stat-label">Voucher Redemptions</div><div class="stat-value" id="pdRedemptions">—</div></div>
+          <div class="stat-card"><div class="stat-label">Hosts Carrying</div><div class="stat-value" id="pdHosts">—</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Listings</div></div>
+          <table><thead><tr><th>Name</th><th>Type</th><th>Category</th><th>Postcodes</th><th>Status</th></tr></thead>
+          <tbody id="pdListingsTable"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Voucher Redemptions</div></div>
+          <table><thead><tr><th>Date</th><th>Surname</th><th>Email</th><th>Voucher</th></tr></thead>
+          <tbody id="pdRedemptionsTable"></tbody></table>
+        </div>
+      </div>
+
+      <!-- REDEMPTIONS PAGE -->
+      <div class="page" id="page-redemptions">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">All Voucher Redemptions</div><div class="card-sub">Every voucher claim across all partners</div></div>
+            <button class="btn btn-outline" onclick="exportRedemptions()">Export CSV</button>
+          </div>
+          <table><thead><tr><th>Date</th><th>Surname</th><th>Email</th><th>Voucher</th><th>Partner</th></tr></thead>
+          <tbody id="allRedemptionsTable"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- ORDERS PAGE -->
+      <div class="page" id="page-orders">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">All Orders</div><div class="card-sub">Every order across all host stores</div></div>
+            <button class="btn btn-outline" onclick="exportOrders()">Export CSV</button>
+          </div>
+          <table><thead><tr><th>Date</th><th>Guest</th><th>Email</th><th>Total</th><th>Host Store</th><th>Status</th></tr></thead>
+          <tbody id="allOrdersTable"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- EVENTS PAGE -->
+      <div class="page" id="page-events">
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Store Events</div><div class="card-sub">Opens, clicks and purchases</div></div></div>
+          <table><thead><tr><th>Date</th><th>Event</th><th>Store</th><th>Product</th></tr></thead>
+          <tbody id="eventsTable"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- ACTIVITY PAGE -->
+      <div class="page" id="page-activity">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Latest Redemptions</div></div>
+            <table><thead><tr><th>Time</th><th>Surname</th><th>Voucher</th></tr></thead>
+            <tbody id="activityRedemptionsTable"></tbody></table>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Latest Orders</div></div>
+            <table><thead><tr><th>Time</th><th>Guest</th><th>Total</th></tr></thead>
+            <tbody id="activityOrdersTable"></tbody></table>
+          </div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <div class="card-header"><div class="card-title">Latest Store Events</div></div>
+          <table><thead><tr><th>Time</th><th>Event</th><th>Store</th></tr></thead>
+          <tbody id="activityEventsTable"></tbody></table>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /adminShell -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const { createClient } = supabase;
+  const sb = createClient(
+    'https://hjwkycknjiyvrxbcejet.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8'
+  );
+
+  // ADMIN EMAILS — add yours here
+  const ADMIN_EMAILS = ['hello@fieldstonegroup.com.au', 'luke@stayable.co'];
+
+  let allHosts = [], allPartners = [], allOrders = [], allRedemptions = [], allEvents = [], allPartnerProducts = [];
+  let currentUser = null;
+
+  // ── AUTH ──
+  async function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const err = document.getElementById('loginError');
+    err.style.display = 'none';
+
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error || !data.session) { err.style.display = 'block'; return; }
+    if (!ADMIN_EMAILS.includes(data.user.email)) {
+      await sb.auth.signOut();
+      err.textContent = 'Access denied — not an admin account.';
+      err.style.display = 'block';
+      return;
+    }
+    currentUser = data.user;
+    bootAdmin();
+  }
+
+  async function doLogout() {
+    await sb.auth.signOut();
+    document.getElementById('adminShell').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ── NAVIGATION ──
+  function showPage(name, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    if (btn) btn.classList.add('active');
+    const titles = { overview:'Dashboard', hosts:'Host Accounts', partners:'Partner Accounts', redemptions:'Voucher Redemptions', orders:'All Orders', events:'Store Events', activity:'Live Activity', 'host-detail':'Host Detail', 'partner-detail':'Partner Detail' };
+    document.getElementById('topbarTitle').textContent = titles[name] || name;
+  }
+
+  // ── BOOT ──
+  async function bootAdmin() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminShell').style.display = 'flex';
+    await loadAllData();
+    renderOverview();
+    renderHostsTable();
+    renderPartnersTable();
+    renderAllRedemptions();
+    renderAllOrders();
+    renderEvents();
+    renderActivity();
+  }
+
+  async function loadAllData() {
+    const [
+      { data: hosts },
+      { data: partners },
+      { data: orders },
+      { data: redemptions },
+      { data: events },
+      { data: partnerProducts },
+      { data: products }
+    ] = await Promise.all([
+      sb.from('hosts').select('*').order('created_at', { ascending: false }),
+      sb.from('partners').select('*').order('created_at', { ascending: false }),
+      sb.from('orders').select('*').order('created_at', { ascending: false }),
+      sb.from('partner_voucher_redemptions').select('*').order('created_at', { ascending: false }),
+      sb.from('store_events').select('*').order('created_at', { ascending: false }).limit(500),
+      sb.from('partner_products').select('*').order('created_at', { ascending: false }),
+      sb.from('products').select('*').order('created_at', { ascending: false }),
+    ]);
+    allHosts = hosts || [];
+    allPartners = partners || [];
+    allOrders = orders || [];
+    allRedemptions = redemptions || [];
+    allEvents = events || [];
+    allPartnerProducts = partnerProducts || [];
+    allProducts = products || [];
+  }
+
+  let allProducts = [];
+
+  // ── OVERVIEW ──
+  function renderOverview() {
+    document.getElementById('statHosts').textContent = allHosts.length;
+    document.getElementById('statPartners').textContent = allPartners.length;
+    document.getElementById('statOrders').textContent = allOrders.length;
+    document.getElementById('statRedemptions').textContent = allRedemptions.length;
+    document.getElementById('statEvents').textContent = allEvents.length.toLocaleString();
+    document.getElementById('statActiveStores').textContent = [...new Set(allProducts.map(p => p.host_id))].length;
+    document.getElementById('statPartnerProducts').textContent = allPartnerProducts.filter(p => p.active).length;
+    document.getElementById('statProducts').textContent = allProducts.length;
+
+    // Recent hosts
+    const ht = document.getElementById('recentHostsTable');
+    ht.innerHTML = allHosts.slice(0,10).map(h => {
+      const date = new Date(h.created_at).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+      return '<tr onclick="drillHost(\'' + h.id + '\')" style="cursor:pointer"><td><strong>' + (h.full_name || h.username || '—') + '</strong></td><td style="color:var(--muted)">' + (h.email || '—') + '</td><td>' + (h.store_name || '—') + '</td><td style="color:var(--muted)">' + date + '</td><td>' + (h.stripe_connected ? '<span class="badge badge-green">✓ Connected</span>' : '<span class="badge badge-grey">Not connected</span>') + '</td></tr>';
+    }).join('') || '<tr><td colspan="5" class="empty">No hosts yet</td></tr>';
+
+    // Recent orders
+    const ot = document.getElementById('recentOrdersTable');
+    ot.innerHTML = allOrders.slice(0,10).map(o => {
+      const date = new Date(o.created_at).toLocaleDateString('en-AU', { day:'numeric', month:'short' });
+      const host = allHosts.find(h => h.id === o.host_id);
+      return '<tr><td><strong>' + (o.guest_name || '—') + '</strong></td><td style="font-weight:700;color:var(--brand)">$' + (o.total || 0) + '</td><td style="color:var(--muted)">' + (host ? (host.store_name || host.username) : '—') + '</td><td style="color:var(--muted)">' + date + '</td><td><span class="badge ' + (o.status === 'paid' ? 'badge-green' : 'badge-amber') + '">' + (o.status || 'pending') + '</span></td></tr>';
+    }).join('') || '<tr><td colspan="5" class="empty">No orders yet</td></tr>';
+  }
+
+  // ── HOSTS ──
+  function renderHostsTable(filtered) {
+    const hosts = filtered || allHosts;
+    document.getElementById('hostCount').textContent = hosts.length + ' Hosts';
+    const tbody = document.getElementById('hostsTable');
+    tbody.innerHTML = hosts.map(h => {
+      const date = new Date(h.created_at).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+      const hOrders = allOrders.filter(o => o.host_id === h.id);
+      const hProducts = allProducts.filter(p => p.host_id === h.id);
+      return '<tr onclick="drillHost(\'' + h.id + '\')" style="cursor:pointer"><td><strong>' + (h.full_name || h.username || '—') + '</strong></td><td style="color:var(--muted);font-size:12px">' + (h.email || '—') + '</td><td>' + (h.store_name || '—') + '</td><td>' + (h.properties_count || 0) + '</td><td>' + hProducts.length + '</td><td>' + hOrders.length + '</td><td>' + (h.stripe_connected ? '<span class="badge badge-green">✓</span>' : '<span class="badge badge-grey">No</span>') + '</td><td style="color:var(--muted);font-size:12px">' + date + '</td></tr>';
+    }).join('') || '<tr><td colspan="8" class="empty">No hosts found</td></tr>';
+  }
+
+  function filterHosts() {
+    const q = document.getElementById('hostSearch').value.toLowerCase();
+    renderHostsTable(q ? allHosts.filter(h => (h.full_name||'').toLowerCase().includes(q) || (h.email||'').toLowerCase().includes(q) || (h.store_name||'').toLowerCase().includes(q)) : allHosts);
+  }
+
+  function drillHost(id) {
+    const h = allHosts.find(x => x.id === id);
+    if (!h) return;
+    const hOrders = allOrders.filter(o => o.host_id === id);
+    const hProducts = allProducts.filter(p => p.host_id === id);
+    const hEvents = allEvents.filter(e => e.host_id === id);
+    const revenue = hOrders.filter(o => o.status === 'paid').reduce((s, o) => s + (o.total || 0), 0);
+
+    document.getElementById('hostDetailAvatar').textContent = (h.full_name || h.username || '?').charAt(0).toUpperCase();
+    document.getElementById('hostDetailName').textContent = h.full_name || h.username || '—';
+    document.getElementById('hostDetailEmail').textContent = (h.email || '—') + (h.store_name ? ' · ' + h.store_name : '');
+    document.getElementById('hostDetailBadges').innerHTML =
+      (h.stripe_connected ? '<span class="badge badge-green">Stripe connected</span>' : '<span class="badge badge-grey">No Stripe</span>') +
+      '<span class="badge badge-blue">' + (hProducts.length) + ' products</span>';
+    document.getElementById('hdProducts').textContent = hProducts.length;
+    document.getElementById('hdOrders').textContent = hOrders.length;
+    document.getElementById('hdRevenue').textContent = '$' + revenue;
+    document.getElementById('hdOpens').textContent = hEvents.filter(e => e.event_type === 'open').length;
+
+    document.getElementById('hdProductsTable').innerHTML = hProducts.map(p =>
+      '<tr><td><strong>' + p.name + '</strong></td><td style="color:var(--muted)">' + (p.category||'—') + '</td><td>$' + (p.price||0) + '</td><td>' + (p.partner_product_id ? '<span class="badge badge-amber">Partner</span>' : '<span class="badge badge-blue">Own</span>') + '</td></tr>'
+    ).join('') || '<tr><td colspan="4" class="empty">No products</td></tr>';
+
+    document.getElementById('hdOrdersTable').innerHTML = hOrders.slice(0,20).map(o => {
+      const date = new Date(o.created_at).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+      return '<tr><td><strong>' + (o.guest_name||'—') + '</strong></td><td style="font-weight:700;color:var(--brand)">$' + (o.total||0) + '</td><td style="color:var(--muted)">' + date + '</td><td><span class="badge ' + (o.status==='paid'?'badge-green':'badge-amber') + '">' + (o.status||'pending') + '</span></td></tr>';
+    }).join('') || '<tr><td colspan="4" class="empty">No orders</td></tr>';
+
+    showPage('host-detail', null);
+  }
+
+  // ── PARTNERS ──
+  function renderPartnersTable(filtered) {
+    const partners = filtered || allPartners;
+    document.getElementById('partnerCount').textContent = partners.length + ' Partners';
+    const tbody = document.getElementById('partnersTable');
+    tbody.innerHTML = partners.map(p => {
+      const date = new Date(p.created_at).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+      const pListings = allPartnerProducts.filter(x => x.partner_id === p.id);
+      const pRedemptions = allRedemptions.filter(x => x.partner_id === p.id);
+      const trialEnd = p.trial_ends_at ? new Date(p.trial_ends_at).toLocaleDateString('en-AU', { day:'numeric', month:'short' }) : '—';
+      const postcodes = Array.isArray(p.postcodes) ? p.postcodes.slice(0,3).join(', ') + (p.postcodes.length > 3 ? '…' : '') : '—';
+      return '<tr onclick="drillPartner(\'' + p.id + '\')" style="cursor:pointer"><td><strong>' + (p.business_name||'—') + '</strong></td><td style="color:var(--muted);font-size:12px">' + (p.email||'—') + '</td><td>' + pListings.length + '</td><td>' + pRedemptions.length + '</td><td style="color:var(--muted);font-size:12px">' + postcodes + '</td><td style="color:var(--muted)">' + trialEnd + '</td><td style="color:var(--muted);font-size:12px">' + date + '</td></tr>';
+    }).join('') || '<tr><td colspan="7" class="empty">No partners found</td></tr>';
+  }
+
+  function filterPartners() {
+    const q = document.getElementById('partnerSearch').value.toLowerCase();
+    renderPartnersTable(q ? allPartners.filter(p => (p.business_name||'').toLowerCase().includes(q) || (p.email||'').toLowerCase().includes(q)) : allPartners);
+  }
+
+  function drillPartner(id) {
+    const p = allPartners.find(x => x.id === id);
+    if (!p) return;
+    const pListings = allPartnerProducts.filter(x => x.partner_id === id);
+    const pRedemptions = allRedemptions.filter(x => x.partner_id === id);
+    // Count distinct host_ids in products table that reference this partner
+    const hostCount = [...new Set(allProducts.filter(x => x.partner_id === id).map(x => x.host_id))].length;
+
+    document.getElementById('partnerDetailAvatar').textContent = (p.business_name||'?').charAt(0).toUpperCase();
+    document.getElementById('partnerDetailName').textContent = p.business_name || '—';
+    document.getElementById('partnerDetailEmail').textContent = p.email || '—';
+    document.getElementById('partnerDetailPostcodes').textContent = '📍 ' + (Array.isArray(p.postcodes) ? p.postcodes.join(', ') : '—');
+    document.getElementById('pdListings').textContent = pListings.length;
+    document.getElementById('pdRedemptions').textContent = pRedemptions.length;
+    document.getElementById('pdHosts').textContent = hostCount;
+
+    document.getElementById('pdListingsTable').innerHTML = pListings.map(l =>
+      '<tr><td><strong>' + l.name + '</strong></td><td style="color:var(--muted)">' + l.type + '</td><td style="color:var(--muted)">' + (l.category||'—') + '</td><td style="font-size:12px;color:var(--muted)">' + (Array.isArray(l.postcodes) ? l.postcodes.slice(0,4).join(', ') : '—') + '</td><td>' + (l.active ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-grey">Inactive</span>') + '</td></tr>'
+    ).join('') || '<tr><td colspan="5" class="empty">No listings</td></tr>';
+
+    document.getElementById('pdRedemptionsTable').innerHTML = pRedemptions.slice(0,30).map(r => {
+      const date = new Date(r.created_at).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+      return '<tr><td style="color:var(--muted)">' + date + '</td><td><strong>' + (r.guest_surname||'—') + '</strong></td><td>' + (r.guest_email||'—') + '</td><td style="color:var(--muted)">' + (r.voucher_title||'—') + '</td></tr>';
+    }).join('') || '<tr><td colspan="4" class="empty">No redemptions yet</td></tr>';
+
+    showPage('partner-detail', null);
+  }
+
+  // ── REDEMPTIONS ──
+  function renderAllRedemptions() {
+    const tbody = document.getElementById('allRedemptionsTable');
+    tbody.innerHTML = allRedemptions.map(r => {
+      const date = new Date(r.created_at).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+      const partner = allPartners.find(p => p.id === r.partner_id);
+      return '<tr><td style="color:var(--muted)">' + date + '</td><td><strong>' + (r.guest_surname||'—') + '</strong></td><td>' + (r.guest_email||'—') + '</td><td style="color:var(--muted)">' + (r.voucher_title||'—') + '</td><td>' + (partner ? partner.business_name : '—') + '</td></tr>';
+    }).join('') || '<tr><td colspan="5" class="empty">No redemptions yet</td></tr>';
+  }
+
+  function exportRedemptions() {
+    const rows = [['Date','Surname','Email','Voucher','Partner']].concat(
+      allRedemptions.map(r => {
+        const partner = allPartners.find(p => p.id === r.partner_id);
+        return [new Date(r.created_at).toLocaleDateString('en-AU'), r.guest_surname||'', r.guest_email||'', r.voucher_title||'', partner ? partner.business_name : ''];
+      })
+    );
+    downloadCSV(rows, 'all-redemptions.csv');
+  }
+
+  // ── ORDERS ──
+  function renderAllOrders() {
+    const tbody = document.getElementById('allOrdersTable');
+    tbody.innerHTML = allOrders.map(o => {
+      const date = new Date(o.created_at).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+      const host = allHosts.find(h => h.id === o.host_id);
+      return '<tr><td style="color:var(--muted)">' + date + '</td><td><strong>' + (o.guest_name||'—') + '</strong></td><td style="font-size:12px;color:var(--muted)">' + (o.guest_email||'—') + '</td><td style="font-weight:700;color:var(--brand)">$' + (o.total||0) + '</td><td>' + (host ? (host.store_name||host.username) : '—') + '</td><td><span class="badge ' + (o.status==='paid'?'badge-green':'badge-amber') + '">' + (o.status||'pending') + '</span></td></tr>';
+    }).join('') || '<tr><td colspan="6" class="empty">No orders yet</td></tr>';
+  }
+
+  function exportOrders() {
+    const rows = [['Date','Guest','Email','Total','Host','Status']].concat(
+      allOrders.map(o => {
+        const host = allHosts.find(h => h.id === o.host_id);
+        return [new Date(o.created_at).toLocaleDateString('en-AU'), o.guest_name||'', o.guest_email||'', o.total||0, host?(host.store_name||host.username):'', o.status||''];
+      })
+    );
+    downloadCSV(rows, 'all-orders.csv');
+  }
+
+  // ── EVENTS ──
+  function renderEvents() {
+    const tbody = document.getElementById('eventsTable');
+    tbody.innerHTML = allEvents.slice(0,100).map(e => {
+      const date = new Date(e.created_at).toLocaleDateString('en-AU', { day:'numeric', month:'short' });
+      const host = allHosts.find(h => h.id === e.host_id);
+      return '<tr><td style="color:var(--muted)">' + date + '</td><td><span class="badge ' + (e.event_type==='open'?'badge-blue':e.event_type==='purchase'?'badge-green':'badge-grey') + '">' + (e.event_type||'—') + '</span></td><td>' + (host ? (host.store_name||host.username) : '—') + '</td><td style="color:var(--muted);font-size:12px">' + (e.product_name||'—') + '</td></tr>';
+    }).join('') || '<tr><td colspan="4" class="empty">No events yet</td></tr>';
+  }
+
+  // ── ACTIVITY ──
+  function renderActivity() {
+    const fmt = ts => new Date(ts).toLocaleTimeString('en-AU', { hour:'2-digit', minute:'2-digit' }) + ' ' + new Date(ts).toLocaleDateString('en-AU', { day:'numeric', month:'short' });
+
+    document.getElementById('activityRedemptionsTable').innerHTML = allRedemptions.slice(0,20).map(r =>
+      '<tr><td style="color:var(--muted);font-size:12px">' + fmt(r.created_at) + '</td><td><strong>' + (r.guest_surname||'—') + '</strong></td><td style="color:var(--muted)">' + (r.voucher_title||'—') + '</td></tr>'
+    ).join('') || '<tr><td colspan="3" class="empty">None yet</td></tr>';
+
+    document.getElementById('activityOrdersTable').innerHTML = allOrders.slice(0,20).map(o =>
+      '<tr><td style="color:var(--muted);font-size:12px">' + fmt(o.created_at) + '</td><td><strong>' + (o.guest_name||'—') + '</strong></td><td style="font-weight:700;color:var(--brand)">$' + (o.total||0) + '</td></tr>'
+    ).join('') || '<tr><td colspan="3" class="empty">None yet</td></tr>';
+
+    document.getElementById('activityEventsTable').innerHTML = allEvents.slice(0,30).map(e => {
+      const host = allHosts.find(h => h.id === e.host_id);
+      return '<tr><td style="color:var(--muted);font-size:12px">' + fmt(e.created_at) + '</td><td><span class="badge ' + (e.event_type==='open'?'badge-blue':e.event_type==='purchase'?'badge-green':'badge-grey') + '">' + (e.event_type||'—') + '</span></td><td>' + (host?(host.store_name||host.username):'—') + '</td></tr>';
+    }).join('') || '<tr><td colspan="3" class="empty">None yet</td></tr>';
+  }
+
+  // ── UTILS ──
+  function downloadCSV(rows, filename) {
+    const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = filename;
+    a.click();
+  }
+
+  // ── INIT ──
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && ADMIN_EMAILS.includes(session.user.email)) {
+      currentUser = session.user;
+      bootAdmin();
+    } else {
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('adminShell').style.display = 'none';
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>

@@ -302,11 +302,12 @@
   <div class="notes-modal" style="max-width:420px">
     <div style="font-size:40px;text-align:center;margin-bottom:12px">🎁</div>
     <h3 style="text-align:center;margin-bottom:6px" id="voucherModalProductName">Claim your voucher</h3>
-    <p style="text-align:center">Enter your email and we'll send your voucher instantly. Then you'll be taken to the booking page.</p>
-    <div style="margin:16px 0">
-      <input type="email" id="voucherEmailInput" placeholder="your@email.com" style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')sendVoucherEmail()">
+    <p style="text-align:center">Enter your details and we'll send your voucher instantly. Then you'll be taken to the booking page.</p>
+    <div style="margin:16px 0;display:flex;flex-direction:column;gap:10px">
+      <input type="text" id="voucherSurnameInput" placeholder="Your surname" style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color 0.2s;box-sizing:border-box" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')document.getElementById('voucherEmailInput').focus()">
+      <input type="email" id="voucherEmailInput" placeholder="your@email.com" style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color 0.2s;box-sizing:border-box" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'" onkeydown="if(event.key==='Enter')sendVoucherEmail()">
     </div>
-    <div id="voucherModalError" style="color:#e53e3e;font-size:13px;margin-bottom:10px;display:none">⚠️ Please enter a valid email address.</div>
+    <div id="voucherModalError" style="color:#e53e3e;font-size:13px;margin-bottom:10px;display:none">⚠️ Please enter your surname and a valid email address.</div>
     <div class="notes-modal-actions" style="justify-content:stretch;flex-direction:column;gap:8px">
       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="sendVoucherEmail()">Send my voucher & continue →</button>
       <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="skipVoucherEmail()">Skip — take me to the booking page</button>
@@ -682,6 +683,7 @@
       pendingPartnerId = partnerId || null;
       pendingPartnerProductId = partnerProductId || null;
       document.getElementById('voucherModalProductName').textContent = 'Claim your voucher — ' + (voucherTitle || productName || 'your booking');
+      document.getElementById('voucherSurnameInput').value = '';
       document.getElementById('voucherEmailInput').value = '';
       document.getElementById('voucherModalError').style.display = 'none';
       document.getElementById('voucherModalOverlay').classList.add('open');
@@ -691,8 +693,9 @@
   }
 
   async function sendVoucherEmail() {
+    const surname = document.getElementById('voucherSurnameInput').value.trim();
     const email = document.getElementById('voucherEmailInput').value.trim();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!surname || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       document.getElementById('voucherModalError').style.display = 'block';
       return;
     }
@@ -722,6 +725,7 @@
       partner_product_id: partnerProductId || null,
       partner_id: partnerId || null,
       guest_email: email,
+      guest_surname: surname,
       voucher_title: voucherTitle,
     }).then(() => {}).catch(e => console.warn('Redemption save:', e));
 

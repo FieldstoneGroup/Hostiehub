@@ -131,8 +131,7 @@
     .property-selector-inner { flex-direction: column; align-items: flex-start; gap: 8px; }
     .property-selector label { white-space: normal; font-size: 14px; }
     .property-select { width: 100%; }
-
-    /* On mobile, cards are full-width so content is shorter — switch to auto height and flow layout */
+    .date-row { grid-template-columns: 1fr !important; }
     .product-card { height: auto !important; min-height: 0 !important; }
     .pc-note { position: static !important; padding: 0 14px 6px !important; }
     .pc-voucher { position: static !important; padding: 0 14px 8px !important; }
@@ -317,7 +316,7 @@
     </div>
     <p style="font-size:14px;color:var(--muted);margin-bottom:20px">Let us know when you're staying so we can have everything ready.</p>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px" class="date-row">
       <div class="mfield"><label>Check-in Date</label><input type="date" id="checkinDate"></div>
       <div class="mfield"><label>Check-out Date</label><input type="date" id="checkoutDate"></div>
     </div>

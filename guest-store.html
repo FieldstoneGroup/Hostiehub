@@ -294,6 +294,39 @@
   </div>
 </div>
 
+<!-- EXPERIENCE BOOKING MODAL -->
+<div class="notes-modal-overlay" id="experienceModalOverlay">
+  <div class="notes-modal" style="max-width:440px">
+    <div style="font-size:32px;text-align:center;margin-bottom:10px" id="expModalEmoji">🍾</div>
+    <h3 style="text-align:center;margin-bottom:4px" id="expModalTitle">Book your experience</h3>
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:20px" id="expModalDesc"></p>
+
+    <div style="margin-bottom:14px">
+      <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Select a date</label>
+      <input type="date" id="expDate" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" onchange="updateExpTotal()">
+      <div id="expDateError" style="color:#e53e3e;font-size:12px;margin-top:4px;display:none"></div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Number of guests</label>
+      <select id="expGuests" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;background:white;box-sizing:border-box" onchange="updateExpTotal()">
+      </select>
+    </div>
+
+    <div id="expGstNote" style="display:none;font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center"></div>
+
+    <div style="background:var(--brand-light);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:13px;color:var(--brand);font-weight:600">Total</span>
+      <span id="expTotal" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--brand)">$0</span>
+    </div>
+
+    <div class="notes-modal-actions" style="flex-direction:column;gap:8px">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;font-size:15px;border-radius:12px" onclick="confirmExperience()">Add to cart →</button>
+      <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="document.getElementById('experienceModalOverlay').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- CHECKOUT MODAL -->
 <div class="modal-overlay" id="checkoutOverlay" onclick="closeCheckout()"></div>
 
@@ -785,8 +818,20 @@
   }
 
   // ── CART WITH NOTES ──
+  let pendingExpProduct = null;
+  let pendingExpBtn = null;
+
   function handleAddToCart(product, btn) {
     if (cart.find(i => i.id === product.id)) return;
+
+    // Experience product — show date + guest picker
+    if (product.is_experience) {
+      pendingExpProduct = product;
+      pendingExpBtn = btn;
+      openExperienceModal(product);
+      return;
+    }
+
     if (product.notes_prompt) {
       pendingCartItem = { product, btn };
       document.getElementById('notesModalTitle').textContent = product.name;
@@ -797,6 +842,111 @@
       addToCart(product, btn, '');
     }
   }
+
+  function openExperienceModal(p) {
+    document.getElementById('expModalEmoji').textContent = p.emoji || '🍾';
+    document.getElementById('expModalTitle').textContent = p.name;
+    document.getElementById('expModalDesc').textContent = p.description || '';
+
+    // Set min date based on lead time
+    const today = new Date();
+    const leadDays = parseInt(p.lead_time_days) || 0;
+    const minDate = new Date(today);
+    minDate.setDate(minDate.getDate() + leadDays);
+    const dateInput = document.getElementById('expDate');
+    dateInput.min = minDate.toISOString().split('T')[0];
+    dateInput.value = '';
+    document.getElementById('expDateError').style.display = 'none';
+
+    // Build guest count dropdown
+    const min = parseInt(p.min_guests) || 1;
+    const max = parseInt(p.max_guests) || 12;
+    const sel = document.getElementById('expGuests');
+    sel.innerHTML = '';
+    for (let i = min; i <= max; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = i + (i === 1 ? ' guest' : ' guests');
+      sel.appendChild(opt);
+    }
+
+    // GST note
+    const gstNote = document.getElementById('expGstNote');
+    if (p.gst_type === 'ontop') {
+      gstNote.style.display = 'block';
+      gstNote.textContent = 'GST will be added on top of the per-person price at checkout';
+    } else {
+      gstNote.style.display = 'none';
+    }
+
+    updateExpTotal();
+    document.getElementById('experienceModalOverlay').classList.add('open');
+  }
+
+  function updateExpTotal() {
+    const p = pendingExpProduct;
+    if (!p) return;
+    const guests = parseInt(document.getElementById('expGuests').value) || 1;
+    let total = p.price * guests;
+    if (p.gst_type === 'ontop') total = Math.round(total * 1.1 * 100) / 100;
+    document.getElementById('expTotal').textContent = '$' + total.toFixed(2).replace('.00', '');
+  }
+  window.updateExpTotal = updateExpTotal;
+
+  function confirmExperience() {
+    const p = pendingExpProduct;
+    if (!p) return;
+    const dateVal = document.getElementById('expDate').value;
+    const guests = parseInt(document.getElementById('expGuests').value) || 1;
+
+    if (!dateVal) {
+      document.getElementById('expDateError').textContent = 'Please select a date';
+      document.getElementById('expDateError').style.display = 'block';
+      return;
+    }
+
+    // Validate lead time
+    const leadDays = parseInt(p.lead_time_days) || 0;
+    if (leadDays > 0) {
+      const minDate = new Date();
+      minDate.setDate(minDate.getDate() + leadDays);
+      minDate.setHours(0,0,0,0);
+      const chosen = new Date(dateVal + 'T00:00:00');
+      if (chosen < minDate) {
+        document.getElementById('expDateError').textContent = 'This experience requires ' + leadDays + ' days notice. Please choose a later date.';
+        document.getElementById('expDateError').style.display = 'block';
+        return;
+      }
+    }
+
+    const dateFormatted = new Date(dateVal + 'T00:00:00').toLocaleDateString('en-AU', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    let total = p.price * guests;
+    if (p.gst_type === 'ontop') total = Math.round(total * 1.1 * 100) / 100;
+
+    const note = dateFormatted + ' · ' + guests + (guests === 1 ? ' guest' : ' guests');
+    const cartItem = {
+      id: p.id, name: p.name, price: total,
+      icon: p.emoji || '🍾',
+      note,
+      is_experience: true,
+      experience_date: dateVal,
+      experience_guests: guests,
+      booking_instructions: p.booking_instructions || '',
+    };
+
+    cart.push(cartItem);
+    if (pendingExpBtn) {
+      pendingExpBtn.textContent = '✓ Added';
+      pendingExpBtn.classList.add('added');
+    }
+    logStoreEvent('click', p.id, p.name);
+    updateCartUI();
+
+    document.getElementById('experienceModalOverlay').classList.remove('open');
+    pendingExpProduct = null;
+    pendingExpBtn = null;
+  }
+  window.confirmExperience = confirmExperience;
 
   function confirmNotes() {
     if (!pendingCartItem) return;
@@ -1154,6 +1304,18 @@
             <div style="font-size:14px;font-weight:700;color:#2C6E6A;margin-bottom:8px">What happens next?</div>
             <p style="font-size:14px;color:#1d4d4a;margin:0;line-height:1.7">Your host <strong>${hostName}</strong> has been notified and will have everything ready for your arrival. If you have any questions about your order or stay, please contact your host directly — <strong>do not reply to this email</strong> as it is sent from an unmonitored address.</p>
           </div>
+
+          ${cart.some(i => i.is_experience && i.booking_instructions) ? `
+          <!-- EXPERIENCE INSTRUCTIONS -->
+          <div style="background:#fff7e6;border-radius:12px;padding:20px;margin-bottom:28px;border-left:4px solid #E8A838">
+            <div style="font-size:14px;font-weight:700;color:#92600a;margin-bottom:12px">🏄 Experience Details & Instructions</div>
+            ${cart.filter(i => i.is_experience && i.booking_instructions).map(i => `
+            <div style="margin-bottom:14px">
+              <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:6px">${i.name}</div>
+              <div style="font-size:13px;color:#92600a;margin-bottom:6px">📅 ${i.note}</div>
+              <div style="font-size:13px;color:#78350f;line-height:1.7;white-space:pre-line">${i.booking_instructions}</div>
+            </div>`).join('')}
+          </div>` : ''}
 
           <p style="font-size:13px;color:#6b7280;text-align:center;margin:0;line-height:1.6">⚠️ <strong>Please do not reply to this email.</strong><br>This is an automated confirmation from Hostie Hub.<br>For any questions about your order or stay, please contact your host <strong>${hostName}</strong> directly.</p>
 

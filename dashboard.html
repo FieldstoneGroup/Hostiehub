@@ -827,12 +827,50 @@
       </div>
       <div class="field">
         <label>Category</label>
-        <select id="pCategory">
+        <select id="pCategory" onchange="toggleExperienceFields()">
           <option value="product">📦 Product</option>
           <option value="service">🛎️ Service</option>
           <option value="reservation">🍽️ Reservation</option>
           <option value="experience">🏄 Experience</option>
         </select>
+      </div>
+
+      <!-- EXPERIENCE FIELDS — shown only when category = experience -->
+      <div id="experienceFields" style="display:none;background:#f4f6f5;border-radius:12px;padding:16px;margin-bottom:4px;border:1.5px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--brand);margin-bottom:14px">🏄 Experience Settings</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Min guests</label>
+            <input type="number" id="pMinGuests" placeholder="1" min="1" max="50" value="1">
+          </div>
+          <div class="field">
+            <label>Max guests</label>
+            <input type="number" id="pMaxGuests" placeholder="12" min="1" max="50" value="12">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Booking lead time</label>
+            <select id="pLeadTime">
+              <option value="0">No minimum lead time</option>
+              <option value="7">7 days notice required</option>
+              <option value="14">14 days notice required</option>
+              <option value="30">30 days notice required</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>GST</label>
+            <select id="pGst">
+              <option value="included">GST included in price</option>
+              <option value="ontop">GST added on top</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Post-booking instructions <span style="font-weight:300;font-size:12px">(sent to guest after payment only)</span></label>
+          <textarea id="pInstructions" placeholder="e.g. Pickup is from 123 Hunter Street, Newcastle at 9:30am sharp. Please wear comfortable shoes and bring sunscreen. Your guide will be holding a Hostie Hub sign. Includes: morning tea, wine tastings at 3 wineries, light lunch. What to bring: ID, comfortable footwear, sunhat." style="min-height:100px"></textarea>
+          <div class="field-hint">Guests won't see this in the store — it's emailed after they complete their booking.</div>
+        </div>
       </div>
       <div class="field">
         <label>Product photo</label>
@@ -1049,7 +1087,7 @@
     { name: 'Kayak / Paddleboard Hire', description: 'Explore the waterways by kayak or paddleboard. Paddles and life jackets included.', price: 55, unit: 'per day', category: 'experience', emoji: '🚣', notes_prompt: 'Kayak or paddleboard? Single or double? How many? How many days?' },
     { name: 'Bike Hire / E-Bike Hire', description: 'Explore the area on two wheels — standard or electric bikes available. Helmets included.', price: 40, unit: 'per day', category: 'experience', emoji: '🚲', notes_prompt: 'Standard or e-bike? How many bikes? How many days? Any size requirements?' },
     { name: 'Fishing Charter Booking', description: 'We\'ll book a local fishing charter for your group — all gear provided, just show up and catch dinner.', price: 95, unit: 'per person', category: 'experience', emoji: '🎣', notes_prompt: 'Preferred date and time? How many people? Any experience level notes?' },
-    { name: 'Wine Tour', description: 'A guided half-day wine tour visiting local wineries with a knowledgeable guide. Tastings included.', price: 120, unit: 'per person', category: 'experience', emoji: '🍾', notes_prompt: 'Preferred date? How many guests? Any wine preferences? (red/white/sparkling)' },
+    { name: 'Wine Tour', description: 'A guided half-day wine tour visiting local wineries with a knowledgeable guide. Wine tastings, morning tea and light lunch included. Bookings essential.', price: 120, unit: 'per person', category: 'experience', emoji: '🍾', notes_prompt: '', is_experience: true, min_guests: 2, max_guests: 12, lead_time_days: 7, gst_type: 'included', booking_instructions: 'Pickup is from [your pickup location] at [time]. Please arrive 5 minutes early. Your guide will be waiting for you.\n\nIncluded: Wine tastings at 3 local wineries, morning tea, light grazing lunch.\n\nPlease bring: Comfortable shoes, sunhat, sunscreen, photo ID.\n\nIf you have any questions please contact us at [your contact details].' },
     { name: 'Tour Booking', description: 'We\'ll book a local tour or experience for you — whale watching, scenic flights, cooking classes and more.', price: 20, unit: 'booking fee', category: 'experience', emoji: '🗺️', notes_prompt: 'What type of tour or experience are you interested in? Preferred date and number of guests?' },
     { name: 'Restaurant Reservation', description: 'We\'ll secure a reservation at the best local restaurants — including hard-to-book spots.', price: 15, unit: 'booking fee', category: 'experience', emoji: '🍽️', notes_prompt: 'Which restaurant or cuisine type? Preferred date and time? How many guests? Any dietary requirements?' },
     { name: 'Babysitting Services', description: 'A qualified and vetted babysitter so you can enjoy a night out without worry.', price: 30, unit: 'per hour', category: 'experience', emoji: '👧', notes_prompt: 'Preferred date and hours? How many children? Ages? Any special requirements or routines?' },
@@ -1539,7 +1577,12 @@
     document.getElementById('pUnit').value = '';
     document.getElementById('pNotesPrompt').value = '';
     document.getElementById('pCategory').value = 'product';
-    // Always show price/category for own products
+    document.getElementById('experienceFields').style.display = 'none';
+    document.getElementById('pMinGuests').value = '1';
+    document.getElementById('pMaxGuests').value = '12';
+    document.getElementById('pLeadTime').value = '0';
+    document.getElementById('pGst').value = 'included';
+    document.getElementById('pInstructions').value = '';
     const priceRow = document.getElementById('pPrice').closest('.field-row');
     if (priceRow) priceRow.style.display = '';
     document.getElementById('pCategory').closest('.field').style.display = '';
@@ -1572,7 +1615,17 @@
     document.getElementById('pNotesPrompt').value = p.notes_prompt || '';
     document.getElementById('pCategory').value = p.category || 'product';
 
-    // Hide price & category for partner products — they can't be changed
+    // Experience fields
+    const isExp = p.category === 'experience' && !isPartner;
+    document.getElementById('experienceFields').style.display = isExp ? 'block' : 'none';
+    if (isExp) {
+      document.getElementById('pMinGuests').value = p.min_guests || 1;
+      document.getElementById('pMaxGuests').value = p.max_guests || 12;
+      document.getElementById('pLeadTime').value = p.lead_time_days || 0;
+      document.getElementById('pGst').value = p.gst_type || 'included';
+      document.getElementById('pInstructions').value = p.booking_instructions || '';
+    }
+
     const priceRow = document.getElementById('pPrice').closest('.field-row');
     if (priceRow) priceRow.style.display = (isPartner && isBookingLink) ? 'none' : '';
     document.getElementById('pCategory').closest('.field').style.display = isPartner ? 'none' : '';
@@ -1602,14 +1655,24 @@
 
   function closeProductModal() { document.getElementById('productModal').classList.remove('open'); }
 
+  function toggleExperienceFields() {
+    const isExp = document.getElementById('pCategory').value === 'experience';
+    document.getElementById('experienceFields').style.display = isExp ? 'block' : 'none';
+    if (isExp) {
+      document.getElementById('pUnit').value = 'per person';
+    }
+  }
+  window.toggleExperienceFields = toggleExperienceFields;
+
   async function saveProduct() {
     const name = document.getElementById('pName').value.trim();
     const price = parseFloat(document.getElementById('pPrice').value);
     if (!name || !price) { showToast('⚠️ Name and price are required'); return; }
     const allProps = document.getElementById('pAllProperties').checked;
     const selectedProps = allProps ? [] : [...document.querySelectorAll('.prop-check:checked')].map(cb => cb.value);
+    const category = document.getElementById('pCategory').value;
+    const isExperience = category === 'experience';
 
-    // Handle image upload
     const imageFile = document.getElementById('productImage').files[0];
     let imageUrl = currentImageUrl;
 
@@ -1618,11 +1681,17 @@
       description: document.getElementById('pDesc').value.trim(),
       unit: document.getElementById('pUnit').value.trim(),
       notes_prompt: document.getElementById('pNotesPrompt').value.trim(),
-      category: document.getElementById('pCategory').value,
+      category,
       emoji: selectedEmoji,
       available_all_properties: allProps,
       property_ids: selectedProps,
       active: true,
+      is_experience: isExperience,
+      min_guests: isExperience ? (parseInt(document.getElementById('pMinGuests').value) || 1) : null,
+      max_guests: isExperience ? (parseInt(document.getElementById('pMaxGuests').value) || 12) : null,
+      lead_time_days: isExperience ? (parseInt(document.getElementById('pLeadTime').value) || 0) : null,
+      gst_type: isExperience ? document.getElementById('pGst').value : null,
+      booking_instructions: isExperience ? document.getElementById('pInstructions').value.trim() : null,
     };
 
     if (editingProductId) {

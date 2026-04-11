@@ -1113,6 +1113,17 @@
       removeProductImage();
     }
 
+    // Voucher — show existing if already uploaded
+    if (isBooking && p.voucher_pdf_url) {
+      const filename = p.voucher_pdf_url.split('/').pop().split('?')[0] || 'Voucher uploaded';
+      document.getElementById('pVoucherFileName').textContent = '✓ ' + decodeURIComponent(filename);
+      document.getElementById('pVoucherPreviewWrap').style.display = 'flex';
+      document.getElementById('pVoucherUploadLabel').style.display = 'none';
+    } else {
+      document.getElementById('pVoucherPreviewWrap').style.display = 'none';
+      document.getElementById('pVoucherUploadLabel').style.display = 'flex';
+    }
+
     // Postcodes
     const codes = Array.isArray(p.postcodes) ? p.postcodes : JSON.parse(p.postcodes || '[]');
     productPostcodes = [...codes];

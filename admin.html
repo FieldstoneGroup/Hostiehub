@@ -352,22 +352,18 @@
 
   // ── AUTH ──
   async function doLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
     const password = document.getElementById('loginPassword').value;
     const err = document.getElementById('loginError');
     err.style.display = 'none';
 
-    if (!ADMIN_EMAILS.includes(email) || password !== ADMIN_PASSWORD) {
+    const validEmails = ADMIN_EMAILS.map(e => e.toLowerCase());
+    if (!validEmails.includes(email) || password !== ADMIN_PASSWORD) {
       err.textContent = 'Invalid credentials.';
       err.style.display = 'block';
       return;
     }
 
-    // Sign into Supabase so we can query data
-    const { data, error } = await sb.auth.signInWithPassword({ email, password: password });
-    if (error) {
-      // Still boot admin even if Supabase password differs — use anon queries
-    }
     currentUser = { email };
     bootAdmin();
   }
@@ -641,14 +637,9 @@
 
   // ── INIT ──
   async function init() {
-    const { data: { session } } = await sb.auth.getSession();
-    if (session && ADMIN_EMAILS.includes(session.user.email)) {
-      currentUser = session.user;
-      bootAdmin();
-    } else {
-      document.getElementById('loginScreen').style.display = 'flex';
-      document.getElementById('adminShell').style.display = 'none';
-    }
+    // Admin uses its own password — no Supabase session needed
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminShell').style.display = 'none';
   }
 
   init();

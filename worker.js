@@ -87,6 +87,122 @@ export default {
         })
       });
 
+      // ── WELCOME EMAIL TO NEW HOST ──
+      if (record.email) {
+        const hostName = record.full_name || 'there';
+        const storeUrl = record.username ? 'https://hostiehub.com.au/store/' + record.username : 'https://hostiehub.com.au/dashboard.html';
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': \`Bearer \${env.RESEND_API_KEY}\` },
+          body: JSON.stringify({
+            from: 'Hostie Hub <hello@hostiehub.com.au>',
+            to: record.email,
+            subject: '🎉 Welcome to Hostie Hub — your store is ready!',
+            html: \`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f6f5;font-family:Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f5;padding:40px 20px">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+
+  <!-- HEADER -->
+  <tr><td style="background:linear-gradient(135deg,#2C6E6A,#1d4d4a);border-radius:16px 16px 0 0;padding:48px 40px;text-align:center">
+    <div style="font-size:52px;margin-bottom:16px">🎉</div>
+    <div style="font-family:Georgia,serif;font-size:32px;font-weight:700;color:white;margin-bottom:10px">You're in, \${hostName}!</div>
+    <div style="font-size:16px;color:rgba(255,255,255,0.8);line-height:1.6">Your Hostie Hub store is live and ready to go.<br>Let's get you set up and earning.</div>
+  </td></tr>
+
+  <!-- BODY -->
+  <tr><td style="background:white;padding:48px 40px">
+
+    <!-- Store URL -->
+    <div style="background:#f0fdf4;border:2px solid #2C6E6A;border-radius:14px;padding:20px 24px;margin-bottom:36px;text-align:center">
+      <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2C6E6A;margin-bottom:6px">Your store link</div>
+      <div style="font-size:17px;font-weight:700;color:#1a1a1a;margin-bottom:14px">\${storeUrl}</div>
+      <a href="\${storeUrl}" style="background:#2C6E6A;color:white;padding:12px 28px;border-radius:50px;text-decoration:none;font-weight:600;font-size:14px">View my store →</a>
+    </div>
+
+    <!-- Intro -->
+    <p style="font-size:16px;color:#374151;line-height:1.7;margin:0 0 36px">Hostie Hub lets you offer your guests amazing add-ons and extras — delivered straight to their door or ready on arrival. Here's everything you need to get started:</p>
+
+    <!-- Steps -->
+    <div style="margin-bottom:36px">
+
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:24px;padding:20px;background:#f9fafb;border-radius:12px;border-left:4px solid #2C6E6A">
+        <div style="width:36px;height:36px;background:#2C6E6A;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;flex-shrink:0;text-align:center;line-height:36px">1</div>
+        <div>
+          <div style="font-weight:700;font-size:15px;color:#1a1a1a;margin-bottom:4px">Set up your store branding</div>
+          <div style="font-size:14px;color:#6b7280;line-height:1.6">Go to <strong>Store Settings</strong> in your dashboard and add your store name, colours and logo. This is what guests see when they open your link.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:24px;padding:20px;background:#f9fafb;border-radius:12px;border-left:4px solid #2C6E6A">
+        <div style="width:36px;height:36px;background:#2C6E6A;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;flex-shrink:0;text-align:center;line-height:36px">2</div>
+        <div>
+          <div style="font-weight:700;font-size:15px;color:#1a1a1a;margin-bottom:4px">Add your properties</div>
+          <div style="font-size:14px;color:#6b7280;line-height:1.6">Go to <strong>Properties</strong> and add each property you manage. Guests will select which property they're staying at when they order.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:24px;padding:20px;background:#f9fafb;border-radius:12px;border-left:4px solid #2C6E6A">
+        <div style="width:36px;height:36px;background:#2C6E6A;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;flex-shrink:0;text-align:center;line-height:36px">3</div>
+        <div>
+          <div style="font-weight:700;font-size:15px;color:#1a1a1a;margin-bottom:4px">Add products & services</div>
+          <div style="font-size:14px;color:#6b7280;line-height:1.6">Go to <strong>Products</strong> and click <strong>Browse presets</strong> to pick from our library of ready-made products — welcome hampers, experiences, grocery packs and more. Or create your own from scratch.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:24px;padding:20px;background:#f9fafb;border-radius:12px;border-left:4px solid #2C6E6A">
+        <div style="width:36px;height:36px;background:#2C6E6A;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;flex-shrink:0;text-align:center;line-height:36px">4</div>
+        <div>
+          <div style="font-weight:700;font-size:15px;color:#1a1a1a;margin-bottom:4px">Connect Stripe to get paid</div>
+          <div style="font-size:14px;color:#6b7280;line-height:1.6">Go to <strong>Stripe Connect</strong> and link your Stripe account. This is how payments go directly to you — Hostie Hub never touches your money.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:flex-start;gap:16px;padding:20px;background:#f9fafb;border-radius:12px;border-left:4px solid #E8A838">
+        <div style="width:36px;height:36px;background:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:16px;flex-shrink:0;text-align:center;line-height:36px">5</div>
+        <div>
+          <div style="font-weight:700;font-size:15px;color:#1a1a1a;margin-bottom:4px">Share your store link with guests</div>
+          <div style="font-size:14px;color:#6b7280;line-height:1.6">Copy your store link and paste it into your Airbnb/Booking.com welcome message, or include it in your guest communication. That's it — guests browse and order directly.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Local partners callout -->
+    <div style="background:#fff7e6;border:1.5px solid #E8A838;border-radius:14px;padding:20px 24px;margin-bottom:36px">
+      <div style="font-size:15px;font-weight:700;color:#92600a;margin-bottom:6px">🤝 Discover local partner offers</div>
+      <div style="font-size:14px;color:#a16207;line-height:1.6">Check out <strong>Local Products</strong> in your dashboard — local businesses in your area have listed their offers (restaurants, experiences, tours) that you can add to your store for free and earn a commission.</div>
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align:center;margin-bottom:36px">
+      <a href="https://hostiehub.com.au/dashboard.html" style="background:#2C6E6A;color:white;padding:16px 40px;border-radius:50px;text-decoration:none;font-size:16px;font-weight:700;display:inline-block">Go to my dashboard →</a>
+    </div>
+
+    <!-- Support -->
+    <div style="border-top:1.5px solid #f0ece8;padding-top:28px;text-align:center">
+      <div style="font-size:14px;color:#6b7280;line-height:1.7">Got questions? We're real people and we read every email.<br>
+      <a href="mailto:hello@hostiehub.com.au" style="color:#2C6E6A;font-weight:600">hello@hostiehub.com.au</a> — we'll get back to you fast.</div>
+    </div>
+
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="padding:28px 0;text-align:center">
+    <div style="font-family:Georgia,serif;font-size:14px;font-weight:700;color:#2C6E6A;margin-bottom:6px">Hostie Hub</div>
+    <div style="font-size:12px;color:#9ca3af">Australia's first extras store platform built by hosts, for hosts.<br>© 2025 Hostie Hub · Made with ❤️ in Newcastle, Australia</div>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>\`
+          })
+        });
+      }
+
       return new Response('ok', { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } });
     }
 
@@ -124,6 +240,106 @@ export default {
 </div>`
         })
       });
+
+      // ── WELCOME EMAIL TO NEW PARTNER ──
+      if (record.email) {
+        const bizName = record.business_name || 'there';
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': \`Bearer \${env.RESEND_API_KEY}\` },
+          body: JSON.stringify({
+            from: 'Hostie Hub <hello@hostiehub.com.au>',
+            to: record.email,
+            subject: '🤝 Welcome to Hostie Hub — your partner account is live!',
+            html: \`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f6f5;font-family:Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f5;padding:40px 20px">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+
+  <!-- HEADER -->
+  <tr><td style="background:linear-gradient(135deg,#E8A838,#d4952e);border-radius:16px 16px 0 0;padding:48px 40px;text-align:center">
+    <div style="font-size:52px;margin-bottom:16px">🤝</div>
+    <div style="font-family:Georgia,serif;font-size:32px;font-weight:700;color:white;margin-bottom:10px">Welcome, \${bizName}!</div>
+    <div style="font-size:16px;color:rgba(255,255,255,0.85);line-height:1.6">Your partner account is live.<br>Let's get your first listing in front of local guests.</div>
+  </td></tr>
+
+  <!-- BODY -->
+  <tr><td style="background:white;padding:48px 40px">
+
+    <!-- Intro -->
+    <p style="font-size:16px;color:#374151;line-height:1.7;margin:0 0 36px">Hostie Hub connects your business with guests staying at local short-term rental properties. Hosts in your area can add your listings to their guest stores — meaning guests discover you <strong>before they even arrive</strong>. Here's how to get set up:</p>
+
+    <!-- Steps -->
+    <div style="margin-bottom:36px">
+
+      <div style="padding:20px;background:#f9fafb;border-radius:12px;border-left:4px solid #E8A838;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <div style="width:30px;height:30px;background:#E8A838;border-radius:50%;color:white;font-weight:700;font-size:14px;text-align:center;line-height:30px;flex-shrink:0">1</div>
+          <div style="font-weight:700;font-size:15px;color:#1a1a1a">Create your first listing</div>
+        </div>
+        <div style="font-size:14px;color:#6b7280;line-height:1.6;padding-left:42px">Go to <strong>My Listings → Add Listing</strong> in your dashboard. Add your product or service name, description, category and wholesale price. Upload a photo — listings with images get significantly more clicks.</div>
+      </div>
+
+      <div style="padding:20px;background:#f9fafb;border-radius:12px;border-left:4px solid #E8A838;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <div style="width:30px;height:30px;background:#E8A838;border-radius:50%;color:white;font-weight:700;font-size:14px;text-align:center;line-height:30px;flex-shrink:0">2</div>
+          <div style="font-weight:700;font-size:15px;color:#1a1a1a">Set your service area</div>
+        </div>
+        <div style="font-size:14px;color:#6b7280;line-height:1.6;padding-left:42px">Enter your suburb and click Apply — we'll cover all postcodes within 30km automatically. Only hosts in your area will see your listing, so you only reach relevant guests.</div>
+      </div>
+
+      <div style="padding:20px;background:#f9fafb;border-radius:12px;border-left:4px solid #E8A838;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <div style="width:30px;height:30px;background:#E8A838;border-radius:50%;color:white;font-weight:700;font-size:14px;text-align:center;line-height:30px;flex-shrink:0">3</div>
+          <div style="font-weight:700;font-size:15px;color:#1a1a1a">Attach a voucher (optional but powerful)</div>
+        </div>
+        <div style="font-size:14px;color:#6b7280;line-height:1.6;padding-left:42px">Upload a voucher image or PDF — when a guest books, it's automatically emailed to them. Perfect for restaurants offering a complimentary drink, spas offering a discount, or any business with a special offer.</div>
+      </div>
+
+      <div style="padding:20px;background:#f9fafb;border-radius:12px;border-left:4px solid #E8A838;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <div style="width:30px;height:30px;background:#E8A838;border-radius:50%;color:white;font-weight:700;font-size:14px;text-align:center;line-height:30px;flex-shrink:0">4</div>
+          <div style="font-weight:700;font-size:15px;color:#1a1a1a">Publish and you're live</div>
+        </div>
+        <div style="font-size:14px;color:#6b7280;line-height:1.6;padding-left:42px">Click <strong>Publish listing</strong> and your offer is immediately available for local hosts to add to their guest stores. You'll see clicks, views and redemptions in your Analytics tab.</div>
+      </div>
+
+    </div>
+
+    <!-- Pricing callout -->
+    <div style="background:#fff7e6;border:1.5px solid #E8A838;border-radius:14px;padding:20px 24px;margin-bottom:36px">
+      <div style="font-size:15px;font-weight:700;color:#92600a;margin-bottom:8px">💛 Your 3-month free trial is active</div>
+      <div style="font-size:14px;color:#a16207;line-height:1.6">Everything is completely free for 3 months. After that, billing is simple — <strong>$49/listing/month</strong> and <strong>$10/voucher/month</strong>. Only active listings count, and you can pause or deactivate anytime.</div>
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align:center;margin-bottom:36px">
+      <a href="https://hostiehub.com.au/partner-dashboard.html" style="background:#E8A838;color:white;padding:16px 40px;border-radius:50px;text-decoration:none;font-size:16px;font-weight:700;display:inline-block">Go to my dashboard →</a>
+    </div>
+
+    <!-- Support -->
+    <div style="border-top:1.5px solid #f0ece8;padding-top:28px;text-align:center">
+      <div style="font-size:14px;color:#6b7280;line-height:1.7">Need help setting up? We're here for you.<br>
+      <a href="mailto:hello@hostiehub.com.au" style="color:#E8A838;font-weight:600">hello@hostiehub.com.au</a> — we'll get back to you quickly.</div>
+    </div>
+
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="padding:28px 0;text-align:center">
+    <div style="font-family:Georgia,serif;font-size:14px;font-weight:700;color:#E8A838;margin-bottom:6px">Hostie Hub</div>
+    <div style="font-size:12px;color:#9ca3af">Connecting local businesses with short-stay guests across Australia.<br>© 2025 Hostie Hub · Made with ❤️ in Newcastle, Australia</div>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>\`
+          })
+        });
+      }
 
       return new Response('ok', { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } });
     }

@@ -345,6 +345,7 @@
 
   // ADMIN EMAILS — add yours here
   const ADMIN_EMAILS = ['hello@fieldstonegroup.com.au', 'luke@stayable.co'];
+  const ADMIN_PASSWORD = 'Kahibah123';
 
   let allHosts = [], allPartners = [], allOrders = [], allRedemptions = [], allEvents = [], allPartnerProducts = [];
   let currentUser = null;
@@ -356,15 +357,18 @@
     const err = document.getElementById('loginError');
     err.style.display = 'none';
 
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
-    if (error || !data.session) { err.style.display = 'block'; return; }
-    if (!ADMIN_EMAILS.includes(data.user.email)) {
-      await sb.auth.signOut();
-      err.textContent = 'Access denied — not an admin account.';
+    if (!ADMIN_EMAILS.includes(email) || password !== ADMIN_PASSWORD) {
+      err.textContent = 'Invalid credentials.';
       err.style.display = 'block';
       return;
     }
-    currentUser = data.user;
+
+    // Sign into Supabase so we can query data
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: password });
+    if (error) {
+      // Still boot admin even if Supabase password differs — use anon queries
+    }
+    currentUser = { email };
     bootAdmin();
   }
 

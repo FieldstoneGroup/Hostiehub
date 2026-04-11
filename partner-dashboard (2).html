@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partner Dashboard – Hostie Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --brand: #2C6E6A; --brand-dark: #1d4d4a; --brand-light: #e6f2f1;
+    --accent: #E8A838; --accent-light: #fdf3e0;
+    --partner: #0f3460; --partner-light: #e8eef7;
+    --text: #1a1a1a; --muted: #6b7280; --bg: #f4f6f5;
+    --card: #ffffff; --border: #e8e4df; --sidebar-w: 240px;
+    --radius: 14px; --error: #dc2626; --success: #16a34a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
+  .sidebar { width: var(--sidebar-w); background: var(--partner); min-height: 100vh; position: fixed; top: 0; left: 0; bottom: 0; display: flex; flex-direction: column; z-index: 50; }
+  .sidebar-logo { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 8px; }
+  .sidebar-logo span { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: white; }
+  .logo-dot { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
+  .sidebar-host { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
+  .host-avatar { width: 36px; height: 36px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; color: white; font-size: 15px; font-weight: 700; flex-shrink: 0; }
+  .host-info-name { font-size: 13px; font-weight: 600; color: white; line-height: 1.3; }
+  .host-info-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
+  .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+  .nav-section-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 12px 8px 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; transition: background 0.2s; color: rgba(255,255,255,0.6); font-size: 14px; font-weight: 500; border: none; background: none; width: 100%; text-align: left; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: white; }
+  .nav-item.active { background: rgba(255,255,255,0.12); color: white; }
+  .nav-item.active .nav-icon { background: var(--accent); }
+  .nav-icon { width: 28px; height: 28px; border-radius: 8px; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .sidebar-bottom { padding: 16px 12px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .logout-btn { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; color: rgba(255,255,255,0.4); font-size: 13px; font-weight: 500; border: none; background: none; width: 100%; text-align: left; transition: color 0.2s; }
+  .logout-btn:hover { color: rgba(255,255,255,0.8); }
+  .main { margin-left: var(--sidebar-w); flex: 1; min-height: 100vh; display: flex; flex-direction: column; }
+  .topbar { background: var(--card); border-bottom: 1.5px solid var(--border); padding: 0 32px; height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 40; }
+  .topbar-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; }
+  .partner-badge { background: var(--partner-light); color: var(--partner); font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 50px; border: 1px solid #c5d3e8; }
+  .content { padding: 32px; flex: 1; }
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); padding: 24px; }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .card-desc { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); padding: 20px; }
+  .stat-label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .stat-value { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; color: var(--partner); line-height: 1; margin-bottom: 4px; }
+  .stat-sub { font-size: 12px; color: var(--muted); }
+  .btn { padding: 10px 20px; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; text-decoration: none; }
+  .btn-primary { background: var(--partner); color: white; }
+  .btn-primary:hover { background: #0a2540; }
+  .btn-outline { background: white; color: var(--text); border: 1.5px solid var(--border); }
+  .btn-outline:hover { border-color: var(--partner); color: var(--partner); }
+  .btn-danger { background: #fef2f2; color: var(--error); border: 1.5px solid #fecaca; }
+  .btn-sm { padding: 7px 14px; font-size: 13px; }
+  .btn-accent { background: var(--accent); color: white; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+  .field input, .field textarea, .field select { width: 100%; padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); background: white; outline: none; transition: border-color 0.2s; }
+  .field input:focus, .field textarea:focus { border-color: var(--partner); box-shadow: 0 0 0 3px rgba(15,52,96,0.1); }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .field-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .postcode-input-wrap { display: flex; gap: 8px; }
+  .postcode-input-wrap input { flex: 1; }
+  .add-postcode-btn { padding: 11px 16px; background: var(--partner); color: white; border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .postcode-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .postcode-tag { background: var(--partner-light); color: var(--partner); font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 50px; display: flex; align-items: center; gap: 6px; }
+  .postcode-tag button { background: none; border: none; color: var(--partner); cursor: pointer; font-size: 14px; padding: 0; }
+  .items-list { display: flex; flex-direction: column; gap: 12px; }
+  .item-row { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px 20px; display: flex; align-items: center; gap: 16px; }
+  .item-thumb { width: 52px; height: 52px; border-radius: 12px; flex-shrink: 0; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 22px; overflow: hidden; }
+  .item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .item-meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; }
+  .badge-active { background: #f0fdf4; color: var(--success); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 50px; }
+  .badge-inactive { background: #fef2f2; color: var(--error); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 50px; }
+  .badge-type { background: var(--partner-light); color: var(--partner); font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 50px; }
+  .type-option { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; background: var(--bg); border-radius: 10px; border: 1.5px solid var(--border); cursor: pointer; margin-bottom: 10px; }
+  .type-option input[type="radio"] { accent-color: var(--partner); width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+  .type-option-label { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .type-option-desc { font-size: 12px; color: var(--muted); }
+  .image-upload-label { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 16px; border: 2px dashed var(--border); border-radius: 10px; cursor: pointer; font-size: 14px; color: var(--muted); transition: border-color 0.2s; }
+  .image-upload-label:hover { border-color: var(--partner); }
+  .image-preview-wrap { position: relative; width: 100%; height: 180px; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border); margin-bottom: 10px; }
+  .image-preview-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  .image-remove-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+  /* ANALYTICS */
+  .analytics-stat { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; }
+  .analytics-stat-val { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--partner); }
+  .analytics-stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .analytics-table { width: 100%; border-collapse: collapse; }
+  .analytics-table th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); padding: 10px 12px; text-align: left; border-bottom: 1.5px solid var(--border); }
+  .analytics-table td { padding: 12px; font-size: 14px; border-bottom: 1px solid var(--bg); vertical-align: middle; }
+  .analytics-table tr:last-child td { border-bottom: none; }
+  .bar-wrap { background: var(--bg); border-radius: 4px; height: 8px; min-width: 60px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; background: var(--partner); transition: width 0.6s ease; }
+  .period-btn { padding: 6px 14px; border-radius: 50px; border: 1.5px solid var(--border); background: white; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+  .period-btn.active { background: var(--partner); color: white; border-color: var(--partner); }
+  /* TRIAL BANNER */
+  .trial-banner { color: white; padding: 12px 32px; display: none; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  /* PLAN CARDS */
+  .plan-card { border: 1.5px solid var(--border); border-radius: var(--radius); padding: 24px; position: relative; transition: border-color 0.2s; }
+  .plan-card:hover { border-color: var(--partner); }
+  .plan-card.featured { border-color: var(--partner); background: var(--partner-light); }
+  .plan-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--partner); color: white; font-size: 11px; font-weight: 700; padding: 3px 12px; border-radius: 50px; white-space: nowrap; }
+  .plan-price { font-family: 'Playfair Display', serif; font-size: 36px; font-weight: 700; color: var(--partner); margin: 12px 0 4px; }
+  .plan-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .plan-features { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 16px 0 20px; }
+  .plan-features li { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .plan-features li::before { content: '✓'; color: var(--success); font-weight: 700; flex-shrink: 0; }
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500; z-index: 999; display: none; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .empty-state p { font-size: 14px; line-height: 1.5; }
+  .how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
+  .how-step { background: var(--bg); border-radius: 12px; padding: 20px; text-align: center; }
+  .how-step-num { width: 36px; height: 36px; background: var(--partner); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; margin: 0 auto 12px; }
+  .how-step h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .how-step p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  @media (max-width: 900px) {
+    .sidebar { width: 64px; }
+    .sidebar-logo span, .host-info-name, .host-info-sub, .nav-item span, .nav-section-label, .logout-btn span { display: none; }
+    .main { margin-left: 64px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .how-steps { grid-template-columns: 1fr; }
+    .field-row { grid-template-columns: 1fr; }
+    #page-newproduct > div { grid-template-columns: 1fr !important; }
+    #listingPreview { display: none; }
+  }
+  @media (max-width: 600px) {
+    .content { padding: 12px; }
+    .topbar { padding: 0 12px; height: 56px; }
+    .card { padding: 14px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card { padding: 12px; }
+    .stat-value { font-size: 22px; }
+    #page-overview > div:nth-child(2) { grid-template-columns: 1fr !important; }
+    #page-account > div { grid-template-columns: 1fr !important; }
+    .item-row { flex-wrap: wrap; }
+    .item-row > div:last-child { width: 100%; display: flex; justify-content: flex-end; gap: 6px; margin-top: 4px; }
+    .trial-banner { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><span>Hostie Hub</span><div class="logo-dot"></div></div>
+  <div class="sidebar-host">
+    <div class="host-avatar" id="sidebarAvatar">?</div>
+    <div>
+      <div class="host-info-name" id="sidebarName">Loading...</div>
+      <div class="host-info-sub">Partner Business</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <button class="nav-item active" onclick="showPage('overview', this)"><div class="nav-icon">🏠</div><span>Overview</span></button>
+    <button class="nav-item" onclick="showPage('analytics', this)"><div class="nav-icon">📊</div><span>Analytics</span></button>
+    <div class="nav-section-label">Listings</div>
+    <button class="nav-item" onclick="showPage('products', this)"><div class="nav-icon">📦</div><span>My Listings</span></button>
+    <button class="nav-item" onclick="showPage('newproduct', this)"><div class="nav-icon">➕</div><span>Add Listing</span></button>
+    <div class="nav-section-label">Vouchers</div>
+    <button class="nav-item" onclick="showPage('vouchers', this)"><div class="nav-icon">🎟️</div><span>My Vouchers</span></button>
+    <button class="nav-item" onclick="showPage('newvoucher', this)"><div class="nav-icon">➕</div><span>Add Voucher</span></button>
+    <div class="nav-section-label">Account</div>
+    <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account</span></button>
+    <button class="nav-item" onclick="showPage('billing', this)"><div class="nav-icon">💳</div><span>Billing</span></button>
+  </nav>
+  <div class="sidebar-bottom">
+    <button class="logout-btn" onclick="handleLogout()"><span>↩</span><span>Log out</span></button>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Overview</div>
+    <div class="partner-badge">🤝 Partner Business</div>
+  </div>
+
+  <!-- TRIAL BANNER -->
+  <div id="trialBanner" class="trial-banner" style="background:linear-gradient(135deg,#E8A838,#d4952e)">
+    <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500">
+      <span>⏳</span><span id="trialBannerText">Your free trial is active</span>
+    </div>
+    <button onclick="showPage('billing', document.querySelector('[onclick*=billing]'))" style="background:white;color:#92600a;padding:8px 20px;border-radius:50px;font-size:13px;font-weight:700;border:none;cursor:pointer;white-space:nowrap;">Choose a plan →</button>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div class="page active" id="page-overview">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Active Products</div><div class="stat-value" id="statProducts">0</div><div class="stat-sub">Live in stores</div></div>
+        <div class="stat-card"><div class="stat-label">Active Vouchers</div><div class="stat-value" id="statVouchers">0</div><div class="stat-sub">Live in stores</div></div>
+        <div class="stat-card"><div class="stat-label">Views this month</div><div class="stat-value" id="statViews">0</div><div class="stat-sub">Guest impressions</div></div>
+        <div class="stat-card"><div class="stat-label">Postcodes</div><div class="stat-value" id="statPostcodes">0</div><div class="stat-sub">Areas covered</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+        <div class="card">
+          <div class="card-title">How it works</div>
+          <div class="card-desc">Your products & services reach guests through local hosts.</div>
+          <div class="how-steps">
+            <div class="how-step"><div class="how-step-num">1</div><h4>Add a product</h4><p>Create your offer with a name, description and wholesale price.</p></div>
+            <div class="how-step"><div class="how-step-num">2</div><h4>Hosts add it</h4><p>Hosts in your postcode area add it to their guest store.</p></div>
+            <div class="how-step"><div class="how-step-num">3</div><h4>Guests buy it</h4><p>You get notified with the host and guest details to arrange delivery.</p></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Quick actions</div>
+          <div class="card-desc">Get your products & services in front of guests.</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-primary" onclick="showPage('newproduct', document.querySelector('[onclick*=newproduct]'))">📦 &nbsp;Add a listing</button>
+            <button class="btn btn-outline" onclick="showPage('analytics', document.querySelector('[onclick*=analytics]'))">📊 &nbsp;View analytics</button>
+            <button class="btn btn-outline" onclick="showPage('newvoucher', document.querySelector('[onclick*=newvoucher]'))">🎟️ &nbsp;Add a voucher</button>
+            <button class="btn btn-outline" onclick="showPage('account', document.querySelector('[onclick*=account]'))">📍 &nbsp;Update my postcodes</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Your service areas</div>
+        <div class="card-desc">Hosts in these postcodes can see and add your products & services.</div>
+        <div class="postcode-tags" id="overviewPostcodes"></div>
+        <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="showPage('account', document.querySelector('[onclick*=account]'))">Edit postcodes →</button>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <p style="font-size:13px;color:var(--muted);margin-top:2px">See how your products are performing across host stores</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="period-btn active" onclick="setAnalyticsPeriod(30, this)">This month</button>
+          <button class="period-btn" onclick="setAnalyticsPeriod(60, this)">Last 2 months</button>
+          <button class="period-btn" onclick="setAnalyticsPeriod(90, this)">Last 3 months</button>
+          <button class="period-btn" onclick="setAnalyticsPeriod(0, this)">All time</button>
+        </div>
+      </div>
+
+      <!-- Summary stats -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px" id="analyticsGrid">
+        <div class="analytics-stat"><div class="analytics-stat-val" id="aViews">–</div><div class="analytics-stat-label">👁 Total views</div></div>
+        <div class="analytics-stat"><div class="analytics-stat-val" id="aClicks">–</div><div class="analytics-stat-label">🖱 Clicks / Book now</div></div>
+        <div class="analytics-stat"><div class="analytics-stat-val" id="aCtr">–</div><div class="analytics-stat-label">% Click-through rate</div></div>
+        <div class="analytics-stat"><div class="analytics-stat-val" id="aPurchases">–</div><div class="analytics-stat-label">✅ Purchases</div></div>
+      </div>
+
+      <!-- Per-product breakdown -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">Performance by listing</div>
+        <div id="analyticsTable">
+          <div class="empty-state" style="padding:40px 20px"><div class="empty-icon">📊</div><h3>No data yet</h3><p>Analytics will appear once your products are live in host stores and guests start viewing them.</p></div>
+        </div>
+      </div>
+
+      <!-- Email report button -->
+      <div style="margin-top:20px;background:var(--partner-light);border:1.5px solid var(--partner);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:15px;font-weight:600;color:var(--partner)">📧 Email me this report</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:2px">Send a performance summary to your email address</div>
+        </div>
+        <button class="btn btn-primary" onclick="emailAnalyticsReport()">Send report →</button>
+      </div>
+
+      <!-- Voucher redemptions -->
+      <div class="card" style="margin-top:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <div class="card-title" style="margin-bottom:2px">🎟️ Voucher Redemptions</div>
+            <div style="font-size:13px;color:var(--muted)">Guest emails collected when vouchers were claimed</div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="exportRedemptions()">Export CSV</button>
+        </div>
+        <div id="redemptionsList">
+          <div class="empty-state" style="padding:30px 20px"><div class="empty-icon" style="font-size:32px">🎟️</div><h3>No redemptions yet</h3><p>Guest emails will appear here when they claim your vouchers.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY PRODUCTS -->
+    <div class="page" id="page-products">
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:20px">
+        <button class="btn btn-primary" onclick="showPage('newproduct', document.querySelector('[onclick*=newproduct]'))">+ Add listing</button>
+      </div>
+      <div class="items-list" id="productsList">
+        <div class="empty-state"><div class="empty-icon">📦</div><h3>No listings yet</h3><p>Add your first listing and hosts in your area will start sharing it with guests.</p></div>
+      </div>
+    </div>
+
+    <!-- ADD PRODUCT -->
+    <div class="page" id="page-newproduct">
+      <div style="display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start">
+      <!-- LIVE PREVIEW — left side -->
+      <div style="position:sticky;top:24px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Live preview</div>
+        <div id="listingPreview" style="background:white;border-radius:14px;border:1.5px solid var(--border);overflow:hidden;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
+          <!-- Banner -->
+          <div id="previewBanner" style="background:linear-gradient(135deg,#E8A838,#d4952e);padding:7px 12px;display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:5px">
+              <span style="font-size:11px">🤝</span>
+              <span style="font-size:10px;font-weight:700;color:white;letter-spacing:0.8px;text-transform:uppercase">Local Partner</span>
+            </div>
+            <span id="previewVoucherBadge" style="display:none;font-size:10px;font-weight:700;color:#92600a;background:white;padding:2px 8px;border-radius:50px">🎟️ Free voucher</span>
+          </div>
+          <!-- Image — tall, cover fill -->
+          <div id="previewImageWrap" style="width:100%;height:200px;background:#f4f6f5;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #f0ece8;overflow:hidden">
+            <span style="font-size:48px;color:#d1d5db">🏪</span>
+          </div>
+          <!-- Content -->
+          <div style="padding:12px 14px 0">
+            <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:2px" id="previewCategory">OTHER</div>
+            <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#1a1a1a;line-height:1.2;margin-bottom:6px" id="previewName">Your listing name</div>
+            <div style="font-size:14px;color:#6b7280;line-height:1.45;margin-bottom:8px;min-height:18px" id="previewDesc"></div>
+            <div id="previewNotes" style="display:none;background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:6px 9px;font-size:12px;font-weight:600;color:#15803d;line-height:1.35;margin-bottom:8px"></div>
+            <div id="previewVoucherRow" style="display:none;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:6px 9px;font-size:11px;font-weight:600;color:#92600a;margin-bottom:10px"><span>🎟️</span><span>Free voucher emailed on booking</span></div>
+            <div id="previewPriceRow" style="display:none;margin-bottom:10px">
+              <span id="previewPrice" style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#2C6E6A"></span>
+            </div>
+          </div>
+          <!-- Button -->
+          <div style="padding:10px 14px 14px;border-top:1px solid #f0ece8;margin-top:4px">
+            <div id="previewBtn" style="width:100%;border-radius:9px;padding:11px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;color:white;background:linear-gradient(135deg,#2C6E6A,#1d4d4a);text-align:center">Book now →</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">This is how guests will see your listing</div>
+      </div>
+
+      <!-- FORM — right side -->
+      <div style="max-width:600px">
+        <div class="card">
+          <div class="field">
+            <label>What type of listing is this?</label>
+            <label class="type-option">
+              <input type="radio" name="productType" value="physical" id="ptPhysical" onchange="toggleProductType();updatePreview()" checked>
+              <div><div class="type-option-label">📦 Physical product</div><div class="type-option-desc">e.g. flowers, hampers, firewood — guest pays host, host arranges payment to you</div></div>
+            </label>
+            <label class="type-option">
+              <input type="radio" name="productType" value="booking" id="ptBooking" onchange="toggleProductType();updatePreview()">
+              <div><div class="type-option-label">🔗 Booking link</div><div class="type-option-desc">e.g. surf lessons, restaurant reservations — guest clicks through to your booking page directly</div></div>
+            </label>
+          </div>
+          <div class="field"><label>Product / service name</label><input type="text" id="pName" placeholder="e.g. Fresh Flower Arrangement" oninput="updatePreview()"></div>
+          <div class="field">
+            <label>Category</label>
+            <select id="pCategory" onchange="updatePreview()" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;outline:none">
+              <option value="product">📦 Product — physical item (flowers, hampers etc)</option>
+              <option value="service">🛎️ Service — ongoing or on-request (cleaning, chef, massage)</option>
+              <option value="reservation">🍽️ Reservation — table, venue or booking link</option>
+              <option value="experience">🏄 Experience — activity, tour, lesson</option>
+            </select>
+            <div class="field-hint">This tells hosts whether they can set their own price or not.</div>
+          </div>
+          <div class="field">
+            <label>Description <span style="font-weight:300;font-size:12px" id="pDescCount">(0 / 220 characters)</span></label>
+            <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="220" oninput="document.getElementById('pDescCount').textContent = '(' + this.value.length + ' / 220 characters)'; document.getElementById('pDescCount').style.color = this.value.length > 190 ? '#e53e3e' : 'var(--muted)'; updatePreview()"></textarea>
+            <div class="field-hint">Shown in the guest store — keep it punchy. Maximum 220 characters.</div>
+          </div>
+          <div class="field">
+            <label>Notes for guests <span style="font-weight:300;font-size:12px">(optional)</span></label>
+            <input type="text" id="pNotes" placeholder="e.g. Please arrive 10 mins before your lesson" oninput="updatePreview()">
+            <div class="field-hint">Appears as a tip on the product listing in the host's store.</div>
+          </div>
+          <div id="physicalFields">
+            <div class="field">
+              <label>Wholesale price ($) — what the host pays you</label>
+              <input type="number" id="pWholesalePrice" placeholder="e.g. 45" min="0" oninput="updatePreview()">
+              <div class="field-hint">Hosts set their own retail price on top. They keep the difference as their margin.</div>
+            </div>
+          </div>
+          <div id="bookingFields" style="display:none">
+            <div class="field">
+              <label>Booking link URL</label>
+              <input type="url" id="pBookingUrl" placeholder="e.g. https://yourbusiness.com/book">
+              <div class="field-hint">Guests click "Book now" and go straight to this link in a new tab.</div>
+            </div>
+            <div class="field">
+              <label>Attach a voucher <span style="font-weight:300;font-size:12px">(optional)</span></label>
+              <input type="text" id="pVoucherTitle" placeholder="e.g. 2 Free Beers or Wines on Arrival at Blanca" style="margin-bottom:10px">
+              <div class="field-hint" style="margin-top:-6px;margin-bottom:10px">This becomes the email subject: <em>Hostie Hub Voucher — [your title]</em></div>
+              <div id="pVoucherPreviewWrap" style="display:none;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;align-items:center;gap:10px;">
+                <span style="font-size:20px">📄</span>
+                <span id="pVoucherFileName" style="font-size:14px;font-weight:500;flex:1;color:var(--text)"></span>
+                <button onclick="removeVoucherPdf()" style="background:none;border:none;color:var(--error);cursor:pointer;font-size:13px;">Remove</button>
+              </div>
+              <label id="pVoucherUploadLabel" class="image-upload-label">
+                🎟️ Click to upload voucher (PDF or image)
+                <input type="file" id="pVoucherFile" accept=".pdf,image/*" style="display:none" onchange="previewVoucherPdf(this)">
+              </label>
+              <div class="field-hint">Upload a PDF or image (PNG, JPG). When guests click "Book now", your voucher will be emailed to them.</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Product photo <span style="font-weight:300;font-size:12px">(recommended)</span></label>
+            <div class="field-hint" style="margin-bottom:8px">📐 Best size: <strong>800 × 400px</strong> landscape or <strong>600 × 600px</strong> square. PNG or JPG. Your logo on a white background works great.</div>
+            <div id="pImagePreviewWrap" style="display:none" class="image-preview-wrap">
+              <img id="pImagePreview" src="">
+              <button class="image-remove-btn" onclick="removeProductImage()">✕</button>
+            </div>
+            <label id="pImageUploadLabel" class="image-upload-label">
+              📷 Click to upload a photo
+              <input type="file" id="pImageFile" accept="image/*" style="display:none" onchange="previewProductImage(this)">
+            </label>
+            <div class="field-hint">Recommended: square image, at least 400x400px. JPG or PNG.</div>
+          </div>
+          <div class="field">
+            <label>Service area</label>
+            <div class="field-hint" style="margin-bottom:12px">Enter your suburb — we'll automatically cover all postcodes within 30km.</div>
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+              <input type="text" id="pSuburbInput" placeholder="e.g. Newcastle, Honeysuckle, Maitland" style="flex:1;padding:14px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px" oninput="suggestSuburbs(this.value)" autocomplete="off">
+              <button class="add-postcode-btn" onclick="applyRadius()">Apply →</button>
+            </div>
+            <div id="suburbSuggestions" style="display:none;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,0.08)"></div>
+            <div id="radiusResult" style="display:none;background:var(--partner-light);border:1.5px solid var(--partner);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--partner);margin-bottom:8px"></div>
+            <div style="margin-bottom:6px;font-size:12px;color:var(--muted)">Or add individual postcodes:</div>
+            <div class="postcode-input-wrap">
+              <input type="text" id="pPostcodeInput" placeholder="e.g. 2300" maxlength="4" onkeydown="if(event.key==='Enter'){event.preventDefault();addProductPostcode()}">
+              <button class="add-postcode-btn" onclick="addProductPostcode()">+ Add</button>
+            </div>
+            <div class="postcode-tags" id="pPostcodeTags"></div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="saveProduct()">Publish listing →</button>
+        </div>
+      </div>
+
+      </div><!-- close grid -->
+    </div>
+
+    <!-- MY VOUCHERS -->
+    <div class="page" id="page-vouchers">
+      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:20px">
+        <button class="btn btn-primary" onclick="showPage('newvoucher', document.querySelector('[onclick*=newvoucher]'))">+ Add voucher</button>
+      </div>
+      <div class="items-list" id="vouchersList">
+        <div class="empty-state"><div class="empty-icon">🎟️</div><h3>No vouchers yet</h3><p>Add your first voucher and hosts in your area will start sharing it with guests.</p></div>
+      </div>
+    </div>
+
+    <!-- ADD VOUCHER -->
+    <div class="page" id="page-newvoucher">
+      <div style="max-width:600px">
+        <div class="card">
+          <div class="field"><label>Voucher title</label><input type="text" id="vTitle" placeholder="e.g. 2 Free Drinks at The Harbour Restaurant"></div>
+          <div class="field"><label>Description</label><textarea id="vDesc" placeholder="What does this include? Any conditions?"></textarea></div>
+          <div class="field-row">
+            <div class="field"><label>Value</label><input type="text" id="vValue" placeholder="e.g. 2 free drinks, 10% off"></div>
+            <div class="field"><label>Price to guest ($) — 0 for FREE</label><input type="number" id="vPrice" placeholder="0" min="0"></div>
+          </div>
+          <div class="field">
+            <label>Expiry date</label>
+            <input type="date" id="vExpiry">
+            <div class="field-hint">Vouchers stop showing to guests after this date.</div>
+          </div>
+          <div class="field">
+            <label>How do guests receive this voucher?</label>
+            <label class="type-option" style="margin-top:8px">
+              <input type="radio" name="voucherType" value="pdf" id="vTypePdf" onchange="toggleVoucherType()" checked>
+              <div><div class="type-option-label">📄 Upload a PDF voucher</div><div class="type-option-desc">Guests download your PDF after purchase</div></div>
+            </label>
+            <label class="type-option">
+              <input type="radio" name="voucherType" value="link" id="vTypeLink" onchange="toggleVoucherType()">
+              <div><div class="type-option-label">🔗 Provide a link</div><div class="type-option-desc">Guests are sent to a URL to redeem their voucher</div></div>
+            </label>
+          </div>
+          <div class="field" id="pdfUploadField">
+            <label>Upload voucher PDF</label>
+            <div id="pdfPreviewWrap" style="display:none;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;align-items:center;gap:10px;">
+              <span style="font-size:20px">📄</span>
+              <span id="pdfFileName" style="font-size:14px;font-weight:500;flex:1"></span>
+              <button onclick="removePdf()" style="background:none;border:none;color:var(--error);cursor:pointer;font-size:13px;">Remove</button>
+            </div>
+            <label id="pdfUploadLabel" class="image-upload-label">
+              📄 Click to upload PDF
+              <input type="file" id="vPdfFile" accept=".pdf" style="display:none" onchange="previewPdf(this)">
+            </label>
+          </div>
+          <div class="field" id="linkField" style="display:none">
+            <label>Voucher link URL</label>
+            <input type="url" id="vLink" placeholder="e.g. https://yourbusiness.com/voucher">
+          </div>
+          <div class="field">
+            <label>Postcodes for this voucher</label>
+            <div class="field-hint" style="margin-bottom:8px">By default uses your account postcodes. Add specific ones here to override.</div>
+            <div class="postcode-input-wrap">
+              <input type="text" id="vPostcodeInput" placeholder="e.g. 2300" maxlength="4" onkeydown="if(event.key==='Enter'){event.preventDefault();addVoucherPostcode()}">
+              <button class="add-postcode-btn" onclick="addVoucherPostcode()">+ Add</button>
+            </div>
+            <div class="postcode-tags" id="vPostcodeTags"></div>
+          </div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="saveVoucher()">Publish voucher →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCOUNT -->
+    <div class="page" id="page-account">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div class="card">
+          <div class="card-title">Business profile</div>
+          <div class="card-desc">Update your business information.</div>
+          <div class="field"><label>Business name</label><input type="text" id="accountName" placeholder="Your business name"></div>
+          <div class="field"><label>Description</label><textarea id="accountDesc" placeholder="Tell hosts and guests about your business..."></textarea></div>
+          <div class="field"><label>Phone number</label><input type="tel" id="accountPhone" placeholder="e.g. 0412 345 678"><div class="field-hint">Shared with hosts when a guest purchases one of your products.</div></div>
+          <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Service postcodes</div>
+          <div class="card-desc">Hosts in these areas can add your products & services.</div>
+          <div class="postcode-input-wrap" style="margin-bottom:8px">
+            <input type="text" id="accountPostcodeInput" placeholder="e.g. 2300" maxlength="4" onkeydown="if(event.key==='Enter'){event.preventDefault();addAccountPostcode()}">
+            <button class="add-postcode-btn" onclick="addAccountPostcode()">+ Add</button>
+          </div>
+          <div class="postcode-tags" id="accountPostcodeTags"></div>
+          <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="savePostcodes()">Save postcodes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BILLING -->
+    <div class="page" id="page-billing">
+
+      <!-- Current plan status -->
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-title">Your plan</div>
+        <div id="trialStatusCard" style="display:none;background:var(--accent-light);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#92600a;margin-bottom:6px">🟡 Free Trial Active</div>
+          <div style="font-size:22px;font-weight:700;color:#92600a;font-family:'Playfair Display',serif;margin-bottom:4px" id="trialDaysLeft">90 days remaining</div>
+          <div style="font-size:13px;color:#a16207;line-height:1.5">Your listings and vouchers are live during your 3-month trial. After your trial, billing is based on what you have active.</div>
+        </div>
+        <div id="paidStatusCard" style="display:none;background:var(--brand-light);border:1.5px solid var(--brand);border-radius:12px;padding:16px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:6px">✅ Active</div>
+          <div style="font-size:22px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif;margin-bottom:4px" id="currentPlanName">Partner Plan</div>
+          <div style="font-size:13px;color:var(--brand-dark)" id="currentPlanDesc">Billed monthly based on active listings & vouchers</div>
+        </div>
+      </div>
+
+      <!-- Pricing model -->
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-title" style="margin-bottom:4px">How billing works</div>
+        <div class="card-desc" style="margin-bottom:20px">Simple usage-based pricing — only pay for what you have active.</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+          <div style="background:var(--bg);border-radius:12px;padding:20px;border:1.5px solid var(--border);text-align:center">
+            <div style="font-size:32px;margin-bottom:8px">📦</div>
+            <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--partner)">$49</div>
+            <div style="font-size:14px;color:var(--muted);margin-top:2px">per listing / per month</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">Each active product or service listing you have published to hosts</div>
+          </div>
+          <div style="background:var(--bg);border-radius:12px;padding:20px;border:1.5px solid var(--border);text-align:center">
+            <div style="font-size:32px;margin-bottom:8px">🎟️</div>
+            <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--partner)">$10</div>
+            <div style="font-size:14px;color:var(--muted);margin-top:2px">per voucher / per month</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">Each active voucher you have attached to your listings</div>
+          </div>
+        </div>
+
+        <!-- Usage summary -->
+        <div style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:12px;padding:16px;margin-bottom:16px">
+          <div style="font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--brand);margin-bottom:12px">Your current usage</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:14px;color:var(--text)">📦 Active listings</span>
+            <span style="font-size:14px;font-weight:700" id="billActiveListings">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span style="font-size:14px;color:var(--text)">🎟️ Active vouchers</span>
+            <span style="font-size:14px;font-weight:700" id="billActiveVouchers">—</span>
+          </div>
+          <div style="border-top:1.5px solid rgba(44,110,106,0.2);padding-top:12px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:15px;font-weight:600;color:var(--text)">Estimated monthly cost</span>
+            <span style="font-size:22px;font-weight:700;font-family:'Playfair Display',serif;color:var(--brand)" id="billEstimate">—</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right" id="billBreakdown"></div>
+        </div>
+
+        <div style="font-size:13px;color:var(--muted);line-height:1.6">
+          ✅ <strong>3 months free</strong> — no credit card required to start.<br>
+          ✅ Only active listings & vouchers count toward billing.<br>
+          ✅ Pause or deactivate anytime to reduce your bill.<br>
+          ✅ Invoiced monthly. Questions? <a href="mailto:hello@hostiehub.com.au" style="color:var(--partner)">hello@hostiehub.com.au</a>
+        </div>
+      </div>
+
+      <div style="background:var(--bg);border-radius:var(--radius);padding:20px;font-size:13px;color:var(--muted);text-align:center">
+        To activate billing after your trial, contact us at <a href="mailto:hello@hostiehub.com.au" style="color:var(--partner)">hello@hostiehub.com.au</a> and we'll set up your account.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<script>
+  const { createClient } = supabase;
+  const sb = createClient(
+    'https://hjwkycknjiyvrxbcejet.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8'
+  );
+
+  let currentUser = null, partnerData = null, partnerProducts = [], vouchers = [], allEvents = [];
+  let productPostcodes = [], voucherPostcodes = [], accountPostcodes = [];
+  let analyticsDays = 30;
+  let editingProductId = null;
+  const pageTitles = { overview:'Overview', analytics:'Analytics', products:'My Listings', newproduct:'Add Listing', vouchers:'My Vouchers', newvoucher:'Add Voucher', account:'Account', billing:'Billing' };
+
+  async function init() {
+    let { data: { session } } = await sb.auth.getSession();
+
+    if (!session) {
+      session = await new Promise(resolve => {
+        const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
+          if (s) { subscription.unsubscribe(); resolve(s); }
+        });
+        setTimeout(() => resolve(null), 4000);
+      });
+    }
+
+    if (!session) { window.location.href = 'partner-signup.html'; return; }
+    currentUser = session.user;
+
+    // Retry partner lookup up to 3 times — JWT may not be attached yet on hard refresh
+    let partner = null;
+    for (let i = 0; i < 3; i++) {
+      const { data } = await sb.from('partners').select('*').eq('user_id', currentUser.id).maybeSingle();
+      if (data) { partner = data; break; }
+      if (i < 2) await new Promise(r => setTimeout(r, 500));
+    }
+
+    if (!partner) { window.location.href = 'partner-signup.html'; return; }
+    partnerData = partner;
+    populateUI();
+    checkTrial();
+    loadProducts();
+    loadVouchers();
+    loadAnalytics();
+  }
+
+  function populateUI() {
+    const initials = (partnerData.business_name || '?').charAt(0).toUpperCase();
+    document.getElementById('sidebarAvatar').textContent = initials;
+    document.getElementById('sidebarName').textContent = partnerData.business_name || '';
+    document.getElementById('accountName').value = partnerData.business_name || '';
+    document.getElementById('accountDesc').value = partnerData.description || '';
+    document.getElementById('accountPhone').value = partnerData.phone || '';
+    accountPostcodes = Array.isArray(partnerData.postcodes) ? partnerData.postcodes : JSON.parse(partnerData.postcodes || '[]');
+    renderAccountPostcodes();
+    renderOverviewPostcodes();
+    document.getElementById('statPostcodes').textContent = accountPostcodes.length;
+  }
+
+  function checkTrial() {
+    const trialEndsAt = partnerData.trial_ends_at ? new Date(partnerData.trial_ends_at) : null;
+    const isPaid = partnerData.plan && ['active', 'basic', 'pro'].includes(partnerData.plan);
+    const now = new Date();
+    const daysLeft = trialEndsAt ? Math.ceil((trialEndsAt - now) / (1000 * 60 * 60 * 24)) : 0;
+    const trialExpired = trialEndsAt && now > trialEndsAt && !isPaid;
+
+    if (isPaid) {
+      document.getElementById('paidStatusCard').style.display = 'block';
+      document.getElementById('trialStatusCard').style.display = 'none';
+      document.getElementById('trialBanner').style.display = 'none';
+    } else {
+      document.getElementById('trialStatusCard').style.display = 'block';
+      document.getElementById('paidStatusCard').style.display = 'none';
+
+      if (!trialExpired && daysLeft > 0) {
+        const banner = document.getElementById('trialBanner');
+        banner.style.display = 'flex';
+        const text = daysLeft === 1
+          ? 'Your free trial ends tomorrow — contact us to continue your listings'
+          : daysLeft <= 14
+          ? 'Your free trial ends in ' + daysLeft + ' days — contact us to set up billing'
+          : 'Your 3-month free trial is active — ' + daysLeft + ' days remaining';
+        document.getElementById('trialBannerText').textContent = text;
+        document.getElementById('trialDaysLeft').textContent = daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' remaining';
+        if (daysLeft <= 7) document.getElementById('trialBanner').style.background = 'linear-gradient(135deg,#e53e3e,#c53030)';
+      } else {
+        document.getElementById('trialDaysLeft').textContent = 'Trial ended';
+      }
+    }
+
+    // Populate billing usage summary (runs after products/vouchers load)
+    setTimeout(updateBillingUsage, 800);
+  }
+
+  function updateBillingUsage() {
+    const activeListings = (partnerProducts || []).filter(p => p.active).length;
+    const activeVouchers = (vouchers || []).filter(v => v.active !== false).length;
+    const listingCost = activeListings * 49;
+    const voucherCost = activeVouchers * 10;
+    const total = listingCost + voucherCost;
+
+    const el = id => document.getElementById(id);
+    if (el('billActiveListings')) el('billActiveListings').textContent = activeListings + ' listing' + (activeListings !== 1 ? 's' : '');
+    if (el('billActiveVouchers')) el('billActiveVouchers').textContent = activeVouchers + ' voucher' + (activeVouchers !== 1 ? 's' : '');
+    if (el('billEstimate')) el('billEstimate').textContent = '$' + total + '/mo';
+    if (el('billBreakdown')) {
+      const parts = [];
+      if (activeListings > 0) parts.push(activeListings + ' × $49');
+      if (activeVouchers > 0) parts.push(activeVouchers + ' × $10');
+      el('billBreakdown').textContent = parts.length ? parts.join(' + ') : 'No active listings yet';
+    }
+  }
+  window.updateBillingUsage = updateBillingUsage;
+
+  function showPage(name, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    if (btn) btn.classList.add('active');
+    document.getElementById('topbarTitle').textContent = pageTitles[name] || name;
+    if (name === 'newproduct') { editingProductId = null; clearProductForm(); }
+    if (name === 'newvoucher') clearVoucherForm();
+    if (name === 'analytics') renderAnalytics();
+  }
+
+  // ── ANALYTICS ──
+  async function loadAnalytics() {
+    const { data } = await sb.from('partner_product_events')
+      .select('*, partner_products(name, type)')
+      .eq('partner_id', partnerData.id)
+      .order('created_at', { ascending: false });
+    allEvents = data || [];
+    renderAnalytics();
+    loadRedemptions();
+  }
+
+  let allRedemptions = [];
+
+  async function loadRedemptions() {
+    const { data } = await sb.from('partner_voucher_redemptions')
+      .select('*')
+      .eq('partner_id', partnerData.id)
+      .order('created_at', { ascending: false });
+    allRedemptions = data || [];
+    renderRedemptions();
+  }
+
+  function renderRedemptions() {
+    const el = document.getElementById('redemptionsList');
+    if (!allRedemptions.length) {
+      el.innerHTML = '<div class="empty-state" style="padding:30px 20px"><div class="empty-icon" style="font-size:32px">🎟️</div><h3>No redemptions yet</h3><p>Guest details will appear here when they claim your vouchers.</p></div>';
+      return;
+    }
+    el.innerHTML = '<table class="analytics-table"><thead><tr><th>Date</th><th>Surname</th><th>Email</th><th>Voucher</th></tr></thead><tbody>' +
+      allRedemptions.map(r => {
+        const date = new Date(r.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+        return '<tr><td style="color:var(--muted)">' + date + '</td><td><strong>' + (r.guest_surname || '—') + '</strong></td><td>' + (r.guest_email || '—') + '</td><td style="color:var(--muted)">' + (r.voucher_title || '—') + '</td></tr>';
+      }).join('') +
+      '</tbody></table>';
+  }
+
+  function exportRedemptions() {
+    if (!allRedemptions.length) { showToast('No redemptions to export yet'); return; }
+    const rows = [['Date', 'Surname', 'Email', 'Voucher']].concat(
+      allRedemptions.map(r => [
+        new Date(r.created_at).toLocaleDateString('en-AU'),
+        r.guest_surname || '',
+        r.guest_email || '',
+        r.voucher_title || ''
+      ])
+    );
+    const csv = rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    a.download = 'voucher-redemptions.csv';
+    a.click();
+    showToast('CSV downloaded!');
+  }
+
+  function setAnalyticsPeriod(days, btn) {
+    analyticsDays = days;
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderAnalytics();
+  }
+
+  function renderAnalytics() {
+    const cutoff = analyticsDays > 0 ? new Date(Date.now() - analyticsDays * 24 * 60 * 60 * 1000) : null;
+    const filtered = cutoff ? allEvents.filter(e => new Date(e.created_at) >= cutoff) : allEvents;
+
+    const views = filtered.filter(e => e.event_type === 'view').length;
+    const clicks = filtered.filter(e => e.event_type === 'click').length;
+    const purchases = filtered.filter(e => e.event_type === 'purchase').length;
+    const ctr = views > 0 ? ((clicks / views) * 100).toFixed(1) + '%' : '–';
+
+    document.getElementById('aViews').textContent = views;
+    document.getElementById('aClicks').textContent = clicks;
+    document.getElementById('aCtr').textContent = ctr;
+    document.getElementById('aPurchases').textContent = purchases;
+    document.getElementById('statViews').textContent = views;
+
+    // Per-product breakdown
+    const byProduct = {};
+    filtered.forEach(e => {
+      const pid = e.partner_product_id;
+      const name = e.partner_products ? e.partner_products.name : 'Unknown';
+      const type = e.partner_products ? e.partner_products.type : '';
+      if (!byProduct[pid]) byProduct[pid] = { name, type, views: 0, clicks: 0, purchases: 0 };
+      if (e.event_type === 'view') byProduct[pid].views++;
+      if (e.event_type === 'click') byProduct[pid].clicks++;
+      if (e.event_type === 'purchase') byProduct[pid].purchases++;
+    });
+
+    const rows = Object.values(byProduct);
+    const tableEl = document.getElementById('analyticsTable');
+
+    if (!rows.length) {
+      tableEl.innerHTML = '<div class="empty-state" style="padding:40px 20px"><div class="empty-icon">📊</div><h3>No data yet</h3><p>Analytics will appear once guests start viewing your products in host stores.</p></div>';
+      return;
+    }
+
+    const maxViews = Math.max(...rows.map(r => r.views), 1);
+    tableEl.innerHTML = '<table class="analytics-table"><thead><tr><th>Product</th><th>Type</th><th>Views</th><th>Clicks / Bookings</th><th>Purchases</th><th>CTR</th></tr></thead><tbody>' +
+      rows.sort((a, b) => b.views - a.views).map(r => {
+        const rowCtr = r.views > 0 ? ((r.clicks / r.views) * 100).toFixed(1) + '%' : '–';
+        const barWidth = Math.round((r.views / maxViews) * 100);
+        return '<tr>' +
+          '<td><strong>' + r.name + '</strong><div class="bar-wrap" style="margin-top:6px"><div class="bar-fill" style="width:' + barWidth + '%"></div></div></td>' +
+          '<td><span class="badge-type" style="font-size:11px">' + (r.type === 'booking' ? '🔗 Booking' : '📦 Physical') + '</span></td>' +
+          '<td>' + r.views + '</td>' +
+          '<td>' + r.clicks + '</td>' +
+          '<td>' + r.purchases + '</td>' +
+          '<td>' + rowCtr + '</td>' +
+          '</tr>';
+      }).join('') +
+      '</tbody></table>';
+  }
+
+  async function emailAnalyticsReport() {
+    const cutoff = analyticsDays > 0 ? new Date(Date.now() - analyticsDays * 24 * 60 * 60 * 1000) : null;
+    const filtered = cutoff ? allEvents.filter(e => new Date(e.created_at) >= cutoff) : allEvents;
+    const views = filtered.filter(e => e.event_type === 'view').length;
+    const clicks = filtered.filter(e => e.event_type === 'click').length;
+    const purchases = filtered.filter(e => e.event_type === 'purchase').length;
+    const period = analyticsDays > 0 ? 'last ' + analyticsDays + ' days' : 'all time';
+
+    try {
+      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+        body: JSON.stringify({
+          from: 'Hostie Hub <hello@hostiehub.com.au>',
+          to: currentUser.email,
+          subject: 'Your Hostie Hub performance report — ' + partnerData.business_name,
+          html: '<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px">' +
+            '<h2 style="font-family:Georgia,serif;color:#0f3460">Performance Report</h2>' +
+            '<p style="color:#6b7280">Hi ' + (partnerData.business_name || 'there') + ', here\'s your Hostie Hub performance summary for the ' + period + '.</p>' +
+            '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0">' +
+              '<div style="background:#e8eef7;border-radius:12px;padding:16px;text-align:center"><div style="font-size:32px;font-weight:700;color:#0f3460">' + views + '</div><div style="font-size:13px;color:#6b7280">Total views</div></div>' +
+              '<div style="background:#e8eef7;border-radius:12px;padding:16px;text-align:center"><div style="font-size:32px;font-weight:700;color:#0f3460">' + clicks + '</div><div style="font-size:13px;color:#6b7280">Clicks / Bookings</div></div>' +
+              '<div style="background:#e8eef7;border-radius:12px;padding:16px;text-align:center"><div style="font-size:32px;font-weight:700;color:#0f3460">' + purchases + '</div><div style="font-size:13px;color:#6b7280">Purchases</div></div>' +
+            '</div>' +
+            '<p style="color:#6b7280;font-size:13px">Log in to your <a href="https://hostiehub.com.au/partner-dashboard.html" style="color:#0f3460">partner dashboard</a> to see the full breakdown by product.</p>' +
+            '<hr style="border:none;border-top:1px solid #e8e4df;margin:24px 0">' +
+            '<p style="color:#6b7280;font-size:12px">Hostie Hub · hello@hostiehub.com.au</p>' +
+          '</div>'
+        })
+      });
+      showToast('Report sent to ' + currentUser.email);
+    } catch(e) {
+      showToast('Could not send report. Please try again.');
+    }
+  }
+
+  async function requestUpgrade(plan) {
+    const planNames = { basic: 'Basic ($49/mo)', pro: 'Pro ($99/mo)' };
+    showToast('Sending upgrade request...');
+    try {
+      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+        body: JSON.stringify({
+          from: 'Hostie Hub Partner <hello@hostiehub.com.au>',
+          to: 'hello@hostiehub.com.au',
+          subject: 'Partner upgrade request — ' + (partnerData.business_name || 'Unknown'),
+          html: '<p><strong>' + (partnerData.business_name || 'A partner') + '</strong> (' + currentUser.email + ') has requested to upgrade to the <strong>' + planNames[plan] + '</strong> plan.</p><p>Please contact them to process payment and update their plan in Supabase.</p>'
+        })
+      });
+      showToast('Request sent! We\'ll be in touch shortly to process your subscription.');
+    } catch(e) {
+      showToast('Something went wrong. Please email hello@hostiehub.com.au');
+    }
+  }
+
+  // ── PARTNER PRODUCTS ──
+  async function loadProducts() {
+    const { data } = await sb.from('partner_products').select('*').eq('partner_id', partnerData.id).order('created_at', { ascending: false });
+    partnerProducts = data || [];
+    renderProducts();
+    document.getElementById('statProducts').textContent = partnerProducts.filter(p => p.active).length;
+  }
+
+  function renderProducts() {
+    const list = document.getElementById('productsList');
+    if (!partnerProducts.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><h3>No listings yet</h3><p>Add your first listing and hosts in your area will start sharing it with guests.</p></div>';
+      return;
+    }
+    list.innerHTML = partnerProducts.map(p => {
+      const codes = Array.isArray(p.postcodes) ? p.postcodes : JSON.parse(p.postcodes || '[]');
+      const typeLabel = p.type === 'booking' ? '🔗 Booking link' : '📦 Physical';
+      const catLabels = { product: '📦 Product', service: '🛎️ Service', reservation: '🍽️ Reservation', experience: '🏄 Experience' };
+      const catLabel = catLabels[p.category] || '📦 Product';
+      const priceLabel = p.type === 'booking' ? 'Free — booking link' : '$' + (p.wholesale_price || 0) + ' wholesale';
+      return '<div class="item-row">' +
+        '<div class="item-thumb">' + (p.image_url ? '<img src="' + p.image_url + '">' : (p.type === 'booking' ? '🔗' : '📦')) + '</div>' +
+        '<div class="item-info"><div class="item-name">' + p.name +
+          ' <span class="' + (p.active ? 'badge-active' : 'badge-inactive') + '">' + (p.active ? 'Active' : 'Inactive') + '</span>' +
+          ' <span class="badge-type">' + catLabel + '</span></div>' +
+          '<div class="item-meta"><span>💰 ' + priceLabel + '</span><span>📍 ' + (codes.length ? codes.join(', ') : 'All areas') + '</span></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-shrink:0">' +
+          '<button class="btn btn-outline btn-sm" onclick="editProduct(\'' + p.id + '\')">Edit</button>' +
+          '<button class="btn btn-outline btn-sm" onclick="toggleProduct(\'' + p.id + '\',' + !p.active + ')">' + (p.active ? 'Deactivate' : 'Activate') + '</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + p.id + '\')">Delete</button>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  function toggleProductType() {
+    const isPhysical = document.getElementById('ptPhysical').checked;
+    document.getElementById('physicalFields').style.display = isPhysical ? 'block' : 'none';
+    document.getElementById('bookingFields').style.display = isPhysical ? 'none' : 'block';
+  }
+
+  function previewProductImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('pImagePreview').src = e.target.result;
+      document.getElementById('pImagePreviewWrap').style.display = 'block';
+      document.getElementById('pImageUploadLabel').style.display = 'none';
+      updatePreview();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function removeProductImage() {
+    document.getElementById('pImageFile').value = '';
+    document.getElementById('pImagePreview').src = '';
+    document.getElementById('pImagePreviewWrap').style.display = 'none';
+    document.getElementById('pImageUploadLabel').style.display = 'flex';
+    updatePreview();
+  }
+
+  async function uploadProductImage(file, productId) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    const path = 'partner-products/' + partnerData.id + '/' + productId + '.' + ext;
+    const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
+    if (error) { console.error(error); return null; }
+    const { data } = sb.storage.from('product-images').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  function clearProductForm() {
+    document.getElementById('pName').value = '';
+    document.getElementById('pCategory').value = 'product';
+    document.getElementById('pDesc').value = '';
+    document.getElementById('pNotes').value = '';
+    document.getElementById('pWholesalePrice').value = '';
+    document.getElementById('pBookingUrl').value = '';
+    document.getElementById('pVoucherTitle').value = '';
+    document.getElementById('ptPhysical').checked = true;
+    document.getElementById('physicalFields').style.display = 'block';
+    document.getElementById('bookingFields').style.display = 'none';
+    removeProductImage();
+    removeVoucherPdf();
+    productPostcodes = [];
+    renderProductPostcodes();
+  }
+
+  function previewVoucherPdf(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('pVoucherFileName').textContent = file.name;
+    document.getElementById('pVoucherPreviewWrap').style.display = 'flex';
+    document.getElementById('pVoucherUploadLabel').style.display = 'none';
+    updatePreview();
+  }
+
+  function removeVoucherPdf() {
+    const el = document.getElementById('pVoucherFile');
+    if (el) el.value = '';
+    const wrap = document.getElementById('pVoucherPreviewWrap');
+    if (wrap) wrap.style.display = 'none';
+    const label = document.getElementById('pVoucherUploadLabel');
+    if (label) label.style.display = 'flex';
+    updatePreview();
+  }
+
+  async function uploadVoucherPdf(file, productId) {
+    const ext = file.name.split('.').pop().toLowerCase() || 'png';
+    const path = 'partner-vouchers/' + partnerData.id + '/' + productId + '.' + ext;
+    console.log('[HH] Uploading voucher to:', path, 'file size:', file.size);
+    const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
+    if (error) {
+      console.error('[HH] Voucher upload error:', error);
+      showToast('⚠️ Voucher upload failed: ' + error.message);
+      return null;
+    }
+    const { data } = sb.storage.from('product-images').getPublicUrl(path);
+    console.log('[HH] Voucher uploaded OK:', data.publicUrl);
+    return data.publicUrl;
+  }
+
+  async function saveProduct() {
+    // Auto-add any postcode typed but not yet clicked + Add
+    const pcInput = document.getElementById('pPostcodeInput');
+    if (pcInput && pcInput.value.trim() && /^\d{4}$/.test(pcInput.value.trim())) {
+      const val = pcInput.value.trim();
+      if (!productPostcodes.includes(val)) productPostcodes.push(val);
+      pcInput.value = '';
+      renderProductPostcodes();
+    }
+
+    const name = document.getElementById('pName').value.trim();
+    if (!name) { showToast('Please enter a product name'); return; }
+    const isPhysical = document.getElementById('ptPhysical').checked;
+    const bookingUrl = document.getElementById('pBookingUrl').value.trim();
+    if (!isPhysical && !bookingUrl) { showToast('Please enter a booking URL'); return; }
+    const codes = productPostcodes.length > 0 ? productPostcodes : accountPostcodes;
+    if (codes.length === 0) { showToast('⚠️ Please add at least one postcode or suburb area'); return; }
+
+    const payload = {
+      partner_id: partnerData.id,
+      name,
+      description: document.getElementById('pDesc').value.trim(),
+      notes: document.getElementById('pNotes').value.trim(),
+      type: isPhysical ? 'physical' : 'booking',
+      category: document.getElementById('pCategory').value,
+      wholesale_price: isPhysical ? (parseFloat(document.getElementById('pWholesalePrice').value) || 0) : 0,
+      booking_url: isPhysical ? null : bookingUrl,
+      voucher_title: isPhysical ? null : (document.getElementById('pVoucherTitle').value.trim() || null),
+      postcodes: codes,
+      active: true,
+    };
+
+    let productId = editingProductId;
+
+    if (editingProductId) {
+      // UPDATE
+      const { error } = await sb.from('partner_products').update(payload).eq('id', editingProductId);
+      if (error) { showToast('Error: ' + error.message); return; }
+    } else {
+      // INSERT
+      const { data: inserted, error } = await sb.from('partner_products').insert(payload).select().single();
+      if (error) { showToast('Error: ' + error.message); return; }
+      productId = inserted.id;
+    }
+
+    const imageFile = document.getElementById('pImageFile').files[0];
+    if (imageFile) {
+      showToast('Uploading image...');
+      const url = await uploadProductImage(imageFile, productId);
+      if (url) await sb.from('partner_products').update({ image_url: url }).eq('id', productId);
+    }
+
+    if (!isPhysical) {
+      const voucherFile = document.getElementById('pVoucherFile') && document.getElementById('pVoucherFile').files[0];
+      if (voucherFile) {
+        showToast('Uploading voucher PDF...');
+        const voucherUrl = await uploadVoucherPdf(voucherFile, productId);
+        if (voucherUrl) await sb.from('partner_products').update({ voucher_pdf_url: voucherUrl }).eq('id', productId);
+      }
+    }
+
+    editingProductId = null;
+    showToast(editingProductId === null ? 'Product saved!' : 'Product updated!');
+    loadProducts();
+    showPage('products', document.querySelector('[onclick*=products]'));
+  }
+
+  async function toggleProduct(id, active) {
+    await sb.from('partner_products').update({ active }).eq('id', id);
+    showToast(active ? 'Product activated' : 'Product deactivated');
+    loadProducts();
+  }
+
+  async function deleteProduct(id) {
+    if (!confirm('Delete this product? This cannot be undone.')) return;
+    await sb.from('partner_products').delete().eq('id', id);
+    showToast('Product deleted');
+    loadProducts();
+  }
+
+  function editProduct(id) {
+    const p = partnerProducts.find(x => x.id === id);
+    if (!p) return;
+    editingProductId = id;
+
+    // Navigate to form
+    document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-newproduct').classList.add('active');
+    document.getElementById('topbarTitle').textContent = 'Edit Product or Service';
+
+    // Populate fields
+    document.getElementById('pName').value = p.name || '';
+    document.getElementById('pCategory').value = p.category || 'product';
+    document.getElementById('pDesc').value = p.description || '';
+    const descCount = document.getElementById('pDescCount');
+    if (descCount) { const l = (p.description || '').length; descCount.textContent = '(' + l + ' / 220 characters)'; descCount.style.color = l > 190 ? '#e53e3e' : 'var(--muted)'; }
+    document.getElementById('pNotes').value = p.notes || '';
+
+    const isBooking = p.type === 'booking';
+    document.getElementById('ptPhysical').checked = !isBooking;
+    document.getElementById('ptBooking').checked = isBooking;
+    document.getElementById('physicalFields').style.display = isBooking ? 'none' : 'block';
+    document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
+
+    if (!isBooking) document.getElementById('pWholesalePrice').value = p.wholesale_price || '';
+    if (isBooking) document.getElementById('pBookingUrl').value = p.booking_url || '';
+    if (isBooking) document.getElementById('pVoucherTitle').value = p.voucher_title || '';
+
+    // Image
+    if (p.image_url) {
+      document.getElementById('pImagePreview').src = p.image_url;
+      document.getElementById('pImagePreviewWrap').style.display = 'block';
+      document.getElementById('pImageUploadLabel').style.display = 'none';
+    } else {
+      removeProductImage();
+    }
+
+    // Voucher — show existing if already uploaded
+    if (isBooking && p.voucher_pdf_url) {
+      const filename = p.voucher_pdf_url.split('/').pop().split('?')[0] || 'Voucher uploaded';
+      document.getElementById('pVoucherFileName').textContent = '✓ ' + decodeURIComponent(filename);
+      document.getElementById('pVoucherPreviewWrap').style.display = 'flex';
+      document.getElementById('pVoucherUploadLabel').style.display = 'none';
+    } else {
+      document.getElementById('pVoucherPreviewWrap').style.display = 'none';
+      document.getElementById('pVoucherUploadLabel').style.display = 'flex';
+    }
+
+    // Postcodes
+    const codes = Array.isArray(p.postcodes) ? p.postcodes : JSON.parse(p.postcodes || '[]');
+    productPostcodes = [...codes];
+    renderProductPostcodes();
+    setTimeout(updatePreview, 50);
+  }
+
+  // ── RADIUS POSTCODE PICKER ──
+  // NSW suburb data: [postcode, suburb, lat, lng]
+  const NSW_SUBURBS = [
+    ['2000','Sydney CBD',-33.8688,151.2093],['2010','Surry Hills',-33.8882,151.2102],
+    ['2011','Kings Cross',-33.8743,151.2226],['2015','Alexandria',-33.9093,151.1964],
+    ['2020','Mascot',-33.9249,151.1901],['2031','Coogee',-33.9208,151.2546],
+    ['2032','Kingsford',-33.9249,151.2255],['2033','Randwick',-33.9138,151.2391],
+    ['2036','Matraville',-33.9646,151.2346],['2040','Leichhardt',-33.8835,151.1571],
+    ['2041','Balmain',-33.8605,151.1793],['2042','Newtown',-33.8977,151.1794],
+    ['2043','Erskineville',-33.8979,151.1937],['2044','St Peters',-33.9102,151.1813],
+    ['2045','Haberfield',-33.8815,151.1396],['2046','Concord',-33.8651,151.1009],
+    ['2048','Stanmore',-33.8972,151.1668],['2049','Petersham',-33.8979,151.1585],
+    ['2050','Camperdown',-33.8895,151.1856],['2060','North Sydney',-33.8397,151.2063],
+    ['2061','Kirribilli',-33.8477,151.2149],['2065','Chatswood',-33.7969,151.1824],
+    ['2066','Lane Cove',-33.8168,151.1664],['2067','Chatswood West',-33.8050,151.1722],
+    ['2068','Willoughby',-33.7975,151.2024],['2070','Lindfield',-33.7760,151.1664],
+    ['2071','Killara',-33.7729,151.1538],['2072','Gordon',-33.7607,151.1543],
+    ['2073','Pymble',-33.7552,151.1436],['2075','Turramurra',-33.7363,151.1351],
+    ['2076','Wahroonga',-33.7263,151.1147],['2077','Hornsby',-33.7032,151.0993],
+    ['2099','Dee Why',-33.7526,151.2877],['2100','Manly',-33.7968,151.2870],
+    ['2101','Manly Vale',-33.7884,151.2741],['2102','Brookvale',-33.7656,151.2683],
+    ['2110','Ryde',-33.8153,151.0899],['2111','Meadowbank',-33.8222,151.0899],
+    ['2112','Gladesville',-33.8300,151.1349],['2113','Meadowbank',-33.8138,151.0883],
+    ['2114','Eastwood',-33.7898,151.0812],['2115','Ermington',-33.8105,151.0528],
+    ['2116','Parramatta',-33.8150,151.0022],['2117','Granville',-33.8350,151.0119],
+    ['2118','Dundas',-33.7863,151.0365],['2119','Beecroft',-33.7547,151.0643],
+    ['2120','Pennant Hills',-33.7406,151.0660],['2121','Epping',-33.7721,151.0815],
+    ['2122','Eastwood',-33.7878,151.0804],['2123','Parramatta',-33.8167,150.9944],
+    ['2125','West Pennant Hills',-33.7443,151.0422],['2126','Cherrybrook',-33.7313,151.0430],
+    ['2127','Newington',-33.8365,151.0497],['2128','Silverwater',-33.8333,151.0333],
+    ['2130','Summer Hill',-33.8877,151.1404],['2131','Ashfield',-33.8882,151.1257],
+    ['2132','Strathfield',-33.8734,151.0985],['2133','Burwood',-33.8778,151.1042],
+    ['2134','Concord',-33.8651,151.0948],['2135','Strathfield South',-33.8833,151.0833],
+    ['2136','Flemington',-33.8743,151.0757],['2137','Homebush',-33.8683,151.0872],
+    ['2138','Rhodes',-33.8317,151.0833],['2139','Granville',-33.8400,151.0083],
+    ['2140','Lidcombe',-33.8650,151.0416],['2141','Berala',-33.8716,151.0333],
+    ['2142','Clyde',-33.8588,151.0150],['2143','Regents Park',-33.8900,151.0150],
+    ['2144','Auburn',-33.8494,151.0268],['2145','Westmead',-33.8066,150.9882],
+    ['2146','Old Toongabbie',-33.7900,150.9767],['2147','Seven Hills',-33.7713,150.9400],
+    ['2148','Blacktown',-33.7682,150.9061],['2150','Parramatta',-33.8150,151.0050],
+    ['2153','Baulkham Hills',-33.7571,150.9821],['2154','Castle Hill',-33.7300,151.0050],
+    ['2155','Rouse Hill',-33.7000,150.9167],['2156','Kenthurst',-33.6900,151.0000],
+    ['2157','Wisemans Ferry',-33.3783,150.9783],['2158','Dural',-33.6800,151.0067],
+    ['2159','Galston',-33.6533,151.0150],['2160','Merrylands',-33.8400,150.9900],
+    ['2161','Granville',-33.8383,151.0100],['2162','Merrylands West',-33.8450,150.9783],
+    ['2163','Lansvale',-33.8950,150.9917],['2164','Smithfield',-33.8583,150.9383],
+    ['2165','Fairfield',-33.8733,150.9567],['2166','Cabramatta',-33.8950,150.9433],
+    ['2167','Glenfield',-33.9800,150.8983],['2168','Miller',-33.9467,150.8900],
+    ['2170','Liverpool',-33.9200,150.9233],['2171','Cecil Hills',-33.8900,150.8450],
+    ['2172','Voyager Point',-33.9633,150.9833],['2173','Illawong',-34.0100,151.0283],
+    ['2176','Wetherill Park',-33.8517,150.9050],['2177','Bossley Park',-33.8567,150.8800],
+    ['2178','Horsley Park',-33.8267,150.8617],['2179','Luddenham',-33.8667,150.7450],
+    ['2190','Greenacre',-33.8983,151.0533],['2191','Earlwood',-33.9233,151.1083],
+    ['2192','Kingsgrove',-33.9367,151.1000],['2193','Hurlstone Park',-33.9100,151.1317],
+    ['2194','Marrickville',-33.9133,151.1567],['2195','Wiley Park',-33.9167,151.0683],
+    ['2196','Lakemba',-33.9200,151.0783],['2197','Yagoona',-33.9017,151.0317],
+    ['2198','Bass Hill',-33.9000,150.9983],['2199','Bankstown',-33.9183,151.0350],
+    ['2200','Bankstown',-33.9183,151.0350],['2203','Dulwich Hill',-33.9017,151.1417],
+    ['2204','Marrickville',-33.9100,151.1600],['2205','Arncliffe',-33.9433,151.1517],
+    ['2206','Bexley',-33.9450,151.1283],['2207','Brighton-Le-Sands',-33.9617,151.1517],
+    ['2208','Kingsgrove',-33.9367,151.1017],['2209','Beverly Hills',-33.9500,151.0750],
+    ['2210','Lugarno',-33.9917,151.0567],['2211','Riverwood',-33.9533,151.0567],
+    ['2212','Padstow',-33.9567,151.0400],['2213','Revesby',-33.9567,151.0117],
+    ['2214','East Hills',-33.9717,151.0067],['2216','Rockdale',-33.9567,151.1333],
+    ['2217','Beverley Park',-33.9683,151.1333],['2218','Kogarah',-33.9633,151.1350],
+    ['2219','Dolls Point',-33.9883,151.1433],['2220','Hurstville',-33.9683,151.0983],
+    ['2221','Blakehurst',-33.9883,151.1167],['2222','Penshurst',-33.9683,151.0817],
+    ['2223','Mortdale',-33.9783,151.0733],['2224','Como',-34.0000,151.0700],
+    ['2225','Sylvania',-34.0100,151.0817],['2226','Kirrawee',-34.0300,151.0733],
+    ['2227','Miranda',-34.0317,151.1017],['2228','Caringbah',-34.0433,151.1233],
+    ['2229','Cronulla',-34.0583,151.1500],['2230','Lilli Pilli',-34.0817,151.1083],
+    // Hunter / Newcastle region
+    ['2280','Pelican',-33.0633,151.5817],['2281','Swansea',-33.0850,151.6217],
+    ['2282','Warners Bay',-33.0383,151.6283],['2283','Blackalls Park',-33.0617,151.6083],
+    ['2284','Speers Point',-33.0283,151.6400],['2285','Kotara',-32.9733,151.6733],
+    ['2286','Glendale',-32.9633,151.6350],['2287','New Lambton',-32.9450,151.7000],
+    ['2289','Hamilton',-32.9167,151.7483],['2290','Wallsend',-32.9017,151.6667],
+    ['2291','Waratah',-32.9200,151.7133],['2292','Carrington',-32.9083,151.7567],
+    ['2293','Tighes Hill',-32.9017,151.7450],['2294','Broadmeadow',-32.9250,151.7250],
+    ['2295','Adamstown',-32.9350,151.7217],['2296','Bar Beach',-32.9417,151.7633],
+    ['2297','Cooks Hill',-32.9300,151.7700],['2298','Islington',-32.9067,151.7483],
+    ['2299','Jesmond',-32.9033,151.6833],['2300','Newcastle',-32.9267,151.7744],
+    ['2302','Merewether',-32.9467,151.7600],['2303','Hamilton South',-32.9217,151.7433],
+    ['2304','Mayfield',-32.9050,151.7317],['2305','Georgetown',-32.8983,151.7183],
+    ['2306','Lambton',-32.9183,151.6967],['2307','Rankin Park',-32.9400,151.6667],
+    ['2308','Newcastle University',-32.8983,151.7017],['2309','Callaghan',-32.8933,151.7000],
+    ['2310','Maitland',-32.7333,151.5583],['2311','Morpeth',-32.7317,151.6317],
+    ['2312','Seaham',-32.7750,151.6367],['2315','Nelson Bay',-32.7233,152.1450],
+    ['2316','Shoal Bay',-32.7183,152.1700],['2317','Corlette',-32.7267,152.1317],
+    ['2318','Medowie',-32.7517,151.8817],['2319','Tilligerry Creek',-32.7483,152.0683],
+    ['2320','Maitland',-32.7333,151.5583],['2321','Cessnock',-32.8333,151.3550],
+    ['2322','Kurri Kurri',-32.8183,151.4833],['2323','Paxton',-32.8417,151.2933],
+    ['2324','Raymond Terrace',-32.7617,151.7467],['2325','Cessnock',-32.8333,151.3550],
+    ['2326','Kurri Kurri',-32.8183,151.4833],['2327','Branxton',-32.6617,151.3717],
+    ['2328','Singleton',-32.5700,151.1800],['2329','Muswellbrook',-32.2650,150.8933],
+    ['2330','Singleton',-32.5700,151.1800],['2333','Scone',-32.0533,150.8683],
+    ['2334','Lochinvar',-32.7117,151.4583],['2335','Rutherford',-32.7417,151.5200],
+    ['2336','Merriwa',-32.1400,150.3533],['2337','Quirindi',-31.5133,150.6800],
+    ['2338','Tamworth',-31.0933,150.9267],['2340','Tamworth',-31.0933,150.9267],
+    ['2420','Dungog',-32.3967,151.7083],['2421','Paterson',-32.5817,151.5967],
+    ['2422','Gloucester',-31.9817,151.9633],['2423','Bulahdelah',-32.4083,152.2083],
+    ['2425','Stroud',-32.3817,151.9617],['2426','Taree',-31.9000,152.4567],
+    // Central Coast
+    ['2250','Gosford',-33.4333,151.3417],['2251','Avoca Beach',-33.4750,151.4367],
+    ['2257','Budgewoi',-33.2317,151.5683],['2258','Wyong',-33.2817,151.4333],
+    ['2259','Tuggerah',-33.3200,151.4117],['2260','Terrigal',-33.4483,151.4483],
+    ['2261','Wamberal',-33.4217,151.4500],['2262','Bateau Bay',-33.3800,151.4750],
+    ['2263','The Entrance',-33.3333,151.4967],['2264','Morisset',-33.1017,151.5283],
+    // Central West / Blue Mountains
+    ['2745','Penrith',-33.7511,150.7042],['2747','Kingswood',-33.7567,150.7217],
+    ['2750','Penrith',-33.7511,150.7042],['2760','St Marys',-33.7683,150.7733],
+    ['2770','Blacktown',-33.7682,150.9061],['2780','Katoomba',-33.7133,150.3117],
+    ['2785','Lithgow',-33.4833,150.1567],
+  ];
+
+  function getDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2-lat1) * Math.PI/180;
+    const dLng = (lng2-lng1) * Math.PI/180;
+    const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+              Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  let selectedSuburb = null;
+  let suburbSearchTimer = null;
+
+  async function suggestSuburbs(val) {
+    const box = document.getElementById('suburbSuggestions');
+    if (!val || val.length < 2) { box.style.display = 'none'; return; }
+    clearTimeout(suburbSearchTimer);
+    suburbSearchTimer = setTimeout(async () => {
+      try {
+        const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(val + ', Australia') + '&format=json&limit=6&addressdetails=1&accept-language=en');
+        const data = await res.json();
+        const raw = data.filter(r => r.address && (r.address.suburb || r.address.town || r.address.city || r.address.village) && r.address.postcode);
+        // Deduplicate by postcode
+        const seen = new Set();
+        const matches = raw.filter(r => { if (seen.has(r.address.postcode)) return false; seen.add(r.address.postcode); return true; });
+        if (!matches.length) { box.style.display = 'none'; return; }
+        box.style.display = 'block';
+        box.innerHTML = matches.map(r => {
+          const name = r.address.suburb || r.address.town || r.address.city || r.address.village || r.display_name;
+          const pc = r.address.postcode;
+          const state = r.address.state_district || r.address.state || '';
+          return '<div onclick="selectSuburbFromApi(\'' + pc + '\',\'' + name.replace(/'/g, '') + '\',' + r.lat + ',' + r.lon + ')" style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'\'"><strong>' + name + '</strong> <span style="color:var(--muted);font-size:12px">' + pc + ' · ' + state + '</span></div>';
+        }).join('');
+      } catch(e) { box.style.display = 'none'; }
+    }, 350);
+  }
+
+  function selectSuburbFromApi(postcode, name, lat, lng) {
+    selectedSuburb = { postcode, name, lat: parseFloat(lat), lng: parseFloat(lng) };
+    document.getElementById('pSuburbInput').value = name + ' (' + postcode + ')';
+    document.getElementById('suburbSuggestions').style.display = 'none';
+  }
+
+  // Keep old selectSuburb for backwards compat
+  function selectSuburb(postcode, name, lat, lng) {
+    selectSuburbFromApi(postcode, name, lat, lng);
+  }
+
+  async function applyRadius() {
+    if (!selectedSuburb) { showToast('Please select a suburb from the dropdown first'); return; }
+    const result = document.getElementById('radiusResult');
+    result.style.display = 'block';
+    result.textContent = '⏳ Finding postcodes within 30km...';
+    try {
+      // Search nearby postcodes using Nominatim bounding box
+      const radius = 30;
+      const latDeg = radius / 111;
+      const lngDeg = radius / (111 * Math.cos(selectedSuburb.lat * Math.PI / 180));
+      const bbox = [
+        selectedSuburb.lng - lngDeg,
+        selectedSuburb.lat - latDeg,
+        selectedSuburb.lng + lngDeg,
+        selectedSuburb.lat + latDeg
+      ].join(',');
+
+      // Always include the selected suburb's postcode
+      const foundCodes = new Set([selectedSuburb.postcode]);
+
+      // Also search NSW_SUBURBS fallback for nearby codes
+      NSW_SUBURBS.forEach(s => {
+        const dist = getDistance(selectedSuburb.lat, selectedSuburb.lng, s[2], s[3]);
+        if (dist <= radius) foundCodes.add(s[0]);
+      });
+
+      productPostcodes = [...foundCodes];
+      renderProductPostcodes();
+      result.textContent = '✓ Found ' + productPostcodes.length + ' postcodes within 30km of ' + selectedSuburb.name;
+    } catch(e) {
+      // Fallback — just add the suburb's own postcode
+      if (!productPostcodes.includes(selectedSuburb.postcode)) {
+        productPostcodes.push(selectedSuburb.postcode);
+        renderProductPostcodes();
+      }
+      result.textContent = '✓ Added postcode ' + selectedSuburb.postcode + ' for ' + selectedSuburb.name;
+    }
+  }
+
+  function addProductPostcode() {
+    const input = document.getElementById('pPostcodeInput');
+    const val = input.value.trim();
+    if (!val || !/^\d{4}$/.test(val)) return;
+    if (!productPostcodes.includes(val)) { productPostcodes.push(val); renderProductPostcodes(); }
+    input.value = '';
+  }
+
+  function removeProductPostcode(code) { productPostcodes = productPostcodes.filter(p => p !== code); renderProductPostcodes(); }
+
+  function renderProductPostcodes() {
+    document.getElementById('pPostcodeTags').innerHTML = productPostcodes.map(p =>
+      '<div class="postcode-tag">' + p + ' <button onclick="removeProductPostcode(\'' + p + '\')">✕</button></div>'
+    ).join('');
+  }
+
+  // ── VOUCHERS ──
+  async function loadVouchers() {
+    const { data } = await sb.from('vouchers').select('*').eq('partner_id', partnerData.id).order('created_at', { ascending: false });
+    vouchers = data || [];
+    renderVouchers();
+    document.getElementById('statVouchers').textContent = vouchers.filter(v => v.active).length;
+  }
+
+  function renderVouchers() {
+    const list = document.getElementById('vouchersList');
+    if (!vouchers.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🎟️</div><h3>No vouchers yet</h3><p>Add your first voucher and hosts in your area will start sharing it with guests.</p></div>';
+      return;
+    }
+    list.innerHTML = vouchers.map(v => {
+      const codes = Array.isArray(v.postcodes) ? v.postcodes : JSON.parse(v.postcodes || '[]');
+      return '<div class="item-row">' +
+        '<div class="item-thumb">🎟️</div>' +
+        '<div class="item-info"><div class="item-name">' + v.title +
+          ' <span class="' + (v.active ? 'badge-active' : 'badge-inactive') + '">' + (v.active ? 'Active' : 'Inactive') + '</span></div>' +
+          '<div class="item-meta"><span>💰 ' + (v.value || 'No value') + '</span><span>🏷️ $' + (v.price || 0) + '</span><span>📅 Expires ' + (v.expiry_date || 'N/A') + '</span><span>📍 ' + (codes.length ? codes.join(', ') : 'All areas') + '</span></div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-shrink:0">' +
+          '<button class="btn btn-outline btn-sm" onclick="toggleVoucher(\'' + v.id + '\',' + !v.active + ')">' + (v.active ? 'Deactivate' : 'Activate') + '</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="deleteVoucher(\'' + v.id + '\')">Delete</button>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  function clearVoucherForm() {
+    document.getElementById('vTitle').value = '';
+    document.getElementById('vDesc').value = '';
+    document.getElementById('vValue').value = '';
+    document.getElementById('vPrice').value = '';
+    document.getElementById('vExpiry').value = '';
+    document.getElementById('vLink').value = '';
+    document.getElementById('vTypePdf').checked = true;
+    document.getElementById('pdfUploadField').style.display = 'block';
+    document.getElementById('linkField').style.display = 'none';
+    document.getElementById('pdfPreviewWrap').style.display = 'none';
+    document.getElementById('pdfUploadLabel').style.display = 'flex';
+    document.getElementById('vPdfFile').value = '';
+    voucherPostcodes = [];
+    renderVoucherPostcodes();
+  }
+
+  function toggleVoucherType() {
+    const isPdf = document.getElementById('vTypePdf').checked;
+    document.getElementById('pdfUploadField').style.display = isPdf ? 'block' : 'none';
+    document.getElementById('linkField').style.display = isPdf ? 'none' : 'block';
+  }
+
+  function previewPdf(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('pdfFileName').textContent = file.name;
+    document.getElementById('pdfPreviewWrap').style.display = 'flex';
+    document.getElementById('pdfUploadLabel').style.display = 'none';
+  }
+
+  function removePdf() {
+    document.getElementById('vPdfFile').value = '';
+    document.getElementById('pdfPreviewWrap').style.display = 'none';
+    document.getElementById('pdfUploadLabel').style.display = 'flex';
+  }
+
+  async function uploadVoucherPdf(file, voucherId) {
+    const path = 'vouchers/' + partnerData.id + '/' + voucherId + '.pdf';
+    const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
+    if (error) { console.error(error); return null; }
+    const { data } = sb.storage.from('product-images').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  async function saveVoucher() {
+    const title = document.getElementById('vTitle').value.trim();
+    if (!title) { showToast('Please enter a voucher title'); return; }
+    const isPdf = document.getElementById('vTypePdf').checked;
+    const pdfFile = document.getElementById('vPdfFile').files[0];
+    const link = document.getElementById('vLink').value.trim();
+    if (isPdf && !pdfFile) { showToast('Please upload a PDF voucher'); return; }
+    if (!isPdf && !link) { showToast('Please enter a voucher link'); return; }
+    const codes = voucherPostcodes.length > 0 ? voucherPostcodes : accountPostcodes;
+    const price = parseFloat(document.getElementById('vPrice').value) || 0;
+
+    const { data: inserted, error } = await sb.from('vouchers').insert({
+      partner_id: partnerData.id,
+      title,
+      description: document.getElementById('vDesc').value.trim(),
+      value: document.getElementById('vValue').value.trim(),
+      price,
+      expiry_date: document.getElementById('vExpiry').value || null,
+      postcodes: codes,
+      voucher_link: isPdf ? null : link,
+      active: true,
+    }).select().single();
+
+    if (error) { showToast('Error: ' + (error.message || 'Could not save voucher')); console.error(error); return; }
+
+    if (isPdf && pdfFile) {
+      showToast('Uploading PDF...');
+      const pdfUrl = await uploadVoucherPdf(pdfFile, inserted.id);
+      if (pdfUrl) await sb.from('vouchers').update({ pdf_url: pdfUrl }).eq('id', inserted.id);
+    }
+
+    showToast('Voucher published' + (price === 0 ? ' — FREE' : '') + '!');
+    clearVoucherForm();
+    loadVouchers();
+    showPage('vouchers', document.querySelector('[onclick*=vouchers]'));
+  }
+
+  function addVoucherPostcode() {
+    const input = document.getElementById('vPostcodeInput');
+    const val = input.value.trim();
+    if (!val || !/^\d{4}$/.test(val)) return;
+    if (!voucherPostcodes.includes(val)) { voucherPostcodes.push(val); renderVoucherPostcodes(); }
+    input.value = '';
+  }
+
+  function removeVoucherPostcode(code) { voucherPostcodes = voucherPostcodes.filter(p => p !== code); renderVoucherPostcodes(); }
+
+  function renderVoucherPostcodes() {
+    document.getElementById('vPostcodeTags').innerHTML = voucherPostcodes.map(p =>
+      '<div class="postcode-tag">' + p + ' <button onclick="removeVoucherPostcode(\'' + p + '\')">✕</button></div>'
+    ).join('');
+  }
+
+  async function toggleVoucher(id, active) {
+    await sb.from('vouchers').update({ active }).eq('id', id);
+    showToast(active ? 'Voucher activated' : 'Voucher deactivated');
+    loadVouchers();
+  }
+
+  async function deleteVoucher(id) {
+    if (!confirm('Delete this voucher?')) return;
+    await sb.from('vouchers').delete().eq('id', id);
+    showToast('Voucher deleted');
+    loadVouchers();
+  }
+
+  // ACCOUNT POSTCODES
+  function addAccountPostcode() {
+    const input = document.getElementById('accountPostcodeInput');
+    const val = input.value.trim();
+    if (!val || !/^\d{4}$/.test(val)) return;
+    if (!accountPostcodes.includes(val)) { accountPostcodes.push(val); renderAccountPostcodes(); renderOverviewPostcodes(); }
+    input.value = '';
+  }
+
+  function removeAccountPostcode(code) { accountPostcodes = accountPostcodes.filter(p => p !== code); renderAccountPostcodes(); renderOverviewPostcodes(); }
+
+  function renderAccountPostcodes() {
+    document.getElementById('accountPostcodeTags').innerHTML = accountPostcodes.map(p =>
+      '<div class="postcode-tag">' + p + ' <button onclick="removeAccountPostcode(\'' + p + '\')">✕</button></div>'
+    ).join('');
+  }
+
+  function renderOverviewPostcodes() {
+    document.getElementById('overviewPostcodes').innerHTML = accountPostcodes.length
+      ? accountPostcodes.map(p => '<div class="postcode-tag">' + p + '</div>').join('')
+      : '<span style="font-size:14px;color:var(--muted)">No postcodes set yet.</span>';
+  }
+
+  async function savePostcodes() {
+    await sb.from('partners').update({ postcodes: accountPostcodes }).eq('id', partnerData.id);
+    document.getElementById('statPostcodes').textContent = accountPostcodes.length;
+    showToast('Postcodes saved');
+  }
+
+  async function saveProfile() {
+    const updates = {
+      business_name: document.getElementById('accountName').value.trim(),
+      description: document.getElementById('accountDesc').value.trim(),
+      phone: document.getElementById('accountPhone').value.trim(),
+    };
+    await sb.from('partners').update(updates).eq('id', partnerData.id);
+    Object.assign(partnerData, updates);
+    document.getElementById('sidebarName').textContent = updates.business_name;
+    showToast('Profile saved');
+  }
+
+  async function handleLogout() { await sb.auth.signOut(); window.location.href = 'partner-signup.html'; }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.style.display = 'flex';
+    setTimeout(() => { t.style.display = 'none'; }, 3500);
+  }
+
+  window.showPage = showPage;
+  window.setAnalyticsPeriod = setAnalyticsPeriod;
+  window.emailAnalyticsReport = emailAnalyticsReport;
+  window.exportRedemptions = exportRedemptions;
+  window.requestUpgrade = requestUpgrade;
+  window.editProduct = editProduct;
+  window.suggestSuburbs = suggestSuburbs;
+  window.selectSuburb = selectSuburb;
+  function updatePreview() {
+    const name = (document.getElementById('pName')?.value || '').trim();
+    const desc = (document.getElementById('pDesc')?.value || '').trim();
+    const notes = (document.getElementById('pNotes')?.value || '').trim();
+    const category = document.getElementById('pCategory')?.value || 'other';
+    const isPhysical = document.getElementById('ptPhysical')?.checked;
+    const price = document.getElementById('pWholesalePrice')?.value || '';
+    const hasVoucherFile = document.getElementById('pVoucherFile')?.files?.length > 0 ||
+                           (document.getElementById('pVoucherPreviewWrap')?.style.display === 'flex');
+    const imagePreview = document.getElementById('pImagePreview')?.src;
+    const hasImage = imagePreview && imagePreview.startsWith('data:') || (imagePreview && imagePreview.includes('supabase'));
+
+    const catLabels = { product:'📦 Product', service:'🛎️ Service', reservation:'🍽️ Reservation', experience:'🏄 Experience', other:'✨ Other' };
+
+    const el = id => document.getElementById(id);
+    if (!el('previewName')) return;
+
+    el('previewName').textContent = name || 'Your listing name';
+    el('previewDesc').textContent = desc;
+    el('previewCategory').textContent = catLabels[category] || '✨ Other';
+
+    if (notes) {
+      el('previewNotes').style.display = 'block';
+      el('previewNotes').textContent = '🎁 ' + notes;
+    } else {
+      el('previewNotes').style.display = 'none';
+    }
+
+    // Voucher only for booking links
+    if (!isPhysical && hasVoucherFile) {
+      el('previewVoucherBadge').style.display = 'inline';
+      el('previewVoucherRow').style.display = 'flex';
+    } else {
+      el('previewVoucherBadge').style.display = 'none';
+      el('previewVoucherRow').style.display = 'none';
+    }
+
+    // Price row for physical products
+    if (isPhysical && price) {
+      el('previewPriceRow').style.display = 'block';
+      el('previewPrice').textContent = '$' + price;
+    } else {
+      el('previewPriceRow').style.display = 'none';
+    }
+
+    // Button label
+    el('previewBtn').textContent = isPhysical ? 'Add to cart +' : 'Book now →';
+
+    // Image
+    if (hasImage) {
+      el('previewImageWrap').innerHTML = '<img src="' + imagePreview + '" style="width:100%;height:100%;object-fit:cover">';
+    } else {
+      el('previewImageWrap').innerHTML = '<span style="font-size:48px;color:#d1d5db">🏪</span>';
+    }
+  }
+  window.updatePreview = updatePreview;
+  window.selectSuburb = selectSuburb;
+  window.selectSuburbFromApi = selectSuburbFromApi;
+  window.toggleProductType = toggleProductType;
+  window.previewProductImage = previewProductImage;
+  window.removeProductImage = removeProductImage;
+  window.previewVoucherPdf = previewVoucherPdf;
+  window.removeVoucherPdf = removeVoucherPdf;
+  window.saveProduct = saveProduct;
+  window.toggleProduct = toggleProduct;
+  window.deleteProduct = deleteProduct;
+  window.addProductPostcode = addProductPostcode;
+  window.removeProductPostcode = removeProductPostcode;
+  window.toggleVoucherType = toggleVoucherType;
+  window.previewPdf = previewPdf;
+  window.removePdf = removePdf;
+  window.saveVoucher = saveVoucher;
+  window.toggleVoucher = toggleVoucher;
+  window.deleteVoucher = deleteVoucher;
+  window.addVoucherPostcode = addVoucherPostcode;
+  window.removeVoucherPostcode = removeVoucherPostcode;
+  window.addAccountPostcode = addAccountPostcode;
+  window.removeAccountPostcode = removeAccountPostcode;
+  window.savePostcodes = savePostcodes;
+  window.saveProfile = saveProfile;
+  window.handleLogout = handleLogout;
+
+  init();
+</script>
+<script src="support-widget.js"></script>
+</body>
+</html>

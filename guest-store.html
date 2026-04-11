@@ -134,8 +134,8 @@
     .date-row { grid-template-columns: 1fr !important; gap: 6px !important; }
     .date-row .mfield { margin-bottom: 0 !important; }
     .date-row input[type="date"] { width: 75% !important; box-sizing: border-box !important; padding: 12px 14px !important; font-size: 15px !important; }
-    .checkout-modal { position: fixed !important; top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; max-width: 100% !important; max-height: 88vh !important; overflow-y: auto !important; transform: none !important; border-radius: 20px 20px 0 0 !important; transition: opacity 0.3s !important; }
-    .checkout-modal.open { transform: none !important; }
+    .checkout-modal { position: fixed !important; top: auto !important; bottom: 0 !important; left: 0 !important; right: 0 !important; width: 100% !important; max-width: 100% !important; max-height: 72vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; transform: translateY(100%) !important; opacity: 1 !important; border-radius: 20px 20px 0 0 !important; transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important; }
+    .checkout-modal.open { transform: translateY(0) !important; }
     .checkout-modal > div { padding-left: 16px !important; padding-right: 16px !important; }
     .product-card { height: auto !important; min-height: 0 !important; }
     .pc-note { position: static !important; padding: 0 14px 6px !important; }
@@ -187,7 +187,7 @@
   /* CHECKOUT MODAL */
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
   .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .checkout-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.95); background: white; border-radius: 20px; width: min(500px,95vw); z-index: 301; box-shadow: 0 24px 60px rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); max-height: 90vh; overflow-y: auto; }
+  .checkout-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.95); background: white; border-radius: 20px; width: min(500px,95vw); z-index: 301; box-shadow: 0 24px 60px rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); max-height: 85vh; overflow-y: auto; display: flex; flex-direction: column; }
   .checkout-modal.open { opacity: 1; pointer-events: all; transform: translate(-50%,-50%) scale(1); }
   .mfield { margin-bottom: 14px; }
   .mfield label { font-size: 12px; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
@@ -302,9 +302,10 @@
     <p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:20px" id="expModalDesc"></p>
 
     <div style="margin-bottom:14px">
-      <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Select a date</label>
-      <input type="date" id="expDate" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" onchange="updateExpTotal()">
-      <div id="expDateError" style="color:#e53e3e;font-size:12px;margin-top:4px;display:none"></div>
+      <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;text-align:center">Select a date</label>
+      <input type="date" id="expDate" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box;text-align:center" onchange="updateExpTotal()">
+      <div id="expLeadTimeNote" style="display:none;font-size:12px;color:var(--muted);text-align:center;margin-top:6px"></div>
+      <div id="expDateError" style="color:#e53e3e;font-size:12px;margin-top:4px;display:none;text-align:center"></div>
     </div>
 
     <div style="margin-bottom:16px">
@@ -858,6 +859,15 @@
     dateInput.value = '';
     document.getElementById('expDateError').style.display = 'none';
 
+    // Show lead time notice
+    const leadNote = document.getElementById('expLeadTimeNote');
+    if (leadDays > 0) {
+      leadNote.style.display = 'block';
+      leadNote.textContent = '⏱ ' + leadDays + ' days notice required — earliest available: ' + minDate.toLocaleDateString('en-AU', { weekday:'short', day:'numeric', month:'long' });
+    } else {
+      leadNote.style.display = 'none';
+    }
+
     // Build guest count dropdown
     const min = parseInt(p.min_guests) || 1;
     const max = parseInt(p.max_guests) || 12;
@@ -1036,29 +1046,7 @@
     const productNotes = {};
     cart.forEach(i => { if (i.note) productNotes[i.name] = i.note; });
 
-    // Save order to database first
-    const { error } = await sb.from('orders').insert({
-      host_id: hostData.id,
-      guest_name: guestName,
-      checkin_date: checkin,
-      checkout_date: checkout,
-      notes,
-      property_id: propId || null,
-      property_name: propName,
-      items: cart.map(i => ({ id: i.id, name: i.name, price: i.price })),
-      product_notes: productNotes,
-      total,
-      status: 'pending'
-    });
-
-    if (error) { console.error(error); alert('Something went wrong. Please try again.'); return; }
-
-    // Log purchase events for partner products
-    cart.forEach(i => { if (i.partner_product_id && i.partner_id) logPartnerEvent(i.partner_product_id, i.partner_id, 'purchase'); });
-    // Log purchase events for store analytics
-    cart.forEach(i => logStoreEvent('purchase', i.id, i.name));
-
-    // If host has Stripe connected, redirect to Stripe checkout
+    // If host has Stripe — go straight to Stripe, order saved only after payment succeeds
     if (hostData.stripe_account_id && hostData.stripe_connected) {
       const checkoutRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
@@ -1069,6 +1057,19 @@
           guest_email: guestEmail || undefined,
           success_url: `${window.location.href}&order=success&guest=${encodeURIComponent(guestName)}`,
           cancel_url: window.location.href,
+          metadata: {
+            host_id: hostData.id,
+            guest_name: guestName,
+            guest_email: guestEmail,
+            checkin_date: checkin,
+            checkout_date: checkout,
+            property_id: propId || '',
+            property_name: propName,
+            notes,
+            total,
+            items: JSON.stringify(cart.map(i => ({ id: i.id, name: i.name, price: i.price }))),
+            product_notes: JSON.stringify(productNotes),
+          }
         })
       });
       const session = await checkoutRes.json();
@@ -1078,7 +1079,23 @@
       }
     }
 
-    // No Stripe — just confirm order and send emails
+    // No Stripe — save order and send emails directly
+    await sb.from('orders').insert({
+      host_id: hostData.id,
+      guest_name: guestName,
+      checkin_date: checkin,
+      checkout_date: checkout,
+      notes,
+      property_id: propId || null,
+      property_name: propName,
+      items: cart.map(i => ({ id: i.id, name: i.name, price: i.price })),
+      product_notes: productNotes,
+      total,
+      status: 'paid'
+    });
+
+    cart.forEach(i => { if (i.partner_product_id && i.partner_id) logPartnerEvent(i.partner_product_id, i.partner_id, 'purchase'); });
+    cart.forEach(i => logStoreEvent('purchase', i.id, i.name));
     await sendHostNotification({
       hostEmail: hostData.email,
       notifEmails: Array.isArray(hostData.notif_emails) ? hostData.notif_emails : (hostData.notif_emails ? JSON.parse(hostData.notif_emails) : []),

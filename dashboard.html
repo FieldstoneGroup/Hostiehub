@@ -643,11 +643,29 @@
         <div>
           <div class="card" style="margin-bottom:16px">
             <div class="card-title">Profile</div>
-            <div class="card-desc">Update your name and email address.</div>
+            <div class="card-desc">Update your name.</div>
             <div class="field"><label>Full name</label><input type="text" id="accountName" placeholder="Your name"></div>
-            <div class="field"><label>Email address</label><input type="email" id="accountEmail" placeholder="you@example.com" disabled style="background:var(--bg);color:var(--muted)"><div class="field-hint">Email cannot be changed here. Contact support.</div></div>
             <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
           </div>
+
+          <!-- Email change -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">Change email</div>
+            <div class="card-desc">A verification link will be sent to your new email address. Your login will update once you click the link.</div>
+            <div class="field"><label>Current email</label><input type="email" id="currentEmailDisplay" disabled style="background:var(--bg);color:var(--muted)"></div>
+            <div class="field"><label>New email address</label><input type="email" id="newEmail" placeholder="new@email.com"></div>
+            <div id="emailChangeMsg" style="display:none;font-size:13px;margin-bottom:10px;padding:10px 12px;border-radius:8px"></div>
+            <button class="btn btn-outline btn-sm" onclick="changeEmail()">Send verification →</button>
+          </div>
+
+          <!-- Password reset -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">Change password</div>
+            <div class="card-desc">We'll send a password reset link to your email address.</div>
+            <div id="passwordResetMsg" style="display:none;font-size:13px;margin-bottom:10px;padding:10px 12px;border-radius:8px"></div>
+            <button class="btn btn-outline btn-sm" onclick="sendPasswordReset()">Send reset link →</button>
+          </div>
+
           <div class="card">
             <div class="card-title">Store URL</div>
             <div class="card-desc">Change your store's unique web address. ⚠️ Your old URL will stop working immediately.</div>
@@ -1184,7 +1202,7 @@
     const mobileStoreLink = document.getElementById('mobileViewStore');
     if (mobileStoreLink) mobileStoreLink.href = 'https://hostiehub.com.au/store/' + (currentHost.username || '');
     document.getElementById('accountName').value = currentHost.full_name || '';
-    document.getElementById('accountEmail').value = currentHost.email || '';
+    if (document.getElementById('currentEmailDisplay')) document.getElementById('currentEmailDisplay').value = currentUser.email || currentHost.email || '';
     const unField = document.getElementById('newUsername');
     if (unField) {
       unField.value = currentHost.username || '';
@@ -2116,6 +2134,52 @@
     document.getElementById('sidebarName').textContent = name;
     showToast('✅ Profile saved');
   }
+
+  async function changeEmail() {
+    const newEmail = document.getElementById('newEmail').value.trim();
+    const msgEl = document.getElementById('emailChangeMsg');
+    if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      msgEl.style.display = 'block';
+      msgEl.style.background = '#fef2f2';
+      msgEl.style.color = '#e53e3e';
+      msgEl.textContent = '⚠️ Please enter a valid email address.';
+      return;
+    }
+    const { error } = await sb.auth.updateUser({ email: newEmail });
+    if (error) {
+      msgEl.style.display = 'block';
+      msgEl.style.background = '#fef2f2';
+      msgEl.style.color = '#e53e3e';
+      msgEl.textContent = '⚠️ ' + error.message;
+    } else {
+      msgEl.style.display = 'block';
+      msgEl.style.background = '#f0fdf4';
+      msgEl.style.color = '#16a34a';
+      msgEl.textContent = '✅ Verification email sent to ' + newEmail + '. Click the link in that email to confirm your new address.';
+      document.getElementById('newEmail').value = '';
+    }
+  }
+  window.changeEmail = changeEmail;
+
+  async function sendPasswordReset() {
+    const msgEl = document.getElementById('passwordResetMsg');
+    const email = currentUser.email;
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://hostiehub.com.au/dashboard.html'
+    });
+    if (error) {
+      msgEl.style.display = 'block';
+      msgEl.style.background = '#fef2f2';
+      msgEl.style.color = '#e53e3e';
+      msgEl.textContent = '⚠️ ' + error.message;
+    } else {
+      msgEl.style.display = 'block';
+      msgEl.style.background = '#f0fdf4';
+      msgEl.style.color = '#16a34a';
+      msgEl.textContent = '✅ Password reset link sent to ' + email + '. Check your inbox.';
+    }
+  }
+  window.sendPasswordReset = sendPasswordReset;
 
   async function changeUsername() {
     const newUsername = document.getElementById('newUsername').value.trim();

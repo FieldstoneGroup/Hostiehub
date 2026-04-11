@@ -505,14 +505,35 @@
     <!-- ACCOUNT -->
     <div class="page" id="page-account">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <div class="card">
-          <div class="card-title">Business profile</div>
-          <div class="card-desc">Update your business information.</div>
-          <div class="field"><label>Business name</label><input type="text" id="accountName" placeholder="Your business name"></div>
-          <div class="field"><label>Description</label><textarea id="accountDesc" placeholder="Tell hosts and guests about your business..."></textarea></div>
-          <div class="field"><label>Phone number</label><input type="tel" id="accountPhone" placeholder="e.g. 0412 345 678"><div class="field-hint">Shared with hosts when a guest purchases one of your products.</div></div>
-          <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">Business profile</div>
+            <div class="card-desc">Update your business information.</div>
+            <div class="field"><label>Business name</label><input type="text" id="accountName" placeholder="Your business name"></div>
+            <div class="field"><label>Description</label><textarea id="accountDesc" placeholder="Tell hosts and guests about your business..."></textarea></div>
+            <div class="field"><label>Phone number</label><input type="tel" id="accountPhone" placeholder="e.g. 0412 345 678"><div class="field-hint">Shared with hosts when a guest purchases one of your products.</div></div>
+            <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
+          </div>
+
+          <!-- Email change -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">Change email</div>
+            <div class="card-desc">A verification link will be sent to your new email. Your login will update once you click it.</div>
+            <div class="field"><label>Current email</label><input type="email" id="partnerCurrentEmail" disabled style="background:var(--bg);color:var(--muted)"></div>
+            <div class="field"><label>New email address</label><input type="email" id="partnerNewEmail" placeholder="new@email.com"></div>
+            <div id="partnerEmailMsg" style="display:none;font-size:13px;margin-bottom:10px;padding:10px 12px;border-radius:8px"></div>
+            <button class="btn btn-outline btn-sm" onclick="partnerChangeEmail()">Send verification →</button>
+          </div>
+
+          <!-- Password reset -->
+          <div class="card">
+            <div class="card-title">Change password</div>
+            <div class="card-desc">We'll send a password reset link to your email address.</div>
+            <div id="partnerPasswordMsg" style="display:none;font-size:13px;margin-bottom:10px;padding:10px 12px;border-radius:8px"></div>
+            <button class="btn btn-outline btn-sm" onclick="partnerSendPasswordReset()">Send reset link →</button>
+          </div>
         </div>
+
         <div class="card">
           <div class="card-title">Service postcodes</div>
           <div class="card-desc">Hosts in these areas can add your products & services.</div>
@@ -651,6 +672,7 @@
     document.getElementById('sidebarName').textContent = partnerData.business_name || '';
     document.getElementById('accountName').value = partnerData.business_name || '';
     document.getElementById('accountDesc').value = partnerData.description || '';
+    if (document.getElementById('partnerCurrentEmail')) document.getElementById('partnerCurrentEmail').value = currentUser.email || partnerData.email || '';
     document.getElementById('accountPhone').value = partnerData.phone || '';
     accountPostcodes = Array.isArray(partnerData.postcodes) ? partnerData.postcodes : JSON.parse(partnerData.postcodes || '[]');
     renderAccountPostcodes();
@@ -1548,6 +1570,41 @@
     document.getElementById('sidebarName').textContent = updates.business_name;
     showToast('Profile saved');
   }
+
+  async function partnerChangeEmail() {
+    const newEmail = document.getElementById('partnerNewEmail').value.trim();
+    const msgEl = document.getElementById('partnerEmailMsg');
+    if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      msgEl.style.display = 'block'; msgEl.style.background = '#fef2f2'; msgEl.style.color = '#e53e3e';
+      msgEl.textContent = '⚠️ Please enter a valid email address.'; return;
+    }
+    const { error } = await sb.auth.updateUser({ email: newEmail });
+    if (error) {
+      msgEl.style.display = 'block'; msgEl.style.background = '#fef2f2'; msgEl.style.color = '#e53e3e';
+      msgEl.textContent = '⚠️ ' + error.message;
+    } else {
+      msgEl.style.display = 'block'; msgEl.style.background = '#f0fdf4'; msgEl.style.color = '#16a34a';
+      msgEl.textContent = '✅ Verification email sent to ' + newEmail + '. Click the link to confirm your new address.';
+      document.getElementById('partnerNewEmail').value = '';
+    }
+  }
+  window.partnerChangeEmail = partnerChangeEmail;
+
+  async function partnerSendPasswordReset() {
+    const msgEl = document.getElementById('partnerPasswordMsg');
+    const email = currentUser.email;
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://hostiehub.com.au/partner-dashboard.html'
+    });
+    if (error) {
+      msgEl.style.display = 'block'; msgEl.style.background = '#fef2f2'; msgEl.style.color = '#e53e3e';
+      msgEl.textContent = '⚠️ ' + error.message;
+    } else {
+      msgEl.style.display = 'block'; msgEl.style.background = '#f0fdf4'; msgEl.style.color = '#16a34a';
+      msgEl.textContent = '✅ Password reset link sent to ' + email + '. Check your inbox.';
+    }
+  }
+  window.partnerSendPasswordReset = partnerSendPasswordReset;
 
   async function handleLogout() { await sb.auth.signOut(); window.location.href = 'partner-signup.html'; }
 

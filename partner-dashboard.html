@@ -188,7 +188,7 @@
   </div>
 
   <!-- TRIAL BANNER -->
-  <div id="trialBanner" class="trial-banner" style="background:linear-gradient(135deg,#E8A838,#d4952e)">
+  <div id="trialBanner" class="trial-banner" style="display:none;background:linear-gradient(135deg,#E8A838,#d4952e)">
     <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500">
       <span>⏳</span><span id="trialBannerText">Your free trial is active</span>
     </div>
@@ -550,69 +550,56 @@
     <!-- BILLING -->
     <div class="page" id="page-billing">
 
-      <!-- Current plan status -->
+      <!-- Status card -->
       <div class="card" style="margin-bottom:24px">
-        <div class="card-title">Your plan</div>
-        <div id="trialStatusCard" style="display:none;background:var(--accent-light);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#92600a;margin-bottom:6px">🟡 Free Trial Active</div>
-          <div style="font-size:22px;font-weight:700;color:#92600a;font-family:'Playfair Display',serif;margin-bottom:4px" id="trialDaysLeft">90 days remaining</div>
-          <div style="font-size:13px;color:#a16207;line-height:1.5">Your listings and vouchers are live during your 3-month trial. After your trial, billing is based on what you have active.</div>
-        </div>
-        <div id="paidStatusCard" style="display:none;background:var(--brand-light);border:1.5px solid var(--brand);border-radius:12px;padding:16px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:6px">✅ Active</div>
-          <div style="font-size:22px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif;margin-bottom:4px" id="currentPlanName">Partner Plan</div>
-          <div style="font-size:13px;color:var(--brand-dark)" id="currentPlanDesc">Billed monthly based on active listings & vouchers</div>
+        <div class="card-title">Your account</div>
+        <div style="background:#f0fdf4;border:1.5px solid #16a34a;border-radius:12px;padding:20px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#16a34a;margin-bottom:6px">✅ Free to list</div>
+          <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#15803d;margin-bottom:6px">Your listings are free</div>
+          <div style="font-size:14px;color:#166534;line-height:1.6">Listing your business on Hostie Hub is completely free. Your offers are shown to guests staying at local short-term rental properties in your area — no cost, no catch.</div>
         </div>
       </div>
 
-      <!-- Pricing model -->
+      <!-- How it works -->
       <div class="card" style="margin-bottom:24px">
-        <div class="card-title" style="margin-bottom:4px">How billing works</div>
-        <div class="card-desc" style="margin-bottom:20px">Simple usage-based pricing — only pay for what you have active.</div>
-
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
-          <div style="background:var(--bg);border-radius:12px;padding:20px;border:1.5px solid var(--border);text-align:center">
-            <div style="font-size:32px;margin-bottom:8px">📦</div>
-            <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--partner)">$49</div>
-            <div style="font-size:14px;color:var(--muted);margin-top:2px">per listing / per month</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">Each active product or service listing you have published to hosts</div>
+        <div class="card-title" style="margin-bottom:4px">How it works</div>
+        <div class="card-desc" style="margin-bottom:20px">List your business, reach local guests automatically.</div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:var(--bg);border-radius:10px">
+            <div style="width:32px;height:32px;background:var(--partner);border-radius:50%;color:white;font-weight:700;font-size:14px;text-align:center;line-height:32px;flex-shrink:0">1</div>
+            <div><div style="font-weight:600;font-size:14px;margin-bottom:3px">Create your listing</div><div style="font-size:13px;color:var(--muted);line-height:1.5">Add your business name, description, category and a photo. Set your service area by suburb.</div></div>
           </div>
-          <div style="background:var(--bg);border-radius:12px;padding:20px;border:1.5px solid var(--border);text-align:center">
-            <div style="font-size:32px;margin-bottom:8px">🎟️</div>
-            <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--partner)">$10</div>
-            <div style="font-size:14px;color:var(--muted);margin-top:2px">per voucher / per month</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">Each active voucher you have attached to your listings</div>
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:var(--bg);border-radius:10px">
+            <div style="width:32px;height:32px;background:var(--partner);border-radius:50%;color:white;font-weight:700;font-size:14px;text-align:center;line-height:32px;flex-shrink:0">2</div>
+            <div><div style="font-weight:600;font-size:14px;margin-bottom:3px">Hosts add you to their store</div><div style="font-size:13px;color:var(--muted);line-height:1.5">Hosts in your postcode area can add your listing to their guest store. Guests see your offer when browsing before their stay.</div></div>
           </div>
-        </div>
-
-        <!-- Usage summary -->
-        <div style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:12px;padding:16px;margin-bottom:16px">
-          <div style="font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--brand);margin-bottom:12px">Your current usage</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span style="font-size:14px;color:var(--text)">📦 Active listings</span>
-            <span style="font-size:14px;font-weight:700" id="billActiveListings">—</span>
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:var(--bg);border-radius:10px">
+            <div style="width:32px;height:32px;background:var(--partner);border-radius:50%;color:white;font-weight:700;font-size:14px;text-align:center;line-height:32px;flex-shrink:0">3</div>
+            <div><div style="font-weight:600;font-size:14px;margin-bottom:3px">Guests discover and book you</div><div style="font-size:13px;color:var(--muted);line-height:1.5">Guests click your listing, are taken to your booking page, and receive any voucher you've attached — all automatically.</div></div>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <span style="font-size:14px;color:var(--text)">🎟️ Active vouchers</span>
-            <span style="font-size:14px;font-weight:700" id="billActiveVouchers">—</span>
-          </div>
-          <div style="border-top:1.5px solid rgba(44,110,106,0.2);padding-top:12px;display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:15px;font-weight:600;color:var(--text)">Estimated monthly cost</span>
-            <span style="font-size:22px;font-weight:700;font-family:'Playfair Display',serif;color:var(--brand)" id="billEstimate">—</span>
-          </div>
-          <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:right" id="billBreakdown"></div>
-        </div>
-
-        <div style="font-size:13px;color:var(--muted);line-height:1.6">
-          ✅ <strong>3 months free</strong> — no credit card required to start.<br>
-          ✅ Only active listings & vouchers count toward billing.<br>
-          ✅ Pause or deactivate anytime to reduce your bill.<br>
-          ✅ Invoiced monthly. Questions? <a href="mailto:hello@hostiehub.com.au" style="color:var(--partner)">hello@hostiehub.com.au</a>
         </div>
       </div>
 
-      <div style="background:var(--bg);border-radius:var(--radius);padding:20px;font-size:13px;color:var(--muted);text-align:center">
-        To activate billing after your trial, contact us at <a href="mailto:hello@hostiehub.com.au" style="color:var(--partner)">hello@hostiehub.com.au</a> and we'll set up your account.
+      <!-- Usage summary -->
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-title" style="margin-bottom:12px">Your listings at a glance</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:14px;color:var(--text)">📦 Active listings</span>
+          <span style="font-size:16px;font-weight:700;color:var(--partner)" id="billActiveListings">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0">
+          <span style="font-size:14px;color:var(--text)">🎟️ Active vouchers</span>
+          <span style="font-size:16px;font-weight:700;color:var(--partner)" id="billActiveVouchers">—</span>
+        </div>
+      </div>
+
+      <!-- Custom listing CTA -->
+      <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:var(--radius);padding:28px;text-align:center">
+        <div style="font-size:32px;margin-bottom:12px">✨</div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:white;margin-bottom:8px">Got a unique product or service?</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.6;margin-bottom:20px;max-width:420px;margin-left:auto;margin-right:auto">If your offering doesn't fit the standard listing format, reach out and we'll build you a custom listing — tailored to exactly what you offer.</div>
+        <a href="mailto:hello@hostiehub.com.au?subject=Custom listing enquiry" style="background:#E8A838;color:white;padding:13px 28px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;text-decoration:none;display:inline-block">Get in touch →</a>
+        <div style="margin-top:12px;font-size:12px;color:rgba(255,255,255,0.4)">hello@hostiehub.com.au · We respond to every message</div>
       </div>
     </div>
 
@@ -681,57 +668,16 @@
   }
 
   function checkTrial() {
-    const trialEndsAt = partnerData.trial_ends_at ? new Date(partnerData.trial_ends_at) : null;
-    const isPaid = partnerData.plan && ['active', 'basic', 'pro'].includes(partnerData.plan);
-    const now = new Date();
-    const daysLeft = trialEndsAt ? Math.ceil((trialEndsAt - now) / (1000 * 60 * 60 * 24)) : 0;
-    const trialExpired = trialEndsAt && now > trialEndsAt && !isPaid;
-
-    if (isPaid) {
-      document.getElementById('paidStatusCard').style.display = 'block';
-      document.getElementById('trialStatusCard').style.display = 'none';
-      document.getElementById('trialBanner').style.display = 'none';
-    } else {
-      document.getElementById('trialStatusCard').style.display = 'block';
-      document.getElementById('paidStatusCard').style.display = 'none';
-
-      if (!trialExpired && daysLeft > 0) {
-        const banner = document.getElementById('trialBanner');
-        banner.style.display = 'flex';
-        const text = daysLeft === 1
-          ? 'Your free trial ends tomorrow — contact us to continue your listings'
-          : daysLeft <= 14
-          ? 'Your free trial ends in ' + daysLeft + ' days — contact us to set up billing'
-          : 'Your 3-month free trial is active — ' + daysLeft + ' days remaining';
-        document.getElementById('trialBannerText').textContent = text;
-        document.getElementById('trialDaysLeft').textContent = daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' remaining';
-        if (daysLeft <= 7) document.getElementById('trialBanner').style.background = 'linear-gradient(135deg,#e53e3e,#c53030)';
-      } else {
-        document.getElementById('trialDaysLeft').textContent = 'Trial ended';
-      }
-    }
-
-    // Populate billing usage summary (runs after products/vouchers load)
+    // Listings are free — no trial or billing logic needed
     setTimeout(updateBillingUsage, 800);
   }
 
   function updateBillingUsage() {
     const activeListings = (partnerProducts || []).filter(p => p.active).length;
     const activeVouchers = (vouchers || []).filter(v => v.active !== false).length;
-    const listingCost = activeListings * 49;
-    const voucherCost = activeVouchers * 10;
-    const total = listingCost + voucherCost;
-
     const el = id => document.getElementById(id);
     if (el('billActiveListings')) el('billActiveListings').textContent = activeListings + ' listing' + (activeListings !== 1 ? 's' : '');
     if (el('billActiveVouchers')) el('billActiveVouchers').textContent = activeVouchers + ' voucher' + (activeVouchers !== 1 ? 's' : '');
-    if (el('billEstimate')) el('billEstimate').textContent = '$' + total + '/mo';
-    if (el('billBreakdown')) {
-      const parts = [];
-      if (activeListings > 0) parts.push(activeListings + ' × $49');
-      if (activeVouchers > 0) parts.push(activeVouchers + ' × $10');
-      el('billBreakdown').textContent = parts.length ? parts.join(' + ') : 'No active listings yet';
-    }
   }
   window.updateBillingUsage = updateBillingUsage;
 

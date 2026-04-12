@@ -495,9 +495,16 @@
 
     <!-- PRODUCTS -->
     <div class="page" id="page-products">
+      <div id="productsPaywallBanner" style="display:none;background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:12px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:white;margin-bottom:4px">🔒 Adding products requires a paid plan</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.5">Your store already shows local partner listings for free. Upgrade to add your own products, set custom pricing and accept Stripe payments.</div>
+        </div>
+        <a href="plans.html" style="background:#E8A838;color:white;padding:10px 20px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">View plans →</a>
+      </div>
       <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:12px">
-        <button class="btn btn-outline btn-sm" onclick="openPresetModal()">✨ Browse presets</button>
-        <button class="btn btn-primary" onclick="openProductModal()">+ Add product</button>
+        <button class="btn btn-outline btn-sm" id="browsePresetsBtn" onclick="openPresetModal()">✨ Browse presets</button>
+        <button class="btn btn-primary" id="addProductBtn" onclick="openProductModal()">+ Add product</button>
       </div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:20px;background:var(--accent-light);border-radius:8px;padding:10px 14px;border-left:3px solid var(--accent);">💡 Click <strong>Browse presets</strong> to pick and choose popular products to add to your store.</p>
       <div class="products-list" id="productsList">
@@ -686,20 +693,22 @@
             <div class="card-title">Subscription</div>
             <div class="card-desc">Your current Hostie Hub plan.</div>
 
-            <!-- Trial status -->
+            <!-- Current plan status -->
             <div id="trialStatusCard" style="background:var(--accent-light);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:16px;display:none">
               <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#92600a;margin-bottom:6px">🟡 Free Trial Active</div>
               <div style="font-size:22px;font-weight:700;color:#92600a;font-family:'Playfair Display',serif;margin-bottom:4px" id="trialDaysLeft">30 days remaining</div>
               <div style="font-size:12px;color:#a16207;line-height:1.5">No credit card required. When your trial ends your store will pause until you activate a plan.</div>
             </div>
-
-            <!-- Paid status -->
+            <div id="freePlanCard" style="background:#f4f6f5;border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;display:none">
+              <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">🆓 Free Plan</div>
+              <div style="font-size:18px;font-weight:700;color:var(--text);font-family:'Playfair Display',serif;margin-bottom:4px" id="planName">Free</div>
+              <div style="font-size:12px;color:var(--muted)" id="planProperties">Partner listings shown automatically — add your own products by upgrading</div>
+            </div>
             <div id="paidStatusCard" style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:12px;padding:16px;margin-bottom:16px;display:none">
               <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:6px">✅ Active Plan</div>
-              <div style="font-size:22px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif;margin-bottom:4px" id="planName">Host Plan · $99/yr</div>
-              <div style="font-size:12px;color:var(--brand-dark)" id="planProperties">1 property</div>
+              <div style="font-size:22px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif;margin-bottom:4px" id="planName2">Host Plan · $99/yr</div>
+              <div style="font-size:12px;color:var(--brand-dark)" id="planProperties2">1 property</div>
             </div>
-
             <div id="subscriptionBtns" style="display:flex;gap:10px;flex-wrap:wrap">
               <div id="trialLabel" style="display:none;width:100%;font-size:12px;color:#92600a;background:var(--accent-light);border-radius:8px;padding:8px 12px;margin-bottom:4px">⏳ You're currently on a free trial — choose a plan to keep your store live after it ends.</div>
               <a href="plans.html" class="btn btn-primary btn-sm">🏠 Host Plan · $99/yr</a>
@@ -1236,11 +1245,20 @@
       tickCheck('checkStore');
     }
     // Show plan details
-    const plan = currentHost.plan || 'host';
-    const planNames = { host: 'Host Plan · $99/yr', pro: 'Pro Plan · $199/yr', enterprise: 'Enterprise Plan · Custom' };
-    const planProps = { host: '1 property', pro: 'Up to 10 properties', enterprise: 'Unlimited properties' };
-    if (document.getElementById('planName')) document.getElementById('planName').textContent = planNames[plan] || planNames.host;
-    if (document.getElementById('planProperties')) document.getElementById('planProperties').textContent = planProps[plan] || planProps.host;
+    const plan = currentHost.plan || 'free';
+    const planNames = { free: 'Free', host: 'Host Plan · $99/yr', pro: 'Pro Plan · $199/yr', enterprise: 'Enterprise Plan · Custom' };
+    const planProps = { free: 'Partner listings only', host: '1 property', pro: 'Up to 10 properties', enterprise: 'Unlimited properties' };
+    if (document.getElementById('planName')) document.getElementById('planName').textContent = planNames[plan] || planNames.free;
+    if (document.getElementById('planProperties')) document.getElementById('planProperties').textContent = planProps[plan] || planProps.free;
+
+    // Show/hide paywall banner on products page
+    const paid = isPaidOrTrial();
+    const paywallBanner = document.getElementById('productsPaywallBanner');
+    if (paywallBanner) paywallBanner.style.display = paid ? 'none' : 'flex';
+    const addProductBtn = document.getElementById('addProductBtn');
+    const browsePresetsBtn = document.getElementById('browsePresetsBtn');
+    if (addProductBtn) { addProductBtn.style.opacity = paid ? '1' : '0.4'; addProductBtn.title = paid ? '' : 'Requires paid plan'; }
+    if (browsePresetsBtn) { browsePresetsBtn.style.opacity = paid ? '1' : '0.4'; browsePresetsBtn.title = paid ? '' : 'Requires paid plan'; }
 
     // ── TRIAL CHECK ──
     checkTrial();
@@ -1249,30 +1267,46 @@
   function checkTrial() {
     const trialEndsAt = currentHost.trial_ends_at ? new Date(currentHost.trial_ends_at) : null;
     const isPaid = currentHost.plan && ['host', 'pro', 'enterprise'].includes(currentHost.plan);
-    const isActive = currentHost.is_active !== false;
-
+    const isFree = !currentHost.plan || currentHost.plan === 'free';
     const now = new Date();
     const daysLeft = trialEndsAt ? Math.ceil((trialEndsAt - now) / (1000 * 60 * 60 * 24)) : 0;
     const trialExpired = trialEndsAt && now > trialEndsAt;
 
-    // Update billing card
+    const trialCard = document.getElementById('trialStatusCard');
+    const freeCard = document.getElementById('freePlanCard');
+    const paidCard = document.getElementById('paidStatusCard');
+    const subBtns = document.getElementById('subscriptionBtns');
+
     if (isPaid) {
-      document.getElementById('paidStatusCard').style.display = 'block';
-      document.getElementById('trialStatusCard').style.display = 'none';
-      document.getElementById('subscriptionBtns').style.display = 'none';
+      if (trialCard) trialCard.style.display = 'none';
+      if (freeCard) freeCard.style.display = 'none';
+      if (paidCard) paidCard.style.display = 'block';
+      if (subBtns) subBtns.style.display = 'none';
       const planNames = { host: 'Host Plan · $99/yr', pro: 'Pro Plan · $199/yr', enterprise: 'Enterprise Plan · Custom' };
       const planProps = { host: '1 property', pro: 'Up to 10 properties', enterprise: 'Unlimited properties' };
-      document.getElementById('planName').textContent = planNames[currentHost.plan] || planNames.host;
-      document.getElementById('planProperties').textContent = planProps[currentHost.plan] || planProps.host;
+      if (document.getElementById('planName2')) document.getElementById('planName2').textContent = planNames[currentHost.plan] || planNames.host;
+      if (document.getElementById('planProperties2')) document.getElementById('planProperties2').textContent = planProps[currentHost.plan] || planProps.host;
+      document.getElementById('trialBanner').style.display = 'none';
+      document.getElementById('trialExpiredOverlay').style.display = 'none';
+      return;
+    }
+
+    if (isFree && !trialEndsAt) {
+      // Pure free plan — no trial
+      if (trialCard) trialCard.style.display = 'none';
+      if (freeCard) freeCard.style.display = 'block';
+      if (paidCard) paidCard.style.display = 'none';
+      if (subBtns) subBtns.style.display = 'flex';
       document.getElementById('trialBanner').style.display = 'none';
       document.getElementById('trialExpiredOverlay').style.display = 'none';
       return;
     }
 
     // On trial
-    document.getElementById('trialStatusCard').style.display = 'block';
-    document.getElementById('paidStatusCard').style.display = 'none';
-    document.getElementById('subscriptionBtns').style.display = 'flex';
+    if (trialCard) trialCard.style.display = 'block';
+    if (freeCard) freeCard.style.display = 'none';
+    if (paidCard) paidCard.style.display = 'none';
+    if (subBtns) subBtns.style.display = 'flex';
     document.getElementById('trialLabel').style.display = 'block';
     if (daysLeft > 0) {
       document.getElementById('trialDaysLeft').textContent = daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' remaining';
@@ -1281,18 +1315,16 @@
     }
 
     if (!trialExpired && daysLeft > 0) {
-      // Trial still active — show banner
       const banner = document.getElementById('trialBanner');
       banner.style.display = 'flex';
       const text = daysLeft === 1
         ? '⚠️ Your free trial ends tomorrow — activate your plan to keep your store live'
         : daysLeft <= 7
-        ? `⚠️ Your free trial ends in ${daysLeft} days — activate your plan to keep your store live`
-        : `Your free trial is active — ${daysLeft} days remaining`;
+        ? '⚠️ Your free trial ends in ' + daysLeft + ' days — activate your plan to keep your store live'
+        : 'Your free trial is active — ' + daysLeft + ' days remaining';
       document.getElementById('trialBannerText').textContent = text;
       if (daysLeft <= 3) document.getElementById('trialBanner').style.background = 'linear-gradient(135deg,#e53e3e,#c53030)';
     } else if (trialExpired) {
-      // Trial expired — show overlay
       document.getElementById('trialExpiredOverlay').style.display = 'flex';
       sb.from('hosts').update({ is_active: false }).eq('id', currentUser.id);
     }
@@ -1586,7 +1618,26 @@
     btn.classList.add('selected');
   }
 
+  function isPaidPlan() {
+    return currentHost && currentHost.plan && ['host', 'pro', 'enterprise'].includes(currentHost.plan);
+  }
+  function isPaidOrTrial() {
+    const trialEndsAt = currentHost?.trial_ends_at ? new Date(currentHost.trial_ends_at) : null;
+    const trialActive = trialEndsAt && new Date() < trialEndsAt;
+    return isPaidPlan() || trialActive;
+  }
+  function showUpgradePaywall(msg) {
+    document.getElementById('upgradeModalTitle').textContent = '🔒 Paid plan required';
+    document.getElementById('upgradeModalText').textContent = (msg || 'This feature requires a paid plan.') + ' Upgrade to unlock adding your own products, custom branding and Stripe payments.';
+    document.getElementById('upgradeModal').classList.add('open');
+  }
+  window.showUpgradePaywall = showUpgradePaywall;
+
   function openProductModal() {
+    if (!isPaidOrTrial()) {
+      showUpgradePaywall('Adding your own products requires a paid plan.');
+      return;
+    }
     editingProductId = null;
     document.getElementById('productModalTitle').textContent = 'Add product';
     document.getElementById('pName').value = '';
@@ -1922,22 +1973,53 @@
 
     // Check which ones are already in the host's store
     const { data: existing } = await sb.from('products')
-      .select('partner_product_id')
+      .select('partner_product_id, id')
       .eq('host_id', currentUser.id)
       .not('partner_product_id', 'is', null);
 
     addedPartnerProductIds = new Set((existing || []).map(p => p.partner_product_id));
+
+    // Auto-inject any partner listings not yet in this host's store
+    const toInject = localPartnerProducts.filter(p => !addedPartnerProductIds.has(p.id));
+    for (const p of toInject) {
+      const isBooking = p.type === 'booking';
+      const { data: inserted } = await sb.from('products').insert({
+        host_id: currentUser.id,
+        name: p.name,
+        description: p.description || '',
+        price: isBooking ? 0 : (p.wholesale_price || 0),
+        unit: 'per stay',
+        category: p.category || 'product',
+        emoji: isBooking ? '🔗' : '📦',
+        image_url: p.image_url || null,
+        available_all_properties: true,
+        active: true,
+        partner_product_id: p.id,
+        partner_id: p.partner_id,
+        partner_product_type: p.type,
+        partner_booking_url: isBooking ? p.booking_url : null,
+        partner_notes: p.notes || null,
+        partner_voucher_pdf_url: isBooking ? (p.voucher_pdf_url || null) : null,
+        wholesale_price: p.wholesale_price || 0,
+      }).select().single();
+      if (inserted) addedPartnerProductIds.add(p.id);
+    }
+
+    if (toInject.length > 0) loadProducts();
     renderLocalProducts();
   }
 
   function renderLocalProducts() {
     const list = document.getElementById('localProductsList');
+    const paid = isPaidOrTrial();
+
     if (!localPartnerProducts.length) {
-      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🤝</div><h3>No local products in your area yet</h3><p>Local businesses will appear here once they sign up.<br>Make sure your postcode is set in Store Settings.</p></div>';
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🤝</div><h3>No local businesses in your area yet</h3><p>Local businesses will appear automatically once they sign up.<br>Make sure your postcode is set in Store Settings.</p></div>';
       return;
     }
 
-    list.innerHTML = localPartnerProducts.map(p => {
+    list.innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--brand-light);border-radius:8px;border-left:3px solid var(--brand)">🤝 <strong>Local partner listings</strong> are automatically shown in your guest store. ' + (paid ? 'You can hide individual listings using the toggle.' : 'Upgrade to a paid plan to control which listings appear.') + '</div>' +
+    localPartnerProducts.map(p => {
       const isAdded = addedPartnerProductIds.has(p.id);
       const isBooking = p.type === 'booking';
       const businessName = p.partners ? p.partners.business_name : 'Local Business';
@@ -1947,24 +2029,64 @@
         ? '<img src="' + p.image_url + '" style="width:100%;height:100%;object-fit:contain;padding:4px;border-radius:10px;background:white;">'
         : (isBooking ? '🔗' : '📦');
 
-      return '<div class="product-row" style="' + (isAdded ? 'opacity:0.7' : '') + '">' +
+      const actionBtn = paid
+        ? (isAdded
+          ? '<button class="btn btn-outline btn-sm" style="color:#e53e3e;border-color:#e53e3e" onclick="hidePartnerListing(\'' + p.id + '\')">Hide from store</button>'
+          : '<button class="btn btn-primary btn-sm" onclick="showPartnerListing(\'' + p.id + '\')">Show in store</button>')
+        : '<span style="font-size:12px;color:var(--muted);background:var(--bg);padding:4px 10px;border-radius:50px;border:1px solid var(--border)">🔒 Mandatory</span>';
+
+      return '<div class="product-row" style="' + (!isAdded ? 'opacity:0.6' : '') + '">' +
         '<div class="product-emoji" style="' + (p.image_url ? 'padding:0;overflow:hidden' : '') + '">' + thumb + '</div>' +
         '<div class="product-info">' +
-          '<div class="product-name">' + p.name + '</div>' +
-          '<div class="product-meta">' +
-            businessName + ' · ' + catLabel +
-            (isBooking ? ' · 🔗 Booking · Free' : ' · Wholesale $' + (p.wholesale_price || 0)) +
-            (p.notes ? ' · 💡 ' + p.notes : '') +
-          '</div>' +
+          '<div class="product-name">' + p.name + (isAdded ? ' <span style="font-size:11px;color:var(--brand);font-weight:600">· Showing</span>' : ' <span style="font-size:11px;color:var(--muted)">· Hidden</span>') + '</div>' +
+          '<div class="product-meta">' + businessName + ' · ' + catLabel + (isBooking ? ' · Free to guest' : '') + '</div>' +
           (p.description ? '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + p.description + '</div>' : '') +
         '</div>' +
-        (isAdded
-          ? '<span style="font-size:13px;color:var(--brand);font-weight:600;white-space:nowrap">✓ Added</span>'
-          : '<button class="btn btn-primary btn-sm" onclick="openLocalProductModal(\'' + p.id + '\')">Add to store</button>'
-        ) +
+        actionBtn +
       '</div>';
     }).join('');
   }
+
+  async function hidePartnerListing(partnerProductId) {
+    await sb.from('products').delete()
+      .eq('host_id', currentUser.id)
+      .eq('partner_product_id', partnerProductId);
+    addedPartnerProductIds.delete(partnerProductId);
+    renderLocalProducts();
+    loadProducts();
+    showToast('Listing hidden from your store');
+  }
+  window.hidePartnerListing = hidePartnerListing;
+
+  async function showPartnerListing(partnerProductId) {
+    const p = localPartnerProducts.find(x => x.id === partnerProductId);
+    if (!p) return;
+    const isBooking = p.type === 'booking';
+    await sb.from('products').insert({
+      host_id: currentUser.id,
+      name: p.name,
+      description: p.description || '',
+      price: isBooking ? 0 : (p.wholesale_price || 0),
+      unit: 'per stay',
+      category: p.category || 'product',
+      emoji: isBooking ? '🔗' : '📦',
+      image_url: p.image_url || null,
+      available_all_properties: true,
+      active: true,
+      partner_product_id: p.id,
+      partner_id: p.partner_id,
+      partner_product_type: p.type,
+      partner_booking_url: isBooking ? p.booking_url : null,
+      partner_notes: p.notes || null,
+      partner_voucher_pdf_url: isBooking ? (p.voucher_pdf_url || null) : null,
+      wholesale_price: p.wholesale_price || 0,
+    });
+    addedPartnerProductIds.add(partnerProductId);
+    renderLocalProducts();
+    loadProducts();
+    showToast('Listing now showing in your store');
+  }
+  window.showPartnerListing = showPartnerListing;
 
   function openLocalProductModal(productId) {
     const p = localPartnerProducts.find(x => x.id === productId);

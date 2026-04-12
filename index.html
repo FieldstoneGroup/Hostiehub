@@ -173,7 +173,7 @@
     .testimonials-grid { grid-template-columns:1fr; }
     .footer-top { grid-template-columns:1fr; gap:36px; }
     .pricing-card { padding:28px 20px; }
-    .pricing-grid { grid-template-columns:1fr; }
+    .pricing-grid { grid-template-columns:1fr !important; }
     .pricing-card.featured { transform:translateY(0); }
     #partners > div { grid-template-columns:1fr !important; gap:40px !important; }
     #partners > div > div:last-child { grid-template-columns:1fr 1fr !important; }
@@ -204,14 +204,14 @@
   <div class="hero-inner">
     <div class="hero-content">
       <div class="hero-eyebrow">🇦🇺 Built by hosts, for hosts</div>
-      <h1>Your own store.<br>Your guests.<br><em>More revenue.</em></h1>
-      <p class="hero-desc">Give your guests a beautiful online store to purchase extras before they arrive — early check-in, welcome baskets, experiences and more. All paid directly to you.</p>
+      <h1>Your guests deserve<br>a local guide.<br><em>You deserve revenue.</em></h1>
+      <p class="hero-desc">Give your guests a beautiful store of local experiences, restaurants and extras — all curated for their stay. Free to start. Earn more when you're ready.</p>
       <div class="hero-actions">
-        <a href="signup.html" class="btn-primary">Start for $99/yr →</a>
+        <a href="signup.html" class="btn-primary">Start for free →</a>
         <a href="#demo" class="btn-secondary">See an example store ↓</a>
       </div>
       <div class="hero-stats">
-        <div><div class="stat-num">$99</div><div class="stat-label">Per year, that's it</div></div>
+        <div><div class="stat-num">Free</div><div class="stat-label">To get started</div></div>
         <div><div class="stat-num">100%</div><div class="stat-label">Revenue goes to you</div></div>
         <div><div class="stat-num">5 min</div><div class="stat-label">To set up your store</div></div>
       </div>
@@ -264,27 +264,48 @@
   <div class="section-inner">
     <div class="pricing-header reveal">
       <div class="section-eyebrow">Pricing</div>
-      <h2 class="section-title">Simple, honest pricing.</h2>
-      <p class="section-desc">No commissions, no per-sale fees. Just a flat yearly fee — and every dollar your guests spend goes directly to you.</p>
+      <h2 class="section-title">Start free. Grow when you're ready.</h2>
+      <p class="section-desc">Every host gets a free store with local partner listings. Upgrade when you want to add your own products and earn directly from guests.</p>
     </div>
-    <div class="pricing-grid reveal">
+    <div class="pricing-grid reveal" style="grid-template-columns:repeat(4,1fr);gap:16px">
+
+      <!-- FREE -->
+      <div class="pricing-card">
+        <div class="pricing-badge" style="background:#f0f0f0;color:#555">🆓 Free</div>
+        <div class="pricing-amount" style="font-size:36px;padding-top:6px">$0</div>
+        <div class="pricing-period">forever · no card needed</div>
+        <div class="pricing-properties" style="background:#f0f0f0;color:#555">Local guide only</div>
+        <ul class="pricing-features">
+          <li><div class="pricing-check">✓</div> Your own store link</li>
+          <li><div class="pricing-check">✓</div> Auto-populated local business listings</li>
+          <li><div class="pricing-check">✓</div> Guest-facing local guide</li>
+          <li><div class="pricing-check" style="background:#fee2e2;color:#e53e3e">✗</div> <span style="color:var(--muted)">Add own products</span></li>
+          <li><div class="pricing-check" style="background:#fee2e2;color:#e53e3e">✗</div> <span style="color:var(--muted)">Custom branding</span></li>
+          <li><div class="pricing-check" style="background:#fee2e2;color:#e53e3e">✗</div> <span style="color:var(--muted)">Stripe payments</span></li>
+          <li><div class="pricing-check" style="background:#fee2e2;color:#e53e3e">✗</div> <span style="color:var(--muted)">Control partner listings</span></li>
+        </ul>
+        <a href="signup.html" class="btn-primary" style="width:100%;justify-content:center;border-radius:12px;font-size:14px;padding:13px;background:#555">Get started free →</a>
+      </div>
+
+      <!-- HOST -->
       <div class="pricing-card">
         <div class="pricing-badge">🏠 Host</div>
         <div class="pricing-amount"><sup>$</sup>99</div>
         <div class="pricing-period">per year · cancel anytime</div>
         <div class="pricing-properties">1 property</div>
         <ul class="pricing-features">
-          <li><div class="pricing-check">✓</div> Your store at <strong>yourname.hostiehub.com</strong></li>
-          <li><div class="pricing-check">✓</div> Unlimited products & services</li>
+          <li><div class="pricing-check">✓</div> Everything in Free</li>
+          <li><div class="pricing-check">✓</div> Add unlimited own products</li>
           <li><div class="pricing-check">✓</div> Custom branding & colours</li>
-          <li><div class="pricing-check">✓</div> Direct Stripe payments — 100% to you</li>
-          <li><div class="pricing-check">✓</div> Guest notes & property selector</li>
+          <li><div class="pricing-check">✓</div> Stripe payments — 100% to you</li>
           <li><div class="pricing-check">✓</div> Order dashboard</li>
-          <li><div class="pricing-check">✓</div> Local partner vouchers</li>
-          <li><div class="pricing-check">✓</div> Email support</li>
+          <li><div class="pricing-check">✓</div> Show or hide partner listings</li>
+          <li><div class="pricing-check" style="background:#fee2e2;color:#e53e3e">✗</div> <span style="color:var(--muted)">Analytics</span></li>
         </ul>
-        <a href="https://buy.stripe.com/00w00j3HM4Tt2PiacA8ww01" class="btn-primary" style="width:100%;justify-content:center;border-radius:12px;font-size:15px;padding:15px">Get started →</a>
+        <a href="https://buy.stripe.com/00w00j3HM4Tt2PiacA8ww01" class="btn-primary" style="width:100%;justify-content:center;border-radius:12px;font-size:14px;padding:13px">Get started →</a>
       </div>
+
+      <!-- PRO -->
       <div class="pricing-card featured">
         <div class="pricing-badge">⭐ Most Popular — Pro</div>
         <div class="pricing-amount"><sup>$</sup>199</div>
@@ -293,33 +314,36 @@
         <ul class="pricing-features">
           <li><div class="pricing-check">✓</div> Everything in Host</li>
           <li><div class="pricing-check">✓</div> Up to 10 properties</li>
-          <li><div class="pricing-check">✓</div> Upsell analytics — see what sells</li>
+          <li><div class="pricing-check">✓</div> Full analytics & revenue reports</div></li>
+          <li><div class="pricing-check">✓</div> Revenue by property breakdown</li>
           <li><div class="pricing-check">✓</div> Bulk product management</li>
-          <li><div class="pricing-check">✓</div> Revenue by property reporting</li>
           <li><div class="pricing-check">✓</div> Priority email support</li>
           <li><div class="pricing-check">✓</div> Early access to new features</li>
         </ul>
-        <a href="https://buy.stripe.com/aFacN55PU0Dd61u0C08ww02" class="btn-primary" style="width:100%;justify-content:center;border-radius:12px;font-size:15px;padding:15px">Get started →</a>
-        <p class="pricing-note">We did over $1,200 in sales in our first 2 weeks. We know it works.</p>
+        <a href="https://buy.stripe.com/aFacN55PU0Dd61u0C08ww02" class="btn-primary" style="width:100%;justify-content:center;border-radius:12px;font-size:14px;padding:13px">Get started →</a>
+        <p class="pricing-note">Most popular for property managers with 2–10 properties.</p>
       </div>
+
+      <!-- ENTERPRISE -->
       <div class="pricing-card">
         <div class="pricing-badge">🏢 Enterprise</div>
-        <div class="pricing-amount" style="font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--brand);padding-top:10px;margin-bottom:4px">Let's talk</div>
-        <div class="pricing-period">custom pricing · tailored to you</div>
-        <div class="pricing-properties">11+ properties</div>
+        <div class="pricing-amount" style="font-size:28px;padding-top:12px;margin-bottom:4px">Let's talk</div>
+        <div class="pricing-period">custom · tailored to you</div>
+        <div class="pricing-properties">Unlimited properties</div>
         <ul class="pricing-features">
           <li><div class="pricing-check">✓</div> Everything in Pro</li>
           <li><div class="pricing-check">✓</div> Unlimited properties</li>
           <li><div class="pricing-check">✓</div> White label option</li>
           <li><div class="pricing-check">✓</div> Dedicated onboarding call</li>
-          <li><div class="pricing-check">✓</div> Custom integrations on request</li>
+          <li><div class="pricing-check">✓</div> Custom integrations</li>
           <li><div class="pricing-check">✓</div> Direct phone support</li>
-          <li><div class="pricing-check">✓</div> Tailored pricing for your portfolio</li>
+          <li><div class="pricing-check">✓</div> Tailored pricing</li>
         </ul>
-        <a href="mailto:hello@hostiehub.com.au" class="btn-primary" style="width:100%;justify-content:center;border-radius:12px;font-size:15px;padding:15px;background:var(--brand-dark)">Get in touch →</a>
+        <a href="mailto:hello@hostiehub.com.au" class="btn-primary" style="width:100%;justify-content:center;border-radius:12px;font-size:14px;padding:13px;background:var(--brand-dark)">Get in touch →</a>
       </div>
+
     </div>
-    <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:24px">🔒 All prices include GST · Cancel anytime · No commissions on sales</p>
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:24px">🔒 All prices include GST · Cancel anytime · No commissions on guest sales</p>
   </div>
 </section>
 
@@ -386,7 +410,7 @@
       <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:32px">
         <div style="display:flex;align-items:center;gap:14px;color:rgba(255,255,255,0.85);font-size:15px"><div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">📍</div><span>Target guests by postcode — only reach the right area</span></div>
         <div style="display:flex;align-items:center;gap:14px;color:rgba(255,255,255,0.85);font-size:15px"><div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🎟️</div><span>Guests purchase and download your vouchers at checkout</span></div>
-        <div style="display:flex;align-items:center;gap:14px;color:rgba(255,255,255,0.85);font-size:15px"><div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚡</div><span>3 months free — then $49/listing/mo + $10/voucher/mo</span></div>
+        <div style="display:flex;align-items:center;gap:14px;color:rgba(255,255,255,0.85);font-size:15px"><div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚡</div><span>Free to list — reach local guests at no cost</span></div>
       </div>
       <a href="partner-signup.html" style="background:#E8A838;color:white;padding:16px 32px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:8px;" onmouseover="this.style.background='#d4952e'" onmouseout="this.style.background='#E8A838'">Join as a partner →</a>
       <div style="margin-top:14px;font-size:13px;color:rgba(255,255,255,0.4)">Already a partner? <a href="partner-dashboard.html" style="color:rgba(255,255,255,0.7);text-decoration:none;font-weight:500">Log in here →</a></div>

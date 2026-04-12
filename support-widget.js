@@ -36,7 +36,7 @@
 
   // ── HTML ──
   document.body.insertAdjacentHTML('beforeend', `
-    <button id="hw-bubble" title="Chat with Hostie Hub Support">🏠</button>
+    <button id="hw-bubble" title="Chat with Hostie Hub Support">💬</button>
     <div id="hw-widget">
       <div id="hw-header">
         <div id="hw-header-left">
@@ -85,7 +85,7 @@
   function closeWidget() {
     isOpen = false;
     widget.classList.remove('open');
-    bubble.innerHTML = '🏠';
+    bubble.innerHTML = '💬';
   }
 
   bubble.addEventListener('click', () => isOpen ? closeWidget() : openWidget());

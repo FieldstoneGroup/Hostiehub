@@ -2,10 +2,10 @@
   // ── STYLES ──
   const style = document.createElement('style');
   style.textContent = `
-    #hw-bubble { position:fixed; bottom:24px; right:24px; width:52px; height:52px; border-radius:50%; background:#2C6E6A; color:white; font-size:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 16px rgba(44,110,106,0.4); z-index:9999; border:none; transition:transform 0.2s, box-shadow 0.2s; }
+    #hw-bubble { position:fixed; bottom:24px; right:24px; width:52px; height:52px; border-radius:50%; background:#2C6E6A; color:white; font-size:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow:0 4px 16px rgba(44,110,106,0.4); z-index:999999; border:none; transition:transform 0.2s, box-shadow 0.2s; }
     #hw-bubble:hover { transform:scale(1.08); box-shadow:0 6px 20px rgba(44,110,106,0.5); }
-    @media (max-width:600px) { #hw-bubble { bottom:33vh !important; right:16px !important; } #hw-widget { bottom:calc(33vh + 64px) !important; right:16px !important; max-width:calc(100vw - 32px) !important; } }
-    #hw-widget { position:fixed; bottom:88px; right:24px; width:360px; max-width:calc(100vw - 48px); background:white; border-radius:20px; box-shadow:0 12px 48px rgba(0,0,0,0.18); z-index:9998; display:none; flex-direction:column; overflow:hidden; font-family:'DM Sans',sans-serif; max-height:520px; }
+    @media (max-width:600px) { #hw-bubble { bottom:220px !important; right:16px !important; z-index:999999 !important; } #hw-widget { bottom:284px !important; right:16px !important; max-width:calc(100vw - 32px) !important; z-index:999998 !important; } }
+    #hw-widget { position:fixed; bottom:88px; right:24px; width:360px; max-width:calc(100vw - 48px); background:white; border-radius:20px; box-shadow:0 12px 48px rgba(0,0,0,0.18); z-index:999998; display:none; flex-direction:column; overflow:hidden; font-family:'DM Sans',sans-serif; max-height:520px; }
     #hw-widget.open { display:flex; animation:hwFadeIn 0.2s ease; }
     @keyframes hwFadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
     #hw-header { background:#1d4d4a; padding:16px 18px; display:flex; align-items:center; justify-content:space-between; }

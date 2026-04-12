@@ -175,6 +175,7 @@
     .pricing-card { padding:28px 20px; }
     .pricing-grid { grid-template-columns:1fr !important; }
     .pricing-card.featured { transform:translateY(0); }
+    #pricing .reveal { grid-template-columns:1fr !important; }
     #partners > div { grid-template-columns:1fr !important; gap:40px !important; }
     #partners > div > div:last-child { grid-template-columns:1fr 1fr !important; }
   }
@@ -267,83 +268,86 @@
       <h2 class="section-title">Start free. Grow when you're ready.</h2>
       <p class="section-desc">Every host gets a free store with local partner listings. Upgrade when you want to add your own products and earn directly from guests.</p>
     </div>
-    <div class="pricing-grid reveal" style="grid-template-columns:repeat(4,1fr);gap:16px">
+    <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:12px">
 
       <!-- FREE -->
-      <div class="pricing-card">
-        <div class="pricing-badge" style="background:#f0f0f0;color:#555">🆓 Free</div>
-        <div class="pricing-amount" style="font-size:36px;padding-top:6px">$0</div>
-        <div class="pricing-period">forever · no card needed</div>
-        <div class="pricing-properties" style="background:#f0f0f0;color:#555">Local guide only</div>
-        <ul class="pricing-features">
-          <li><div class="pricing-check">✓</div> Your own store link</li>
-          <li><div class="pricing-check">✓</div> Auto-populated local business listings</li>
-          <li><div class="pricing-check">✓</div> Guest-facing local guide</li>
-          <li><div class="pricing-check" style="background:#fee2e2;color:#e53e3e">✗</div> <span style="color:var(--muted)">Add own products</span></li>
-          <li><div class="pricing-check" style="background:#fee2e2;color:#e53e3e">✗</div> <span style="color:var(--muted)">Custom branding</span></li>
-          <li><div class="pricing-check" style="background:#fee2e2;color:#e53e3e">✗</div> <span style="color:var(--muted)">Stripe payments</span></li>
-          <li><div class="pricing-check" style="background:#fee2e2;color:#e53e3e">✗</div> <span style="color:var(--muted)">Control partner listings</span></li>
+      <div style="background:white;border:1.5px solid var(--border);border-radius:20px;padding:28px;display:flex;flex-direction:column;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--border)"></div>
+        <div style="display:inline-block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:50px;background:#f0f0f0;color:#666;margin-bottom:14px;width:fit-content">🆓 Free</div>
+        <div style="font-family:'Playfair Display',serif;font-size:44px;font-weight:700;color:#555;line-height:1;margin-bottom:4px">$0</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">forever · no card needed</div>
+        <div style="font-size:12px;font-weight:600;color:#666;background:#f0f0f0;display:inline-block;padding:3px 10px;border-radius:50px;margin-bottom:20px;width:fit-content">Local guide only</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:9px;flex:1;margin-bottom:20px">
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Your own store link</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Auto-populated local business listings</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Guest-facing local guide</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)"><div style="width:18px;height:18px;background:#fee2e2;color:#e53e3e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✗</div>Add own products</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)"><div style="width:18px;height:18px;background:#fee2e2;color:#e53e3e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✗</div>Custom branding & Stripe payments</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)"><div style="width:18px;height:18px;background:#fee2e2;color:#e53e3e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✗</div>Control which partner listings show</li>
         </ul>
-        <a href="signup.html" class="btn-primary" style="width:100%;justify-content:center;border-radius:12px;font-size:14px;padding:13px;background:#555">Get started free →</a>
+        <a href="signup.html" style="background:#555;color:white;padding:13px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;text-align:center;display:block">Get started free →</a>
       </div>
 
       <!-- HOST -->
-      <div class="pricing-card">
-        <div class="pricing-badge">🏠 Host</div>
-        <div class="pricing-amount"><sup>$</sup>99</div>
-        <div class="pricing-period">per year · cancel anytime</div>
-        <div class="pricing-properties">1 property</div>
-        <ul class="pricing-features">
-          <li><div class="pricing-check">✓</div> Everything in Free</li>
-          <li><div class="pricing-check">✓</div> Add unlimited own products</li>
-          <li><div class="pricing-check">✓</div> Custom branding & colours</li>
-          <li><div class="pricing-check">✓</div> Stripe payments — 100% to you</li>
-          <li><div class="pricing-check">✓</div> Order dashboard</li>
-          <li><div class="pricing-check">✓</div> Show or hide partner listings</li>
-          <li><div class="pricing-check" style="background:#fee2e2;color:#e53e3e">✗</div> <span style="color:var(--muted)">Analytics</span></li>
+      <div style="background:white;border:1.5px solid var(--border);border-radius:20px;padding:28px;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 48px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+        <div style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--border)"></div>
+        <div style="display:inline-block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:50px;background:var(--brand-light);color:var(--brand);margin-bottom:14px;width:fit-content">🏠 Host</div>
+        <div style="font-family:'Playfair Display',serif;font-size:44px;font-weight:700;color:var(--brand);line-height:1;margin-bottom:4px"><sup style="font-size:22px;vertical-align:top;margin-top:10px">$</sup>99</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">per year · cancel anytime</div>
+        <div style="font-size:12px;font-weight:600;color:var(--brand);background:var(--brand-light);display:inline-block;padding:3px 10px;border-radius:50px;margin-bottom:20px;width:fit-content">1 property</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:9px;flex:1;margin-bottom:20px">
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Everything in Free</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Add unlimited own products</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Custom branding & colours</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Stripe payments — 100% to you</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Order dashboard</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Show or hide partner listings</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)"><div style="width:18px;height:18px;background:#fee2e2;color:#e53e3e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✗</div>Analytics & revenue reports</li>
         </ul>
-        <a href="https://buy.stripe.com/00w00j3HM4Tt2PiacA8ww01" class="btn-primary" style="width:100%;justify-content:center;border-radius:12px;font-size:14px;padding:13px">Get started →</a>
+        <a href="https://buy.stripe.com/00w00j3HM4Tt2PiacA8ww01" style="background:var(--brand);color:white;padding:13px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;text-align:center;display:block">Get started →</a>
       </div>
 
       <!-- PRO -->
-      <div class="pricing-card featured">
-        <div class="pricing-badge">⭐ Most Popular — Pro</div>
-        <div class="pricing-amount"><sup>$</sup>199</div>
-        <div class="pricing-period">per year · cancel anytime</div>
-        <div class="pricing-properties">2–10 properties</div>
-        <ul class="pricing-features">
-          <li><div class="pricing-check">✓</div> Everything in Host</li>
-          <li><div class="pricing-check">✓</div> Up to 10 properties</li>
-          <li><div class="pricing-check">✓</div> Full analytics & revenue reports</div></li>
-          <li><div class="pricing-check">✓</div> Revenue by property breakdown</li>
-          <li><div class="pricing-check">✓</div> Bulk product management</li>
-          <li><div class="pricing-check">✓</div> Priority email support</li>
-          <li><div class="pricing-check">✓</div> Early access to new features</li>
+      <div style="background:white;border:2px solid var(--brand);border-radius:20px;padding:28px;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(44,110,106,0.12)" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+        <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--brand),var(--accent))"></div>
+        <div style="display:inline-block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:50px;background:var(--accent-light);color:#92600a;margin-bottom:14px;width:fit-content">⭐ Most Popular — Pro</div>
+        <div style="font-family:'Playfair Display',serif;font-size:44px;font-weight:700;color:var(--brand);line-height:1;margin-bottom:4px"><sup style="font-size:22px;vertical-align:top;margin-top:10px">$</sup>199</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">per year · cancel anytime</div>
+        <div style="font-size:12px;font-weight:600;color:var(--brand);background:var(--brand-light);display:inline-block;padding:3px 10px;border-radius:50px;margin-bottom:20px;width:fit-content">2–10 properties</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:9px;flex:1;margin-bottom:20px">
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Everything in Host</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Up to 10 properties</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Full analytics & revenue reports</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Revenue by property breakdown</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Bulk product management</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Priority email support</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Early access to new features</li>
         </ul>
-        <a href="https://buy.stripe.com/aFacN55PU0Dd61u0C08ww02" class="btn-primary" style="width:100%;justify-content:center;border-radius:12px;font-size:14px;padding:13px">Get started →</a>
-        <p class="pricing-note">Most popular for property managers with 2–10 properties.</p>
+        <a href="https://buy.stripe.com/aFacN55PU0Dd61u0C08ww02" style="background:var(--brand);color:white;padding:13px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;text-align:center;display:block">Get started →</a>
+        <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.5">Best for property managers with 2–10 properties.</p>
       </div>
 
       <!-- ENTERPRISE -->
-      <div class="pricing-card">
-        <div class="pricing-badge">🏢 Enterprise</div>
-        <div class="pricing-amount" style="font-size:28px;padding-top:12px;margin-bottom:4px">Let's talk</div>
-        <div class="pricing-period">custom · tailored to you</div>
-        <div class="pricing-properties">Unlimited properties</div>
-        <ul class="pricing-features">
-          <li><div class="pricing-check">✓</div> Everything in Pro</li>
-          <li><div class="pricing-check">✓</div> Unlimited properties</li>
-          <li><div class="pricing-check">✓</div> White label option</li>
-          <li><div class="pricing-check">✓</div> Dedicated onboarding call</li>
-          <li><div class="pricing-check">✓</div> Custom integrations</li>
-          <li><div class="pricing-check">✓</div> Direct phone support</li>
-          <li><div class="pricing-check">✓</div> Tailored pricing</li>
+      <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:20px;padding:28px;display:flex;flex-direction:column;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#E8A838,#d4952e)"></div>
+        <div style="display:inline-block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:50px;background:rgba(232,168,56,0.2);color:#E8A838;margin-bottom:14px;width:fit-content">🏢 Enterprise</div>
+        <div style="font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:white;line-height:1;margin-bottom:4px">Let's talk</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px">custom · tailored to you</div>
+        <div style="font-size:12px;font-weight:600;color:#E8A838;background:rgba(232,168,56,0.15);display:inline-block;padding:3px 10px;border-radius:50px;margin-bottom:20px;width:fit-content">Unlimited properties</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:9px;flex:1;margin-bottom:20px">
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Everything in Pro</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Unlimited properties</div></li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>White label option</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Dedicated onboarding call</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Custom integrations</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Direct phone support</li>
+          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Tailored pricing</li>
         </ul>
-        <a href="mailto:hello@hostiehub.com.au" class="btn-primary" style="width:100%;justify-content:center;border-radius:12px;font-size:14px;padding:13px;background:var(--brand-dark)">Get in touch →</a>
+        <a href="mailto:hello@hostiehub.com.au" style="background:#E8A838;color:white;padding:13px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;text-align:center;display:block">Get in touch →</a>
       </div>
 
     </div>
-    <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:24px">🔒 All prices include GST · Cancel anytime · No commissions on guest sales</p>
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:8px">🔒 All prices include GST · Cancel anytime · No commissions on guest sales</p>
   </div>
 </section>
 

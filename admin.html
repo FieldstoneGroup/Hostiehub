@@ -365,10 +365,12 @@
     }
 
     currentUser = { email };
+    sessionStorage.setItem('hh_admin', email);
     bootAdmin();
   }
 
   async function doLogout() {
+    sessionStorage.removeItem('hh_admin');
     await sb.auth.signOut();
     document.getElementById('adminShell').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
@@ -637,9 +639,15 @@
 
   // ── INIT ──
   async function init() {
-    // Admin uses its own password — no Supabase session needed
-    document.getElementById('loginScreen').style.display = 'flex';
-    document.getElementById('adminShell').style.display = 'none';
+    const savedEmail = sessionStorage.getItem('hh_admin');
+    const validEmails = ADMIN_EMAILS.map(e => e.toLowerCase());
+    if (savedEmail && validEmails.includes(savedEmail.toLowerCase())) {
+      currentUser = { email: savedEmail };
+      bootAdmin();
+    } else {
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('adminShell').style.display = 'none';
+    }
   }
 
   init();

@@ -238,7 +238,8 @@ export default {
             '<p style="font-size:14px;color:#1d4d4a;margin:0;line-height:1.7">Your host <strong>' + hostName + '</strong> has been notified and will have everything ready for your arrival. If you have any questions about your order or stay, please contact your host directly.</p></div>' +
             (partnerRequests.length > 0
               ? '<div style="background:#fff7e6;border-radius:12px;padding:20px;margin-bottom:28px;border-left:4px solid #E8A838">' +
-                '<div style="font-size:14px;font-weight:700;color:#92600a;margin-bottom:10px">&#129309; Partner Service Requests</div>' +
+                '<div style="font-size:20px;font-weight:700;color:#92600a;margin-bottom:6px">For Requested Products/Services</div>' +
+                '<div style="font-size:11px;color:#E8A838;font-style:italic;margin-bottom:12px">Ignore this section if you haven\'t requested any partner products or services.</div>' +
                 '<p style="font-size:13px;color:#92600a;margin:0 0 12px;line-height:1.6">The following businesses will contact you directly to confirm and arrange payment:</p>' +
                 partnerRequests.map(r =>
                   '<div style="background:white;border-radius:8px;padding:14px 16px;margin-bottom:8px;border:1px solid #fde68a">' +
@@ -272,6 +273,57 @@ export default {
       }
 
       return new Response('OK', { status: 200 });
+    }
+
+    // ── PARTNER REQUEST NOTIFICATION ──
+    if (service === 'partner-request-notify') {
+      const body = await request.json();
+      const { partnerId, productName, businessName, guestName, guestEmail, guestPhone, propName, checkin, checkout, preferredDate, notes, storeName } = body;
+
+      if (!partnerId) return new Response('ok', { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } });
+
+      const supabaseUrl = 'https://hjwkycknjiyvrxbcejet.supabase.co';
+      const partnerRes = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(partnerId)}&select=email,business_name,contact_name,full_name&limit=1`, {
+        headers: { 'apikey': env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}` }
+      });
+      const partners = await partnerRes.json();
+      const partner = partners?.[0];
+      if (!partner?.email) return new Response('ok', { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } });
+
+      const bizName = partner.business_name || businessName || 'Local Partner';
+      const html = '<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#f4f6f5;border-radius:16px">' +
+        '<div style="background:linear-gradient(135deg,#E8A838,#d4952e);border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">' +
+        '<div style="font-size:36px;margin-bottom:8px">&#129309;</div>' +
+        '<div style="font-size:18px;font-weight:700;color:white;font-family:Georgia,serif">New service request!</div>' +
+        '<div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:4px">via ' + (storeName || 'Hostie Hub') + '</div></div>' +
+        '<div style="background:white;border-radius:12px;padding:24px;margin-bottom:16px">' +
+        '<div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:14px">Request Details</div>' +
+        '<table cellpadding="8" style="width:100%;border-collapse:collapse">' +
+        '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px;width:35%">Service</td><td style="font-weight:600;font-size:14px">' + (productName || '') + '</td></tr>' +
+        '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Guest name</td><td style="font-size:14px">' + (guestName || '') + '</td></tr>' +
+        (guestEmail ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Guest email</td><td style="font-size:14px"><a href="mailto:' + guestEmail + '" style="color:#2C6E6A">' + guestEmail + '</a></td></tr>' : '') +
+        (guestPhone ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Guest phone</td><td style="font-size:14px;font-weight:600"><a href="tel:' + guestPhone + '" style="color:#2C6E6A">' + guestPhone + '</a></td></tr>' : '') +
+        (propName ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Property</td><td style="font-size:14px">' + propName + '</td></tr>' : '') +
+        (checkin ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Check-in</td><td style="font-size:14px">' + checkin + '</td></tr>' : '') +
+        (checkout ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Check-out</td><td style="font-size:14px">' + checkout + '</td></tr>' : '') +
+        (preferredDate ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Preferred date</td><td style="font-weight:600;font-size:14px;color:#2C6E6A">' + preferredDate + '</td></tr>' : '') +
+        (notes ? '<tr><td style="color:#6b7280;font-size:13px;vertical-align:top">Notes</td><td style="font-size:14px;font-style:italic">"' + notes + '"</td></tr>' : '') +
+        '</table></div>' +
+        '<div style="background:#f0fdf4;border-radius:10px;padding:14px 16px;font-size:13px;color:#15803d;line-height:1.5">&#10003; Please contact the guest directly to confirm the booking and arrange payment.</div>' +
+        '</div>';
+
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.RESEND_API_KEY}` },
+        body: JSON.stringify({
+          from: 'Hostie Hub <hello@hostiehub.com.au>',
+          to: partner.email,
+          subject: '&#129309; New service request \u2014 ' + (productName || 'Request'),
+          html
+        })
+      });
+      console.log('Partner request email sent to:', partner.email);
+      return new Response('ok', { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } });
     }
 
     // ── NEW HOST SIGNUP NOTIFICATION ──

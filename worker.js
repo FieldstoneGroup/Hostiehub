@@ -278,17 +278,40 @@ export default {
     // ── PARTNER REQUEST NOTIFICATION ──
     if (service === 'partner-request-notify') {
       const body = await request.json();
-      const { partnerId, productName, businessName, guestName, guestEmail, guestPhone, propName, checkin, checkout, preferredDate, notes, storeName } = body;
-
-      if (!partnerId) return new Response('ok', { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } });
+      const { partnerId, partnerProductId, productName, businessName, guestName, guestEmail, guestPhone, propName, checkin, checkout, preferredDate, notes, storeName } = body;
+      console.log('[partner-request-notify] partnerId:', partnerId, 'partnerProductId:', partnerProductId);
 
       const supabaseUrl = 'https://hjwkycknjiyvrxbcejet.supabase.co';
-      const partnerRes = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(partnerId)}&select=email,business_name,contact_name,full_name&limit=1`, {
-        headers: { 'apikey': env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}` }
-      });
-      const partners = await partnerRes.json();
-      const partner = partners?.[0];
-      if (!partner?.email) return new Response('ok', { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } });
+      const headers = { 'apikey': env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}` };
+
+      // Try to find partner — first by partnerId, then via partnerProductId as fallback
+      let partner = null;
+
+      if (partnerId) {
+        const r = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(partnerId)}&select=email,business_name,contact_name,full_name&limit=1`, { headers });
+        const data = await r.json();
+        partner = data?.[0] || null;
+        console.log('[partner-request-notify] lookup by partnerId result:', JSON.stringify(partner));
+      }
+
+      if (!partner && partnerProductId) {
+        console.log('[partner-request-notify] falling back to partnerProductId lookup');
+        const r = await fetch(`${supabaseUrl}/rest/v1/partner_products?id=eq.${encodeURIComponent(partnerProductId)}&select=partner_id&limit=1`, { headers });
+        const ppData = await r.json();
+        const resolvedPartnerId = ppData?.[0]?.partner_id;
+        console.log('[partner-request-notify] resolved partnerId from partner_products:', resolvedPartnerId);
+        if (resolvedPartnerId) {
+          const r2 = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(resolvedPartnerId)}&select=email,business_name,contact_name,full_name&limit=1`, { headers });
+          const data2 = await r2.json();
+          partner = data2?.[0] || null;
+          console.log('[partner-request-notify] partner from fallback:', JSON.stringify(partner));
+        }
+      }
+
+      if (!partner?.email) {
+        console.log('[partner-request-notify] no partner email found — aborting');
+        return new Response(JSON.stringify({ error: 'partner not found' }), { status: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' } });
+      }
 
       const bizName = partner.business_name || businessName || 'Local Partner';
       const html = '<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#f4f6f5;border-radius:16px">' +
@@ -312,7 +335,7 @@ export default {
         '<div style="background:#f0fdf4;border-radius:10px;padding:14px 16px;font-size:13px;color:#15803d;line-height:1.5">&#10003; Please contact the guest directly to confirm the booking and arrange payment.</div>' +
         '</div>';
 
-      await fetch('https://api.resend.com/emails', {
+      const emailRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.RESEND_API_KEY}` },
         body: JSON.stringify({
@@ -322,7 +345,9 @@ export default {
           html
         })
       });
-      console.log('Partner request email sent to:', partner.email);
+      const emailResult = await emailRes.json();
+      console.log('[partner-request-notify] Resend result:', JSON.stringify(emailResult));
+
       return new Response(JSON.stringify({
         email: partner.email,
         businessName: bizName,

@@ -1395,13 +1395,14 @@
   }
 
   async function sendPartnerRequestEmail({ req, guestName, guestEmail, guestPhone, propName, checkin, checkout, storeName }) {
-    if (!req.partnerId) return null;
+    if (!req.partnerId && !req.partnerProductId) return null;
     try {
       const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Service': 'partner-request-notify' },
         body: JSON.stringify({
-          partnerId: req.partnerId,
+          partnerId: req.partnerId || null,
+          partnerProductId: req.partnerProductId || null,
           productName: req.productName,
           businessName: req.businessName,
           guestName,
@@ -1416,14 +1417,14 @@
         })
       });
       const result = await res.json();
-      // Return partner contact details for guest email enrichment
+      console.log('[sendPartnerRequestEmail] Worker response:', JSON.stringify(result));
       return {
         businessName: result.businessName || req.businessName,
         ownerName: result.contactName || null,
         email: result.email || null
       };
     } catch(e) {
-      console.error('Partner request email failed:', e);
+      console.error('[sendPartnerRequestEmail] failed:', e);
       return { businessName: req.businessName, ownerName: null, email: null };
     }
   }

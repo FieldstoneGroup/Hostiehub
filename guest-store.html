@@ -328,6 +328,31 @@
   </div>
 </div>
 
+<!-- PARTNER REQUEST MODAL -->
+<div class="notes-modal-overlay" id="partnerRequestOverlay">
+  <div class="notes-modal" style="max-width:420px">
+    <div style="font-size:40px;text-align:center;margin-bottom:8px">🤝</div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--brand);text-align:center;margin-bottom:4px">Partner Request</div>
+    <h3 style="text-align:center;margin-bottom:4px" id="partnerRequestTitle">Request this service</h3>
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:20px" id="partnerRequestBusiness"></p>
+    <div style="margin-bottom:14px">
+      <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Preferred date <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input type="date" id="partnerRequestDate" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Notes <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <textarea id="partnerRequestNotes" placeholder="Any specific requirements or questions..." style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;resize:vertical;min-height:80px;box-sizing:border-box"></textarea>
+    </div>
+    <div style="background:#fff7e6;border:1.5px solid #E8A838;border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:#92600a;line-height:1.5">
+      🤝 <strong>No payment needed now.</strong> Submit your request and <span id="partnerRequestBusinessInline">the business</span> will be in touch to confirm your booking and arrange payment.
+    </div>
+    <div class="notes-modal-actions" style="flex-direction:column;gap:8px">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;font-size:15px;border-radius:12px" onclick="confirmPartnerRequest()">Submit request →</button>
+      <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="document.getElementById('partnerRequestOverlay').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- CHECKOUT MODAL -->
 <div class="modal-overlay" id="checkoutOverlay" onclick="closeCheckout()"></div>
 
@@ -385,7 +410,8 @@
   </div>
 
   <div style="padding:0 28px 28px">
-    <button onclick="confirmCheckout()" style="width:100%;background:var(--brand);color:white;border:none;border-radius:12px;padding:16px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;cursor:pointer;">Pay securely with Stripe →</button>
+    <button onclick="confirmCheckout()" id="checkoutPayBtn" style="width:100%;background:var(--brand);color:white;border:none;border-radius:12px;padding:16px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;cursor:pointer;">Pay securely with Stripe →</button>
+    <div id="partnerRequestNotice" style="display:none;background:#fff7e6;border:1.5px solid #E8A838;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:13px;color:#92600a;line-height:1.5;text-align:center">🤝 Partner requests in your cart are <strong>not charged now</strong> — those businesses will contact you directly to arrange payment.</div>
     <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:10px">🔒 Payments go directly to your host via Stripe · All prices include GST</div>
   </div>
 </div>
@@ -400,6 +426,7 @@
   let cart = [], allProducts = [], properties = [], hostData = null;
   let selectedPropertyId = '', selectedPropertyName = '';
   let pendingCartItem = null;
+  let pendingPartnerRequestProduct = null, pendingPartnerRequestBtn = null;
   const categoryLabels = { product:'📦 Product', service:'🛎️ Service', reservation:'🍽️ Reservation', experience:'🏄 Experience' };
 
   // ── STORE EVENT TRACKING ──
@@ -473,6 +500,17 @@
 
     allProducts = prods || [];
     properties = props || [];
+
+    // Fetch business names for partner products
+    const partnerIds = [...new Set(allProducts.filter(p => p.partner_id).map(p => p.partner_id))];
+    if (partnerIds.length > 0) {
+      const { data: partnerRows } = await sb.from('partners').select('id, business_name').in('id', partnerIds);
+      if (partnerRows) {
+        const partnerMap = {};
+        partnerRows.forEach(p => { partnerMap[p.id] = p.business_name; });
+        allProducts = allProducts.map(p => ({ ...p, partner_business_name: p.partner_id ? (partnerMap[p.partner_id] || 'Local Partner') : null }));
+      }
+    }
 
     // Sync latest voucher URLs from partner_products (in case host added product before voucher was uploaded)
     const bookingPartnerIds = allProducts.filter(p => p.partner_product_id && p.partner_product_type === 'booking').map(p => p.partner_product_id);
@@ -825,6 +863,21 @@
   function handleAddToCart(product, btn) {
     if (cart.find(i => i.id === product.id)) return;
 
+    // Partner product without booking URL — show request popup
+    const isPartnerRequest = !!product.partner_product_id && product.partner_product_type !== 'booking';
+    if (isPartnerRequest) {
+      pendingPartnerRequestProduct = product;
+      pendingPartnerRequestBtn = btn;
+      const bizName = product.partner_business_name || 'Local Partner';
+      document.getElementById('partnerRequestTitle').textContent = product.name;
+      document.getElementById('partnerRequestBusiness').textContent = 'by ' + bizName;
+      document.getElementById('partnerRequestBusinessInline').textContent = bizName;
+      document.getElementById('partnerRequestDate').value = '';
+      document.getElementById('partnerRequestNotes').value = '';
+      document.getElementById('partnerRequestOverlay').classList.add('open');
+      return;
+    }
+
     // Experience product — show date + guest picker
     if (product.is_experience) {
       pendingExpProduct = product;
@@ -973,9 +1026,33 @@
     pendingCartItem = null;
   }
 
-  function addToCart(product, btn, note) {
-    cart.push({ id: product.id, name: product.name, price: product.price, icon: product.emoji || '✨', note, partner_product_id: product.partner_product_id || null, partner_id: product.partner_id || null });
-    btn.textContent = '✓ Added';
+  function confirmPartnerRequest() {
+    if (!pendingPartnerRequestProduct) return;
+    const preferredDate = document.getElementById('partnerRequestDate').value;
+    const partnerNotes = document.getElementById('partnerRequestNotes').value.trim();
+    document.getElementById('partnerRequestOverlay').classList.remove('open');
+    addToCart(pendingPartnerRequestProduct, pendingPartnerRequestBtn, '', { preferredDate, partnerNotes });
+    pendingPartnerRequestProduct = null;
+    pendingPartnerRequestBtn = null;
+  }
+  window.confirmPartnerRequest = confirmPartnerRequest;
+
+  function addToCart(product, btn, note, partnerRequestData) {
+    const isPartnerRequest = !!product.partner_product_id && product.partner_product_type !== 'booking';
+    cart.push({
+      id: product.id,
+      name: product.name,
+      price: isPartnerRequest ? 0 : product.price,
+      icon: product.emoji || '✨',
+      note,
+      partner_product_id: product.partner_product_id || null,
+      partner_id: product.partner_id || null,
+      isPartnerRequest,
+      partnerBusinessName: product.partner_business_name || null,
+      preferredDate: partnerRequestData ? partnerRequestData.preferredDate : '',
+      partnerNotes: partnerRequestData ? partnerRequestData.partnerNotes : '',
+    });
+    btn.textContent = isPartnerRequest ? '✓ Requested' : '✓ Added';
     btn.classList.add('added');
     if (product.partner_product_id && product.partner_id) logPartnerEvent(product.partner_product_id, product.partner_id, 'cart');
     logStoreEvent('click', product.id, product.name);
@@ -990,7 +1067,7 @@
   }
 
   function updateCartUI() {
-    const total = cart.reduce((s, i) => s + i.price, 0);
+    const total = cart.filter(i => !i.isPartnerRequest).reduce((s, i) => s + i.price, 0);
     document.getElementById('cartCount').textContent = cart.length;
     document.getElementById('cartTotal').textContent = '$' + total;
     const el = document.getElementById('cartItems');
@@ -1000,9 +1077,10 @@
           <div class="cart-item">
             <div class="cart-item-icon">${item.icon}</div>
             <div class="cart-item-info">
-              <div class="cart-item-name">${item.name}</div>
-              <div class="cart-item-price">$${item.price}</div>
+              <div class="cart-item-name">${item.name}${item.isPartnerRequest ? ' <span style="font-size:10px;background:#fff7e6;color:#92600a;padding:2px 6px;border-radius:50px;font-weight:600">🤝 Request</span>' : ''}</div>
+              <div class="cart-item-price">${item.isPartnerRequest ? '<span style="font-size:12px;color:#92600a">Arrange payment with ' + (item.partnerBusinessName || 'business') + '</span>' : '$' + item.price}</div>
               ${item.note ? `<div class="cart-item-note">📝 ${item.note}</div>` : ''}
+              ${item.preferredDate ? `<div class="cart-item-note">📅 Preferred: ${item.preferredDate}</div>` : ''}
             </div>
             <button class="cart-item-remove" onclick="removeFromCart('${item.id}')">✕</button>
           </div>`).join('');
@@ -1014,14 +1092,34 @@
   function openCheckout() {
     if (!cart.length) { alert('Add something to your cart first!'); return; }
     closeCart();
-    const total = cart.reduce((s, i) => s + i.price, 0);
-    document.getElementById('modalOrderItems').innerHTML = cart.map(item =>
+    const hostItems = cart.filter(i => !i.isPartnerRequest);
+    const partnerItems = cart.filter(i => i.isPartnerRequest);
+    const total = hostItems.reduce((s, i) => s + i.price, 0);
+
+    let orderHtml = hostItems.map(item =>
       `<div style="font-size:14px;margin-bottom:6px">
         <div style="display:flex;justify-content:space-between"><span>${item.icon} ${item.name}</span><span style="font-weight:500">$${item.price}</span></div>
         ${item.note ? `<div style="font-size:12px;color:var(--brand);font-style:italic;margin-top:2px">📝 ${item.note}</div>` : ''}
       </div>`
     ).join('');
-    document.getElementById('modalTotal').textContent = '$' + total;
+
+    if (partnerItems.length > 0) {
+      orderHtml += `<div style="border-top:1px dashed var(--border);margin:10px 0 8px;padding-top:8px;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted)">🤝 Partner Requests (no charge now)</div>`;
+      orderHtml += partnerItems.map(item =>
+        `<div style="font-size:13px;margin-bottom:6px;color:#92600a">
+          <div style="display:flex;justify-content:space-between"><span>${item.icon} ${item.name}</span><span style="font-size:11px;background:#fff7e6;padding:2px 8px;border-radius:50px">Request</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${item.partnerBusinessName || 'Partner'} will arrange payment</div>
+          ${item.preferredDate ? `<div style="font-size:11px;color:var(--muted)">📅 Preferred: ${item.preferredDate}</div>` : ''}
+        </div>`
+      ).join('');
+      document.getElementById('partnerRequestNotice').style.display = 'block';
+    } else {
+      document.getElementById('partnerRequestNotice').style.display = 'none';
+    }
+
+    document.getElementById('modalOrderItems').innerHTML = orderHtml;
+    document.getElementById('modalTotal').textContent = hostItems.length > 0 ? '$' + total : 'No charge';
+    document.getElementById('checkoutPayBtn').textContent = hostItems.length > 0 ? 'Pay securely with Stripe →' : 'Submit requests →';
     if (selectedPropertyId) document.getElementById('checkoutPropertySelect').value = selectedPropertyId;
     document.getElementById('propertyFieldWrap').style.display = properties.length > 0 ? 'block' : 'none';
     document.getElementById('checkoutOverlay').classList.add('open');
@@ -1042,17 +1140,29 @@
     const notes = document.getElementById('guestNotes').value || '';
     const propId = document.getElementById('checkoutPropertySelect').value;
     const propName = propId ? (properties.find(p => p.id === propId)?.nickname || '') : '';
-    const total = cart.reduce((s, i) => s + i.price, 0);
+
+    const hostItems = cart.filter(i => !i.isPartnerRequest);
+    const partnerItems = cart.filter(i => i.isPartnerRequest);
+    const total = hostItems.reduce((s, i) => s + i.price, 0);
     const productNotes = {};
     cart.forEach(i => { if (i.note) productNotes[i.name] = i.note; });
 
-    // If host has Stripe — go straight to Stripe, order saved only after payment succeeds
-    if (hostData.stripe_account_id && hostData.stripe_connected) {
+    const partnerRequests = partnerItems.map(i => ({
+      productName: i.name,
+      businessName: i.partnerBusinessName || 'Local Partner',
+      partnerId: i.partner_id,
+      partnerProductId: i.partner_product_id,
+      preferredDate: i.preferredDate || '',
+      notes: i.partnerNotes || '',
+    }));
+
+    // If host has Stripe and there are host items — go to Stripe
+    if (hostData.stripe_account_id && hostData.stripe_connected && hostItems.length > 0) {
       const checkoutRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-checkout' },
         body: JSON.stringify({
-          items: cart.map(i => ({ name: i.name, price: i.price })),
+          items: hostItems.map(i => ({ name: i.name, price: i.price })),
           stripe_account_id: hostData.stripe_account_id,
           guest_email: guestEmail || undefined,
           success_url: `${window.location.href}&order=success&guest=${encodeURIComponent(guestName)}`,
@@ -1067,8 +1177,9 @@
             property_name: propName,
             notes,
             total,
-            items: JSON.stringify(cart.map(i => ({ id: i.id, name: i.name, price: i.price }))),
+            items: JSON.stringify(hostItems.map(i => ({ id: i.id, name: i.name, price: i.price }))),
             product_notes: JSON.stringify(productNotes),
+            partner_requests: JSON.stringify(partnerRequests),
           }
         })
       });
@@ -1079,7 +1190,7 @@
       }
     }
 
-    // No Stripe — save order and send emails directly
+    // No Stripe or no host items — save order and send emails directly
     await sb.from('orders').insert({
       host_id: hostData.id,
       guest_name: guestName,
@@ -1088,42 +1199,41 @@
       notes,
       property_id: propId || null,
       property_name: propName,
-      items: cart.map(i => ({ id: i.id, name: i.name, price: i.price })),
+      items: hostItems.map(i => ({ id: i.id, name: i.name, price: i.price })),
       product_notes: productNotes,
       total,
-      status: 'paid'
+      status: hostItems.length > 0 ? 'paid' : 'partner_only'
     });
 
     cart.forEach(i => { if (i.partner_product_id && i.partner_id) logPartnerEvent(i.partner_product_id, i.partner_id, 'purchase'); });
     cart.forEach(i => logStoreEvent('purchase', i.id, i.name));
-    await sendHostNotification({
-      hostEmail: hostData.email,
-      notifEmails: Array.isArray(hostData.notif_emails) ? hostData.notif_emails : (hostData.notif_emails ? JSON.parse(hostData.notif_emails) : []),
-      hostName: hostData.full_name || hostData.store_name || 'Host',
-      storeName: hostData.store_name || hostData.username,
-      guestName,
-      checkin,
-      checkout,
-      propName,
-      notes,
-      productNotes,
-      items: cart.map(i => ({ name: i.name, price: i.price, icon: i.icon, note: i.note })),
-      total,
-    });
+
+    if (hostItems.length > 0) {
+      await sendHostNotification({
+        hostEmail: hostData.email,
+        notifEmails: Array.isArray(hostData.notif_emails) ? hostData.notif_emails : (hostData.notif_emails ? JSON.parse(hostData.notif_emails) : []),
+        hostName: hostData.full_name || hostData.store_name || 'Host',
+        storeName: hostData.store_name || hostData.username,
+        guestName, checkin, checkout, propName, notes, productNotes,
+        items: hostItems.map(i => ({ name: i.name, price: i.price, icon: i.icon, note: i.note })),
+        total,
+      });
+    }
+
+    // Send partner request emails
+    for (const req of partnerRequests) {
+      await sendPartnerRequestEmail({ req, guestName, guestEmail, propName, checkin, checkout, storeName: hostData.store_name || hostData.username });
+    }
 
     if (guestEmail) {
       await sendGuestConfirmation({
-        guestEmail,
-        guestName,
+        guestEmail, guestName,
         storeName: hostData.store_name || hostData.username,
         hostName: hostData.full_name || hostData.store_name,
-        checkin,
-        checkout,
-        propName,
-        notes,
-        productNotes,
-        items: cart.map(i => ({ name: i.name, price: i.price, icon: i.icon, note: i.note })),
+        checkin, checkout, propName, notes, productNotes,
+        items: hostItems.map(i => ({ name: i.name, price: i.price, icon: i.icon, note: i.note })),
         total,
+        partnerRequests,
       });
     }
 
@@ -1260,7 +1370,45 @@
     }
   }
 
-  async function sendGuestConfirmation({ guestEmail, guestName, storeName, hostName, checkin, checkout, propName, notes, productNotes, items, total }) {
+  async function sendPartnerRequestEmail({ req, guestName, guestEmail, propName, checkin, checkout, storeName }) {
+    if (!req.partnerId) return;
+    // Fetch partner email
+    const { data: partner } = await sb.from('partners').select('email, business_name').eq('id', req.partnerId).single();
+    if (!partner || !partner.email) return;
+    const bizName = partner.business_name || req.businessName || 'Partner';
+    try {
+      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+        body: JSON.stringify({
+          from: 'Hostie Hub <hello@hostiehub.com.au>',
+          to: partner.email,
+          subject: '🤝 New service request — ' + req.productName,
+          html: '<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#f4f6f5;border-radius:16px">' +
+            '<div style="background:linear-gradient(135deg,#E8A838,#d4952e);border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">' +
+            '<div style="font-size:36px;margin-bottom:8px">🤝</div>' +
+            '<div style="font-size:18px;font-weight:700;color:white;font-family:Georgia,serif">New service request!</div>' +
+            '<div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:4px">via ' + storeName + ' on Hostie Hub</div></div>' +
+            '<div style="background:white;border-radius:12px;padding:24px;margin-bottom:16px">' +
+            '<div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:14px">Request Details</div>' +
+            '<table cellpadding="8" style="width:100%;border-collapse:collapse">' +
+            '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px;width:35%">Service</td><td style="font-weight:600;font-size:14px">' + req.productName + '</td></tr>' +
+            '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Guest name</td><td style="font-size:14px">' + guestName + '</td></tr>' +
+            (guestEmail ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Guest email</td><td style="font-size:14px">' + guestEmail + '</td></tr>' : '') +
+            (propName ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Property</td><td style="font-size:14px">' + propName + '</td></tr>' : '') +
+            '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Check-in</td><td style="font-size:14px">' + checkin + '</td></tr>' +
+            '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Check-out</td><td style="font-size:14px">' + checkout + '</td></tr>' +
+            (req.preferredDate ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Preferred date</td><td style="font-weight:600;font-size:14px;color:#2C6E6A">' + req.preferredDate + '</td></tr>' : '') +
+            (req.notes ? '<tr><td style="color:#6b7280;font-size:13px;vertical-align:top">Notes</td><td style="font-size:14px;font-style:italic">"' + req.notes + '"</td></tr>' : '') +
+            '</table></div>' +
+            '<div style="background:#f0fdf4;border-radius:10px;padding:14px 16px;font-size:13px;color:#15803d;line-height:1.5">✅ Please contact the guest directly to confirm the booking and arrange payment.</div>' +
+            '</div>'
+        })
+      });
+    } catch(e) { console.error('Partner request email failed:', e); }
+  }
+
+  async function sendGuestConfirmation({ guestEmail, guestName, storeName, hostName, checkin, checkout, propName, notes, productNotes, items, total, partnerRequests = [] }) {
     const itemsHtml = items.map(i => `
       <tr>
         <td style="padding:12px 0;border-bottom:1px solid #e8e4df;font-size:15px;color:#1a1a1a">${i.icon} ${i.name}${i.note ? `<div style="font-size:12px;color:#6b7280;margin-top:3px;font-style:italic">📝 ${i.note}</div>` : ''}</td>
@@ -1322,15 +1470,17 @@
             <p style="font-size:14px;color:#1d4d4a;margin:0;line-height:1.7">Your host <strong>${hostName}</strong> has been notified and will have everything ready for your arrival. If you have any questions about your order or stay, please contact your host directly — <strong>do not reply to this email</strong> as it is sent from an unmonitored address.</p>
           </div>
 
-          ${cart.some(i => i.is_experience && i.booking_instructions) ? `
-          <!-- EXPERIENCE INSTRUCTIONS -->
+          ${partnerRequests.length > 0 ? `
+          <!-- PARTNER REQUESTS -->
           <div style="background:#fff7e6;border-radius:12px;padding:20px;margin-bottom:28px;border-left:4px solid #E8A838">
-            <div style="font-size:14px;font-weight:700;color:#92600a;margin-bottom:12px">🏄 Experience Details & Instructions</div>
-            ${cart.filter(i => i.is_experience && i.booking_instructions).map(i => `
-            <div style="margin-bottom:14px">
-              <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:6px">${i.name}</div>
-              <div style="font-size:13px;color:#92600a;margin-bottom:6px">📅 ${i.note}</div>
-              <div style="font-size:13px;color:#78350f;line-height:1.7;white-space:pre-line">${i.booking_instructions}</div>
+            <div style="font-size:14px;font-weight:700;color:#92600a;margin-bottom:12px">🤝 Partner Service Requests</div>
+            <p style="font-size:13px;color:#92600a;margin:0 0 14px;line-height:1.6">The following businesses will contact you directly to confirm your booking and arrange payment:</p>
+            ${partnerRequests.map(r => `
+            <div style="background:white;border-radius:8px;padding:12px 14px;margin-bottom:10px;border:1px solid #fde68a">
+              <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:4px">${r.productName}</div>
+              <div style="font-size:13px;color:#92600a;margin-bottom:4px">🏪 ${r.businessName}</div>
+              ${r.preferredDate ? '<div style="font-size:12px;color:#6b7280">📅 Preferred date: ' + r.preferredDate + '</div>' : ''}
+              ${r.notes ? '<div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:2px">"' + r.notes + '"</div>' : ''}
             </div>`).join('')}
           </div>` : ''}
 

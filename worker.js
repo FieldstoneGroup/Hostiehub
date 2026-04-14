@@ -27,26 +27,236 @@ export default {
 
       const event = JSON.parse(body);
       console.log('Stripe webhook event:', event.type);
+      const supabaseUrl = 'https://hjwkycknjiyvrxbcejet.supabase.co';
 
-      if (event.type === 'checkout.session.completed' || event.type === 'customer.subscription.created') {
+      // ── SUBSCRIPTION PAYMENT — update host plan ──
+      if (event.type === 'customer.subscription.created' ||
+          (event.type === 'checkout.session.completed' && event.data.object.mode === 'subscription')) {
         const customerEmail = event.data.object.customer_email || event.data.object.customer_details?.email;
         const amount = event.data.object.amount_total || event.data.object.plan?.amount;
         const plan = amount >= 19900 ? 'pro' : 'host';
-
         if (customerEmail) {
-          const supabaseUrl = 'https://hjwkycknjiyvrxbcejet.supabase.co';
           const r = await fetch(`${supabaseUrl}/rest/v1/hosts?email=eq.${encodeURIComponent(customerEmail)}`, {
             method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': env.SUPABASE_SERVICE_KEY,
-              'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-              'Prefer': 'return=minimal'
-            },
+            headers: { 'Content-Type': 'application/json', 'apikey': env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`, 'Prefer': 'return=minimal' },
             body: JSON.stringify({ plan, is_active: true })
           });
-          console.log('Supabase update status:', r.status, 'email:', customerEmail, 'plan:', plan);
+          console.log('Subscription plan update:', r.status, customerEmail, plan);
         }
+        return new Response('OK', { status: 200 });
+      }
+
+      // ── GUEST ORDER PAYMENT — save order + send emails ──
+      if (event.type === 'checkout.session.completed' && event.data.object.mode === 'payment') {
+        const session = event.data.object;
+        const meta = session.metadata || {};
+        const hostId = meta.host_id;
+        const guestName = meta.guest_name || 'Guest';
+        const guestEmail = meta.guest_email || session.customer_details?.email || '';
+        const checkin = meta.checkin_date || '';
+        const checkout_date = meta.checkout_date || '';
+        const propId = meta.property_id || null;
+        const propName = meta.property_name || '';
+        const notes = meta.notes || '';
+        const total = parseFloat(meta.total) || (session.amount_total / 100);
+        let items = [];
+        let productNotes = {};
+        try { items = JSON.parse(meta.items || '[]'); } catch(e) {}
+        try { productNotes = JSON.parse(meta.product_notes || '{}'); } catch(e) {}
+
+        if (!hostId) {
+          console.log('No host_id in metadata — skipping order save');
+          return new Response('OK', { status: 200 });
+        }
+
+        // Fetch host details for emails
+        const hostRes = await fetch(`${supabaseUrl}/rest/v1/hosts?id=eq.${encodeURIComponent(hostId)}&select=email,full_name,store_name,username,notif_emails&limit=1`, {
+          headers: { 'apikey': env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}` }
+        });
+        const hosts = await hostRes.json();
+        const host = hosts?.[0];
+        if (!host) {
+          console.log('Host not found for id:', hostId);
+          return new Response('OK', { status: 200 });
+        }
+
+        // Save order to Supabase
+        await fetch(`${supabaseUrl}/rest/v1/orders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`, 'Prefer': 'return=minimal' },
+          body: JSON.stringify({
+            host_id: hostId,
+            guest_name: guestName,
+            guest_email: guestEmail,
+            checkin_date: checkin,
+            checkout_date: checkout_date,
+            notes,
+            property_id: propId,
+            property_name: propName,
+            items,
+            product_notes: productNotes,
+            total,
+            status: 'paid',
+            stripe_session_id: session.id
+          })
+        });
+        console.log('Order saved for host:', hostId, 'guest:', guestName);
+
+        // Build items HTML rows (used in both emails)
+        const itemsHtml = items.map(i => `<tr><td style="padding:10px 0;border-bottom:1px solid #e8e4df;font-size:15px">&#128722; ${i.name}${productNotes[i.name] ? '<div style="font-size:12px;color:#6b7280;margin-top:3px;font-style:italic">&#128203; ' + productNotes[i.name] + '</div>' : ''}</td><td style="padding:10px 0;border-bottom:1px solid #e8e4df;font-size:15px;text-align:right;font-weight:600">$${i.price}</td></tr>`).join('');
+        const hostName = host.full_name || host.store_name || 'Host';
+        const storeName = host.store_name || host.username || 'your store';
+
+        // ── HOST NOTIFICATION EMAIL ──
+        const hostEmailHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
+          '<body style="margin:0;padding:0;background:#f4f6f5;font-family:Arial,sans-serif;">' +
+          '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f5;padding:40px 20px"><tr><td align="center">' +
+          '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">' +
+          '<tr><td style="background:#2C6E6A;border-radius:16px 16px 0 0;padding:32px 40px;text-align:center">' +
+          '<div style="font-size:24px;font-weight:700;color:white;font-family:Georgia,serif">Hostie Hub</div></td></tr>' +
+          '<tr><td style="background:white;padding:40px;border-radius:0 0 16px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.06)">' +
+          '<div style="font-size:28px;margin-bottom:8px">&#128718;</div>' +
+          '<h1 style="font-family:Georgia,serif;font-size:24px;font-weight:700;color:#1a1a1a;margin:0 0 8px">New order received!</h1>' +
+          '<p style="font-size:15px;color:#6b7280;margin:0 0 32px;line-height:1.6">Hi ' + hostName + ', a guest has just placed an order through your <strong>' + storeName + '</strong> store.</p>' +
+          '<div style="background:#f4f6f5;border-radius:12px;padding:20px;margin-bottom:24px">' +
+          '<div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:14px">Guest Details</div>' +
+          '<table width="100%" cellpadding="0" cellspacing="0">' +
+          '<tr><td style="padding:6px 0;font-size:14px;color:#6b7280;width:40%">&#128100; Guest name</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#1a1a1a">' + guestName + '</td></tr>' +
+          (guestEmail ? '<tr><td style="padding:6px 0;font-size:14px;color:#6b7280">&#128231; Email</td><td style="padding:6px 0;font-size:14px;color:#1a1a1a">' + guestEmail + '</td></tr>' : '') +
+          '<tr><td style="padding:6px 0;font-size:14px;color:#6b7280">&#128197; Check-in</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#1a1a1a">' + checkin + '</td></tr>' +
+          '<tr><td style="padding:6px 0;font-size:14px;color:#6b7280">&#128197; Check-out</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#1a1a1a">' + checkout_date + '</td></tr>' +
+          (propName ? '<tr><td style="padding:6px 0;font-size:14px;color:#6b7280">&#127968; Property</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#1a1a1a">' + propName + '</td></tr>' : '') +
+          (notes ? '<tr><td style="padding:6px 0;font-size:14px;color:#6b7280;vertical-align:top">&#128172; Notes</td><td style="padding:6px 0;font-size:14px;color:#1a1a1a;font-style:italic">"' + notes + '"</td></tr>' : '') +
+          '</table></div>' +
+          '<div style="margin-bottom:24px"><div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:14px">Order Items</div>' +
+          '<table width="100%" cellpadding="0" cellspacing="0">' + itemsHtml +
+          '<tr><td style="padding:14px 0 0;font-size:16px;font-weight:700;color:#1a1a1a">Total</td><td style="padding:14px 0 0;font-size:20px;font-weight:700;color:#2C6E6A;text-align:right;font-family:Georgia,serif">$' + total + '</td></tr>' +
+          '</table></div>' +
+          '<div style="text-align:center;margin:32px 0 24px"><a href="https://hostiehub.com.au/dashboard.html" style="background:#2C6E6A;color:white;padding:14px 32px;border-radius:50px;text-decoration:none;font-size:15px;font-weight:600;display:inline-block">View in dashboard &#8594;</a></div>' +
+          '<p style="font-size:13px;color:#6b7280;text-align:center;margin:0;line-height:1.6">This email was sent by Hostie Hub on behalf of your store.</p>' +
+          '</td></tr><tr><td style="padding:24px 0;text-align:center"><div style="font-size:12px;color:#9ca3af">&#169; 2025 Hostie Hub &#183; Made with &#10084;&#65039; in Newcastle, Australia</div></td></tr>' +
+          '</table></td></tr></table></body></html>';
+
+        // Send to host
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.RESEND_API_KEY}` },
+          body: JSON.stringify({ from: 'Hostie Hub <hello@hostiehub.com.au>', to: host.email, subject: '&#128718; New order from ' + guestName + ' \u2014 ' + storeName, html: hostEmailHtml })
+        });
+
+        // Send to additional notif_emails if any
+        let notifEmails = [];
+        try { notifEmails = Array.isArray(host.notif_emails) ? host.notif_emails : JSON.parse(host.notif_emails || '[]'); } catch(e) {}
+        for (const u of notifEmails) {
+          const email = typeof u === 'string' ? u : u.email;
+          if (!email || email === host.email) continue;
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.RESEND_API_KEY}` },
+            body: JSON.stringify({ from: 'Hostie Hub <hello@hostiehub.com.au>', to: email, subject: '&#128718; New order from ' + guestName + ' \u2014 ' + storeName, html: hostEmailHtml })
+          });
+        }
+        console.log('Host notification sent to:', host.email);
+
+        // ── PARTNER REQUEST EMAILS ──
+        let partnerRequests = [];
+        try { partnerRequests = JSON.parse(meta.partner_requests || '[]'); } catch(e) {}
+        for (const req of partnerRequests) {
+          if (!req.partnerId) continue;
+          const partnerRes = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(req.partnerId)}&select=email,business_name&limit=1`, {
+            headers: { 'apikey': env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}` }
+          });
+          const partners = await partnerRes.json();
+          const partner = partners?.[0];
+          if (!partner || !partner.email) continue;
+          const bizName = partner.business_name || req.businessName || 'Partner';
+          const partnerEmailHtml = '<div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#f4f6f5;border-radius:16px">' +
+            '<div style="background:linear-gradient(135deg,#E8A838,#d4952e);border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">' +
+            '<div style="font-size:36px;margin-bottom:8px">&#129309;</div>' +
+            '<div style="font-size:18px;font-weight:700;color:white;font-family:Georgia,serif">New service request!</div>' +
+            '<div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:4px">via ' + storeName + ' on Hostie Hub</div></div>' +
+            '<div style="background:white;border-radius:12px;padding:24px;margin-bottom:16px">' +
+            '<div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:14px">Request Details</div>' +
+            '<table cellpadding="8" style="width:100%;border-collapse:collapse">' +
+            '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px;width:35%">Service</td><td style="font-weight:600;font-size:14px">' + req.productName + '</td></tr>' +
+            '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Guest name</td><td style="font-size:14px">' + guestName + '</td></tr>' +
+            (guestEmail ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Guest email</td><td style="font-size:14px">' + guestEmail + '</td></tr>' : '') +
+            (propName ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Property</td><td style="font-size:14px">' + propName + '</td></tr>' : '') +
+            '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Check-in</td><td style="font-size:14px">' + checkin + '</td></tr>' +
+            '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Check-out</td><td style="font-size:14px">' + checkout_date + '</td></tr>' +
+            (req.preferredDate ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Preferred date</td><td style="font-weight:600;font-size:14px;color:#2C6E6A">' + req.preferredDate + '</td></tr>' : '') +
+            (req.notes ? '<tr><td style="color:#6b7280;font-size:13px;vertical-align:top">Notes</td><td style="font-size:14px;font-style:italic">"' + req.notes + '"</td></tr>' : '') +
+            '</table></div>' +
+            '<div style="background:#f0fdf4;border-radius:10px;padding:14px 16px;font-size:13px;color:#15803d;line-height:1.5">&#10003; Please contact the guest directly to confirm the booking and arrange payment.</div>' +
+            '</div>';
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.RESEND_API_KEY}` },
+            body: JSON.stringify({ from: 'Hostie Hub <hello@hostiehub.com.au>', to: partner.email, subject: '&#129309; New service request \u2014 ' + req.productName, html: partnerEmailHtml })
+          });
+          console.log('Partner request email sent to:', partner.email, 'for:', req.productName);
+        }
+
+        // ── GUEST CONFIRMATION EMAIL ──
+        if (guestEmail) {
+          const partnerRequests = [];
+          try { partnerRequests.push(...JSON.parse(meta.partner_requests || '[]')); } catch(e) {}
+          const guestEmailHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
+            '<body style="margin:0;padding:0;background:#f4f6f5;font-family:Arial,sans-serif;">' +
+            '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f5;padding:40px 20px"><tr><td align="center">' +
+            '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">' +
+            '<tr><td style="background:linear-gradient(135deg,#2C6E6A,#1d4d4a);border-radius:16px 16px 0 0;padding:36px 40px;text-align:center">' +
+            '<div style="font-size:28px;font-weight:700;color:white;font-family:Georgia,serif;margin-bottom:4px">Hostie Hub</div>' +
+            '<div style="font-size:13px;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase">Order Confirmed</div></td></tr>' +
+            '<tr><td style="background:white;padding:40px;border-radius:0 0 16px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.08)">' +
+            '<div style="text-align:center;margin-bottom:32px">' +
+            '<div style="font-size:48px;margin-bottom:12px">&#127881;</div>' +
+            '<h1 style="font-size:26px;font-weight:700;color:#1a1a1a;font-family:Georgia,serif;margin:0 0 8px">You\'re all set, ' + guestName + '!</h1>' +
+            '<p style="font-size:15px;color:#6b7280;margin:0;line-height:1.6">Your extras have been ordered from <strong style="color:#2C6E6A">' + storeName + '</strong>.<br>Your host will have everything ready for your arrival.</p></div>' +
+            '<div style="background:#f4f6f5;border-radius:12px;padding:20px;margin-bottom:28px">' +
+            '<div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:14px">Stay Details</div>' +
+            '<table width="100%" cellpadding="0" cellspacing="0">' +
+            (propName ? '<tr><td style="padding:6px 0;font-size:14px;color:#6b7280;width:40%">&#127968; Property</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#1a1a1a">' + propName + '</td></tr>' : '') +
+            '<tr><td style="padding:6px 0;font-size:14px;color:#6b7280">&#128197; Check-in</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#1a1a1a">' + checkin + '</td></tr>' +
+            '<tr><td style="padding:6px 0;font-size:14px;color:#6b7280">&#128197; Check-out</td><td style="padding:6px 0;font-size:14px;font-weight:600;color:#1a1a1a">' + checkout_date + '</td></tr>' +
+            (notes ? '<tr><td style="padding:6px 0;font-size:14px;color:#6b7280;vertical-align:top">&#128203; Notes</td><td style="padding:6px 0;font-size:14px;color:#1a1a1a">' + notes + '</td></tr>' : '') +
+            '</table></div>' +
+            '<div style="margin-bottom:28px"><div style="font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:14px">Your Order</div>' +
+            '<table width="100%" cellpadding="0" cellspacing="0">' + itemsHtml +
+            '<tr><td style="padding:16px 0 0;font-size:16px;font-weight:700;color:#1a1a1a">Total</td><td style="padding:16px 0 0;font-size:22px;font-weight:700;color:#2C6E6A;text-align:right;font-family:Georgia,serif">$' + total + '</td></tr>' +
+            '</table></div>' +
+            '<div style="background:#e6f2f1;border-radius:12px;padding:20px;margin-bottom:28px;border-left:4px solid #2C6E6A">' +
+            '<div style="font-size:14px;font-weight:700;color:#2C6E6A;margin-bottom:8px">What happens next?</div>' +
+            '<p style="font-size:14px;color:#1d4d4a;margin:0;line-height:1.7">Your host <strong>' + hostName + '</strong> has been notified and will have everything ready for your arrival. If you have any questions about your order or stay, please contact your host directly.</p></div>' +
+            (partnerRequests.length > 0
+              ? '<div style="background:#fff7e6;border-radius:12px;padding:20px;margin-bottom:28px;border-left:4px solid #E8A838">' +
+                '<div style="font-size:14px;font-weight:700;color:#92600a;margin-bottom:10px">&#129309; Partner Service Requests</div>' +
+                '<p style="font-size:13px;color:#92600a;margin:0 0 12px;line-height:1.6">The following businesses will contact you directly to confirm and arrange payment:</p>' +
+                partnerRequests.map(r =>
+                  '<div style="background:white;border-radius:8px;padding:12px 14px;margin-bottom:8px;border:1px solid #fde68a">' +
+                  '<div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:3px">' + r.productName + '</div>' +
+                  '<div style="font-size:13px;color:#92600a">&#127978; ' + (r.businessName || 'Local Partner') + '</div>' +
+                  (r.preferredDate ? '<div style="font-size:12px;color:#6b7280;margin-top:3px">&#128197; Preferred: ' + r.preferredDate + '</div>' : '') +
+                  (r.notes ? '<div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:2px">"' + r.notes + '"</div>' : '') +
+                  '</div>'
+                ).join('') +
+                '</div>'
+              : '') +
+            '<p style="font-size:13px;color:#6b7280;text-align:center;margin:0;line-height:1.6">&#9888;&#65039; <strong>Please do not reply to this email.</strong><br>This is an automated confirmation from Hostie Hub.</p>' +
+            '</td></tr><tr><td style="padding:28px 0;text-align:center">' +
+            '<div style="font-size:13px;font-weight:700;color:#2C6E6A;font-family:Georgia,serif;margin-bottom:6px">Hostie Hub</div>' +
+            '<div style="font-size:12px;color:#9ca3af">&#169; 2025 Hostie Hub &#183; Made with &#10084;&#65039; in Newcastle, Australia</div>' +
+            '</td></tr></table></td></tr></table></body></html>';
+
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.RESEND_API_KEY}` },
+            body: JSON.stringify({ from: 'Hostie Hub <noreply@hostiehub.com.au>', to: guestEmail, subject: '\u2705 Your order is confirmed \u2014 ' + storeName, html: guestEmailHtml })
+          });
+          console.log('Guest confirmation sent to:', guestEmail);
+        }
+
+        return new Response('OK', { status: 200 });
       }
 
       return new Response('OK', { status: 200 });

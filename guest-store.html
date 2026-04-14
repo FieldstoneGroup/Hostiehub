@@ -214,6 +214,21 @@
   <a href="index.html">Open your store →</a>
 </div>
 
+<!-- PROPERTY MODAL -->
+<div class="notes-modal-overlay" id="propertyModalOverlay">
+  <div class="notes-modal" style="max-width:420px">
+    <div style="font-size:40px;text-align:center;margin-bottom:12px">🏠</div>
+    <h3 style="text-align:center;margin-bottom:6px">Which property are you staying at?</h3>
+    <p style="text-align:center;font-size:14px;color:var(--muted);margin-bottom:20px">We'll show you the add-ons available for your property.</p>
+    <select id="propertyModalSelect" style="width:100%;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;background:white;margin-bottom:16px;box-sizing:border-box">
+      <option value="">— Select your property —</option>
+    </select>
+    <div class="notes-modal-actions" style="flex-direction:column;gap:8px">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="confirmPropertyModal()">Let's go →</button>
+    </div>
+  </div>
+</div>
+
 <div id="storeContent" style="display:none">
   <header>
     <div class="header-inner">
@@ -224,19 +239,12 @@
           <div class="host-sub" id="hostSub">Extras & Add-ons Store</div>
         </div>
       </div>
-      <button class="cart-btn" onclick="openCart()">🛒 Cart <span class="cart-count" id="cartCount">0</span></button>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button id="changePropertyBtn" onclick="openPropertyModal()" style="display:none;font-size:12px;font-weight:600;color:var(--brand);background:var(--brand-light);border:none;border-radius:50px;padding:6px 12px;cursor:pointer">🏠 <span id="changePropertyLabel">Change property</span></button>
+        <button class="cart-btn" onclick="openCart()">🛒 Cart <span class="cart-count" id="cartCount">0</span></button>
+      </div>
     </div>
   </header>
-
-  <!-- PROPERTY SELECTOR -->
-  <div class="property-selector" id="propertySelectorBar" style="display:none">
-    <div class="property-selector-inner">
-      <label>🏠 Which property are you staying at?</label>
-      <select class="property-select" id="propertySelect" onchange="onPropertyChange(this.value)">
-        <option value="">— Select your property —</option>
-      </select>
-    </div>
-  </div>
 
   <div class="hero">
     <div class="hero-content" id="heroContent">
@@ -248,9 +256,15 @@
 
   <div class="categories">
     <div class="cat-label">Browse by category</div>
-    <select id="catDropdown" onchange="filterCatDropdown(this.value)" style="padding:10px 16px;border:1.5px solid var(--border);border-radius:50px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;background:white;color:var(--text);outline:none;cursor:pointer;min-width:200px;appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22><path fill=%22%236b7280%22 d=%22M6 8L1 3h10z%22/></svg>');background-repeat:no-repeat;background-position:right 14px center;padding-right:36px">
-      <option value="all">All</option>
-    </select>
+    <div id="catDropdownWrap" style="position:relative;display:inline-block;min-width:220px">
+      <button id="catDropdownBtn" onclick="toggleCatDropdown()" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border:1.5px solid var(--border);border-radius:50px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;background:white;color:var(--text);outline:none;cursor:pointer;width:100%;min-width:220px">
+        <span id="catDropdownLabel">🌟 All</span>
+        <span style="font-size:10px;color:var(--muted)">▾</span>
+      </button>
+      <div id="catDropdownMenu" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:100;overflow:hidden;min-width:220px">
+        <div id="catDropdownOptions"></div>
+      </div>
+    </div>
   </div>
 
   <div class="products-section">
@@ -545,27 +559,31 @@
     console.log('[Hostie] booking products after sync:', allProducts.filter(p => p.partner_product_type === 'booking').map(p => ({ name: p.name, voucher: p.partner_voucher_pdf_url })));
 
     if (properties.length > 0) {
-      buildPropertySelector();
-      document.getElementById('propertySelectorBar').style.display = 'block';
       populateCheckoutPropertySelect();
+      populatePropertyModal();
     }
 
     renderCategories(allProducts);
     renderProducts(allProducts);
     document.getElementById('storeContent').style.display = 'block';
     hideLoading();
-    // Log store open event
     if (!hostData.is_demo) logStoreEvent('open', null, null);
 
-    // Restore saved property selection
+    // Restore saved property selection or show modal
     const saved = sessionStorage.getItem('selectedProperty_' + username);
-    if (saved) {
+    if (saved && properties.length > 0) {
       const parsed = JSON.parse(saved);
       selectedPropertyId = parsed.id;
       selectedPropertyName = parsed.name;
-      document.getElementById('propertySelect').value = parsed.id;
       document.getElementById('checkoutPropertySelect').value = parsed.id;
+      updateChangePropertyBtn();
       filterProductsByProperty();
+    } else if (properties.length > 1) {
+      // Show modal after brief delay so store is visible behind it
+      setTimeout(() => openPropertyModal(), 400);
+    } else if (properties.length === 1) {
+      // Only one property — auto-select it
+      onPropertyChange(properties[0].id);
     }
   }
 
@@ -582,13 +600,39 @@
     document.title = name + ' – Extras Store';
   }
 
-  function buildPropertySelector() {
-    const sel = document.getElementById('propertySelect');
+  function populatePropertyModal() {
+    const sel = document.getElementById('propertyModalSelect');
+    sel.innerHTML = '<option value="">— Select your property —</option>';
     properties.forEach(p => {
       const opt = document.createElement('option');
       opt.value = p.id; opt.textContent = p.nickname;
       sel.appendChild(opt);
     });
+  }
+
+  function openPropertyModal() {
+    document.getElementById('propertyModalOverlay').classList.add('open');
+  }
+
+  function confirmPropertyModal() {
+    const sel = document.getElementById('propertyModalSelect');
+    if (!sel.value) { sel.style.borderColor = '#e53e3e'; return; }
+    sel.style.borderColor = 'var(--border)';
+    document.getElementById('propertyModalOverlay').classList.remove('open');
+    onPropertyChange(sel.value);
+  }
+  window.confirmPropertyModal = confirmPropertyModal;
+  window.openPropertyModal = openPropertyModal;
+
+  function updateChangePropertyBtn() {
+    const btn = document.getElementById('changePropertyBtn');
+    const label = document.getElementById('changePropertyLabel');
+    if (properties.length > 1 && selectedPropertyName) {
+      btn.style.display = 'flex';
+      label.textContent = selectedPropertyName;
+    } else {
+      btn.style.display = 'none';
+    }
   }
 
   function populateCheckoutPropertySelect() {
@@ -606,13 +650,39 @@
     selectedPropertyName = prop ? prop.nickname : '';
     document.getElementById('checkoutPropertySelect').value = propId;
     if (propId) sessionStorage.setItem('selectedProperty_' + getUsername(), JSON.stringify({ id: propId, name: selectedPropertyName }));
+    updateChangePropertyBtn();
     filterProductsByProperty();
   }
 
   function filterProductsByProperty() {
-    const val = document.getElementById('catDropdown')?.value || 'all';
-    filterCatDropdown(val);
+    document.getElementById('catDropdownLabel').textContent = '🌟 All';
+    filterCatDropdown('all');
   }
+
+  const catOptions = [
+    { value: 'all', label: '🌟 All' },
+    { value: 'product', label: '📦 Products' },
+    { value: 'service', label: '🛎️ Services' },
+    { value: 'reservation', label: '🍽️ Reservations' },
+    { value: 'experience', label: '🏄 Experiences' },
+    { value: 'local_recommendations', label: '🤝 Local Recommendations' },
+  ];
+
+  let catDropdownOpen = false;
+
+  function toggleCatDropdown() {
+    catDropdownOpen = !catDropdownOpen;
+    document.getElementById('catDropdownMenu').style.display = catDropdownOpen ? 'block' : 'none';
+  }
+
+  function closeCatDropdown() {
+    catDropdownOpen = false;
+    document.getElementById('catDropdownMenu').style.display = 'none';
+  }
+
+  document.addEventListener('click', e => {
+    if (!document.getElementById('catDropdownWrap')?.contains(e.target)) closeCatDropdown();
+  });
 
   function renderCategories(products) {
     const partnerCats = ['local_products', 'local_services', 'local_attractions'];
@@ -620,24 +690,23 @@
     const hostCats = allCats.filter(c => !partnerCats.includes(c));
     const hasPartner = allCats.some(c => partnerCats.includes(c));
 
-    const dropdown = document.getElementById('catDropdown');
-    dropdown.innerHTML = '<option value="all">All</option>';
-
-    hostCats.forEach(cat => {
-      const opt = document.createElement('option');
-      opt.value = cat;
-      opt.textContent = categoryLabels[cat] || cat;
-      dropdown.appendChild(opt);
+    const visibleOptions = catOptions.filter(o => {
+      if (o.value === 'all') return true;
+      if (o.value === 'local_recommendations') return hasPartner;
+      return hostCats.includes(o.value);
     });
 
-    if (hasPartner) {
-      const opt = document.createElement('option');
-      opt.value = 'local_recommendations';
-      opt.textContent = '🤝 Local Recommendations';
-      dropdown.appendChild(opt);
-    }
+    const container = document.getElementById('catDropdownOptions');
+    container.innerHTML = visibleOptions.map(o => `
+      <div onclick="selectCat('${o.value}', '${o.label}')" style="padding:10px 16px;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='white'">
+        ${o.label}
+      </div>`).join('');
+  }
 
-    dropdown.value = 'all';
+  function selectCat(value, label) {
+    document.getElementById('catDropdownLabel').textContent = label;
+    closeCatDropdown();
+    filterCatDropdown(value);
   }
 
   function filterCatDropdown(val) {

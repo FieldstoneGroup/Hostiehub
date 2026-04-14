@@ -988,6 +988,8 @@
     dollarSign.style.display = isContactForPricing ? 'none' : 'block';
     if (isContactForPricing) priceInput.value = '';
   }
+
+  function updateAllDaysCheck() {
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
     const allChecked = days.every(d => document.getElementById('day' + d).checked);
     document.getElementById('dayAll').checked = allChecked;

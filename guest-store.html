@@ -248,9 +248,9 @@
 
   <div class="categories">
     <div class="cat-label">Browse by category</div>
-    <div class="cat-tabs" id="catTabs">
-      <button class="cat-tab active" onclick="filterCat('all', this)">All</button>
-    </div>
+    <select id="catDropdown" onchange="filterCatDropdown(this.value)" style="padding:10px 16px;border:1.5px solid var(--border);border-radius:50px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;background:white;color:var(--text);outline:none;cursor:pointer;min-width:200px;appearance:none;background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22><path fill=%22%236b7280%22 d=%22M6 8L1 3h10z%22/></svg>');background-repeat:no-repeat;background-position:right 14px center;padding-right:36px">
+      <option value="all">All</option>
+    </select>
   </div>
 
   <div class="products-section">
@@ -431,8 +431,8 @@
   let pendingCartItem = null;
   let pendingPartnerRequestProduct = null, pendingPartnerRequestBtn = null;
   const categoryLabels = {
-    product:'📦 Product', service:'🛎️ Service', reservation:'🍽️ Reservation', experience:'🏄 Experience',
-    local_products:'🛍️ Local Products', local_services:'🛎️ Local Services', local_attractions:'🗺️ Local Attractions'
+    product:'📦 Products', service:'🛎️ Services', reservation:'🍽️ Reservations', experience:'🏄 Experiences',
+    local_products:'🤝 Local Recommendations', local_services:'🤝 Local Recommendations', local_attractions:'🤝 Local Recommendations'
   };
 
   // ── STORE EVENT TRACKING ──
@@ -610,42 +610,51 @@
   }
 
   function filterProductsByProperty() {
-    if (!selectedPropertyId) { renderProducts(allProducts); return; }
-    const filtered = allProducts.filter(p => {
-      if (p.available_all_properties !== false) return true;
-      const ids = Array.isArray(p.property_ids) ? p.property_ids : JSON.parse(p.property_ids || '[]');
-      return ids.includes(selectedPropertyId);
-    });
-    renderProducts(filtered);
+    const val = document.getElementById('catDropdown')?.value || 'all';
+    filterCatDropdown(val);
   }
 
   function renderCategories(products) {
     const partnerCats = ['local_products', 'local_services', 'local_attractions'];
     const allCats = [...new Set(products.map(p => p.category).filter(Boolean))];
-    // Host categories first, then partner categories in fixed order
     const hostCats = allCats.filter(c => !partnerCats.includes(c));
-    const activeParnterCats = partnerCats.filter(c => allCats.includes(c));
-    const cats = [...hostCats, ...activeParnterCats];
-    const tabs = document.getElementById('catTabs');
-    while (tabs.children.length > 1) tabs.removeChild(tabs.lastChild);
-    cats.forEach(cat => {
-      const btn = document.createElement('button');
-      btn.className = 'cat-tab';
-      btn.textContent = categoryLabels[cat] || cat;
-      btn.onclick = () => filterCat(cat, btn);
-      tabs.appendChild(btn);
+    const hasPartner = allCats.some(c => partnerCats.includes(c));
+
+    const dropdown = document.getElementById('catDropdown');
+    dropdown.innerHTML = '<option value="all">All</option>';
+
+    hostCats.forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = categoryLabels[cat] || cat;
+      dropdown.appendChild(opt);
     });
+
+    if (hasPartner) {
+      const opt = document.createElement('option');
+      opt.value = 'local_recommendations';
+      opt.textContent = '🤝 Local Recommendations';
+      dropdown.appendChild(opt);
+    }
+
+    dropdown.value = 'all';
   }
 
-  function filterCat(cat, btn) {
-    document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
+  function filterCatDropdown(val) {
+    const partnerCats = ['local_products', 'local_services', 'local_attractions'];
     const base = selectedPropertyId ? allProducts.filter(p => {
       if (p.available_all_properties !== false) return true;
       const ids = Array.isArray(p.property_ids) ? p.property_ids : JSON.parse(p.property_ids || '[]');
       return ids.includes(selectedPropertyId);
     }) : allProducts;
-    renderProducts(cat === 'all' ? base : base.filter(p => p.category === cat));
+
+    if (val === 'all') renderProducts(base);
+    else if (val === 'local_recommendations') renderProducts(base.filter(p => partnerCats.includes(p.category)));
+    else renderProducts(base.filter(p => p.category === val));
+  }
+
+  function filterCat(cat, btn) {
+    filterCatDropdown(cat);
   }
 
   // ── PARTNER EVENT TRACKING ──

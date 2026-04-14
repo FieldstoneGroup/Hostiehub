@@ -53,6 +53,7 @@ export default {
         const hostId = meta.host_id;
         const guestName = meta.guest_name || 'Guest';
         const guestEmail = meta.guest_email || session.customer_details?.email || '';
+        const guestPhone = meta.guest_phone || '';
         const checkin = meta.checkin_date || '';
         const checkout_date = meta.checkout_date || '';
         const propId = meta.property_id || null;
@@ -163,7 +164,7 @@ export default {
         try { partnerRequests = JSON.parse(meta.partner_requests || '[]'); } catch(e) {}
         for (const req of partnerRequests) {
           if (!req.partnerId) continue;
-          const partnerRes = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(req.partnerId)}&select=email,business_name&limit=1`, {
+          const partnerRes = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(req.partnerId)}&select=email,business_name,contact_name,full_name&limit=1`, {
             headers: { 'apikey': env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}` }
           });
           const partners = await partnerRes.json();
@@ -180,7 +181,8 @@ export default {
             '<table cellpadding="8" style="width:100%;border-collapse:collapse">' +
             '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px;width:35%">Service</td><td style="font-weight:600;font-size:14px">' + req.productName + '</td></tr>' +
             '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Guest name</td><td style="font-size:14px">' + guestName + '</td></tr>' +
-            (guestEmail ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Guest email</td><td style="font-size:14px">' + guestEmail + '</td></tr>' : '') +
+            (guestEmail ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Guest email</td><td style="font-size:14px"><a href="mailto:' + guestEmail + '" style="color:#2C6E6A">' + guestEmail + '</a></td></tr>' : '') +
+            (guestPhone ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Guest phone</td><td style="font-size:14px;font-weight:600"><a href="tel:' + guestPhone + '" style="color:#2C6E6A">' + guestPhone + '</a></td></tr>' : '') +
             (propName ? '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Property</td><td style="font-size:14px">' + propName + '</td></tr>' : '') +
             '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Check-in</td><td style="font-size:14px">' + checkin + '</td></tr>' +
             '<tr style="border-bottom:1px solid #f0ece8"><td style="color:#6b7280;font-size:13px">Check-out</td><td style="font-size:14px">' + checkout_date + '</td></tr>' +
@@ -189,6 +191,10 @@ export default {
             '</table></div>' +
             '<div style="background:#f0fdf4;border-radius:10px;padding:14px 16px;font-size:13px;color:#15803d;line-height:1.5">&#10003; Please contact the guest directly to confirm the booking and arrange payment.</div>' +
             '</div>';
+          // Store enriched partner details for guest email
+          req._partnerEmail = partner.email;
+          req._ownerName = partner.contact_name || partner.full_name || null;
+          req._businessName = bizName;
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.RESEND_API_KEY}` },
@@ -226,6 +232,8 @@ export default {
             '<tr><td style="padding:16px 0 0;font-size:16px;font-weight:700;color:#1a1a1a">Total</td><td style="padding:16px 0 0;font-size:22px;font-weight:700;color:#2C6E6A;text-align:right;font-family:Georgia,serif">$' + total + '</td></tr>' +
             '</table></div>' +
             '<div style="background:#e6f2f1;border-radius:12px;padding:20px;margin-bottom:28px;border-left:4px solid #2C6E6A">' +
+            '<div style="font-size:20px;font-weight:700;color:#1d4d4a;margin-bottom:6px">For Purchased Products</div>' +
+            '<div style="font-size:11px;color:#2C6E6A;font-style:italic;margin-bottom:12px">Ignore this section if you haven\'t purchased any host products.</div>' +
             '<div style="font-size:14px;font-weight:700;color:#2C6E6A;margin-bottom:8px">What happens next?</div>' +
             '<p style="font-size:14px;color:#1d4d4a;margin:0;line-height:1.7">Your host <strong>' + hostName + '</strong> has been notified and will have everything ready for your arrival. If you have any questions about your order or stay, please contact your host directly.</p></div>' +
             (partnerRequests.length > 0
@@ -233,11 +241,15 @@ export default {
                 '<div style="font-size:14px;font-weight:700;color:#92600a;margin-bottom:10px">&#129309; Partner Service Requests</div>' +
                 '<p style="font-size:13px;color:#92600a;margin:0 0 12px;line-height:1.6">The following businesses will contact you directly to confirm and arrange payment:</p>' +
                 partnerRequests.map(r =>
-                  '<div style="background:white;border-radius:8px;padding:12px 14px;margin-bottom:8px;border:1px solid #fde68a">' +
-                  '<div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:3px">' + r.productName + '</div>' +
-                  '<div style="font-size:13px;color:#92600a">&#127978; ' + (r.businessName || 'Local Partner') + '</div>' +
-                  (r.preferredDate ? '<div style="font-size:12px;color:#6b7280;margin-top:3px">&#128197; Preferred: ' + r.preferredDate + '</div>' : '') +
-                  (r.notes ? '<div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:2px">"' + r.notes + '"</div>' : '') +
+                  '<div style="background:white;border-radius:8px;padding:14px 16px;margin-bottom:8px;border:1px solid #fde68a">' +
+                  '<div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:8px">' + r.productName + '</div>' +
+                  '<table cellpadding="4" style="width:100%;border-collapse:collapse">' +
+                  '<tr><td style="font-size:12px;color:#6b7280;width:35%">Business</td><td style="font-size:13px;font-weight:600;color:#92600a">' + (r._businessName || r.businessName || 'Local Partner') + '</td></tr>' +
+                  (r._ownerName ? '<tr><td style="font-size:12px;color:#6b7280">Contact</td><td style="font-size:13px;font-weight:600;color:#1a1a1a">' + r._ownerName + '</td></tr>' : '') +
+                  (r._partnerEmail ? '<tr><td style="font-size:12px;color:#6b7280">Email</td><td style="font-size:13px"><a href="mailto:' + r._partnerEmail + '" style="color:#2C6E6A;font-weight:600">' + r._partnerEmail + '</a></td></tr>' : '') +
+                  (r.preferredDate ? '<tr><td style="font-size:12px;color:#6b7280">Preferred date</td><td style="font-size:13px;color:#1a1a1a">' + r.preferredDate + '</td></tr>' : '') +
+                  '</table>' +
+                  (r.notes ? '<div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:8px;border-top:1px solid #f0ece8;padding-top:8px">"' + r.notes + '"</div>' : '') +
                   '</div>'
                 ).join('') +
                 '</div>'

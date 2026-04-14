@@ -1620,7 +1620,7 @@
       contact_name: document.getElementById('accountContactName').value.trim(),
       phone: document.getElementById('accountPhone').value.trim(),
     };
-    const { error } = await sb.from('partners').update(updates).eq('id', partnerData.id);
+    const { error } = await sb.from('partners').update(updates).eq('user_id', currentUser.id);
     if (error) { showToast('Error saving: ' + error.message); return; }
     Object.assign(partnerData, updates);
     document.getElementById('sidebarName').textContent = updates.business_name;

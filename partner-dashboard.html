@@ -561,7 +561,7 @@
             <div class="card-title">Business profile</div>
             <div class="card-desc">Update your business information.</div>
             <div class="field"><label>Business name</label><input type="text" id="accountName" placeholder="Your business name"></div>
-            <div class="field"><label>Description</label><textarea id="accountDesc" placeholder="Tell hosts and guests about your business..."></textarea></div>
+            <div class="field"><label>Business owner / representative name <span style="font-weight:300;font-size:12px">(shown to guests in confirmation emails)</span></label><input type="text" id="accountContactName" placeholder="e.g. Jane Smith"></div>
             <div class="field"><label>Phone number</label><input type="tel" id="accountPhone" placeholder="e.g. 0412 345 678"><div class="field-hint">Shared with hosts when a guest purchases one of your products.</div></div>
             <button class="btn btn-primary btn-sm" onclick="saveProfile()">Save changes</button>
           </div>
@@ -709,7 +709,7 @@
     document.getElementById('sidebarAvatar').textContent = initials;
     document.getElementById('sidebarName').textContent = partnerData.business_name || '';
     document.getElementById('accountName').value = partnerData.business_name || '';
-    document.getElementById('accountDesc').value = partnerData.description || '';
+    document.getElementById('accountContactName').value = partnerData.contact_name || '';
     if (document.getElementById('partnerCurrentEmail')) document.getElementById('partnerCurrentEmail').value = currentUser.email || partnerData.email || '';
     document.getElementById('accountPhone').value = partnerData.phone || '';
     accountPostcodes = Array.isArray(partnerData.postcodes) ? partnerData.postcodes : JSON.parse(partnerData.postcodes || '[]');
@@ -1628,7 +1628,7 @@
   async function saveProfile() {
     const updates = {
       business_name: document.getElementById('accountName').value.trim(),
-      description: document.getElementById('accountDesc').value.trim(),
+      contact_name: document.getElementById('accountContactName').value.trim(),
       phone: document.getElementById('accountPhone').value.trim(),
     };
     await sb.from('partners').update(updates).eq('id', partnerData.id);

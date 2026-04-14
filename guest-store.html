@@ -1237,9 +1237,16 @@
       });
     }
 
-    // Send partner request emails
+    // Send partner request emails and collect enriched details
+    const enrichedPartnerRequests = [];
     for (const req of partnerRequests) {
-      await sendPartnerRequestEmail({ req, guestName, guestEmail, guestPhone, propName, checkin, checkout, storeName: hostData.store_name || hostData.username });
+      const details = await sendPartnerRequestEmail({ req, guestName, guestEmail, guestPhone, propName, checkin, checkout, storeName: hostData.store_name || hostData.username });
+      enrichedPartnerRequests.push({
+        ...req,
+        partnerEmail: details?.email || null,
+        ownerName: details?.ownerName || null,
+        businessName: details?.businessName || req.businessName,
+      });
     }
 
     if (guestEmail) {
@@ -1250,7 +1257,7 @@
         checkin, checkout, propName, notes, productNotes,
         items: hostItems.map(i => ({ name: i.name, price: i.price, icon: i.icon, note: i.note })),
         total,
-        partnerRequests,
+        partnerRequests: enrichedPartnerRequests,
       });
     }
 
@@ -1388,9 +1395,9 @@
   }
 
   async function sendPartnerRequestEmail({ req, guestName, guestEmail, guestPhone, propName, checkin, checkout, storeName }) {
-    if (!req.partnerId) return;
+    if (!req.partnerId) return null;
     try {
-      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+      const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Service': 'partner-request-notify' },
         body: JSON.stringify({
@@ -1408,23 +1415,21 @@
           storeName
         })
       });
-    } catch(e) { console.error('Partner request email failed:', e); }
-    // Also fetch partner details for guest email enrichment (fails gracefully if RLS blocks)
-    try {
-      const { data: p } = await sb.from('partners').select('email, business_name, contact_name, full_name').eq('id', req.partnerId).single();
-      return { businessName: p?.business_name || req.businessName, ownerName: p?.contact_name || p?.full_name || null, email: p?.email || null };
-    } catch(e) { return { businessName: req.businessName, ownerName: null, email: null }; }
+      const result = await res.json();
+      // Return partner contact details for guest email enrichment
+      return {
+        businessName: result.businessName || req.businessName,
+        ownerName: result.contactName || null,
+        email: result.email || null
+      };
+    } catch(e) {
+      console.error('Partner request email failed:', e);
+      return { businessName: req.businessName, ownerName: null, email: null };
+    }
   }
 
   async function sendGuestConfirmation({ guestEmail, guestName, guestPhone, storeName, hostName, checkin, checkout, propName, notes, productNotes, items, total, partnerRequests = [] }) {
-    // Enrich partner requests with contact details
-    const enrichedPartnerRequests = await Promise.all(partnerRequests.map(async req => {
-      if (!req.partnerId) return req;
-      try {
-        const { data: p } = await sb.from('partners').select('email, business_name, contact_name, full_name').eq('id', req.partnerId).single();
-        return { ...req, partnerEmail: p?.email || null, ownerName: p?.contact_name || p?.full_name || null, businessName: p?.business_name || req.businessName };
-      } catch(e) { return req; }
-    }));
+    const enrichedPartnerRequests = partnerRequests; // already enriched by sendPartnerRequestEmail
     const itemsHtml = items.map(i => `
       <tr>
         <td style="padding:12px 0;border-bottom:1px solid #e8e4df;font-size:15px;color:#1a1a1a">${i.icon} ${i.name}${i.note ? `<div style="font-size:12px;color:#6b7280;margin-top:3px;font-style:italic">📝 ${i.note}</div>` : ''}</td>

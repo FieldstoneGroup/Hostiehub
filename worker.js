@@ -323,7 +323,11 @@ export default {
         })
       });
       console.log('Partner request email sent to:', partner.email);
-      return new Response('ok', { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } });
+      return new Response(JSON.stringify({
+        email: partner.email,
+        businessName: bizName,
+        contactName: partner.contact_name || partner.full_name || null
+      }), { status: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' } });
     }
 
     // ── NEW HOST SIGNUP NOTIFICATION ──

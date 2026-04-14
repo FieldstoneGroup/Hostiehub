@@ -1620,10 +1620,11 @@
       contact_name: document.getElementById('accountContactName').value.trim(),
       phone: document.getElementById('accountPhone').value.trim(),
     };
-    await sb.from('partners').update(updates).eq('id', partnerData.id);
+    const { error } = await sb.from('partners').update(updates).eq('id', partnerData.id);
+    if (error) { showToast('Error saving: ' + error.message); return; }
     Object.assign(partnerData, updates);
     document.getElementById('sidebarName').textContent = updates.business_name;
-    showToast('Profile saved');
+    showToast('Profile saved ✓');
   }
 
   async function partnerChangeEmail() {

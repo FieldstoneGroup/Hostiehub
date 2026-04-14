@@ -288,22 +288,22 @@ export default {
       let partner = null;
 
       if (partnerId) {
-        const r = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(partnerId)}&select=email,business_name,contact_name,full_name&limit=1`, { headers });
+        const r = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(partnerId)}&select=*&limit=1`, { headers });
         const data = await r.json();
-        partner = data?.[0] || null;
-        console.log('[partner-request-notify] lookup by partnerId result:', JSON.stringify(partner));
+        partner = Array.isArray(data) ? (data[0] || null) : null;
+        console.log('[partner-request-notify] lookup by partnerId status:', Array.isArray(data) ? 'ok' : 'error', 'result:', JSON.stringify(partner));
       }
 
       if (!partner && partnerProductId) {
         console.log('[partner-request-notify] falling back to partnerProductId lookup');
         const r = await fetch(`${supabaseUrl}/rest/v1/partner_products?id=eq.${encodeURIComponent(partnerProductId)}&select=partner_id&limit=1`, { headers });
         const ppData = await r.json();
-        const resolvedPartnerId = ppData?.[0]?.partner_id;
+        const resolvedPartnerId = Array.isArray(ppData) ? ppData[0]?.partner_id : null;
         console.log('[partner-request-notify] resolved partnerId from partner_products:', resolvedPartnerId);
         if (resolvedPartnerId) {
-          const r2 = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(resolvedPartnerId)}&select=email,business_name,contact_name,full_name&limit=1`, { headers });
+          const r2 = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(resolvedPartnerId)}&select=*&limit=1`, { headers });
           const data2 = await r2.json();
-          partner = data2?.[0] || null;
+          partner = Array.isArray(data2) ? (data2[0] || null) : null;
           console.log('[partner-request-notify] partner from fallback:', JSON.stringify(partner));
         }
       }

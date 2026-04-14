@@ -524,16 +524,17 @@
       else if (p.partner_product_type === 'booking') partnerCat = 'local_attractions';
       return { ...p, category: partnerCat };
     });
-    const bookingPartnerIds = allProducts.filter(p => p.partner_product_id && p.partner_product_type === 'booking').map(p => p.partner_product_id);
+    const bookingPartnerIds = allProducts.filter(p => p.partner_product_id).map(p => p.partner_product_id);
     if (bookingPartnerIds.length > 0) {
-      const { data: partnerProds } = await sb.from('partner_products').select('id, voucher_pdf_url, voucher_title').in('id', bookingPartnerIds);
+      const { data: partnerProds } = await sb.from('partner_products').select('id, voucher_pdf_url, voucher_title, service_price, service_price_unit').in('id', bookingPartnerIds);
       console.log('[Hostie] partner_products voucher fetch:', partnerProds);
       if (partnerProds) {
         const voucherMap = {};
-        partnerProds.forEach(pp => { voucherMap[pp.id] = { url: pp.voucher_pdf_url, title: pp.voucher_title }; });
+        partnerProds.forEach(pp => { voucherMap[pp.id] = { url: pp.voucher_pdf_url, title: pp.voucher_title, service_price: pp.service_price, service_price_unit: pp.service_price_unit }; });
         allProducts = allProducts.map(p => {
           if (p.partner_product_id && voucherMap[p.partner_product_id]) {
-            return { ...p, partner_voucher_pdf_url: voucherMap[p.partner_product_id].url, partner_voucher_title: voucherMap[p.partner_product_id].title };
+            const m = voucherMap[p.partner_product_id];
+            return { ...p, partner_voucher_pdf_url: m.url, partner_voucher_title: m.title, service_price: m.service_price, service_price_unit: m.service_price_unit };
           }
           return p;
         });
@@ -745,7 +746,13 @@
         </div>
         ${p.partner_notes ? `<div class="pc-reg-note" style="position:absolute;bottom:104px;left:0;right:0;padding:0 16px"><div style="background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:6px 10px;font-size:11px;font-weight:600;color:#15803d;line-height:1.35">🎁 ${p.partner_notes}</div></div>` : ''}
         <div class="pc-reg-footer" style="position:absolute;bottom:0;left:0;right:0;padding:10px 16px;background:white;border-top:1px solid #f0ece8;display:flex;align-items:center;justify-content:space-between">
-          <div class="product-price">${p.partner_product_type === 'service' ? '<span style="font-size:12px;color:#92600a;font-weight:600">🤝 Request service</span>' : ('$' + p.price + ' <small>' + (p.partner_product_id ? '' : (p.unit ? '/ ' + p.unit : '')) + '</small>')}</div>
+          <div class="product-price">${p.partner_product_type === 'service'
+            ? (p.service_price_unit === 'contact for pricing'
+              ? '<span style="font-size:12px;color:#92600a;font-weight:600">💬 Contact for pricing</span>'
+              : p.service_price
+                ? '<span style="font-size:13px;font-weight:700;color:#2C6E6A">$' + p.service_price + '</span> <small style="font-size:11px;color:#6b7280">' + (p.service_price_unit || '') + '</small>'
+                : '<span style="font-size:12px;color:#92600a;font-weight:600">🤝 Request service</span>')
+            : ('$' + p.price + ' <small>' + (p.partner_product_id ? '' : (p.unit ? '/ ' + p.unit : '')) + '</small>')}</div>
           ${isDemo
             ? `<button class="add-btn" onclick="handleDemoAdd()">Add +</button>`
             : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">${p.partner_product_type === 'service' ? 'Add →' : 'Add'}</button>`

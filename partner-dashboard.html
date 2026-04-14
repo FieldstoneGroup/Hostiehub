@@ -415,6 +415,30 @@
           </div>
           <div id="serviceFields" style="display:none">
             <div class="field">
+              <label>Pricing</label>
+              <div class="field-hint" style="margin-bottom:10px">How do you charge for this service?</div>
+              <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+                <div style="position:relative;width:140px">
+                  <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none" id="priceDollarSign">$</span>
+                  <input type="number" id="pServicePrice" placeholder="0" min="0" step="0.01" style="width:100%;padding:11px 14px 11px 28px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
+                </div>
+                <select id="pServicePriceUnit" onchange="toggleServicePriceInput()" style="flex:1;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;outline:none">
+                  <option value="per hour">Per hour</option>
+                  <option value="per session">Per session</option>
+                  <option value="per person">Per person</option>
+                  <option value="per couple">Per couple</option>
+                  <option value="per half day">Per half day</option>
+                  <option value="per day">Per day</option>
+                  <option value="per visit">Per visit</option>
+                  <option value="per booking">Per booking</option>
+                  <option value="per event">Per event</option>
+                  <option value="starting from">Starting from</option>
+                  <option value="contact for pricing">Contact for pricing</option>
+                </select>
+              </div>
+              <div class="field-hint">This is displayed on your listing so guests know what to expect before requesting.</div>
+            </div>
+            <div class="field">
               <label>Lead time required</label>
               <div class="field-hint" style="margin-bottom:10px">How much notice do you need before a guest's preferred date?</div>
               <div style="display:flex;gap:10px;align-items:center">
@@ -955,7 +979,15 @@
     days.forEach(d => { document.getElementById('day' + d).checked = cb.checked; });
   }
 
-  function updateAllDaysCheck() {
+  function toggleServicePriceInput() {
+    const unit = document.getElementById('pServicePriceUnit').value;
+    const priceInput = document.getElementById('pServicePrice');
+    const dollarSign = document.getElementById('priceDollarSign');
+    const isContactForPricing = unit === 'contact for pricing';
+    priceInput.style.display = isContactForPricing ? 'none' : 'block';
+    dollarSign.style.display = isContactForPricing ? 'none' : 'block';
+    if (isContactForPricing) priceInput.value = '';
+  }
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
     const allChecked = days.every(d => document.getElementById('day' + d).checked);
     document.getElementById('dayAll').checked = allChecked;
@@ -1018,6 +1050,10 @@
     document.getElementById('pVoucherTitle').value = '';
     document.getElementById('pLeadTimeValue').value = '';
     document.getElementById('pLeadTimeUnit').value = 'none';
+    document.getElementById('pServicePrice').value = '';
+    document.getElementById('pServicePriceUnit').value = 'per hour';
+    document.getElementById('pServicePrice').style.display = 'block';
+    document.getElementById('priceDollarSign').style.display = 'block';
     document.getElementById('ptPhysical').checked = true;
     document.getElementById('physicalFields').style.display = 'block';
     document.getElementById('serviceFields').style.display = 'none';
@@ -1089,6 +1125,10 @@
     const leadTimeValue = isService ? (parseInt(document.getElementById('pLeadTimeValue').value) || 0) : null;
     const leadTimeUnit = isService ? (document.getElementById('pLeadTimeUnit').value || 'none') : null;
 
+    // Service pricing
+    const servicePriceUnit = isService ? document.getElementById('pServicePriceUnit').value : null;
+    const servicePrice = isService && servicePriceUnit !== 'contact for pricing' ? (parseFloat(document.getElementById('pServicePrice').value) || 0) : null;
+
     // Available days (physical only)
     const availableDays = isPhysical ? getSelectedDays() : null;
 
@@ -1105,6 +1145,8 @@
       postcodes: codes,
       lead_time_value: leadTimeValue,
       lead_time_unit: leadTimeUnit,
+      service_price: servicePrice,
+      service_price_unit: servicePriceUnit,
       available_days: availableDays,
       active: true,
     };
@@ -1195,6 +1237,9 @@
     if (isService) {
       document.getElementById('pLeadTimeValue').value = p.lead_time_value || '';
       document.getElementById('pLeadTimeUnit').value = p.lead_time_unit || 'none';
+      document.getElementById('pServicePriceUnit').value = p.service_price_unit || 'per hour';
+      document.getElementById('pServicePrice').value = p.service_price || '';
+      toggleServicePriceInput();
     }
     if (isBooking) document.getElementById('pBookingUrl').value = p.booking_url || '';
     if (isBooking) document.getElementById('pVoucherTitle').value = p.voucher_title || '';

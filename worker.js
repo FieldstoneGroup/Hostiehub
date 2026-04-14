@@ -194,11 +194,12 @@ export default {
           // Store enriched partner details for guest email
           req._partnerEmail = partner.email;
           req._ownerName = partner.contact_name || partner.full_name || null;
+          req._partnerPhone = partner.phone || null;
           req._businessName = bizName;
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.RESEND_API_KEY}` },
-            body: JSON.stringify({ from: 'Hostie Hub <hello@hostiehub.com.au>', to: partner.email, subject: '&#129309; New service request \u2014 ' + req.productName, html: partnerEmailHtml })
+            body: JSON.stringify({ from: 'Hostie Hub <hello@hostiehub.com.au>', to: partner.email, subject: '🤝 New service request — ' + req.productName, html: partnerEmailHtml })
           });
           console.log('Partner request email sent to:', partner.email, 'for:', req.productName);
         }
@@ -248,6 +249,7 @@ export default {
                   '<tr><td style="font-size:12px;color:#6b7280;width:35%">Business</td><td style="font-size:13px;font-weight:600;color:#92600a">' + (r._businessName || r.businessName || 'Local Partner') + '</td></tr>' +
                   (r._ownerName ? '<tr><td style="font-size:12px;color:#6b7280">Contact</td><td style="font-size:13px;font-weight:600;color:#1a1a1a">' + r._ownerName + '</td></tr>' : '') +
                   (r._partnerEmail ? '<tr><td style="font-size:12px;color:#6b7280">Email</td><td style="font-size:13px"><a href="mailto:' + r._partnerEmail + '" style="color:#2C6E6A;font-weight:600">' + r._partnerEmail + '</a></td></tr>' : '') +
+                  (r._partnerPhone ? '<tr><td style="font-size:12px;color:#6b7280">Phone</td><td style="font-size:13px"><a href="tel:' + r._partnerPhone + '" style="color:#2C6E6A;font-weight:600">' + r._partnerPhone + '</a></td></tr>' : '') +
                   (r.preferredDate ? '<tr><td style="font-size:12px;color:#6b7280">Preferred date</td><td style="font-size:13px;color:#1a1a1a">' + r.preferredDate + '</td></tr>' : '') +
                   '</table>' +
                   (r.notes ? '<div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:8px;border-top:1px solid #f0ece8;padding-top:8px">"' + r.notes + '"</div>' : '') +
@@ -344,7 +346,7 @@ export default {
         body: JSON.stringify({
           from: 'Hostie Hub <hello@hostiehub.com.au>',
           to: partner.email,
-          subject: '&#129309; New service request \u2014 ' + (productName || 'Request'),
+          subject: '🤝 New service request — ' + (productName || 'Request'),
           html
         })
       });
@@ -354,7 +356,8 @@ export default {
       return new Response(JSON.stringify({
         email: partner.email,
         businessName: bizName,
-        contactName: partner.contact_name || partner.full_name || null
+        contactName: partner.contact_name || partner.full_name || null,
+        phone: partner.phone || null
       }), { status: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' } });
     }
 
@@ -399,12 +402,12 @@ export default {
         const storeUrl = record.username ? 'https://hostiehub.com.au/store/' + record.username : 'https://hostiehub.com.au/dashboard.html';
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': \`Bearer \${env.RESEND_API_KEY}\` },
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + env.RESEND_API_KEY },
           body: JSON.stringify({
             from: 'Hostie Hub <hello@hostiehub.com.au>',
             to: record.email,
             subject: '🎉 Welcome to Hostie Hub — your store is ready!',
-            html: \`<!DOCTYPE html>
+            html: `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f4f6f5;font-family:Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f5;padding:40px 20px">
@@ -504,7 +507,7 @@ export default {
 </table>
 </td></tr>
 </table>
-</body></html>\`
+</body></html>`
           })
         });
       }
@@ -552,12 +555,12 @@ export default {
         const bizName = record.business_name || 'there';
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': \`Bearer \${env.RESEND_API_KEY}\` },
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + env.RESEND_API_KEY },
           body: JSON.stringify({
             from: 'Hostie Hub <hello@hostiehub.com.au>',
             to: record.email,
             subject: '🤝 Welcome to Hostie Hub — your partner account is live!',
-            html: \`<!DOCTYPE html>
+            html: `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f4f6f5;font-family:Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f5;padding:40px 20px">
@@ -642,7 +645,7 @@ export default {
 </table>
 </td></tr>
 </table>
-</body></html>\`
+</body></html>`
           })
         });
       }

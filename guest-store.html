@@ -75,7 +75,7 @@
 
   .product-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; animation: fadeUp 0.5s ease both; height: 500px; overflow: hidden; position: relative; }
   .product-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
-  .pc-notes-box { position:absolute; bottom:96px; left:0; right:0; padding:0 14px; }
+  .pc-notes-box { position:absolute; bottom:112px; left:0; right:0; padding:0 14px; }
   .pc-notes-box-inner { background:#f0fdf4; border-left:3px solid #16a34a; border-radius:0 6px 6px 0; padding:7px 10px; font-size:11px; font-weight:600; color:#15803d; line-height:1.35; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .product-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -730,7 +730,7 @@
           <!-- Note pinned at fixed position -->
           ${p.partner_notes ? `<div class="pc-notes-box"><div class="pc-notes-box-inner">🎁 ${p.partner_notes}</div></div>` : ''}
           <!-- Voucher row pinned above button -->
-          ${hasVoucher ? `<div class="pc-voucher" style="position:absolute;bottom:58px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;color:#92600a"><span>🎟️</span><span>Free voucher emailed on booking</span></div></div>` : ''}
+          ${hasVoucher ? `<div class="pc-voucher" style="position:absolute;bottom:68px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;color:#92600a"><span>🎟️</span><span>Free voucher emailed on booking</span></div></div>` : ''}
           <!-- Book now button — absolute bottom -->
           <div class="pc-btn" style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:white;border-top:1px solid var(--border)">
             <button onclick="${bookingFn}" style="width:100%;border:none;border-radius:10px;padding:11px;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;color:#ffffff;background:linear-gradient(135deg,#2C6E6A,#1d4d4a);cursor:pointer;letter-spacing:0.3px">Book now →</button>

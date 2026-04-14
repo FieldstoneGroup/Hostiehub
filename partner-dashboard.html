@@ -343,7 +343,11 @@
             <label>What type of listing is this?</label>
             <label class="type-option">
               <input type="radio" name="productType" value="physical" id="ptPhysical" onchange="toggleProductType();updatePreview()" checked>
-              <div><div class="type-option-label">📦 Physical product</div><div class="type-option-desc">e.g. flowers, hampers, firewood — guest pays host, host arranges payment to you</div></div>
+              <div><div class="type-option-label">📦 Physical product</div><div class="type-option-desc">e.g. flowers, hampers, firewood — delivered or ready on arrival</div></div>
+            </label>
+            <label class="type-option">
+              <input type="radio" name="productType" value="service" id="ptService" onchange="toggleProductType();updatePreview()">
+              <div><div class="type-option-label">🛎️ Service request</div><div class="type-option-desc">e.g. massage, chef, cleaning — guest submits a request and you contact them to confirm and arrange payment</div></div>
             </label>
             <label class="type-option">
               <input type="radio" name="productType" value="booking" id="ptBooking" onchange="toggleProductType();updatePreview()">
@@ -376,6 +380,53 @@
               <label>Wholesale price ($) — what the host pays you</label>
               <input type="number" id="pWholesalePrice" placeholder="e.g. 45" min="0" oninput="updatePreview()">
               <div class="field-hint">Hosts set their own retail price on top. They keep the difference as their margin.</div>
+            </div>
+            <div class="field">
+              <label>Days available</label>
+              <div class="field-hint" style="margin-bottom:10px">Which days of the week can you fulfil this product?</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayMon" value="mon" onchange="updateAllDaysCheck()"> Mon
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayTue" value="tue" onchange="updateAllDaysCheck()"> Tue
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayWed" value="wed" onchange="updateAllDaysCheck()"> Wed
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayThu" value="thu" onchange="updateAllDaysCheck()"> Thu
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayFri" value="fri" onchange="updateAllDaysCheck()"> Fri
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="daySat" value="sat" onchange="updateAllDaysCheck()"> Sat
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="daySun" value="sun" onchange="updateAllDaysCheck()"> Sun
+                </label>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--partner)">
+                <input type="checkbox" id="dayAll" onchange="toggleAllDays(this)"> All days (7 days a week)
+              </label>
+              <div class="field-hint" style="margin-top:6px">Guests will see which days this product is available when they browse your listing.</div>
+            </div>
+          </div>
+          <div id="serviceFields" style="display:none">
+            <div class="field">
+              <label>Lead time required</label>
+              <div class="field-hint" style="margin-bottom:10px">How much notice do you need before a guest's preferred date?</div>
+              <div style="display:flex;gap:10px;align-items:center">
+                <input type="number" id="pLeadTimeValue" placeholder="e.g. 2" min="0" style="width:100px;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none">
+                <select id="pLeadTimeUnit" style="flex:1;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;outline:none">
+                  <option value="none">No lead time required</option>
+                  <option value="days">Days</option>
+                  <option value="weeks">Weeks</option>
+                  <option value="months">Months</option>
+                </select>
+              </div>
+              <div class="field-hint" style="margin-top:6px">e.g. "2 weeks" means guests can't select a date within 2 weeks of today.</div>
             </div>
           </div>
           <div id="bookingFields" style="display:none">
@@ -898,8 +949,42 @@
 
   function toggleProductType() {
     const isPhysical = document.getElementById('ptPhysical').checked;
+    const isService = document.getElementById('ptService').checked;
+    const isBooking = document.getElementById('ptBooking').checked;
     document.getElementById('physicalFields').style.display = isPhysical ? 'block' : 'none';
-    document.getElementById('bookingFields').style.display = isPhysical ? 'none' : 'block';
+    document.getElementById('serviceFields').style.display = isService ? 'block' : 'none';
+    document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
+    // Update preview button label
+    const btn = document.getElementById('previewBtn');
+    if (btn) btn.textContent = isBooking ? 'Book now →' : (isService ? 'Request →' : 'Add →');
+  }
+
+  function toggleAllDays(cb) {
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    days.forEach(d => { document.getElementById('day' + d).checked = cb.checked; });
+  }
+
+  function updateAllDaysCheck() {
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const allChecked = days.every(d => document.getElementById('day' + d).checked);
+    document.getElementById('dayAll').checked = allChecked;
+  }
+
+  function getSelectedDays() {
+    const days = ['mon','tue','wed','thu','fri','sat','sun'];
+    const selected = days.filter(d => document.getElementById('day' + d.charAt(0).toUpperCase() + d.slice(1)).checked);
+    return selected.length === 7 || selected.length === 0 ? null : selected;
+  }
+
+  function setSelectedDays(availableDays) {
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    if (!availableDays || availableDays.length === 0) {
+      days.forEach(d => { document.getElementById('day' + d).checked = true; });
+      document.getElementById('dayAll').checked = true;
+    } else {
+      days.forEach(d => { document.getElementById('day' + d).checked = availableDays.includes(d.toLowerCase()); });
+      document.getElementById('dayAll').checked = availableDays.length === 7;
+    }
   }
 
   function previewProductImage(input) {
@@ -940,9 +1025,13 @@
     document.getElementById('pWholesalePrice').value = '';
     document.getElementById('pBookingUrl').value = '';
     document.getElementById('pVoucherTitle').value = '';
+    document.getElementById('pLeadTimeValue').value = '';
+    document.getElementById('pLeadTimeUnit').value = 'none';
     document.getElementById('ptPhysical').checked = true;
     document.getElementById('physicalFields').style.display = 'block';
+    document.getElementById('serviceFields').style.display = 'none';
     document.getElementById('bookingFields').style.display = 'none';
+    setSelectedDays(null);
     removeProductImage();
     removeVoucherPdf();
     productPostcodes = [];
@@ -996,22 +1085,34 @@
     const name = document.getElementById('pName').value.trim();
     if (!name) { showToast('Please enter a product name'); return; }
     const isPhysical = document.getElementById('ptPhysical').checked;
+    const isService = document.getElementById('ptService').checked;
+    const isBooking = document.getElementById('ptBooking').checked;
     const bookingUrl = document.getElementById('pBookingUrl').value.trim();
-    if (!isPhysical && !bookingUrl) { showToast('Please enter a booking URL'); return; }
+    if (isBooking && !bookingUrl) { showToast('Please enter a booking URL'); return; }
     const codes = productPostcodes.length > 0 ? productPostcodes : accountPostcodes;
     if (codes.length === 0) { showToast('⚠️ Please add at least one postcode or suburb area'); return; }
+
+    // Lead time
+    const leadTimeValue = isService ? (parseInt(document.getElementById('pLeadTimeValue').value) || 0) : null;
+    const leadTimeUnit = isService ? (document.getElementById('pLeadTimeUnit').value || 'none') : null;
+
+    // Available days (physical only)
+    const availableDays = isPhysical ? getSelectedDays() : null;
 
     const payload = {
       partner_id: partnerData.id,
       name,
       description: document.getElementById('pDesc').value.trim(),
       notes: document.getElementById('pNotes').value.trim(),
-      type: isPhysical ? 'physical' : 'booking',
+      type: isBooking ? 'booking' : (isService ? 'service' : 'physical'),
       category: document.getElementById('pCategory').value,
       wholesale_price: isPhysical ? (parseFloat(document.getElementById('pWholesalePrice').value) || 0) : 0,
-      booking_url: isPhysical ? null : bookingUrl,
-      voucher_title: isPhysical ? null : (document.getElementById('pVoucherTitle').value.trim() || null),
+      booking_url: isBooking ? bookingUrl : null,
+      voucher_title: isBooking ? (document.getElementById('pVoucherTitle').value.trim() || null) : null,
       postcodes: codes,
+      lead_time_value: leadTimeValue,
+      lead_time_unit: leadTimeUnit,
+      available_days: availableDays,
       active: true,
     };
 
@@ -1035,7 +1136,7 @@
       if (url) await sb.from('partner_products').update({ image_url: url }).eq('id', productId);
     }
 
-    if (!isPhysical) {
+    if (isBooking) {
       const voucherFile = document.getElementById('pVoucherFile') && document.getElementById('pVoucherFile').files[0];
       if (voucherFile) {
         showToast('Uploading voucher PDF...');
@@ -1083,12 +1184,22 @@
     document.getElementById('pNotes').value = p.notes || '';
 
     const isBooking = p.type === 'booking';
-    document.getElementById('ptPhysical').checked = !isBooking;
+    const isService = p.type === 'service';
+    document.getElementById('ptPhysical').checked = !isBooking && !isService;
+    document.getElementById('ptService').checked = isService;
     document.getElementById('ptBooking').checked = isBooking;
-    document.getElementById('physicalFields').style.display = isBooking ? 'none' : 'block';
+    document.getElementById('physicalFields').style.display = (!isBooking && !isService) ? 'block' : 'none';
+    document.getElementById('serviceFields').style.display = isService ? 'block' : 'none';
     document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
 
-    if (!isBooking) document.getElementById('pWholesalePrice').value = p.wholesale_price || '';
+    if (!isBooking && !isService) {
+      document.getElementById('pWholesalePrice').value = p.wholesale_price || '';
+      setSelectedDays(Array.isArray(p.available_days) ? p.available_days : null);
+    }
+    if (isService) {
+      document.getElementById('pLeadTimeValue').value = p.lead_time_value || '';
+      document.getElementById('pLeadTimeUnit').value = p.lead_time_unit || 'none';
+    }
     if (isBooking) document.getElementById('pBookingUrl').value = p.booking_url || '';
     if (isBooking) document.getElementById('pVoucherTitle').value = p.voucher_title || '';
 

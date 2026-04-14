@@ -350,7 +350,10 @@
     <div style="font-size:40px;text-align:center;margin-bottom:8px">🤝</div>
     <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--brand);text-align:center;margin-bottom:4px">Partner Request</div>
     <h3 style="text-align:center;margin-bottom:4px" id="partnerRequestTitle">Request this service</h3>
-    <p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:20px" id="partnerRequestBusiness"></p>
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:12px" id="partnerRequestBusiness"></p>
+    <div id="partnerLeadTimeNotice" style="display:none;background:#f0fdf4;border:1.5px solid #16a34a;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#15803d;line-height:1.5">
+      ⏱️ <strong>Lead time required:</strong> <span id="partnerLeadTimeText"></span>. Please select a preferred date that allows enough notice.
+    </div>
     <div style="margin-bottom:14px">
       <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Preferred date <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
       <input type="date" id="partnerRequestDate" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
@@ -542,15 +545,15 @@
     });
     const bookingPartnerIds = allProducts.filter(p => p.partner_product_id).map(p => p.partner_product_id);
     if (bookingPartnerIds.length > 0) {
-      const { data: partnerProds } = await sb.from('partner_products').select('id, voucher_pdf_url, voucher_title, service_price, service_price_unit').in('id', bookingPartnerIds);
+      const { data: partnerProds } = await sb.from('partner_products').select('id, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit').in('id', bookingPartnerIds);
       console.log('[Hostie] partner_products voucher fetch:', partnerProds);
       if (partnerProds) {
         const voucherMap = {};
-        partnerProds.forEach(pp => { voucherMap[pp.id] = { url: pp.voucher_pdf_url, title: pp.voucher_title, service_price: pp.service_price, service_price_unit: pp.service_price_unit }; });
+        partnerProds.forEach(pp => { voucherMap[pp.id] = { url: pp.voucher_pdf_url, title: pp.voucher_title, service_price: pp.service_price, service_price_unit: pp.service_price_unit, lead_time_value: pp.lead_time_value, lead_time_unit: pp.lead_time_unit }; });
         allProducts = allProducts.map(p => {
           if (p.partner_product_id && voucherMap[p.partner_product_id]) {
             const m = voucherMap[p.partner_product_id];
-            return { ...p, partner_voucher_pdf_url: m.url, partner_voucher_title: m.title, service_price: m.service_price, service_price_unit: m.service_price_unit };
+            return { ...p, partner_voucher_pdf_url: m.url, partner_voucher_title: m.title, service_price: m.service_price, service_price_unit: m.service_price_unit, lead_time_value: m.lead_time_value, lead_time_unit: m.lead_time_unit };
           }
           return p;
         });
@@ -976,6 +979,25 @@
       document.getElementById('partnerRequestBusinessInline').textContent = bizName;
       document.getElementById('partnerRequestDate').value = '';
       document.getElementById('partnerRequestNotes').value = '';
+
+      // Show lead time if set
+      const ltValue = product.lead_time_value;
+      const ltUnit = product.lead_time_unit;
+      const ltNotice = document.getElementById('partnerLeadTimeNotice');
+      if (ltValue && ltUnit && ltUnit !== 'none') {
+        document.getElementById('partnerLeadTimeText').textContent = ltValue + ' ' + ltUnit;
+        ltNotice.style.display = 'block';
+        // Set min date on date picker
+        const minDate = new Date();
+        if (ltUnit === 'days') minDate.setDate(minDate.getDate() + parseInt(ltValue));
+        else if (ltUnit === 'weeks') minDate.setDate(minDate.getDate() + parseInt(ltValue) * 7);
+        else if (ltUnit === 'months') minDate.setMonth(minDate.getMonth() + parseInt(ltValue));
+        document.getElementById('partnerRequestDate').min = minDate.toISOString().split('T')[0];
+      } else {
+        ltNotice.style.display = 'none';
+        document.getElementById('partnerRequestDate').min = '';
+      }
+
       document.getElementById('partnerRequestOverlay').classList.add('open');
       return;
     }

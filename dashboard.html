@@ -1136,30 +1136,23 @@
   ];
 
   async function init() {
-    // Always wait for confirmed auth state — getSession() on hard refresh in Edge
-    // returns a session but without a valid JWT, causing all queries to fail.
-    // onAuthStateChange fires with the real confirmed session after token refresh.
-    const session = await new Promise(resolve => {
-      // First check if we already have a valid session
-      sb.auth.getSession().then(({ data: { session: s } }) => {
-        if (s) {
-          // Still subscribe to catch token refresh completing
-          const { data: { subscription } } = sb.auth.onAuthStateChange((event, freshSession) => {
-            subscription.unsubscribe();
-            resolve(freshSession || s);
-          });
-          // If onAuthStateChange doesn't fire within 1s, use what we have
-          setTimeout(() => resolve(s), 1000);
-        } else {
-          // No session at all — wait for auth state
-          const { data: { subscription } } = sb.auth.onAuthStateChange((event, freshSession) => {
-            subscription.unsubscribe();
-            resolve(freshSession);
-          });
-          setTimeout(() => resolve(null), 4000);
-        }
+    // Get session — retry up to 3 times to handle token refresh on hard refresh
+    let session = null;
+    for (let i = 0; i < 3; i++) {
+      const { data: { session: s } } = await sb.auth.getSession();
+      if (s) { session = s; break; }
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    // If still no session, wait briefly for onAuthStateChange
+    if (!session) {
+      session = await new Promise(resolve => {
+        const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
+          if (s) { subscription.unsubscribe(); resolve(s); }
+        });
+        setTimeout(() => resolve(null), 3000);
       });
-    });
+    }
 
     if (!session) { window.location.href = 'signup.html'; return; }
     currentUser = session.user;

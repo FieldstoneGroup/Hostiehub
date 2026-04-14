@@ -428,7 +428,10 @@
   let selectedPropertyId = '', selectedPropertyName = '';
   let pendingCartItem = null;
   let pendingPartnerRequestProduct = null, pendingPartnerRequestBtn = null;
-  const categoryLabels = { product:'📦 Product', service:'🛎️ Service', reservation:'🍽️ Reservation', experience:'🏄 Experience' };
+  const categoryLabels = {
+    product:'📦 Product', service:'🛎️ Service', reservation:'🍽️ Reservation', experience:'🏄 Experience',
+    local_products:'🛍️ Local Products', local_services:'🛎️ Local Services', local_attractions:'🗺️ Local Attractions'
+  };
 
   // ── STORE EVENT TRACKING ──
   const loggedStoreViews = new Set();
@@ -513,7 +516,14 @@
       }
     }
 
-    // Sync latest voucher URLs from partner_products (in case host added product before voucher was uploaded)
+    // Map partner products to their guest store category
+    allProducts = allProducts.map(p => {
+      if (!p.partner_product_id) return p;
+      let partnerCat = 'local_products';
+      if (p.partner_product_type === 'service') partnerCat = 'local_services';
+      else if (p.partner_product_type === 'booking') partnerCat = 'local_attractions';
+      return { ...p, category: partnerCat };
+    });
     const bookingPartnerIds = allProducts.filter(p => p.partner_product_id && p.partner_product_type === 'booking').map(p => p.partner_product_id);
     if (bookingPartnerIds.length > 0) {
       const { data: partnerProds } = await sb.from('partner_products').select('id, voucher_pdf_url, voucher_title').in('id', bookingPartnerIds);
@@ -607,9 +617,13 @@
   }
 
   function renderCategories(products) {
-    const cats = [...new Set(products.map(p => p.category).filter(Boolean))];
+    const partnerCats = ['local_products', 'local_services', 'local_attractions'];
+    const allCats = [...new Set(products.map(p => p.category).filter(Boolean))];
+    // Host categories first, then partner categories in fixed order
+    const hostCats = allCats.filter(c => !partnerCats.includes(c));
+    const activeParnterCats = partnerCats.filter(c => allCats.includes(c));
+    const cats = [...hostCats, ...activeParnterCats];
     const tabs = document.getElementById('catTabs');
-    // Clear existing tabs except 'All'
     while (tabs.children.length > 1) tabs.removeChild(tabs.lastChild);
     cats.forEach(cat => {
       const btn = document.createElement('button');
@@ -731,10 +745,10 @@
         </div>
         ${p.partner_notes ? `<div class="pc-reg-note" style="position:absolute;bottom:104px;left:0;right:0;padding:0 16px"><div style="background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:6px 10px;font-size:11px;font-weight:600;color:#15803d;line-height:1.35">🎁 ${p.partner_notes}</div></div>` : ''}
         <div class="pc-reg-footer" style="position:absolute;bottom:0;left:0;right:0;padding:10px 16px;background:white;border-top:1px solid #f0ece8;display:flex;align-items:center;justify-content:space-between">
-          <div class="product-price">$${p.price} <small>${p.partner_product_id ? '' : (p.unit ? '/ ' + p.unit : '')}</small></div>
+          <div class="product-price">${p.partner_product_type === 'service' ? '<span style="font-size:12px;color:#92600a;font-weight:600">🤝 Request service</span>' : ('$' + p.price + ' <small>' + (p.partner_product_id ? '' : (p.unit ? '/ ' + p.unit : '')) + '</small>')}</div>
           ${isDemo
             ? `<button class="add-btn" onclick="handleDemoAdd()">Add +</button>`
-            : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">Add</button>`
+            : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">${p.partner_product_type === 'service' ? 'Add →' : 'Add'}</button>`
           }
         </div>
       </div>`;

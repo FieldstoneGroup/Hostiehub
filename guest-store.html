@@ -1504,14 +1504,12 @@
             <p style="font-size:13px;color:#92600a;margin:0 0 14px;line-height:1.6">The following businesses will contact you directly to confirm your booking and arrange payment:</p>
             ${enrichedPartnerRequests.map(r => `
             <div style="background:white;border-radius:8px;padding:14px 16px;margin-bottom:10px;border:1px solid #fde68a">
-              <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:8px">${r.productName}</div>
-              <table cellpadding="4" style="width:100%;border-collapse:collapse">
-                <tr><td style="font-size:12px;color:#6b7280;width:35%">Business</td><td style="font-size:13px;font-weight:600;color:#92600a">${r.businessName || 'Local Partner'}</td></tr>
-                ${r.ownerName ? '<tr><td style="font-size:12px;color:#6b7280">Contact</td><td style="font-size:13px;font-weight:600;color:#1a1a1a">' + r.ownerName + '</td></tr>' : ''}
-                ${r.partnerEmail ? '<tr><td style="font-size:12px;color:#6b7280">Email</td><td style="font-size:13px"><a href="mailto:' + r.partnerEmail + '" style="color:#2C6E6A;font-weight:600">' + r.partnerEmail + '</a></td></tr>' : ''}
-                ${r.partnerPhone ? '<tr><td style="font-size:12px;color:#6b7280">Phone</td><td style="font-size:13px"><a href="tel:' + r.partnerPhone + '" style="color:#2C6E6A;font-weight:600">' + r.partnerPhone + '</a></td></tr>' : ''}
-                ${r.preferredDate ? '<tr><td style="font-size:12px;color:#6b7280">Preferred date</td><td style="font-size:13px;color:#1a1a1a">' + r.preferredDate + '</td></tr>' : ''}
-              </table>
+              <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:10px">${r.productName}</div>
+              <div style="margin-bottom:6px"><span style="font-size:12px;color:#6b7280;display:block;margin-bottom:2px">Business</span><span style="font-size:13px;font-weight:600;color:#92600a">${r.businessName || 'Local Partner'}</span></div>
+              ${r.ownerName ? '<div style="margin-bottom:6px"><span style="font-size:12px;color:#6b7280;display:block;margin-bottom:2px">Contact</span><span style="font-size:13px;font-weight:600;color:#1a1a1a">' + r.ownerName + '</span></div>' : ''}
+              ${r.partnerEmail ? '<div style="margin-bottom:6px"><span style="font-size:12px;color:#6b7280;display:block;margin-bottom:2px">Email</span><a href="mailto:' + r.partnerEmail + '" style="font-size:13px;color:#2C6E6A;font-weight:600;text-decoration:none">' + r.partnerEmail + '</a></div>' : ''}
+              ${r.partnerPhone ? '<div style="margin-bottom:6px"><span style="font-size:12px;color:#6b7280;display:block;margin-bottom:2px">Phone</span><a href="tel:' + r.partnerPhone + '" style="font-size:13px;color:#2C6E6A;font-weight:600;text-decoration:none">' + r.partnerPhone + '</a></div>' : ''}
+              ${r.preferredDate ? '<div style="margin-bottom:6px"><span style="font-size:12px;color:#6b7280;display:block;margin-bottom:2px">Preferred date</span><span style="font-size:13px;color:#1a1a1a">' + r.preferredDate + '</span></div>' : ''}
               ${r.notes ? '<div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:8px;border-top:1px solid #f0ece8;padding-top:8px">"' + r.notes + '"</div>' : ''}
             </div>`).join('')}
           </div>` : ''}

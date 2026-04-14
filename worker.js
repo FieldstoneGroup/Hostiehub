@@ -244,14 +244,12 @@ export default {
                 '<p style="font-size:13px;color:#92600a;margin:0 0 12px;line-height:1.6">The following businesses will contact you directly to confirm and arrange payment:</p>' +
                 partnerRequests.map(r =>
                   '<div style="background:white;border-radius:8px;padding:14px 16px;margin-bottom:8px;border:1px solid #fde68a">' +
-                  '<div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:8px">' + r.productName + '</div>' +
-                  '<table cellpadding="4" style="width:100%;border-collapse:collapse">' +
-                  '<tr><td style="font-size:12px;color:#6b7280;width:35%">Business</td><td style="font-size:13px;font-weight:600;color:#92600a">' + (r._businessName || r.businessName || 'Local Partner') + '</td></tr>' +
-                  (r._ownerName ? '<tr><td style="font-size:12px;color:#6b7280">Contact</td><td style="font-size:13px;font-weight:600;color:#1a1a1a">' + r._ownerName + '</td></tr>' : '') +
-                  (r._partnerEmail ? '<tr><td style="font-size:12px;color:#6b7280">Email</td><td style="font-size:13px"><a href="mailto:' + r._partnerEmail + '" style="color:#2C6E6A;font-weight:600">' + r._partnerEmail + '</a></td></tr>' : '') +
-                  (r._partnerPhone ? '<tr><td style="font-size:12px;color:#6b7280">Phone</td><td style="font-size:13px"><a href="tel:' + r._partnerPhone + '" style="color:#2C6E6A;font-weight:600">' + r._partnerPhone + '</a></td></tr>' : '') +
-                  (r.preferredDate ? '<tr><td style="font-size:12px;color:#6b7280">Preferred date</td><td style="font-size:13px;color:#1a1a1a">' + r.preferredDate + '</td></tr>' : '') +
-                  '</table>' +
+                  '<div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:10px">' + r.productName + '</div>' +
+                  '<div style="margin-bottom:6px"><span style="font-size:12px;color:#6b7280;display:block;margin-bottom:2px">Business</span><span style="font-size:13px;font-weight:600;color:#92600a">' + (r._businessName || r.businessName || 'Local Partner') + '</span></div>' +
+                  (r._ownerName ? '<div style="margin-bottom:6px"><span style="font-size:12px;color:#6b7280;display:block;margin-bottom:2px">Contact</span><span style="font-size:13px;font-weight:600;color:#1a1a1a">' + r._ownerName + '</span></div>' : '') +
+                  (r._partnerEmail ? '<div style="margin-bottom:6px"><span style="font-size:12px;color:#6b7280;display:block;margin-bottom:2px">Email</span><a href="mailto:' + r._partnerEmail + '" style="font-size:13px;color:#2C6E6A;font-weight:600;text-decoration:none">' + r._partnerEmail + '</a></div>' : '') +
+                  (r._partnerPhone ? '<div style="margin-bottom:6px"><span style="font-size:12px;color:#6b7280;display:block;margin-bottom:2px">Phone</span><a href="tel:' + r._partnerPhone + '" style="font-size:13px;color:#2C6E6A;font-weight:600;text-decoration:none">' + r._partnerPhone + '</a></div>' : '') +
+                  (r.preferredDate ? '<div style="margin-bottom:6px"><span style="font-size:12px;color:#6b7280;display:block;margin-bottom:2px">Preferred date</span><span style="font-size:13px;color:#1a1a1a">' + r.preferredDate + '</span></div>' : '') +
                   (r.notes ? '<div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:8px;border-top:1px solid #f0ece8;padding-top:8px">"' + r.notes + '"</div>' : '') +
                   '</div>'
                 ).join('') +

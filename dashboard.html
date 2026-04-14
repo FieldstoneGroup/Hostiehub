@@ -350,7 +350,7 @@
     <button class="nav-item" onclick="showPage('properties', this)"><div class="nav-icon">🏠</div><span>Properties</span></button>
     <button class="nav-item" onclick="showPage('products', this)"><div class="nav-icon">📦</div><span>Products</span></button>
     <button class="nav-item" onclick="showPage('vouchers', this)"><div class="nav-icon">🎟️</div><span>Local Vouchers</span></button>
-    <button class="nav-item" onclick="showPage('localproducts', this)"><div class="nav-icon">🤝</div><span>Local Products</span></button>
+    <button class="nav-item" onclick="showPage('localproducts', this)" style="background:rgba(232,168,56,0.18);border:1px solid rgba(232,168,56,0.3);font-weight:700;color:#E8A838"><div class="nav-icon">🤝</div><span>Local Products</span></button>
     <button class="nav-item" onclick="showPage('stripe', this)"><div class="nav-icon">💳</div><span>Stripe Connect</span></button>
     <div class="nav-section-label">Account</div>
     <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account & Billing</span></button>
@@ -1979,33 +1979,7 @@
 
     addedPartnerProductIds = new Set((existing || []).map(p => p.partner_product_id));
 
-    // Auto-inject any partner listings not yet in this host's store
-    const toInject = localPartnerProducts.filter(p => !addedPartnerProductIds.has(p.id));
-    for (const p of toInject) {
-      const isBooking = p.type === 'booking';
-      const { data: inserted } = await sb.from('products').insert({
-        host_id: currentUser.id,
-        name: p.name,
-        description: p.description || '',
-        price: isBooking ? 0 : (p.wholesale_price || 0),
-        unit: 'per stay',
-        category: p.category || 'product',
-        emoji: isBooking ? '🔗' : '📦',
-        image_url: p.image_url || null,
-        available_all_properties: true,
-        active: true,
-        partner_product_id: p.id,
-        partner_id: p.partner_id,
-        partner_product_type: p.type,
-        partner_booking_url: isBooking ? p.booking_url : null,
-        partner_notes: p.notes || null,
-        partner_voucher_pdf_url: isBooking ? (p.voucher_pdf_url || null) : null,
-        wholesale_price: p.wholesale_price || 0,
-      }).select().single();
-      if (inserted) addedPartnerProductIds.add(p.id);
-    }
-
-    if (toInject.length > 0) loadProducts();
+    // Partner listings are opt-in only — hosts choose to add them manually
     renderLocalProducts();
   }
 

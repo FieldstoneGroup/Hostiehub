@@ -420,9 +420,9 @@
               <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
                 <div style="position:relative;width:140px">
                   <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;pointer-events:none" id="priceDollarSign">$</span>
-                  <input type="number" id="pServicePrice" placeholder="0" min="0" step="0.01" style="width:100%;padding:11px 14px 11px 28px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
+                  <input type="number" id="pServicePrice" placeholder="0" min="0" step="0.01" style="width:100%;padding:11px 14px 11px 28px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" oninput="updatePreview()">
                 </div>
-                <select id="pServicePriceUnit" onchange="toggleServicePriceInput()" style="flex:1;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;outline:none">
+                <select id="pServicePriceUnit" onchange="toggleServicePriceInput();updatePreview()" style="flex:1;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;outline:none">
                   <option value="per hour">Per hour</option>
                   <option value="per session">Per session</option>
                   <option value="per person">Per person</option>
@@ -1732,7 +1732,10 @@
     const notes = (document.getElementById('pNotes')?.value || '').trim();
     const category = document.getElementById('pCategory')?.value || 'other';
     const isPhysical = document.getElementById('ptPhysical')?.checked;
+    const isService = document.getElementById('ptService')?.checked;
     const price = document.getElementById('pWholesalePrice')?.value || '';
+    const servicePrice = document.getElementById('pServicePrice')?.value || '';
+    const servicePriceUnit = document.getElementById('pServicePriceUnit')?.value || '';
     const hasVoucherFile = document.getElementById('pVoucherFile')?.files?.length > 0 ||
                            (document.getElementById('pVoucherPreviewWrap')?.style.display === 'flex');
     const imagePreview = document.getElementById('pImagePreview')?.src;
@@ -1763,16 +1766,24 @@
       el('previewVoucherRow').style.display = 'none';
     }
 
-    // Price row for physical products
+    // Price row — physical products show wholesale price, service shows service price
     if (isPhysical && price) {
       el('previewPriceRow').style.display = 'block';
       el('previewPrice').textContent = '$' + price;
+    } else if (isService && servicePriceUnit === 'contact for pricing') {
+      el('previewPriceRow').style.display = 'block';
+      el('previewPrice').textContent = 'Contact for pricing';
+      el('previewPrice').style.fontSize = '14px';
+    } else if (isService && servicePrice) {
+      el('previewPriceRow').style.display = 'block';
+      el('previewPrice').textContent = '$' + servicePrice + ' ' + servicePriceUnit;
+      el('previewPrice').style.fontSize = '16px';
     } else {
       el('previewPriceRow').style.display = 'none';
     }
 
     // Button label
-    el('previewBtn').textContent = isPhysical ? 'Add to cart +' : 'Book now →';
+    el('previewBtn').textContent = isPhysical ? 'Add to cart +' : (isService ? 'Add →' : 'Book now →');
 
     // Image
     if (hasImage) {

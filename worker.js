@@ -289,28 +289,31 @@ export default {
 
       if (partnerId) {
         const r = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(partnerId)}&select=*&limit=1`, { headers });
-        const data = await r.json();
-        partner = Array.isArray(data) ? (data[0] || null) : null;
-        console.log('[partner-request-notify] lookup by partnerId status:', Array.isArray(data) ? 'ok' : 'error', 'result:', JSON.stringify(partner));
+        const rawText = await r.text();
+        console.log('[partner-request-notify] partnerId lookup status:', r.status, 'body:', rawText);
+        try { const data = JSON.parse(rawText); partner = Array.isArray(data) ? (data[0] || null) : null; } catch(e) {}
       }
 
       if (!partner && partnerProductId) {
-        console.log('[partner-request-notify] falling back to partnerProductId lookup');
         const r = await fetch(`${supabaseUrl}/rest/v1/partner_products?id=eq.${encodeURIComponent(partnerProductId)}&select=partner_id&limit=1`, { headers });
-        const ppData = await r.json();
-        const resolvedPartnerId = Array.isArray(ppData) ? ppData[0]?.partner_id : null;
-        console.log('[partner-request-notify] resolved partnerId from partner_products:', resolvedPartnerId);
-        if (resolvedPartnerId) {
-          const r2 = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(resolvedPartnerId)}&select=*&limit=1`, { headers });
-          const data2 = await r2.json();
-          partner = Array.isArray(data2) ? (data2[0] || null) : null;
-          console.log('[partner-request-notify] partner from fallback:', JSON.stringify(partner));
-        }
+        const rawText = await r.text();
+        console.log('[partner-request-notify] partnerProductId lookup status:', r.status, 'body:', rawText);
+        try {
+          const ppData = JSON.parse(rawText);
+          const resolvedPartnerId = Array.isArray(ppData) ? ppData[0]?.partner_id : null;
+          if (resolvedPartnerId) {
+            const r2 = await fetch(`${supabaseUrl}/rest/v1/partners?id=eq.${encodeURIComponent(resolvedPartnerId)}&select=*&limit=1`, { headers });
+            const rawText2 = await r2.text();
+            console.log('[partner-request-notify] partner fallback lookup status:', r2.status, 'body:', rawText2);
+            try { const data2 = JSON.parse(rawText2); partner = Array.isArray(data2) ? (data2[0] || null) : null; } catch(e) {}
+          }
+        } catch(e) {}
       }
 
       if (!partner?.email) {
-        console.log('[partner-request-notify] no partner email found — aborting');
-        return new Response(JSON.stringify({ error: 'partner not found' }), { status: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' } });
+        const diagnostic = { error: 'partner not found', partnerId, partnerProductId, serviceKeySet: !!env.SUPABASE_SERVICE_KEY };
+        console.log('[partner-request-notify] FAILED:', JSON.stringify(diagnostic));
+        return new Response(JSON.stringify(diagnostic), { status: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' } });
       }
 
       const bizName = partner.business_name || businessName || 'Local Partner';

@@ -555,8 +555,7 @@
 
     <!-- ACCOUNT -->
     <div class="page" id="page-account">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <div>
+      <div style="max-width:600px">
           <div class="card" style="margin-bottom:16px">
             <div class="card-title">Business profile</div>
             <div class="card-desc">Update your business information.</div>
@@ -583,18 +582,6 @@
             <div id="partnerPasswordMsg" style="display:none;font-size:13px;margin-bottom:10px;padding:10px 12px;border-radius:8px"></div>
             <button class="btn btn-outline btn-sm" onclick="partnerSendPasswordReset()">Send reset link →</button>
           </div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">Service postcodes</div>
-          <div class="card-desc">Hosts in these areas can add your products & services.</div>
-          <div class="postcode-input-wrap" style="margin-bottom:8px">
-            <input type="text" id="accountPostcodeInput" placeholder="e.g. 2300" maxlength="4" onkeydown="if(event.key==='Enter'){event.preventDefault();addAccountPostcode()}">
-            <button class="add-postcode-btn" onclick="addAccountPostcode()">+ Add</button>
-          </div>
-          <div class="postcode-tags" id="accountPostcodeTags"></div>
-          <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="savePostcodes()">Save postcodes</button>
-        </div>
       </div>
     </div>
 

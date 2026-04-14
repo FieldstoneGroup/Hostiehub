@@ -1595,7 +1595,9 @@
   function removeAccountPostcode(code) { accountPostcodes = accountPostcodes.filter(p => p !== code); renderAccountPostcodes(); renderOverviewPostcodes(); }
 
   function renderAccountPostcodes() {
-    document.getElementById('accountPostcodeTags').innerHTML = accountPostcodes.map(p =>
+    const el = document.getElementById('accountPostcodeTags');
+    if (!el) return;
+    el.innerHTML = accountPostcodes.map(p =>
       '<div class="postcode-tag">' + p + ' <button onclick="removeAccountPostcode(\'' + p + '\')">✕</button></div>'
     ).join('');
   }

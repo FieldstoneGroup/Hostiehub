@@ -1316,21 +1316,21 @@
       partnerProductId: product.partner_product_id,
     });
 
-    // Send partner notification and get partner details back
-    const details = await sendPartnerRequestEmail({ req, guestName, guestEmail: email, guestPhone: '', propName, propAddress, checkin: '', checkout: '', storeName });
-
-    // Send guest confirmation email
-    await sendPartnerGuestConfirmation({
-      guestEmail: email,
-      guestName,
-      productName: product.name,
-      preferredDate,
-      notes: partnerNotes,
-      businessName: details?.businessName || req.businessName,
-      ownerName: details?.ownerName || null,
-      partnerEmail: details?.email || null,
-      partnerPhone: details?.phone || null,
-    });
+    // Send partner notification and guest confirmation in parallel
+    const [details] = await Promise.all([
+      sendPartnerRequestEmail({ req, guestName, guestEmail: email, guestPhone: '', propName, propAddress, checkin: '', checkout: '', storeName }),
+      sendPartnerGuestConfirmation({
+        guestEmail: email,
+        guestName,
+        productName: product.name,
+        preferredDate,
+        notes: partnerNotes,
+        businessName: req.businessName,
+        ownerName: null,
+        partnerEmail: null,
+        partnerPhone: null,
+      }),
+    ]);
 
     // Show brief success message in hero
     const heroContent = document.getElementById('heroContent');
@@ -1526,7 +1526,7 @@
     const html = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f6f5;font-family:Arial,sans-serif">' +
       '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f5;padding:40px 20px"><tr><td align="center">' +
       '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">' +
-      '<tr><td bgcolor="#8a5e08" style="background:#8a5e08;border-radius:16px 16px 0 0;padding:36px 40px;text-align:center">' +
+      '<tr><td bgcolor="#E8A838" style="background:#E8A838;border-radius:16px 16px 0 0;padding:36px 40px;text-align:center">' +
       '<div style="font-size:40px;margin-bottom:8px">🤝</div>' +
       '<div style="font-size:22px;font-weight:700;color:white;font-family:Georgia,serif">Your request has been sent!</div>' +
       '<div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:4px">via Hostie Hub</div>' +

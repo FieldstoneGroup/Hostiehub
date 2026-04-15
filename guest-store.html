@@ -1290,7 +1290,7 @@
           items: hostItems.map(i => ({ name: i.name, price: i.price })),
           stripe_account_id: hostData.stripe_account_id,
           guest_email: guestEmail || undefined,
-          success_url: `${window.location.href}&order=success&guest=${encodeURIComponent(guestName)}`,
+          success_url: `${window.location.href}&order=success&guest=${encodeURIComponent(guestName)}&oid=${encodeURIComponent(JSON.stringify({host_id:hostData.id,guest_name:guestName,guest_email:guestEmail,guest_phone:guestPhone,checkin_date:checkin,checkout_date:checkout,property_id:propId||'',property_name:propName,notes,total,items:JSON.stringify(hostItems.map(i=>({id:i.id,name:i.name,price:i.price}))),product_notes:JSON.stringify(productNotes),partner_requests:JSON.stringify(partnerRequests)}))}`,
           cancel_url: window.location.href,
           metadata: {
             host_id: hostData.id,
@@ -1681,6 +1681,22 @@
         <h1 style="font-size:clamp(22px,4vw,34px)">Thanks, ${guestName}!</h1>
         <p style="margin-top:12px;opacity:0.85">Payment confirmed! Your host will have everything ready for your arrival.</p>`;
     }, 1000);
+
+    // Save order and send emails via Worker
+    const oidParam = urlParams.get('oid');
+    if (oidParam) {
+      try {
+        const orderData = JSON.parse(decodeURIComponent(oidParam));
+        // Fire and forget — don't await so page loads fast
+        fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-order-complete' },
+          body: JSON.stringify(orderData)
+        }).then(r => r.json()).then(result => {
+          console.log('[Hostie] Order save result:', result);
+        }).catch(e => console.error('[Hostie] Order save failed:', e));
+      } catch(e) { console.error('[Hostie] Failed to parse order data:', e); }
+    }
   }
 </script>
 <script src="support-widget.js"></script>

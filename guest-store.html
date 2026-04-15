@@ -369,6 +369,10 @@
       <input type="email" id="partnerReqEmail" placeholder="your@email.com" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
     </div>
     <div style="margin-bottom:12px">
+      <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Phone number <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input type="tel" id="partnerReqPhone" placeholder="e.g. 0412 345 678" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
+    </div>
+    <div style="margin-bottom:12px">
       <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Preferred date <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
       <input type="date" id="partnerRequestDate" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
     </div>
@@ -1095,6 +1099,11 @@
       document.getElementById('partnerRequestBusinessInline').textContent = bizName;
       document.getElementById('partnerRequestDate').value = '';
       document.getElementById('partnerRequestNotes').value = '';
+      document.getElementById('partnerReqFirstName').value = '';
+      document.getElementById('partnerReqLastName').value = '';
+      document.getElementById('partnerReqEmail').value = '';
+      document.getElementById('partnerReqPhone').value = '';
+      document.getElementById('partnerReqError').style.display = 'none';
 
       // Show lead time if set
       const ltValue = product.lead_time_value;
@@ -1274,6 +1283,7 @@
     const firstName = document.getElementById('partnerReqFirstName').value.trim();
     const lastName = document.getElementById('partnerReqLastName').value.trim();
     const email = document.getElementById('partnerReqEmail').value.trim();
+    const guestPhone = document.getElementById('partnerReqPhone').value.trim();
     const preferredDate = document.getElementById('partnerRequestDate').value;
     const partnerNotes = document.getElementById('partnerRequestNotes').value.trim();
 
@@ -1318,7 +1328,7 @@
 
     // Send partner notification and guest confirmation in parallel
     const [details] = await Promise.all([
-      sendPartnerRequestEmail({ req, guestName, guestEmail: email, guestPhone: '', propName, propAddress, checkin: '', checkout: '', storeName }),
+      sendPartnerRequestEmail({ req, guestName, guestEmail: email, guestPhone, propName, propAddress, checkin: '', checkout: '', storeName }),
       sendPartnerGuestConfirmation({
         guestEmail: email,
         guestName,

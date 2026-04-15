@@ -1326,21 +1326,21 @@
       partnerProductId: product.partner_product_id,
     });
 
-    // Send partner notification and guest confirmation in parallel
-    const [details] = await Promise.all([
-      sendPartnerRequestEmail({ req, guestName, guestEmail: email, guestPhone, propName, propAddress, checkin: '', checkout: '', storeName }),
-      sendPartnerGuestConfirmation({
-        guestEmail: email,
-        guestName,
-        productName: product.name,
-        preferredDate,
-        notes: partnerNotes,
-        businessName: req.businessName,
-        ownerName: null,
-        partnerEmail: null,
-        partnerPhone: null,
-      }),
-    ]);
+    // Send partner notification first to get their contact details
+    const details = await sendPartnerRequestEmail({ req, guestName, guestEmail: email, guestPhone, propName, propAddress, checkin: '', checkout: '', storeName });
+
+    // Send guest confirmation with partner contact details
+    sendPartnerGuestConfirmation({
+      guestEmail: email,
+      guestName,
+      productName: product.name,
+      preferredDate,
+      notes: partnerNotes,
+      businessName: details?.businessName || req.businessName,
+      ownerName: details?.ownerName || null,
+      partnerEmail: details?.email || null,
+      partnerPhone: details?.phone || null,
+    });
 
     // Show brief success message in hero
     const heroContent = document.getElementById('heroContent');

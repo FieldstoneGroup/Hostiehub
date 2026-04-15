@@ -1693,6 +1693,9 @@
         <p style="margin-top:12px;opacity:0.85">Payment confirmed! Your host will have everything ready for your arrival.</p>`;
     }, 1000);
 
+    // Clear success params from URL so refresh doesn't re-trigger
+    window.history.replaceState({}, '', window.location.pathname + '?store=' + getUsername());
+
     // Read order data from sessionStorage using session key
     const username = getUsername();
     const sk = urlParams.get('sk');

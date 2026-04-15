@@ -1963,13 +1963,46 @@
     const postcode = currentHost?.postcode;
     if (!postcode) return;
 
-    // Load all active partner products
+    // Load all active partner products with partner location data
     const { data } = await sb.from('partner_products')
-      .select('*, partners(business_name, phone)')
+      .select('*, partners(business_name, phone, service_lat, service_lng, service_radius_km, postcodes)')
       .eq('active', true);
 
+    if (!data?.length) { localPartnerProducts = []; renderLocalProducts(); return; }
+
+    // Get host lat/lng — geocode if not stored
+    let hostLat = currentHost.lat;
+    let hostLng = currentHost.lng;
+
+    if (!hostLat || !hostLng) {
+      try {
+        const geo = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(postcode + ', Australia') + '&format=json&limit=1', {
+          headers: { 'Accept-Language': 'en', 'User-Agent': 'HostieHub/1.0' }
+        });
+        const geoData = await geo.json();
+        if (geoData?.[0]) {
+          hostLat = parseFloat(geoData[0].lat);
+          hostLng = parseFloat(geoData[0].lon);
+          // Save for future use
+          await sb.from('hosts').update({ lat: hostLat, lng: hostLng }).eq('id', currentUser.id);
+          currentHost.lat = hostLat;
+          currentHost.lng = hostLng;
+        }
+      } catch(e) { console.warn('Geocode failed:', e); }
+    }
+
     localPartnerProducts = (data || []).filter(p => {
-      const codes = Array.isArray(p.postcodes) ? p.postcodes : JSON.parse(p.postcodes || '[]');
+      const partner = p.partners;
+      if (!partner) return false;
+
+      // New radius-based matching
+      if (partner.service_lat && partner.service_lng && partner.service_radius_km && hostLat && hostLng) {
+        const dist = haversineKm(hostLat, hostLng, partner.service_lat, partner.service_lng);
+        return dist <= partner.service_radius_km;
+      }
+
+      // Fallback: legacy postcode matching
+      const codes = Array.isArray(partner.postcodes) ? partner.postcodes : JSON.parse(partner.postcodes || '[]');
       return codes.includes(postcode);
     });
 
@@ -1983,6 +2016,16 @@
 
     // Partner listings are opt-in only — hosts choose to add them manually
     renderLocalProducts();
+  }
+
+  function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   }
 
   function renderLocalProducts() {

@@ -227,10 +227,10 @@
         </div>
       </div>
       <div class="card">
-        <div class="card-title">Your service areas</div>
-        <div class="card-desc">Hosts in these postcodes can see and add your products & services.</div>
-        <div class="postcode-tags" id="overviewPostcodes"></div>
-        <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="showPage('account', document.querySelector('[onclick*=account]'))">Edit postcodes →</button>
+        <div class="card-title">Your service area</div>
+        <div class="card-desc">Hosts within your selected radius can see and add your products & services.</div>
+        <div id="overviewServiceArea" style="font-size:14px;color:var(--muted);margin-bottom:12px">Not set — go to Account to set your service area.</div>
+        <button class="btn btn-outline btn-sm" onclick="showPage('account', document.querySelector('[onclick*=account]'))">Edit service area →</button>
       </div>
     </div>
 
@@ -590,8 +590,33 @@
           </div>
 
           <!-- Email change -->
+          <!-- Service area -->
           <div class="card" style="margin-bottom:16px">
-            <div class="card-title">Change email</div>
+            <div class="card-title">Service area</div>
+            <div class="card-desc">Set your location and how far you're willing to travel or deliver. Hosts within this radius will see your listings.</div>
+            <div class="field">
+              <label>Your suburb</label>
+              <div style="position:relative">
+                <input type="text" id="serviceSuburbInput" placeholder="e.g. Newcastle, Honeysuckle, Maitland" style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" oninput="suggestServiceSuburb(this.value)" autocomplete="off">
+                <div id="serviceSuburbSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:4px"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Radius</label>
+              <select id="serviceRadiusSelect" style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:white;outline:none">
+                <option value="5">5 km</option>
+                <option value="10">10 km</option>
+                <option value="25" selected>25 km</option>
+                <option value="50">50 km</option>
+                <option value="100">100 km</option>
+              </select>
+              <div class="field-hint">Hosts within this distance from your suburb will see your listings.</div>
+            </div>
+            <div id="serviceAreaCurrent" style="display:none;background:var(--partner-light);border:1.5px solid var(--partner);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--partner);margin-bottom:12px"></div>
+            <button class="btn btn-primary btn-sm" onclick="saveServiceArea()">Save service area</button>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
             <div class="card-desc">A verification link will be sent to your new email. Your login will update once you click it.</div>
             <div class="field"><label>Current email</label><input type="email" id="partnerCurrentEmail" disabled style="background:var(--bg);color:var(--muted)"></div>
             <div class="field"><label>New email address</label><input type="email" id="partnerNewEmail" placeholder="new@email.com"></div>
@@ -725,6 +750,14 @@
     document.getElementById('accountPhone').value = partnerData.phone || '';
     accountPostcodes = Array.isArray(partnerData.postcodes) ? partnerData.postcodes : JSON.parse(partnerData.postcodes || '[]');
     renderAccountPostcodes();
+
+    // Load service area
+    if (partnerData.service_suburb) {
+      document.getElementById('serviceSuburbInput').value = partnerData.service_suburb;
+      selectedServiceSuburb = { name: partnerData.service_suburb, lat: partnerData.service_lat, lng: partnerData.service_lng };
+      if (partnerData.service_radius_km) document.getElementById('serviceRadiusSelect').value = partnerData.service_radius_km;
+    }
+    updateServiceAreaDisplay();
     renderOverviewPostcodes();
     document.getElementById('statPostcodes').textContent = accountPostcodes.length;
   }
@@ -1662,7 +1695,69 @@
     showToast('Postcodes saved');
   }
 
-  async function saveProfile() {
+  let selectedServiceSuburb = null;
+
+  async function suggestServiceSuburb(query) {
+    if (query.length < 2) { document.getElementById('serviceSuburbSuggestions').style.display = 'none'; return; }
+    try {
+      const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(query + ', Australia') + '&format=json&addressdetails=1&limit=5', {
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'HostieHub/1.0' }
+      });
+      const data = await res.json();
+      const matches = data.filter(r => r.address && (r.address.suburb || r.address.town || r.address.city || r.address.village));
+      const box = document.getElementById('serviceSuburbSuggestions');
+      if (!matches.length) { box.style.display = 'none'; return; }
+      box.style.display = 'block';
+      box.innerHTML = matches.map(r => {
+        const name = r.address.suburb || r.address.town || r.address.city || r.address.village;
+        const state = r.address.state_code || r.address.state || '';
+        const postcode = r.address.postcode || '';
+        return '<div onclick="selectServiceSuburb(' + r.lat + ',' + r.lon + ',\'' + (name + (postcode ? ' ' + postcode : '') + (state ? ', ' + state : '')).replace(/'/g, '') + '\')" style="padding:12px 16px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border)" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'white\'">' + name + (postcode ? ' <span style="color:var(--muted);font-size:13px">(' + postcode + ')</span>' : '') + (state ? '<span style="color:var(--muted);font-size:12px"> · ' + state + '</span>' : '') + '</div>';
+      }).join('');
+    } catch(e) { console.error('Geocode error:', e); }
+  }
+
+  function selectServiceSuburb(lat, lng, name) {
+    selectedServiceSuburb = { lat: parseFloat(lat), lng: parseFloat(lng), name };
+    document.getElementById('serviceSuburbInput').value = name;
+    document.getElementById('serviceSuburbSuggestions').style.display = 'none';
+  }
+
+  async function saveServiceArea() {
+    if (!selectedServiceSuburb) { showToast('⚠️ Please select a suburb from the suggestions'); return; }
+    const radius = parseInt(document.getElementById('serviceRadiusSelect').value);
+    const { error } = await sb.from('partners').update({
+      service_suburb: selectedServiceSuburb.name,
+      service_lat: selectedServiceSuburb.lat,
+      service_lng: selectedServiceSuburb.lng,
+      service_radius_km: radius,
+    }).eq('user_id', currentUser.id);
+    if (error) { showToast('Error: ' + error.message); return; }
+    partnerData.service_suburb = selectedServiceSuburb.name;
+    partnerData.service_lat = selectedServiceSuburb.lat;
+    partnerData.service_lng = selectedServiceSuburb.lng;
+    partnerData.service_radius_km = radius;
+    updateServiceAreaDisplay();
+    showToast('✓ Service area saved');
+  }
+  window.saveServiceArea = saveServiceArea;
+
+  function updateServiceAreaDisplay() {
+    const suburb = partnerData.service_suburb;
+    const radius = partnerData.service_radius_km || 25;
+    const el = document.getElementById('serviceAreaCurrent');
+    const overview = document.getElementById('overviewServiceArea');
+    if (suburb) {
+      const txt = '📍 ' + suburb + ' · ' + radius + 'km radius';
+      if (el) { el.style.display = 'block'; el.textContent = txt; }
+      if (overview) { overview.textContent = txt; overview.style.color = 'var(--partner)'; overview.style.fontWeight = '600'; }
+    } else {
+      if (el) el.style.display = 'none';
+      if (overview) overview.textContent = 'Not set — go to Account to set your service area.';
+    }
+  }
+  window.suggestServiceSuburb = suggestServiceSuburb;
+  window.selectServiceSuburb = selectServiceSuburb;
     const updates = {
       business_name: document.getElementById('accountName').value.trim(),
       contact_name: document.getElementById('accountContactName').value.trim(),

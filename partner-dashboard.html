@@ -1232,9 +1232,12 @@
   }
 
   async function deleteProduct(id) {
-    if (!confirm('Delete this product? This cannot be undone.')) return;
+    if (!confirm('Delete this product? It will also be removed from any host stores. This cannot be undone.')) return;
+    // Remove from all host stores first
+    await sb.from('products').delete().eq('partner_product_id', id);
+    // Then delete the partner product itself
     await sb.from('partner_products').delete().eq('id', id);
-    showToast('Product deleted');
+    showToast('Product deleted from your listings and all host stores');
     loadProducts();
   }
 

@@ -1283,6 +1283,9 @@
 
     // If host has Stripe and there are host items — go to Stripe
     if (hostData.stripe_account_id && hostData.stripe_connected && hostItems.length > 0) {
+      const orderData = {host_id:hostData.id,guest_name:guestName,guest_email:guestEmail,guest_phone:guestPhone,checkin_date:checkin,checkout_date:checkout,property_id:propId||'',property_name:propName,notes,total,items:JSON.stringify(hostItems.map(i=>({id:i.id,name:i.name,price:i.price}))),product_notes:JSON.stringify(productNotes),partner_requests:JSON.stringify(partnerRequests)};
+      sessionStorage.setItem('pending_order_' + getUsername(), JSON.stringify(orderData));
+
       const checkoutRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-checkout' },
@@ -1290,7 +1293,7 @@
           items: hostItems.map(i => ({ name: i.name, price: i.price })),
           stripe_account_id: hostData.stripe_account_id,
           guest_email: guestEmail || undefined,
-          success_url: `${window.location.href}&order=success&guest=${encodeURIComponent(guestName)}&oid=${encodeURIComponent(JSON.stringify({host_id:hostData.id,guest_name:guestName,guest_email:guestEmail,guest_phone:guestPhone,checkin_date:checkin,checkout_date:checkout,property_id:propId||'',property_name:propName,notes,total,items:JSON.stringify(hostItems.map(i=>({id:i.id,name:i.name,price:i.price}))),product_notes:JSON.stringify(productNotes),partner_requests:JSON.stringify(partnerRequests)}))}`,
+          success_url: `${window.location.href}&order=success&guest=${encodeURIComponent(guestName)}`,
           cancel_url: window.location.href,
           metadata: {
             host_id: hostData.id,
@@ -1302,18 +1305,20 @@
             property_id: propId || '',
             property_name: propName,
             notes,
-            total,
-            items: JSON.stringify(hostItems.map(i => ({ id: i.id, name: i.name, price: i.price }))),
-            product_notes: JSON.stringify(productNotes),
-            partner_requests: JSON.stringify(partnerRequests),
+            total: String(total),
+            items: JSON.stringify(hostItems.map(i => ({ id: i.id, name: i.name, price: i.price }))).substring(0, 490),
+            product_notes: JSON.stringify(productNotes).substring(0, 490),
+            partner_requests: JSON.stringify(partnerRequests).substring(0, 490),
           }
         })
       });
       const session = await checkoutRes.json();
+      console.log('[Hostie] Stripe session:', session.url ? 'got URL' : 'error', session.error?.message || '');
       if (session.url) {
         window.location.href = session.url;
         return;
       }
+      console.error('[Hostie] Stripe checkout failed:', session);
     }
 
     // No Stripe or no host items — save order and send emails directly
@@ -1682,12 +1687,13 @@
         <p style="margin-top:12px;opacity:0.85">Payment confirmed! Your host will have everything ready for your arrival.</p>`;
     }, 1000);
 
-    // Save order and send emails via Worker
-    const oidParam = urlParams.get('oid');
-    if (oidParam) {
+    // Read order data from sessionStorage
+    const username = getUsername();
+    const pendingOrderStr = sessionStorage.getItem('pending_order_' + username);
+    if (pendingOrderStr) {
       try {
-        const orderData = JSON.parse(decodeURIComponent(oidParam));
-        // Fire and forget — don't await so page loads fast
+        const orderData = JSON.parse(pendingOrderStr);
+        sessionStorage.removeItem('pending_order_' + username);
         fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-order-complete' },
@@ -1695,7 +1701,7 @@
         }).then(r => r.json()).then(result => {
           console.log('[Hostie] Order save result:', result);
         }).catch(e => console.error('[Hostie] Order save failed:', e));
-      } catch(e) { console.error('[Hostie] Failed to parse order data:', e); }
+      } catch(e) { console.error('[Hostie] Failed to parse pending order:', e); }
     }
   }
 </script>

@@ -381,37 +381,6 @@
               <input type="number" id="pWholesalePrice" placeholder="e.g. 45" min="0" oninput="updatePreview()">
               <div class="field-hint">Hosts set their own retail price on top. They keep the difference as their margin.</div>
             </div>
-            <div class="field">
-              <label>Days available</label>
-              <div class="field-hint" style="margin-bottom:10px">Which days of the week can you fulfil this product?</div>
-              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="dayMon" value="mon" onchange="updateAllDaysCheck()"> Mon
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="dayTue" value="tue" onchange="updateAllDaysCheck()"> Tue
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="dayWed" value="wed" onchange="updateAllDaysCheck()"> Wed
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="dayThu" value="thu" onchange="updateAllDaysCheck()"> Thu
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="dayFri" value="fri" onchange="updateAllDaysCheck()"> Fri
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="daySat" value="sat" onchange="updateAllDaysCheck()"> Sat
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="daySun" value="sun" onchange="updateAllDaysCheck()"> Sun
-                </label>
-              </div>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--partner)">
-                <input type="checkbox" id="dayAll" onchange="toggleAllDays(this)"> All days (7 days a week)
-              </label>
-              <div class="field-hint" style="margin-top:6px">Guests will see which days this product is available when they browse your listing.</div>
-            </div>
           </div>
           <div id="serviceFields" style="display:none">
             <div class="field">
@@ -451,6 +420,37 @@
                 </select>
               </div>
               <div class="field-hint" style="margin-top:6px">e.g. "2 weeks" means guests can't select a date within 2 weeks of today.</div>
+            </div>
+            <div class="field">
+              <label>Days available</label>
+              <div class="field-hint" style="margin-bottom:10px">Which days of the week can you offer this service?</div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayMon" value="mon" onchange="updateAllDaysCheck()"> Mon
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayTue" value="tue" onchange="updateAllDaysCheck()"> Tue
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayWed" value="wed" onchange="updateAllDaysCheck()"> Wed
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayThu" value="thu" onchange="updateAllDaysCheck()"> Thu
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayFri" value="fri" onchange="updateAllDaysCheck()"> Fri
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="daySat" value="sat" onchange="updateAllDaysCheck()"> Sat
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="daySun" value="sun" onchange="updateAllDaysCheck()"> Sun
+                </label>
+              </div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--partner)">
+                <input type="checkbox" id="dayAll" onchange="toggleAllDays(this)"> All days (7 days a week)
+              </label>
+              <div class="field-hint" style="margin-top:6px">Guests will see which days this service is available when they browse your listing.</div>
             </div>
           </div>
           <div id="bookingFields" style="display:none">
@@ -1132,7 +1132,7 @@
     const servicePrice = isService && servicePriceUnit !== 'contact for pricing' ? (parseFloat(document.getElementById('pServicePrice').value) || 0) : null;
 
     // Available days (physical only)
-    const availableDays = isPhysical ? getSelectedDays() : null;
+    const availableDays = (isPhysical || isService) ? getSelectedDays() : null;
 
     const payload = {
       partner_id: partnerData.id,
@@ -1242,6 +1242,7 @@
       document.getElementById('pServicePriceUnit').value = p.service_price_unit || 'per hour';
       document.getElementById('pServicePrice').value = p.service_price || '';
       toggleServicePriceInput();
+      setSelectedDays(Array.isArray(p.available_days) ? p.available_days : null);
     }
     if (isBooking) document.getElementById('pBookingUrl').value = p.booking_url || '';
     if (isBooking) document.getElementById('pVoucherTitle').value = p.voucher_title || '';

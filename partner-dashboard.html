@@ -709,19 +709,27 @@
   const pageTitles = { overview:'Overview', analytics:'Analytics', products:'My Listings', newproduct:'Add Listing', vouchers:'My Vouchers', newvoucher:'Add Voucher', account:'Account', billing:'Billing' };
 
   async function init() {
-    let { data: { session } } = await sb.auth.getSession();
+    // Retry getSession up to 3 times to handle token refresh on hard refresh
+    let session = null;
+    for (let i = 0; i < 3; i++) {
+      const { data: { session: s } } = await sb.auth.getSession();
+      if (s) { session = s; break; }
+      await new Promise(r => setTimeout(r, 500));
+    }
 
+    // If still no session wait briefly for onAuthStateChange
     if (!session) {
       session = await new Promise(resolve => {
         const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
           if (s) { subscription.unsubscribe(); resolve(s); }
         });
-        setTimeout(() => resolve(null), 4000);
+        setTimeout(() => resolve(null), 3000);
       });
     }
 
     if (!session) { window.location.href = 'partner-signup.html'; return; }
     currentUser = session.user;
+    await sb.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
 
     // Retry partner lookup up to 3 times — JWT may not be attached yet on hard refresh
     let partner = null;
@@ -1758,6 +1766,8 @@
   }
   window.suggestServiceSuburb = suggestServiceSuburb;
   window.selectServiceSuburb = selectServiceSuburb;
+
+  async function saveProfile() {
     const updates = {
       business_name: document.getElementById('accountName').value.trim(),
       contact_name: document.getElementById('accountContactName').value.trim(),

@@ -1564,7 +1564,7 @@
       '</td></tr></table></td></tr></table></body></html>';
 
     try {
-      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+      const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
         body: JSON.stringify({
@@ -1574,6 +1574,8 @@
           html,
         }),
       });
+      const result = await res.json();
+      console.log('[sendPartnerGuestConfirmation] result:', JSON.stringify(result));
     } catch(e) { console.error('Partner guest confirmation failed:', e); }
   }
 

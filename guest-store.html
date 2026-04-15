@@ -366,7 +366,7 @@
       🤝 <strong>No payment needed now.</strong> Submit your request and <span id="partnerRequestBusinessInline">the business</span> will be in touch to confirm your booking and arrange payment.
     </div>
     <div class="notes-modal-actions" style="flex-direction:column;gap:8px">
-      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;font-size:15px;border-radius:12px" onclick="confirmPartnerRequest()">Submit request →</button>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;font-size:15px;border-radius:12px" onclick="confirmPartnerRequest()">Send request →</button>
       <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="document.getElementById('partnerRequestOverlay').classList.remove('open')">Cancel</button>
     </div>
   </div>
@@ -1150,14 +1150,68 @@
     pendingCartItem = null;
   }
 
-  function confirmPartnerRequest() {
+  async function confirmPartnerRequest() {
     if (!pendingPartnerRequestProduct) return;
+    const product = pendingPartnerRequestProduct;
+    const btn = pendingPartnerRequestBtn;
     const preferredDate = document.getElementById('partnerRequestDate').value;
     const partnerNotes = document.getElementById('partnerRequestNotes').value.trim();
+
+    // Close popup immediately
     document.getElementById('partnerRequestOverlay').classList.remove('open');
-    addToCart(pendingPartnerRequestProduct, pendingPartnerRequestBtn, '', { preferredDate, partnerNotes });
     pendingPartnerRequestProduct = null;
     pendingPartnerRequestBtn = null;
+
+    // Mark button as requested
+    if (btn) { btn.textContent = '✓ Requested'; btn.classList.add('added'); }
+
+    // Build request data
+    const req = {
+      productName: product.name,
+      businessName: product.partner_business_name || 'Local Partner',
+      partnerId: product.partner_id,
+      partnerProductId: product.partner_product_id,
+      preferredDate,
+      notes: partnerNotes,
+    };
+
+    // Get guest details from checkout form if filled, otherwise use blanks
+    const guestName = document.getElementById('guestName')?.value?.trim() || 'Guest';
+    const guestEmail = document.getElementById('guestEmail')?.value?.trim() || '';
+    const guestPhone = document.getElementById('guestPhone')?.value?.trim() || '';
+    const checkin = document.getElementById('checkinDate')?.value || '';
+    const checkout = document.getElementById('checkoutDate')?.value || '';
+    const propName = selectedPropertyName || '';
+    const storeName = hostData.store_name || hostData.username || 'your host';
+
+    // Send partner notification email
+    const details = await sendPartnerRequestEmail({ req, guestName, guestEmail, guestPhone, propName, checkin, checkout, storeName });
+
+    // Send guest confirmation if email provided
+    if (guestEmail) {
+      await sendGuestConfirmation({
+        guestEmail, guestName, guestPhone,
+        storeName,
+        hostName: hostData.full_name || hostData.store_name || 'Host',
+        checkin, checkout, propName,
+        notes: '', productNotes: {},
+        items: [],
+        total: 0,
+        partnerRequests: [{
+          ...req,
+          partnerEmail: details?.email || null,
+          ownerName: details?.ownerName || null,
+          partnerPhone: details?.phone || null,
+          businessName: details?.businessName || req.businessName,
+        }],
+      });
+    }
+
+    // Show brief success message in hero
+    const heroContent = document.getElementById('heroContent');
+    const originalHtml = heroContent.innerHTML;
+    heroContent.innerHTML = '<div style="font-size:40px;margin-bottom:12px">🤝</div><h1 style="font-size:clamp(20px,4vw,30px)">Request sent!</h1><p style="margin-top:8px;opacity:0.85">Your request has been sent to <strong>' + (details?.businessName || req.businessName) + '</strong>. They\'ll be in touch to confirm and arrange payment.</p>';
+    setTimeout(() => { heroContent.innerHTML = originalHtml; }, 4000);
   }
   window.confirmPartnerRequest = confirmPartnerRequest;
 
@@ -1191,7 +1245,7 @@
   }
 
   function updateCartUI() {
-    const total = cart.filter(i => !i.isPartnerRequest).reduce((s, i) => s + i.price, 0);
+    const total = cart.reduce((s, i) => s + i.price, 0);
     document.getElementById('cartCount').textContent = cart.length;
     document.getElementById('cartTotal').textContent = '$' + total;
     const el = document.getElementById('cartItems');
@@ -1201,10 +1255,9 @@
           <div class="cart-item">
             <div class="cart-item-icon">${item.icon}</div>
             <div class="cart-item-info">
-              <div class="cart-item-name">${item.name}${item.isPartnerRequest ? ' <span style="font-size:10px;background:#fff7e6;color:#92600a;padding:2px 6px;border-radius:50px;font-weight:600">🤝 Request</span>' : ''}</div>
-              <div class="cart-item-price">${item.isPartnerRequest ? '<span style="font-size:12px;color:#92600a">Arrange payment with ' + (item.partnerBusinessName || 'business') + '</span>' : '$' + item.price}</div>
+              <div class="cart-item-name">${item.name}</div>
+              <div class="cart-item-price">$${item.price}</div>
               ${item.note ? `<div class="cart-item-note">📝 ${item.note}</div>` : ''}
-              ${item.preferredDate ? `<div class="cart-item-note">📅 Preferred: ${item.preferredDate}</div>` : ''}
             </div>
             <button class="cart-item-remove" onclick="removeFromCart('${item.id}')">✕</button>
           </div>`).join('');
@@ -1216,34 +1269,19 @@
   function openCheckout() {
     if (!cart.length) { alert('Add something to your cart first!'); return; }
     closeCart();
-    const hostItems = cart.filter(i => !i.isPartnerRequest);
-    const partnerItems = cart.filter(i => i.isPartnerRequest);
-    const total = hostItems.reduce((s, i) => s + i.price, 0);
+    const total = cart.reduce((s, i) => s + i.price, 0);
 
-    let orderHtml = hostItems.map(item =>
+    const orderHtml = cart.map(item =>
       `<div style="font-size:14px;margin-bottom:6px">
         <div style="display:flex;justify-content:space-between"><span>${item.icon} ${item.name}</span><span style="font-weight:500">$${item.price}</span></div>
         ${item.note ? `<div style="font-size:12px;color:var(--brand);font-style:italic;margin-top:2px">📝 ${item.note}</div>` : ''}
       </div>`
     ).join('');
 
-    if (partnerItems.length > 0) {
-      orderHtml += `<div style="border-top:1px dashed var(--border);margin:10px 0 8px;padding-top:8px;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted)">🤝 Partner Requests (no charge now)</div>`;
-      orderHtml += partnerItems.map(item =>
-        `<div style="font-size:13px;margin-bottom:6px;color:#92600a">
-          <div style="display:flex;justify-content:space-between"><span>${item.icon} ${item.name}</span><span style="font-size:11px;background:#fff7e6;padding:2px 8px;border-radius:50px">Request</span></div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">${item.partnerBusinessName || 'Partner'} will arrange payment</div>
-          ${item.preferredDate ? `<div style="font-size:11px;color:var(--muted)">📅 Preferred: ${item.preferredDate}</div>` : ''}
-        </div>`
-      ).join('');
-      document.getElementById('partnerRequestNotice').style.display = 'block';
-    } else {
-      document.getElementById('partnerRequestNotice').style.display = 'none';
-    }
-
+    document.getElementById('partnerRequestNotice').style.display = 'none';
     document.getElementById('modalOrderItems').innerHTML = orderHtml;
-    document.getElementById('modalTotal').textContent = hostItems.length > 0 ? '$' + total : 'No charge';
-    document.getElementById('checkoutPayBtn').textContent = hostItems.length > 0 ? 'Pay securely with Stripe →' : 'Submit requests →';
+    document.getElementById('modalTotal').textContent = '$' + total;
+    document.getElementById('checkoutPayBtn').textContent = 'Pay securely with Stripe →';
     if (selectedPropertyId) document.getElementById('checkoutPropertySelect').value = selectedPropertyId;
     document.getElementById('propertyFieldWrap').style.display = properties.length > 0 ? 'block' : 'none';
     document.getElementById('checkoutOverlay').classList.add('open');
@@ -1266,41 +1304,28 @@
     const propId = document.getElementById('checkoutPropertySelect').value;
     const propName = propId ? (properties.find(p => p.id === propId)?.nickname || '') : '';
 
-    const hostItems = cart.filter(i => !i.isPartnerRequest);
-    const partnerItems = cart.filter(i => i.isPartnerRequest);
-    const total = hostItems.reduce((s, i) => s + i.price, 0);
+    const total = cart.reduce((s, i) => s + i.price, 0);
     const productNotes = {};
     cart.forEach(i => { if (i.note) productNotes[i.name] = i.note; });
 
-    const partnerRequests = partnerItems.map(i => ({
-      productName: i.name,
-      businessName: i.partnerBusinessName || 'Local Partner',
-      partnerId: i.partner_id,
-      partnerProductId: i.partner_product_id,
-      preferredDate: i.preferredDate || '',
-      notes: i.partnerNotes || '',
-    }));
-
-    // If host has Stripe and there are host items — go to Stripe
-    if (hostData.stripe_account_id && hostData.stripe_connected && hostItems.length > 0) {
-      const orderData = {host_id:hostData.id,guest_name:guestName,guest_email:guestEmail,guest_phone:guestPhone,checkin_date:checkin,checkout_date:checkout,property_id:propId||'',property_name:propName,notes,total,items:JSON.stringify(hostItems.map(i=>({id:i.id,name:i.name,price:i.price}))),product_notes:JSON.stringify(productNotes),partner_requests:JSON.stringify(partnerRequests)};
+    // Go to Stripe if host has it connected
+    if (hostData.stripe_account_id && hostData.stripe_connected && cart.length > 0) {
+      const orderData = {host_id:hostData.id,guest_name:guestName,guest_email:guestEmail,guest_phone:guestPhone,checkin_date:checkin,checkout_date:checkout,property_id:propId||'',property_name:propName,notes,total,items:JSON.stringify(cart.map(i=>({id:i.id,name:i.name,price:i.price}))),product_notes:JSON.stringify(productNotes),partner_requests:'[]'};
       const sessionKey = 'po_' + Date.now();
       sessionStorage.setItem(sessionKey, JSON.stringify(orderData));
 
-      // Build a short success URL — just the base store URL + params
       const baseUrl = 'https://www.hostiehub.com.au/store/' + getUsername();
       const successUrl = baseUrl + '?order=success&guest=' + encodeURIComponent(guestName) + '&sk=' + sessionKey;
-      const cancelUrl = baseUrl;
 
       const checkoutRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-checkout' },
         body: JSON.stringify({
-          items: hostItems.map(i => ({ name: i.name, price: i.price })),
+          items: cart.map(i => ({ name: i.name, price: i.price })),
           stripe_account_id: hostData.stripe_account_id,
           guest_email: guestEmail || undefined,
           success_url: successUrl,
-          cancel_url: cancelUrl,
+          cancel_url: baseUrl,
           metadata: {
             host_id: hostData.id,
             guest_name: guestName,
@@ -1312,22 +1337,18 @@
             property_name: propName,
             notes: notes.substring(0, 490),
             total: String(total),
-            items: JSON.stringify(hostItems.map(i => ({ id: i.id, name: i.name, price: i.price }))).substring(0, 490),
+            items: JSON.stringify(cart.map(i => ({ id: i.id, name: i.name, price: i.price }))).substring(0, 490),
             product_notes: JSON.stringify(productNotes).substring(0, 490),
-            partner_requests: JSON.stringify(partnerRequests).substring(0, 490),
           }
         })
       });
       const session = await checkoutRes.json();
       console.log('[Hostie] Stripe session:', session.url ? 'got URL' : 'error', session.error?.message || '');
-      if (session.url) {
-        window.location.href = session.url;
-        return;
-      }
+      if (session.url) { window.location.href = session.url; return; }
       console.error('[Hostie] Stripe checkout failed:', session);
     }
 
-    // No Stripe or no host items — save order and send emails directly
+    // No Stripe — save order directly
     await sb.from('orders').insert({
       host_id: hostData.id,
       guest_name: guestName,
@@ -1336,39 +1357,23 @@
       notes,
       property_id: propId || null,
       property_name: propName,
-      items: hostItems.map(i => ({ id: i.id, name: i.name, price: i.price })),
+      items: cart.map(i => ({ id: i.id, name: i.name, price: i.price })),
       product_notes: productNotes,
       total,
-      status: hostItems.length > 0 ? 'paid' : 'partner_only'
+      status: 'paid'
     });
 
-    cart.forEach(i => { if (i.partner_product_id && i.partner_id) logPartnerEvent(i.partner_product_id, i.partner_id, 'purchase'); });
     cart.forEach(i => logStoreEvent('purchase', i.id, i.name));
 
-    if (hostItems.length > 0) {
-      await sendHostNotification({
-        hostEmail: hostData.email,
-        notifEmails: Array.isArray(hostData.notif_emails) ? hostData.notif_emails : (hostData.notif_emails ? JSON.parse(hostData.notif_emails) : []),
-        hostName: hostData.full_name || hostData.store_name || 'Host',
-        storeName: hostData.store_name || hostData.username,
-        guestName, checkin, checkout, propName, notes, productNotes,
-        items: hostItems.map(i => ({ name: i.name, price: i.price, icon: i.icon, note: i.note })),
-        total,
-      });
-    }
-
-    // Send partner request emails and collect enriched details
-    const enrichedPartnerRequests = [];
-    for (const req of partnerRequests) {
-      const details = await sendPartnerRequestEmail({ req, guestName, guestEmail, guestPhone, propName, checkin, checkout, storeName: hostData.store_name || hostData.username });
-      enrichedPartnerRequests.push({
-        ...req,
-        partnerEmail: details?.email || null,
-        ownerName: details?.ownerName || null,
-        partnerPhone: details?.phone || null,
-        businessName: details?.businessName || req.businessName,
-      });
-    }
+    await sendHostNotification({
+      hostEmail: hostData.email,
+      notifEmails: Array.isArray(hostData.notif_emails) ? hostData.notif_emails : (hostData.notif_emails ? JSON.parse(hostData.notif_emails) : []),
+      hostName: hostData.full_name || hostData.store_name || 'Host',
+      storeName: hostData.store_name || hostData.username,
+      guestName, checkin, checkout, propName, notes, productNotes,
+      items: cart.map(i => ({ name: i.name, price: i.price, icon: i.icon, note: i.note })),
+      total,
+    });
 
     if (guestEmail) {
       await sendGuestConfirmation({
@@ -1376,9 +1381,9 @@
         storeName: hostData.store_name || hostData.username,
         hostName: hostData.full_name || hostData.store_name,
         checkin, checkout, propName, notes, productNotes,
-        items: hostItems.map(i => ({ name: i.name, price: i.price, icon: i.icon, note: i.note })),
+        items: cart.map(i => ({ name: i.name, price: i.price, icon: i.icon, note: i.note })),
         total,
-        partnerRequests: enrichedPartnerRequests,
+        partnerRequests: [],
       });
     }
 

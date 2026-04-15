@@ -758,16 +758,12 @@
     document.getElementById('accountPhone').value = partnerData.phone || '';
     accountPostcodes = Array.isArray(partnerData.postcodes) ? partnerData.postcodes : JSON.parse(partnerData.postcodes || '[]');
     renderAccountPostcodes();
-
-    // Load service area
     if (partnerData.service_suburb) {
       document.getElementById('serviceSuburbInput').value = partnerData.service_suburb;
       selectedServiceSuburb = { name: partnerData.service_suburb, lat: partnerData.service_lat, lng: partnerData.service_lng };
       if (partnerData.service_radius_km) document.getElementById('serviceRadiusSelect').value = partnerData.service_radius_km;
     }
     updateServiceAreaDisplay();
-    renderOverviewPostcodes();
-    document.getElementById('statPostcodes').textContent = accountPostcodes.length;
   }
 
   function checkTrial() {
@@ -1692,9 +1688,8 @@
   }
 
   function renderOverviewPostcodes() {
-    document.getElementById('overviewPostcodes').innerHTML = accountPostcodes.length
-      ? accountPostcodes.map(p => '<div class="postcode-tag">' + p + '</div>').join('')
-      : '<span style="font-size:14px;color:var(--muted)">No postcodes set yet.</span>';
+    const el = document.getElementById('overviewPostcodes');
+    if (!el) return; // element removed — service area card handles overview now
   }
 
   async function savePostcodes() {

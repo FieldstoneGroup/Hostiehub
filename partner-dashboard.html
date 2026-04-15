@@ -749,7 +749,7 @@
     document.getElementById('page-' + name).classList.add('active');
     if (btn) btn.classList.add('active');
     document.getElementById('topbarTitle').textContent = pageTitles[name] || name;
-    if (name === 'newproduct') { editingProductId = null; clearProductForm(); }
+    if (name === 'newproduct') { editingProductId = null; clearProductForm(); toggleProductType(); updatePreview(); }
     if (name === 'newvoucher') clearVoucherForm();
     if (name === 'analytics') renderAnalytics();
   }

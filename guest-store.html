@@ -1304,6 +1304,7 @@
 
     const storeName = hostData.store_name || hostData.username || 'your host';
     const propName = selectedPropertyName || '';
+    const propAddress = properties.find(p => p.nickname === selectedPropertyName)?.address || '';
 
     // Log analytics interaction
     logPartnerInteraction({
@@ -1316,7 +1317,7 @@
     });
 
     // Send partner notification and get partner details back
-    const details = await sendPartnerRequestEmail({ req, guestName, guestEmail: email, guestPhone: '', propName, checkin: '', checkout: '', storeName });
+    const details = await sendPartnerRequestEmail({ req, guestName, guestEmail: email, guestPhone: '', propName, propAddress, checkin: '', checkout: '', storeName });
 
     // Send guest confirmation email
     await sendPartnerGuestConfirmation({
@@ -1699,7 +1700,7 @@
     }
   }
 
-  async function sendPartnerRequestEmail({ req, guestName, guestEmail, guestPhone, propName, checkin, checkout, storeName }) {
+  async function sendPartnerRequestEmail({ req, guestName, guestEmail, guestPhone, propName, propAddress, checkin, checkout, storeName }) {
     if (!req.partnerId && !req.partnerProductId) return null;
     try {
       const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
@@ -1714,6 +1715,7 @@
           guestEmail,
           guestPhone,
           propName,
+          propAddress: propAddress || '',
           checkin,
           checkout,
           preferredDate: req.preferredDate || '',

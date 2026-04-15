@@ -582,6 +582,15 @@
 
       </div>
 
+      <!-- Partner interactions -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title" style="margin-bottom:4px">🤝 Partner Interactions</div>
+        <div class="card-desc" style="margin-bottom:16px">Guests who clicked through to a booking link or submitted a service request</div>
+        <div id="partnerInteractionsTable">
+          <div class="empty-state" style="padding:30px 20px"><div class="empty-icon" style="font-size:32px">🤝</div><p>No partner interactions yet</p></div>
+        </div>
+      </div>
+
       <!-- Financial report -->
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
@@ -2489,15 +2498,18 @@
   // ── HOST ANALYTICS ──
   let hostOrders = [];
   let hostStoreEvents = [];
+  let hostPartnerInteractions = [];
   let hostAnalyticsDays = 30;
 
   async function loadHostAnalytics() {
-    const [ordersRes, eventsRes] = await Promise.all([
+    const [ordersRes, eventsRes, interactionsRes] = await Promise.all([
       sb.from('orders').select('*').eq('host_id', currentUser.id).order('created_at', { ascending: false }),
       sb.from('store_events').select('*').eq('host_id', currentUser.id).order('created_at', { ascending: false }),
+      sb.from('partner_interactions').select('*').eq('host_id', currentUser.id).order('created_at', { ascending: false }),
     ]);
     hostOrders = ordersRes.data || [];
     hostStoreEvents = eventsRes.data || [];
+    hostPartnerInteractions = interactionsRes.data || [];
     renderHostAnalytics();
   }
 
@@ -2609,6 +2621,37 @@
         '</tbody></table>';
       document.getElementById('financialSummary').style.display = 'flex';
       document.getElementById('financialTotal').textContent = '$' + revenue.toFixed(2);
+    }
+
+    // Partner interactions table
+    const filteredInteractions = cutoff ? hostPartnerInteractions.filter(i => new Date(i.created_at) >= cutoff) : hostPartnerInteractions;
+    const interactionsEl = document.getElementById('partnerInteractionsTable');
+    if (!filteredInteractions.length) {
+      interactionsEl.innerHTML = '<div class="empty-state" style="padding:30px 20px"><div class="empty-icon" style="font-size:32px">🤝</div><p>No partner interactions yet</p></div>';
+    } else {
+      interactionsEl.innerHTML = '<table style="width:100%;border-collapse:collapse;font-size:13px">' +
+        '<thead><tr style="border-bottom:1.5px solid var(--border)">' +
+          '<th style="text-align:left;padding:8px 10px;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Date</th>' +
+          '<th style="text-align:left;padding:8px 10px;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Guest</th>' +
+          '<th style="text-align:left;padding:8px 10px;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Email</th>' +
+          '<th style="text-align:left;padding:8px 10px;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Business</th>' +
+          '<th style="text-align:left;padding:8px 10px;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Listing</th>' +
+          '<th style="text-align:left;padding:8px 10px;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Type</th>' +
+        '</tr></thead><tbody>' +
+        filteredInteractions.map(i => {
+          const typeLabel = i.interaction_type === 'booking_click'
+            ? '<span style="font-size:11px;background:#e6f2f1;color:var(--brand);padding:2px 8px;border-radius:50px;font-weight:600">🔗 Booking</span>'
+            : '<span style="font-size:11px;background:#fff7e6;color:#92600a;padding:2px 8px;border-radius:50px;font-weight:600">🤝 Request</span>';
+          return '<tr style="border-bottom:1px solid var(--bg)">' +
+            '<td style="padding:10px">' + new Date(i.created_at).toLocaleDateString('en-AU') + '</td>' +
+            '<td style="padding:10px;font-weight:600">' + (i.guest_first_name || '') + ' ' + (i.guest_last_name || '') + '</td>' +
+            '<td style="padding:10px;color:var(--muted)">' + (i.guest_email || '') + '</td>' +
+            '<td style="padding:10px">' + (i.business_name || '–') + '</td>' +
+            '<td style="padding:10px">' + (i.product_name || '–') + '</td>' +
+            '<td style="padding:10px">' + typeLabel + '</td>' +
+          '</tr>';
+        }).join('') +
+        '</tbody></table>';
     }
   }
 

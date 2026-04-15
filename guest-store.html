@@ -354,20 +354,64 @@
     <div id="partnerLeadTimeNotice" style="display:none;background:#f0fdf4;border:1.5px solid #16a34a;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#15803d;line-height:1.5">
       ⏱️ <strong>Lead time required:</strong> <span id="partnerLeadTimeText"></span>. Please select a preferred date that allows enough notice.
     </div>
-    <div style="margin-bottom:14px">
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="flex:1">
+        <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">First name</label>
+        <input type="text" id="partnerReqFirstName" placeholder="Jane" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
+      </div>
+      <div style="flex:1">
+        <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Last name</label>
+        <input type="text" id="partnerReqLastName" placeholder="Smith" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Email address</label>
+      <input type="email" id="partnerReqEmail" placeholder="your@email.com" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
+    </div>
+    <div style="margin-bottom:12px">
       <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Preferred date <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
       <input type="date" id="partnerRequestDate" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
     </div>
-    <div style="margin-bottom:16px">
+    <div style="margin-bottom:14px">
       <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Notes <span style="font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></label>
-      <textarea id="partnerRequestNotes" placeholder="Any specific requirements or questions..." style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;resize:vertical;min-height:80px;box-sizing:border-box"></textarea>
+      <textarea id="partnerRequestNotes" placeholder="Any specific requirements or questions..." style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;resize:vertical;min-height:70px;box-sizing:border-box"></textarea>
     </div>
-    <div style="background:#fff7e6;border:1.5px solid #E8A838;border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:#92600a;line-height:1.5">
-      🤝 <strong>No payment needed now.</strong> Submit your request and <span id="partnerRequestBusinessInline">the business</span> will be in touch to confirm your booking and arrange payment.
+    <div id="partnerReqError" style="display:none;color:#e53e3e;font-size:13px;margin-bottom:10px">⚠️ Please enter your first name, last name and email.</div>
+    <div style="background:#fff7e6;border:1.5px solid #E8A838;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#92600a;line-height:1.5">
+      🤝 <strong>No payment needed now.</strong> <span id="partnerRequestBusinessInline">The business</span> will be in touch to confirm your booking and arrange payment.
     </div>
     <div class="notes-modal-actions" style="flex-direction:column;gap:8px">
       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;font-size:15px;border-radius:12px" onclick="confirmPartnerRequest()">Send request →</button>
       <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="document.getElementById('partnerRequestOverlay').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING LINK CAPTURE MODAL -->
+<div class="notes-modal-overlay" id="bookingCaptureOverlay">
+  <div class="notes-modal" style="max-width:420px">
+    <div style="font-size:40px;text-align:center;margin-bottom:8px">🔗</div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--brand);text-align:center;margin-bottom:4px">Booking Link</div>
+    <h3 style="text-align:center;margin-bottom:4px" id="bookingCaptureTitle">Continue to booking</h3>
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:16px" id="bookingCaptureBusiness"></p>
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="flex:1">
+        <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">First name</label>
+        <input type="text" id="bookingCaptureFirstName" placeholder="Jane" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
+      </div>
+      <div style="flex:1">
+        <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Last name</label>
+        <input type="text" id="bookingCaptureLastName" placeholder="Smith" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
+      </div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px">Email address</label>
+      <input type="email" id="bookingCaptureEmail" placeholder="your@email.com" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
+    </div>
+    <div id="bookingCaptureError" style="display:none;color:#e53e3e;font-size:13px;margin-bottom:10px">⚠️ Please enter your first name, last name and email.</div>
+    <div class="notes-modal-actions" style="flex-direction:column;gap:8px">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;font-size:15px;border-radius:12px" onclick="confirmBookingCapture()">Continue to booking →</button>
+      <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="skipBookingCapture()">Skip</button>
     </div>
   </div>
 </div>
@@ -850,10 +894,13 @@
   let pendingVoucherProductName = null;
   let pendingPartnerId = null;
   let pendingPartnerProductId = null;
+  let pendingBookingProductName = null;
+  let pendingBookingBusinessName = null;
 
   function handleBookingLink(url, partnerProductId, partnerId, voucherPdfUrl, productName, voucherTitle) {
     if (partnerProductId && partnerId) logPartnerEvent(partnerProductId, partnerId, 'click');
     if (voucherPdfUrl) {
+      // Has voucher — use existing voucher modal
       pendingBookingUrl = url;
       pendingVoucherUrl = voucherPdfUrl;
       pendingVoucherProductName = voucherTitle || productName || 'your booking';
@@ -865,8 +912,77 @@
       document.getElementById('voucherModalError').style.display = 'none';
       document.getElementById('voucherModalOverlay').classList.add('open');
     } else {
-      window.open(url, '_blank');
+      // No voucher — show capture popup
+      pendingBookingUrl = url;
+      pendingPartnerId = partnerId || null;
+      pendingPartnerProductId = partnerProductId || null;
+      pendingBookingProductName = productName || 'Booking';
+      // Get business name from the product
+      const product = allProducts.find(p => p.partner_product_id === partnerProductId);
+      pendingBookingBusinessName = product?.partner_business_name || 'Local Partner';
+      document.getElementById('bookingCaptureTitle').textContent = productName || 'Continue to booking';
+      document.getElementById('bookingCaptureBusiness').textContent = 'by ' + pendingBookingBusinessName;
+      document.getElementById('bookingCaptureFirstName').value = '';
+      document.getElementById('bookingCaptureLastName').value = '';
+      document.getElementById('bookingCaptureEmail').value = '';
+      document.getElementById('bookingCaptureError').style.display = 'none';
+      document.getElementById('bookingCaptureOverlay').classList.add('open');
     }
+  }
+
+  async function confirmBookingCapture() {
+    const firstName = document.getElementById('bookingCaptureFirstName').value.trim();
+    const lastName = document.getElementById('bookingCaptureLastName').value.trim();
+    const email = document.getElementById('bookingCaptureEmail').value.trim();
+    if (!firstName || !lastName || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('bookingCaptureError').style.display = 'block';
+      return;
+    }
+    document.getElementById('bookingCaptureError').style.display = 'none';
+    const bookingUrl = pendingBookingUrl;
+    document.getElementById('bookingCaptureOverlay').classList.remove('open');
+    window.open(bookingUrl, '_blank');
+
+    // Log interaction
+    logPartnerInteraction({
+      type: 'booking_click',
+      firstName, lastName, email,
+      productName: pendingBookingProductName,
+      businessName: pendingBookingBusinessName,
+      partnerId: pendingPartnerId,
+      partnerProductId: pendingPartnerProductId,
+    });
+
+    pendingBookingUrl = null;
+    pendingPartnerId = null;
+    pendingPartnerProductId = null;
+    pendingBookingProductName = null;
+    pendingBookingBusinessName = null;
+  }
+  window.confirmBookingCapture = confirmBookingCapture;
+
+  function skipBookingCapture() {
+    const bookingUrl = pendingBookingUrl;
+    document.getElementById('bookingCaptureOverlay').classList.remove('open');
+    pendingBookingUrl = null;
+    if (bookingUrl) window.open(bookingUrl, '_blank');
+  }
+  window.skipBookingCapture = skipBookingCapture;
+
+  function logPartnerInteraction({ type, firstName, lastName, email, productName, businessName, partnerId, partnerProductId }) {
+    const data = {
+      host_id: hostData?.id || null,
+      partner_id: partnerId || null,
+      partner_product_id: partnerProductId || null,
+      interaction_type: type,
+      guest_first_name: firstName,
+      guest_last_name: lastName,
+      guest_email: email,
+      product_name: productName,
+      business_name: businessName,
+      property_name: selectedPropertyName || null,
+    };
+    sb.from('partner_interactions').insert(data).then(() => {}).catch(e => console.warn('Interaction log:', e));
   }
 
   async function sendVoucherEmail() {
@@ -1154,8 +1270,20 @@
     if (!pendingPartnerRequestProduct) return;
     const product = pendingPartnerRequestProduct;
     const btn = pendingPartnerRequestBtn;
+
+    const firstName = document.getElementById('partnerReqFirstName').value.trim();
+    const lastName = document.getElementById('partnerReqLastName').value.trim();
+    const email = document.getElementById('partnerReqEmail').value.trim();
     const preferredDate = document.getElementById('partnerRequestDate').value;
     const partnerNotes = document.getElementById('partnerRequestNotes').value.trim();
+
+    if (!firstName || !lastName || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('partnerReqError').style.display = 'block';
+      return;
+    }
+    document.getElementById('partnerReqError').style.display = 'none';
+
+    const guestName = firstName + ' ' + lastName;
 
     // Close popup immediately
     document.getElementById('partnerRequestOverlay').classList.remove('open');
@@ -1165,7 +1293,6 @@
     // Mark button as requested
     if (btn) { btn.textContent = '✓ Requested'; btn.classList.add('added'); }
 
-    // Build request data
     const req = {
       productName: product.name,
       businessName: product.partner_business_name || 'Local Partner',
@@ -1175,37 +1302,34 @@
       notes: partnerNotes,
     };
 
-    // Get guest details from checkout form if filled, otherwise use blanks
-    const guestName = document.getElementById('guestName')?.value?.trim() || 'Guest';
-    const guestEmail = document.getElementById('guestEmail')?.value?.trim() || '';
-    const guestPhone = document.getElementById('guestPhone')?.value?.trim() || '';
-    const checkin = document.getElementById('checkinDate')?.value || '';
-    const checkout = document.getElementById('checkoutDate')?.value || '';
-    const propName = selectedPropertyName || '';
     const storeName = hostData.store_name || hostData.username || 'your host';
+    const propName = selectedPropertyName || '';
 
-    // Send partner notification email
-    const details = await sendPartnerRequestEmail({ req, guestName, guestEmail, guestPhone, propName, checkin, checkout, storeName });
+    // Log analytics interaction
+    logPartnerInteraction({
+      type: 'service_request',
+      firstName, lastName, email,
+      productName: product.name,
+      businessName: req.businessName,
+      partnerId: product.partner_id,
+      partnerProductId: product.partner_product_id,
+    });
 
-    // Send guest confirmation if email provided
-    if (guestEmail) {
-      await sendGuestConfirmation({
-        guestEmail, guestName, guestPhone,
-        storeName,
-        hostName: hostData.full_name || hostData.store_name || 'Host',
-        checkin, checkout, propName,
-        notes: '', productNotes: {},
-        items: [],
-        total: 0,
-        partnerRequests: [{
-          ...req,
-          partnerEmail: details?.email || null,
-          ownerName: details?.ownerName || null,
-          partnerPhone: details?.phone || null,
-          businessName: details?.businessName || req.businessName,
-        }],
-      });
-    }
+    // Send partner notification and get partner details back
+    const details = await sendPartnerRequestEmail({ req, guestName, guestEmail: email, guestPhone: '', propName, checkin: '', checkout: '', storeName });
+
+    // Send guest confirmation email
+    await sendPartnerGuestConfirmation({
+      guestEmail: email,
+      guestName,
+      productName: product.name,
+      preferredDate,
+      notes: partnerNotes,
+      businessName: details?.businessName || req.businessName,
+      ownerName: details?.ownerName || null,
+      partnerEmail: details?.email || null,
+      partnerPhone: details?.phone || null,
+    });
 
     // Show brief success message in hero
     const heroContent = document.getElementById('heroContent');
@@ -1397,7 +1521,60 @@
       <p style="margin-top:12px;opacity:0.85">Your order is confirmed. Your host will have everything ready for your arrival${propName ? ' at ' + propName : ''}.</p>`;
   }
 
-  async function sendHostNotification({ hostEmail, notifEmails = [], hostName, storeName, guestName, checkin, checkout, propName, notes, productNotes, items, total }) {
+  async function sendPartnerGuestConfirmation({ guestEmail, guestName, productName, preferredDate, notes, businessName, ownerName, partnerEmail, partnerPhone }) {
+    const html = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f6f5;font-family:Arial,sans-serif">' +
+      '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f5;padding:40px 20px"><tr><td align="center">' +
+      '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">' +
+      '<tr><td style="background:linear-gradient(135deg,#E8A838,#d4952e);border-radius:16px 16px 0 0;padding:36px 40px;text-align:center">' +
+      '<div style="font-size:40px;margin-bottom:8px">🤝</div>' +
+      '<div style="font-size:22px;font-weight:700;color:white;font-family:Georgia,serif">Your request has been sent!</div>' +
+      '<div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:4px">via Hostie Hub</div>' +
+      '</td></tr>' +
+      '<tr><td style="background:white;padding:36px 40px;border-radius:0 0 16px 16px">' +
+      '<p style="font-size:15px;color:#1a1a1a;margin:0 0 28px;line-height:1.6">Hi <strong>' + guestName + '</strong>, your request has been sent. Here\'s a summary:</p>' +
+
+      // What you requested
+      '<div style="background:#f4f6f5;border-radius:12px;padding:20px;margin-bottom:24px">' +
+      '<div style="font-size:13px;font-weight:700;color:#6b7280;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px">What you requested</div>' +
+      '<div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:8px">' + productName + '</div>' +
+      (preferredDate ? '<div style="font-size:14px;color:#6b7280;margin-bottom:4px">📅 Preferred date: <strong style="color:#1a1a1a">' + preferredDate + '</strong></div>' : '') +
+      (notes ? '<div style="font-size:14px;color:#6b7280;margin-top:8px;font-style:italic">"' + notes + '"</div>' : '') +
+      '</div>' +
+
+      // Who will contact you
+      '<div style="background:#fff7e6;border-radius:12px;padding:20px;margin-bottom:28px;border-left:4px solid #E8A838">' +
+      '<div style="font-size:13px;font-weight:700;color:#92600a;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:12px">Who will contact you</div>' +
+      '<div style="font-size:17px;font-weight:700;color:#92600a;margin-bottom:10px">' + businessName + '</div>' +
+      (ownerName ? '<div style="font-size:14px;color:#92600a;margin-bottom:6px">👤 ' + ownerName + '</div>' : '') +
+      (partnerEmail ? '<div style="font-size:14px;margin-bottom:6px">✉️ <a href="mailto:' + partnerEmail + '" style="color:#2C6E6A;font-weight:600;text-decoration:none">' + partnerEmail + '</a></div>' : '') +
+      (partnerPhone ? '<div style="font-size:14px;margin-bottom:6px">📞 <a href="tel:' + partnerPhone + '" style="color:#2C6E6A;font-weight:600;text-decoration:none">' + partnerPhone + '</a></div>' : '') +
+      '</div>' +
+
+      // Message
+      '<div style="background:#e6f2f1;border-radius:10px;padding:16px 20px;margin-bottom:24px">' +
+      '<p style="font-size:14px;color:#1d4d4a;margin:0;line-height:1.7">💬 <strong>No payment is needed now.</strong> ' + businessName + ' will be in touch to confirm availability and arrange payment directly with you.</p>' +
+      '</div>' +
+
+      '<p style="font-size:12px;color:#9ca3af;text-align:center;margin:0">This confirmation was sent by Hostie Hub · Please do not reply to this email</p>' +
+      '</td></tr>' +
+      '<tr><td style="padding:24px 0;text-align:center">' +
+      '<div style="font-family:Georgia,serif;font-size:14px;font-weight:700;color:#E8A838;margin-bottom:4px">Hostie Hub</div>' +
+      '<div style="font-size:12px;color:#9ca3af">Connecting guests with local experiences · Made with ❤️ in Newcastle, Australia</div>' +
+      '</td></tr></table></td></tr></table></body></html>';
+
+    try {
+      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+        body: JSON.stringify({
+          from: 'Hostie Hub <hello@hostiehub.com.au>',
+          to: guestEmail,
+          subject: '🤝 Your request has been sent — ' + businessName,
+          html,
+        }),
+      });
+    } catch(e) { console.error('Partner guest confirmation failed:', e); }
+  } hostEmail, notifEmails = [], hostName, storeName, guestName, checkin, checkout, propName, notes, productNotes, items, total }) {
     const itemsHtml = items.map(i => `
       <tr>
         <td style="padding:10px 0;border-bottom:1px solid #e8e4df;font-size:15px">${i.icon} ${i.name}${i.note ? `<div style="font-size:12px;color:#6b7280;margin-top:3px;font-style:italic">📝 ${i.note}</div>` : ''}</td>

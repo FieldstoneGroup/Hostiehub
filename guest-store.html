@@ -1284,7 +1284,13 @@
     // If host has Stripe and there are host items — go to Stripe
     if (hostData.stripe_account_id && hostData.stripe_connected && hostItems.length > 0) {
       const orderData = {host_id:hostData.id,guest_name:guestName,guest_email:guestEmail,guest_phone:guestPhone,checkin_date:checkin,checkout_date:checkout,property_id:propId||'',property_name:propName,notes,total,items:JSON.stringify(hostItems.map(i=>({id:i.id,name:i.name,price:i.price}))),product_notes:JSON.stringify(productNotes),partner_requests:JSON.stringify(partnerRequests)};
-      sessionStorage.setItem('pending_order_' + getUsername(), JSON.stringify(orderData));
+      const sessionKey = 'po_' + Date.now();
+      sessionStorage.setItem(sessionKey, JSON.stringify(orderData));
+
+      // Build a short success URL — just the base store URL + params
+      const baseUrl = 'https://www.hostiehub.com.au/store/' + getUsername();
+      const successUrl = baseUrl + '?order=success&guest=' + encodeURIComponent(guestName) + '&sk=' + sessionKey;
+      const cancelUrl = baseUrl;
 
       const checkoutRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
@@ -1293,8 +1299,8 @@
           items: hostItems.map(i => ({ name: i.name, price: i.price })),
           stripe_account_id: hostData.stripe_account_id,
           guest_email: guestEmail || undefined,
-          success_url: `${window.location.href}&order=success&guest=${encodeURIComponent(guestName)}`,
-          cancel_url: window.location.href,
+          success_url: successUrl,
+          cancel_url: cancelUrl,
           metadata: {
             host_id: hostData.id,
             guest_name: guestName,
@@ -1304,7 +1310,7 @@
             checkout_date: checkout,
             property_id: propId || '',
             property_name: propName,
-            notes,
+            notes: notes.substring(0, 490),
             total: String(total),
             items: JSON.stringify(hostItems.map(i => ({ id: i.id, name: i.name, price: i.price }))).substring(0, 490),
             product_notes: JSON.stringify(productNotes).substring(0, 490),
@@ -1687,13 +1693,15 @@
         <p style="margin-top:12px;opacity:0.85">Payment confirmed! Your host will have everything ready for your arrival.</p>`;
     }, 1000);
 
-    // Read order data from sessionStorage
+    // Read order data from sessionStorage using session key
     const username = getUsername();
-    const pendingOrderStr = sessionStorage.getItem('pending_order_' + username);
+    const sk = urlParams.get('sk');
+    const pendingOrderStr = sk ? sessionStorage.getItem(sk) : sessionStorage.getItem('pending_order_' + username);
     if (pendingOrderStr) {
       try {
         const orderData = JSON.parse(pendingOrderStr);
-        sessionStorage.removeItem('pending_order_' + username);
+        if (sk) sessionStorage.removeItem(sk);
+        else sessionStorage.removeItem('pending_order_' + username);
         fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-order-complete' },

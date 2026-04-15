@@ -341,12 +341,12 @@
         <div class="card">
           <div class="field">
             <label>What type of listing is this?</label>
-            <label class="type-option">
-              <input type="radio" name="productType" value="physical" id="ptPhysical" onchange="toggleProductType();updatePreview()" checked>
+            <label class="type-option" style="display:none">
+              <input type="radio" name="productType" value="physical" id="ptPhysical" onchange="toggleProductType();updatePreview()">
               <div><div class="type-option-label">📦 Physical product</div><div class="type-option-desc">e.g. flowers, hampers, firewood — delivered or ready on arrival</div></div>
             </label>
             <label class="type-option">
-              <input type="radio" name="productType" value="service" id="ptService" onchange="toggleProductType();updatePreview()">
+              <input type="radio" name="productType" value="service" id="ptService" onchange="toggleProductType();updatePreview()" checked>
               <div><div class="type-option-label">🛎️ Service request</div><div class="type-option-desc">e.g. massage, chef, cleaning — guest submits a request and you contact them to confirm and arrange payment</div></div>
             </label>
             <label class="type-option">
@@ -1056,7 +1056,7 @@
     document.getElementById('pServicePriceUnit').value = 'per hour';
     document.getElementById('pServicePrice').style.display = 'block';
     document.getElementById('priceDollarSign').style.display = 'block';
-    document.getElementById('ptPhysical').checked = true;
+    document.getElementById('ptService').checked = true;
     document.getElementById('physicalFields').style.display = 'block';
     document.getElementById('serviceFields').style.display = 'none';
     document.getElementById('bookingFields').style.display = 'none';

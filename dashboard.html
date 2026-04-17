@@ -682,6 +682,14 @@
             <button class="btn btn-outline btn-sm" onclick="sendPasswordReset()">Send reset link →</button>
           </div>
 
+          <!-- Delete account -->
+          <div class="card" style="margin-bottom:16px;border:1.5px solid #fee2e2">
+            <div class="card-title" style="color:#dc2626">⚠️ Delete account</div>
+            <div class="card-desc">Permanently delete your Hostie Hub account and all associated data — products, orders, and store settings. This cannot be undone.</div>
+            <div id="deleteAccountMsg" style="display:none;font-size:13px;margin-bottom:10px;padding:10px 12px;border-radius:8px"></div>
+            <button class="btn btn-sm" style="background:#dc2626;color:white;border:none" onclick="confirmDeleteAccount()">Delete my account</button>
+          </div>
+
           <div class="card">
             <div class="card-title">Store URL</div>
             <div class="card-desc">Change your store's unique web address. ⚠️ Your old URL will stop working immediately.</div>
@@ -2321,6 +2329,35 @@
     }
   }
   window.sendPasswordReset = sendPasswordReset;
+
+  async function confirmDeleteAccount() {
+    const msg = document.getElementById('deleteAccountMsg');
+    const confirmed = confirm('Are you absolutely sure? This will permanently delete your account, all products, orders and store data. This cannot be undone.');
+    if (!confirmed) return;
+    const doubleCheck = prompt('Type DELETE to confirm:');
+    if (doubleCheck !== 'DELETE') { showToast('Account deletion cancelled.'); return; }
+    try {
+      msg.style.display = 'block';
+      msg.style.background = '#fff7e6';
+      msg.style.color = '#92600a';
+      msg.textContent = 'Deleting your account...';
+      // Delete host data
+      await sb.from('products').delete().eq('host_id', currentUser.id);
+      await sb.from('orders').delete().eq('host_id', currentUser.id);
+      await sb.from('store_events').delete().eq('host_id', currentUser.id);
+      await sb.from('partner_interactions').delete().eq('host_id', currentUser.id);
+      await sb.from('properties').delete().eq('host_id', currentUser.id);
+      await sb.from('hosts').delete().eq('user_id', currentUser.id);
+      // Delete auth user
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    } catch(e) {
+      msg.style.background = '#fee2e2';
+      msg.style.color = '#dc2626';
+      msg.textContent = 'Error deleting account: ' + e.message;
+    }
+  }
+  window.confirmDeleteAccount = confirmDeleteAccount;
 
   async function changeUsername() {
     const newUsername = document.getElementById('newUsername').value.trim();

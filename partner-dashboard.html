@@ -631,6 +631,14 @@
             <div id="partnerPasswordMsg" style="display:none;font-size:13px;margin-bottom:10px;padding:10px 12px;border-radius:8px"></div>
             <button class="btn btn-outline btn-sm" onclick="partnerSendPasswordReset()">Send reset link →</button>
           </div>
+
+          <!-- Delete account -->
+          <div class="card" style="margin-top:16px;border:1.5px solid #fee2e2">
+            <div class="card-title" style="color:#dc2626">⚠️ Delete account</div>
+            <div class="card-desc">Permanently delete your partner account and all listings. This will also remove your listings from any host stores. This cannot be undone.</div>
+            <div id="partnerDeleteMsg" style="display:none;font-size:13px;margin-bottom:10px;padding:10px 12px;border-radius:8px"></div>
+            <button class="btn btn-sm" style="background:#dc2626;color:white;border:none" onclick="confirmDeletePartnerAccount()">Delete my account</button>
+          </div>
       </div>
     </div>
 
@@ -1812,6 +1820,39 @@
     }
   }
   window.partnerSendPasswordReset = partnerSendPasswordReset;
+
+  async function confirmDeletePartnerAccount() {
+    const msg = document.getElementById('partnerDeleteMsg');
+    const confirmed = confirm('Are you absolutely sure? This will permanently delete your partner account and all listings from every host store. This cannot be undone.');
+    if (!confirmed) return;
+    const doubleCheck = prompt('Type DELETE to confirm:');
+    if (doubleCheck !== 'DELETE') { showToast('Account deletion cancelled.'); return; }
+    try {
+      msg.style.display = 'block';
+      msg.style.background = '#fff7e6';
+      msg.style.color = '#92600a';
+      msg.textContent = 'Deleting your account...';
+      // Get all partner product IDs first
+      const { data: prods } = await sb.from('partner_products').select('id').eq('partner_id', partnerData.id);
+      if (prods?.length) {
+        const ids = prods.map(p => p.id);
+        // Remove from all host stores
+        await sb.from('products').delete().in('partner_product_id', ids);
+        // Delete partner products
+        await sb.from('partner_products').delete().eq('partner_id', partnerData.id);
+      }
+      await sb.from('partner_interactions').delete().eq('partner_id', partnerData.id);
+      await sb.from('partners').delete().eq('user_id', currentUser.id);
+      await sb.auth.signOut();
+      window.location.href = 'index.html';
+    } catch(e) {
+      msg.style.display = 'block';
+      msg.style.background = '#fee2e2';
+      msg.style.color = '#dc2626';
+      msg.textContent = 'Error deleting account: ' + e.message;
+    }
+  }
+  window.confirmDeletePartnerAccount = confirmDeletePartnerAccount;
 
   async function handleLogout() { await sb.auth.signOut(); window.location.href = 'partner-signup.html'; }
 

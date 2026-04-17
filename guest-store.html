@@ -87,11 +87,13 @@
   .btn-blue-outline:hover { background:#1a5fa8; color:white; }
   .partner-price { font-size:13px;font-weight:700;color:#1a5fa8; }
 
-  /* LOCAL COMING SOON */
-  .local-coming-soon { text-align:center; padding:80px 24px; grid-column:1/-1; }
-  .local-coming-soon .icon { font-size:52px; margin-bottom:16px; }
-  .local-coming-soon h3 { font-family:'Playfair Display',serif; font-size:22px; margin-bottom:8px; color:#1a5fa8; }
-  .local-coming-soon p { font-size:14px; color:var(--muted); max-width:360px; margin:0 auto; line-height:1.6; }
+  .store-tab-bar { background:#f0f0ee; border-top:1.5px solid var(--border); border-bottom:1.5px solid var(--border); padding:12px 24px; }
+  .store-tab-inner { max-width:900px; margin:0 auto; display:flex; gap:10px; }
+  .store-tab { flex:1; display:flex; align-items:center; justify-content:center; gap:10px; padding:14px 20px; font-size:15px; font-weight:700; cursor:pointer; border:none; border-radius:12px; font-family:'DM Sans',sans-serif; transition:all 0.2s; }
+  .store-tab-active-host { background:#2C6E6A; color:white; box-shadow:0 4px 12px rgba(44,110,106,0.3); }
+  .store-tab-active-local { background:#1a5fa8; color:white; box-shadow:0 4px 12px rgba(26,95,168,0.3); }
+  .store-tab-inactive { background:#e0e0de; color:#6b7280; box-shadow:none; }
+  @media (max-width:600px) { .store-tab { font-size:13px; padding:12px 8px; gap:6px; } .store-tab span:first-child { font-size:16px; } }
 
   .product-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; animation: fadeUp 0.5s ease both; height: 500px; overflow: hidden; position: relative; }
   .product-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
@@ -278,28 +280,40 @@
         <p id="heroDesc">Add a few extras before you arrive and we'll have everything ready for you.</p>
       </div>
     </div>
+
+    <!-- TAB BAR -->
+    <div class="store-tab-bar">
+      <div class="store-tab-inner">
+        <button id="tabHost" onclick="switchStoreTab('host')" class="store-tab store-tab-active-host">
+          <span style="font-size:20px">🏠</span><span>Host Products & Services</span>
+        </button>
+        <button id="tabLocal" onclick="switchStoreTab('local')" class="store-tab store-tab-inactive">
+          <span style="font-size:20px">🌟</span><span>Local Reservations & Experiences</span>
+        </button>
+      </div>
+    </div>
+
     <div class="products-section">
       <div class="section-title"><span>✨</span> Available Add-ons</div>
       <div class="products-grid" id="productsGrid"></div>
     </div>
   </div>
 
-  <!-- TAB BAR — sits between hero and content, sticky on scroll -->
-  <div id="storeTabBar" style="background:#f0f0ee;border-bottom:1.5px solid var(--border);border-top:1.5px solid var(--border);padding:12px 24px;position:sticky;top:64px;z-index:90;margin-top:-1px">
-    <div style="max-width:900px;margin:0 auto;display:flex;gap:10px">
-      <button id="tabHost" onclick="switchStoreTab('host')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;border:none;border-radius:12px;background:#2C6E6A;color:white;font-family:'DM Sans',sans-serif;transition:all 0.2s;box-shadow:0 4px 12px rgba(44,110,106,0.3)">
-        <span style="font-size:20px">🏠</span>
-        <span>Host Products & Services</span>
-      </button>
-      <button id="tabLocal" onclick="switchStoreTab('local')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;border:none;border-radius:12px;background:#e0e0de;color:#6b7280;font-family:'DM Sans',sans-serif;transition:all 0.2s;box-shadow:none">
-        <span style="font-size:20px">🌟</span>
-        <span>Local Reservations & Experiences</span>
-      </button>
-    </div>
-  </div>
-
   <!-- LOCAL TAB -->
   <div id="storePageLocal" style="display:none">
+
+    <!-- TAB BAR (duplicate) -->
+    <div class="store-tab-bar">
+      <div class="store-tab-inner">
+        <button id="tabHost2" onclick="switchStoreTab('host')" class="store-tab store-tab-inactive">
+          <span style="font-size:20px">🏠</span><span>Host Products & Services</span>
+        </button>
+        <button id="tabLocal2" onclick="switchStoreTab('local')" class="store-tab store-tab-active-local">
+          <span style="font-size:20px">🌟</span><span>Local Reservations & Experiences</span>
+        </button>
+      </div>
+    </div>
+
     <div style="background:linear-gradient(135deg,#0f3d6e 0%,#1a5fa8 100%);padding:40px 24px 32px;text-align:center">
       <div style="max-width:600px;margin:0 auto">
         <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:12px">Local Reservations & Experiences</div>
@@ -748,16 +762,19 @@
     const isHost = tab === 'host';
     document.getElementById('storePageHost').style.display = isHost ? 'block' : 'none';
     document.getElementById('storePageLocal').style.display = isHost ? 'none' : 'block';
-    const hostTab = document.getElementById('tabHost');
-    const localTab = document.getElementById('tabLocal');
-    // Host tab
-    hostTab.style.background = isHost ? '#2C6E6A' : '#e0e0de';
-    hostTab.style.color = isHost ? 'white' : '#6b7280';
-    hostTab.style.boxShadow = isHost ? '0 4px 12px rgba(44,110,106,0.3)' : 'none';
-    // Local tab
-    localTab.style.background = isHost ? '#e0e0de' : '#1a5fa8';
-    localTab.style.color = isHost ? '#6b7280' : 'white';
-    localTab.style.boxShadow = isHost ? 'none' : '0 4px 12px rgba(26,95,168,0.3)';
+
+    // Update both tab bars
+    ['tabHost', 'tabHost2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = isHost ? 'store-tab store-tab-active-host' : 'store-tab store-tab-inactive';
+    });
+    ['tabLocal', 'tabLocal2'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.className = isHost ? 'store-tab store-tab-inactive' : 'store-tab store-tab-active-local';
+    });
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (!isHost) renderLocalTab();
   }

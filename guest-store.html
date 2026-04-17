@@ -73,6 +73,26 @@
   .section-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 600; margin-bottom: 20px; color: var(--text); display: flex; align-items: center; gap: 10px; }
   .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 
+  /* PARTNER (LOCAL) CARDS */
+  .partner-card { background: var(--card); border-radius: var(--radius); border: 2px solid #c8ddf5; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; animation: fadeUp 0.5s ease both; height: 500px; overflow: hidden; position: relative; }
+  .partner-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(26,95,168,0.12); }
+  .partner-card-header { background: linear-gradient(135deg,#1a5fa8,#2472c8); padding: 5px 14px; display: flex; align-items: center; justify-content: space-between; }
+  .partner-card-badge { font-size: 10px; font-weight: 700; color: white; letter-spacing: 1px; text-transform: uppercase; }
+  .partner-card-tag { font-size: 10px; background: rgba(255,255,255,0.2); color: white; padding: 2px 8px; border-radius: 50px; font-weight: 600; }
+  .partner-card .pc-notes-box-inner { background:#eff6ff; border-left:3px solid #2472c8; color:#1a5fa8; }
+  .partner-card .pc-voucher { bottom:68px; }
+  .btn-blue { background: linear-gradient(135deg,#1a5fa8,#2472c8); color: white; border: none; border-radius: 50px; padding: 11px; font-size: 15px; font-weight: 700; font-family:'DM Sans',sans-serif; cursor: pointer; width:100%; letter-spacing:0.3px; transition: opacity 0.2s; }
+  .btn-blue:hover { opacity: 0.88; }
+  .btn-blue-outline { background: white; color: #1a5fa8; border: 2px solid #1a5fa8; border-radius: 50px; padding: 9px 20px; font-size: 15px; font-weight: 700; font-family:'DM Sans',sans-serif; cursor: pointer; transition: all 0.2s; }
+  .btn-blue-outline:hover { background:#1a5fa8; color:white; }
+  .partner-price { font-size:13px;font-weight:700;color:#1a5fa8; }
+
+  /* LOCAL COMING SOON */
+  .local-coming-soon { text-align:center; padding:80px 24px; grid-column:1/-1; }
+  .local-coming-soon .icon { font-size:52px; margin-bottom:16px; }
+  .local-coming-soon h3 { font-family:'Playfair Display',serif; font-size:22px; margin-bottom:8px; color:#1a5fa8; }
+  .local-coming-soon p { font-size:14px; color:var(--muted); max-width:360px; margin:0 auto; line-height:1.6; }
+
   .product-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; animation: fadeUp 0.5s ease both; height: 500px; overflow: hidden; position: relative; }
   .product-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
   .pc-notes-box { position:absolute; bottom:112px; left:0; right:0; padding:0 14px; }
@@ -246,30 +266,41 @@
     </div>
   </header>
 
-  <div class="hero">
-    <div class="hero-content" id="heroContent">
-      <div class="hero-eyebrow">Welcome, Guest</div>
-      <h1 id="heroTitle">Make your stay<br><em>truly special</em></h1>
-      <p id="heroDesc">Add a few extras before you arrive and we'll have everything ready for you.</p>
+  <!-- TAB BAR -->
+  <div id="storeTabBar" style="background:white;border-bottom:1.5px solid var(--border);padding:0 24px;position:sticky;top:64px;z-index:90">
+    <div style="max-width:900px;margin:0 auto;display:flex">
+      <button id="tabHost" onclick="switchStoreTab('host')" style="padding:15px 20px;font-size:14px;font-weight:600;cursor:pointer;border:none;background:none;border-bottom:3px solid var(--brand);color:var(--brand);font-family:'DM Sans',sans-serif;white-space:nowrap">🏠 Host Products & Services</button>
+      <button id="tabLocal" onclick="switchStoreTab('local')" style="padding:15px 20px;font-size:14px;font-weight:600;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;color:var(--muted);font-family:'DM Sans',sans-serif;white-space:nowrap">🌟 Local Reservations & Experiences</button>
     </div>
   </div>
 
-  <div class="categories">
-    <div class="cat-label">Browse by category</div>
-    <div id="catDropdownWrap" style="position:relative;display:inline-block;min-width:220px">
-      <button id="catDropdownBtn" onclick="toggleCatDropdown()" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border:1.5px solid var(--border);border-radius:50px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;background:white;color:var(--text);outline:none;cursor:pointer;width:100%;min-width:220px">
-        <span id="catDropdownLabel">🌟 All</span>
-        <span style="font-size:10px;color:var(--muted)">▾</span>
-      </button>
-      <div id="catDropdownMenu" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:100;overflow:hidden;min-width:220px">
-        <div id="catDropdownOptions"></div>
+  <!-- HOST TAB -->
+  <div id="storePageHost">
+    <div class="hero" id="heroHost">
+      <div class="hero-content" id="heroContent">
+        <div class="hero-eyebrow">Welcome, Guest</div>
+        <h1 id="heroTitle">Make your stay<br><em>truly special</em></h1>
+        <p id="heroDesc">Add a few extras before you arrive and we'll have everything ready for you.</p>
       </div>
     </div>
+    <div class="products-section">
+      <div class="section-title"><span>✨</span> Available Add-ons</div>
+      <div class="products-grid" id="productsGrid"></div>
+    </div>
   </div>
 
-  <div class="products-section">
-    <div class="section-title"><span>✨</span> Available Add-ons</div>
-    <div class="products-grid" id="productsGrid"></div>
+  <!-- LOCAL TAB -->
+  <div id="storePageLocal" style="display:none">
+    <div style="background:linear-gradient(135deg,#0f3d6e 0%,#1a5fa8 100%);padding:40px 24px 32px;text-align:center">
+      <div style="max-width:600px;margin:0 auto">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:12px">Local Reservations & Experiences</div>
+        <h1 style="font-family:'Playfair Display',serif;font-size:clamp(26px,5vw,40px);font-weight:600;line-height:1.2;margin-bottom:12px;letter-spacing:-0.5px;color:white">Discover<br><em>local gems</em></h1>
+        <p style="font-size:15px;color:rgba(255,255,255,0.8);font-weight:300;line-height:1.6;max-width:420px;margin:0 auto">Book directly with local businesses — restaurants, tours, photography and more.</p>
+      </div>
+    </div>
+    <div class="products-section">
+      <div class="products-grid" id="localProductsGrid"></div>
+    </div>
   </div>
 
   <footer>
@@ -614,7 +645,6 @@
       populatePropertyModal();
     }
 
-    renderCategories(allProducts);
     renderProducts(allProducts);
     document.getElementById('storeContent').style.display = 'block';
     hideLoading();
@@ -705,9 +735,93 @@
     filterProductsByProperty();
   }
 
+  function switchStoreTab(tab) {
+    const isHost = tab === 'host';
+    document.getElementById('storePageHost').style.display = isHost ? 'block' : 'none';
+    document.getElementById('storePageLocal').style.display = isHost ? 'none' : 'block';
+    const hostTab = document.getElementById('tabHost');
+    const localTab = document.getElementById('tabLocal');
+    hostTab.style.borderBottomColor = isHost ? 'var(--brand)' : 'transparent';
+    hostTab.style.color = isHost ? 'var(--brand)' : 'var(--muted)';
+    localTab.style.borderBottomColor = isHost ? 'transparent' : '#1a5fa8';
+    localTab.style.color = isHost ? 'var(--muted)' : '#1a5fa8';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!isHost) renderLocalTab();
+  }
+  window.switchStoreTab = switchStoreTab;
+
+  function renderLocalTab() {
+    const partnerCats = ['local_products', 'local_services', 'local_attractions'];
+    const base = selectedPropertyId ? allProducts.filter(p => {
+      if (p.available_all_properties !== false) return true;
+      const ids = Array.isArray(p.property_ids) ? p.property_ids : JSON.parse(p.property_ids || '[]');
+      return ids.includes(selectedPropertyId);
+    }) : allProducts;
+
+    const partnerProducts = base.filter(p => partnerCats.includes(p.category) || p.partner_product_id);
+    const grid = document.getElementById('localProductsGrid');
+
+    if (!partnerProducts.length) {
+      grid.innerHTML = `<div class="local-coming-soon"><div class="icon">🌟</div><h3>Coming soon to your area</h3><p>Local businesses are joining Hostie Hub in your area. Check back soon for restaurants, experiences and more.</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = partnerProducts.map((p, i) => {
+      const isBookingLink = p.partner_product_type === 'booking' && p.partner_booking_url;
+      const isServiceReq = p.partner_product_type === 'service' || (!p.partner_product_type && p.partner_product_id);
+      const hasVoucher = !!p.partner_voucher_pdf_url;
+      const hasNotes = !!p.partner_notes;
+      const isDemo = hostData && hostData.is_demo;
+
+      if (p.partner_product_id && p.partner_id && !loggedViews.has(p.id)) {
+        loggedViews.add(p.id);
+        logPartnerEvent(p.partner_product_id, p.partner_id, 'view');
+      }
+
+      const typeTag = isBookingLink ? '🔗 Book direct' : '🤝 Request';
+      const bookingFn = isDemo ? `handleDemoAdd()` : `handleBookingLink('${p.partner_booking_url}','${p.partner_product_id || ''}','${p.partner_id || ''}','${p.partner_voucher_pdf_url || ''}','${(p.name || '').replace(/'/g, "\\'")}','${(p.partner_voucher_title || '').replace(/'/g, "\\'")}')`;
+      const requestFn = isDemo ? `handleDemoAdd()` : `handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)`;
+
+      const priceHtml = p.service_price_unit === 'contact for pricing'
+        ? '<span style="font-size:12px;color:#1a5fa8;font-weight:600">💬 Contact for pricing</span>'
+        : p.service_price
+          ? '<span style="font-size:15px;font-weight:700;color:#1a5fa8">$' + p.service_price + '</span> <small style="font-size:11px;color:var(--muted)">' + (p.service_price_unit || '') + '</small>'
+          : isBookingLink ? '<span style="font-size:12px;color:var(--muted)">🔗 Book direct</span>'
+          : '<span style="font-size:12px;color:#1a5fa8;font-weight:600">🤝 Request service</span>';
+
+      return `
+      <div class="partner-card" style="animation-delay:${i * 0.06}s">
+        <div class="partner-card-header">
+          <span class="partner-card-badge">🤝 Local Partner</span>
+          ${hasVoucher ? '<span class="partner-card-tag">🎟️ Free voucher</span>' : '<span class="partner-card-tag">' + typeTag + '</span>'}
+        </div>
+        <div class="product-img">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '✨')}</div>
+        <div class="product-body">
+          ${p.partner_product_id ? '' : `<div class="product-category">${p.category || ''}</div>`}
+          <div class="product-name">${p.name}</div>
+          <div class="product-desc">${p.description || ''}</div>
+        </div>
+        ${hasNotes ? `<div class="pc-notes-box"><div class="pc-notes-box-inner">🎁 ${p.partner_notes}</div></div>` : ''}
+        ${hasVoucher ? `<div class="pc-voucher" style="position:absolute;bottom:68px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#eff6ff;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;color:#1a5fa8"><span>🎟️</span><span>Free voucher emailed on booking</span></div></div>` : ''}
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:white;border-top:1px solid #c8ddf5;display:flex;align-items:center;justify-content:space-between">
+          <div>${priceHtml}</div>
+          ${isBookingLink
+            ? `<button class="btn-blue" style="width:auto;padding:9px 18px;font-size:14px" onclick="${bookingFn}">Book now →</button>`
+            : `<button class="btn-blue-outline" id="btn-${p.id}" onclick="${requestFn}">Add →</button>`}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
   function filterProductsByProperty() {
-    document.getElementById('catDropdownLabel').textContent = '🌟 All';
-    filterCatDropdown('all');
+    document.getElementById('catDropdownLabel') && (document.getElementById('catDropdownLabel').textContent = '🌟 All');
+    const base = selectedPropertyId ? allProducts.filter(p => {
+      if (p.available_all_properties !== false) return true;
+      const ids = Array.isArray(p.property_ids) ? p.property_ids : JSON.parse(p.property_ids || '[]');
+      return ids.includes(selectedPropertyId);
+    }) : allProducts;
+    renderProducts(base);
+    if (document.getElementById('storePageLocal').style.display !== 'none') renderLocalTab();
   }
 
   const catOptions = [
@@ -792,12 +906,15 @@
   }
 
   function renderProducts(products) {
+    // Host tab only shows non-partner products
+    const hostProducts = products.filter(p => !p.partner_product_id);
     const grid = document.getElementById('productsGrid');
-    if (!products.length) {
+    if (!hostProducts.length) {
       grid.innerHTML = `<div class="empty-state"><div class="icon">🛍️</div><p>No extras available for this property yet.<br>Check back soon!</p></div>`;
       return;
     }
-    grid.innerHTML = products.map((p, i) => {
+    const toRender = hostProducts;
+    grid.innerHTML = toRender.map((p, i) => {
       const isVoucher = p.is_voucher;
       const isFree = parseFloat(p.price) === 0;
       const isDemo = hostData && hostData.is_demo;

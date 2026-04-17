@@ -74,7 +74,8 @@
   .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 
   /* PARTNER (LOCAL) CARDS */
-  .partner-card { background: var(--card); border-radius: var(--radius); border: 2px solid #c8ddf5; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; animation: fadeUp 0.5s ease both; height: 500px; overflow: hidden; position: relative; }
+  .partner-card { background: var(--card); border-radius: var(--radius); border: 2px solid #c8ddf5; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; animation: fadeUp 0.5s ease both; min-height: 500px; overflow: hidden; position: relative; }
+  .partner-card-footer { margin-top: auto; }
   .partner-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(26,95,168,0.12); }
   .partner-card-header { background: linear-gradient(135deg,#1a5fa8,#2472c8); padding: 5px 14px; display: flex; align-items: center; justify-content: space-between; }
   .partner-card-badge { font-size: 10px; font-weight: 700; color: white; letter-spacing: 1px; text-transform: uppercase; }
@@ -149,6 +150,8 @@
     #tabHost, #tabLocal { font-size: 13px; padding: 12px 8px; gap: 6px; }
     #tabHost span:first-child, #tabLocal span:first-child { font-size: 16px; }
     .products-grid { grid-template-columns: 1fr; }
+    .partner-card { height: auto !important; min-height: 0 !important; }
+    .partner-card > div[style*="position:absolute;bottom:0"] { position: static !important; border-top: 1px solid #c8ddf5; }
     .hero { padding: 32px 16px 28px; }
     .header-inner { height: 56px; }
     .host-name { font-size: 15px; }
@@ -833,7 +836,7 @@
         </div>
         ${hasNotes ? `<div class="pc-notes-box"><div class="pc-notes-box-inner">🎁 ${p.partner_notes}</div></div>` : ''}
         ${hasVoucher ? `<div class="pc-voucher" style="position:absolute;bottom:68px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#eff6ff;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;color:#1a5fa8"><span>🎟️</span><span>Free voucher emailed on booking</span></div></div>` : ''}
-        <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:white;border-top:1px solid #c8ddf5;display:flex;align-items:center;justify-content:space-between">
+        <div class="partner-card-footer" style="padding:10px 14px;background:white;border-top:1px solid #c8ddf5;display:flex;align-items:center;justify-content:space-between;margin-top:auto">
           <div>${priceHtml}</div>
           ${isBookingLink
             ? `<button class="btn-blue" style="width:auto;padding:9px 18px;font-size:14px" onclick="${bookingFn}">Book now →</button>`

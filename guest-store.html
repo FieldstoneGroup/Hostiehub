@@ -269,20 +269,6 @@
     </div>
   </header>
 
-  <!-- TAB BAR -->
-  <div id="storeTabBar" style="background:#f0f0ee;border-bottom:1.5px solid var(--border);padding:12px 24px;position:sticky;top:64px;z-index:90">
-    <div style="max-width:900px;margin:0 auto;display:flex;gap:10px">
-      <button id="tabHost" onclick="switchStoreTab('host')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;border:none;border-radius:12px;background:#2C6E6A;color:white;font-family:'DM Sans',sans-serif;transition:all 0.2s;box-shadow:0 4px 12px rgba(44,110,106,0.3)">
-        <span style="font-size:20px">🏠</span>
-        <span>Host Products & Services</span>
-      </button>
-      <button id="tabLocal" onclick="switchStoreTab('local')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;border:none;border-radius:12px;background:#e0e0de;color:#6b7280;font-family:'DM Sans',sans-serif;transition:all 0.2s;box-shadow:none">
-        <span style="font-size:20px">🌟</span>
-        <span>Local Reservations & Experiences</span>
-      </button>
-    </div>
-  </div>
-
   <!-- HOST TAB -->
   <div id="storePageHost">
     <div class="hero" id="heroHost">
@@ -295,6 +281,20 @@
     <div class="products-section">
       <div class="section-title"><span>✨</span> Available Add-ons</div>
       <div class="products-grid" id="productsGrid"></div>
+    </div>
+  </div>
+
+  <!-- TAB BAR — sits between hero and content, sticky on scroll -->
+  <div id="storeTabBar" style="background:#f0f0ee;border-bottom:1.5px solid var(--border);border-top:1.5px solid var(--border);padding:12px 24px;position:sticky;top:64px;z-index:90;margin-top:-1px">
+    <div style="max-width:900px;margin:0 auto;display:flex;gap:10px">
+      <button id="tabHost" onclick="switchStoreTab('host')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;border:none;border-radius:12px;background:#2C6E6A;color:white;font-family:'DM Sans',sans-serif;transition:all 0.2s;box-shadow:0 4px 12px rgba(44,110,106,0.3)">
+        <span style="font-size:20px">🏠</span>
+        <span>Host Products & Services</span>
+      </button>
+      <button id="tabLocal" onclick="switchStoreTab('local')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;border:none;border-radius:12px;background:#e0e0de;color:#6b7280;font-family:'DM Sans',sans-serif;transition:all 0.2s;box-shadow:none">
+        <span style="font-size:20px">🌟</span>
+        <span>Local Reservations & Experiences</span>
+      </button>
     </div>
   </div>
 

@@ -74,6 +74,9 @@
   .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
 
   /* PARTNER (LOCAL) CARDS */
+  .cat-pill { padding: 7px 14px; border: 1.5px solid #c8ddf5; background: white; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; color: #1a5fa8; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .cat-pill:hover { border-color: #1a5fa8; }
+  .cat-pill.active { background: linear-gradient(135deg,#1a5fa8,#2472c8); border-color: #1a5fa8; color: white; }
   .partner-card { background: var(--card); border-radius: var(--radius); border: 2px solid #c8ddf5; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; animation: fadeUp 0.5s ease both; min-height: 500px; overflow: hidden; position: relative; }
   .partner-card-footer { margin-top: auto; }
   .partner-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(26,95,168,0.12); }
@@ -325,15 +328,27 @@
       </div>
     </div>
     <div class="products-section">
-      <div id="localDistanceFilterWrap" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:4px 0 20px;flex-wrap:wrap">
-        <label for="localDistanceFilter" style="font-size:13px;color:var(--muted);font-weight:500">📍 Show places</label>
-        <select id="localDistanceFilter" onchange="applyLocalDistanceFilter(this.value)" style="padding:8px 36px 8px 14px;border:1.5px solid #c8ddf5;border-radius:50px;background:white;font-size:14px;font-weight:600;color:#1a5fa8;cursor:pointer;outline:none;font-family:inherit;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231a5fa8%22 stroke-width=%223%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>');background-repeat:no-repeat;background-position:right 12px center">
-          <option value="all">Any distance</option>
-          <option value="5">Within 5 km</option>
-          <option value="10">Within 10 km</option>
-          <option value="20">Within 20 km</option>
-        </select>
-        <div id="localDistanceHint" style="font-size:11px;color:var(--muted);flex-basis:100%;text-align:center;margin-top:2px;display:none">Select your property above to filter by distance</div>
+      <div id="localFilterBar" style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:4px 0 22px">
+        <!-- Category pills -->
+        <div id="localCategoryPills" style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px">
+          <button type="button" class="cat-pill active" data-cat="all" onclick="setLocalCategoryFilter('all', this)">✨ All</button>
+          <button type="button" class="cat-pill" data-cat="reservation" onclick="setLocalCategoryFilter('reservation', this)">🍽️ Reservations</button>
+          <button type="button" class="cat-pill" data-cat="experience" onclick="setLocalCategoryFilter('experience', this)">🏄 Experiences</button>
+          <button type="button" class="cat-pill" data-cat="service" onclick="setLocalCategoryFilter('service', this)">🛎️ Services</button>
+          <button type="button" class="cat-pill" data-cat="product" onclick="setLocalCategoryFilter('product', this)">📦 Products</button>
+        </div>
+        <!-- Distance dropdown -->
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">
+          <label for="localDistanceFilter" style="font-size:13px;color:var(--muted);font-weight:500">📍 Within</label>
+          <select id="localDistanceFilter" onchange="applyLocalDistanceFilter(this.value)" style="padding:8px 36px 8px 14px;border:1.5px solid #c8ddf5;border-radius:50px;background:white;font-size:14px;font-weight:600;color:#1a5fa8;cursor:pointer;outline:none;font-family:inherit;appearance:none;-webkit-appearance:none;background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%231a5fa8%22 stroke-width=%223%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>');background-repeat:no-repeat;background-position:right 12px center">
+            <option value="5">5 km</option>
+            <option value="10">10 km</option>
+            <option value="20">20 km</option>
+            <option value="35" selected>35 km</option>
+          </select>
+          <span style="font-size:12px;color:var(--muted)">of your property</span>
+        </div>
+        <div id="localDistanceHint" style="font-size:11px;color:var(--muted);text-align:center;display:none">We couldn't pinpoint your property — distances may be approximate.</div>
       </div>
       <div class="products-grid" id="localProductsGrid"></div>
     </div>
@@ -558,7 +573,7 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8'
   );
 
-  let cart = [], allProducts = [], properties = [], hostData = null;
+  let cart = [], allProducts = [], allPartnerListings = [], properties = [], hostData = null;
   let selectedPropertyId = '', selectedPropertyName = '';
   let pendingCartItem = null;
   let pendingPartnerRequestProduct = null, pendingPartnerRequestBtn = null;
@@ -631,13 +646,49 @@
 
     applyBranding(host);
 
-    const [{ data: prods }, { data: props }] = await Promise.all([
+    const [{ data: prods }, { data: props }, { data: livePartnerProducts }] = await Promise.all([
       sb.from('products').select('*').eq('host_id', host.id).eq('active', true).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true }),
       sb.from('properties').select('*').eq('host_id', host.id).order('nickname'),
+      sb.from('partner_products').select('*, partners(id, business_name, phone, contact_name, full_name, is_active, business_lat, business_lng, service_lat, service_lng, service_suburb)').eq('active', true),
     ]);
 
     allProducts = prods || [];
     properties = props || [];
+
+    // ── NEW: build allPartnerListings from live partner_products (platform-wide, not host-curated) ──
+    // Each listing is mapped into the shape the existing cart/booking handlers expect,
+    // so handleAddToCart / handleBookingLink / logPartnerEvent all continue to work.
+    allPartnerListings = (livePartnerProducts || [])
+      .filter(pp => pp.partners && pp.partners.is_active !== false)
+      .filter(pp => pp.listing_lat != null && pp.listing_lng != null)
+      .map(pp => ({
+        id: 'pp-' + pp.id,                          // synthetic id (no collision with products.id)
+        partner_product_id: pp.id,
+        partner_id: pp.partner_id,
+        partner_business_name: pp.partners.business_name || 'Local Partner',
+        partner_business_lat: pp.partners.business_lat,
+        partner_business_lng: pp.partners.business_lng,
+        partner_service_lat: pp.partners.service_lat,
+        partner_service_lng: pp.partners.service_lng,
+        partner_product_type: pp.type,              // 'physical' | 'service' | 'booking'
+        partner_booking_url: pp.booking_url,
+        partner_voucher_pdf_url: pp.voucher_pdf_url,
+        partner_voucher_title: pp.voucher_title,
+        partner_notes: pp.notes,
+        name: pp.name,
+        description: pp.description,
+        image_url: pp.image_url,
+        emoji: '✨',
+        category: pp.category,                      // 'product' | 'service' | 'reservation' | 'experience'
+        service_price: pp.service_price,
+        service_price_unit: pp.service_price_unit,
+        lead_time_value: pp.lead_time_value,
+        lead_time_unit: pp.lead_time_unit,
+        listing_address: pp.listing_address,
+        listing_lat: pp.listing_lat,
+        listing_lng: pp.listing_lng,
+      }));
+    console.log('[Hostie] partner listings loaded:', allPartnerListings.length);
 
     // Fetch business names and locations for partner products
     const partnerIds = [...new Set(allProducts.filter(p => p.partner_id).map(p => p.partner_id))];
@@ -798,13 +849,25 @@
   window.switchStoreTab = switchStoreTab;
 
   let hostGeoCache = { lat: null, lng: null };
-  let localMaxDistanceKm = null; // null = Any distance (no filter)
+  const HARD_CAP_KM = 35;
+  let localMaxDistanceKm = HARD_CAP_KM; // default = platform-wide 35 km cap
+  let localCategoryFilter = 'all';      // 'all' | 'product' | 'service' | 'reservation' | 'experience'
 
   function applyLocalDistanceFilter(val) {
-    localMaxDistanceKm = (val === 'all') ? null : parseFloat(val);
+    const parsed = parseFloat(val);
+    // Cap user selection at the platform max — no value > HARD_CAP_KM is ever accepted
+    localMaxDistanceKm = Math.min(isNaN(parsed) ? HARD_CAP_KM : parsed, HARD_CAP_KM);
     renderLocalTab();
   }
   window.applyLocalDistanceFilter = applyLocalDistanceFilter;
+
+  function setLocalCategoryFilter(cat, btn) {
+    localCategoryFilter = cat;
+    document.querySelectorAll('#localCategoryPills .cat-pill').forEach(el => el.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderLocalTab();
+  }
+  window.setLocalCategoryFilter = setLocalCategoryFilter;
 
   function haversineKmStore(lat1, lon1, lat2, lon2) {
     const R = 6371;
@@ -835,41 +898,61 @@
 
   async function renderLocalTab() {
     await geocodePropertyForDistance();
-    const partnerCats = ['local_products', 'local_services', 'local_attractions'];
-    const base = selectedPropertyId ? allProducts.filter(p => {
-      if (p.available_all_properties !== false) return true;
-      const ids = Array.isArray(p.property_ids) ? p.property_ids : JSON.parse(p.property_ids || '[]');
-      return ids.includes(selectedPropertyId);
-    }) : allProducts;
-
-    const partnerProducts = base.filter(p => partnerCats.includes(p.category) || p.partner_product_id);
-
-    // Apply distance filter — only hides listings with a *detailed* address that's out of range.
-    // Listings with no detailed address (postcode-area only) always stay — they fall back on postcode-match availability.
-    const canFilter = localMaxDistanceKm && hostGeoCache.lat && hostGeoCache.lng;
-    const filtered = canFilter
-      ? partnerProducts.filter(p => {
-          if (!p.listing_address || !p.listing_lat || !p.listing_lng) return true;
-          return haversineKmStore(hostGeoCache.lat, hostGeoCache.lng, p.listing_lat, p.listing_lng) <= localMaxDistanceKm;
-        })
-      : partnerProducts;
-
-    // Hint if guest picked a radius but we have no coords (no property selected / geocoding failed)
-    const hint = document.getElementById('localDistanceHint');
-    if (hint) hint.style.display = (localMaxDistanceKm && !hostGeoCache.lat) ? 'block' : 'none';
 
     const grid = document.getElementById('localProductsGrid');
+    const hint = document.getElementById('localDistanceHint');
+    const haveCoords = !!(hostGeoCache.lat && hostGeoCache.lng);
 
-    if (!filtered.length) {
-      grid.innerHTML = localMaxDistanceKm
-        ? `<div class="local-coming-soon"><div class="icon">📍</div><h3>No places within ${localMaxDistanceKm} km</h3><p>Try a wider radius, or switch back to <strong>Any distance</strong> to see everything available in your area.</p></div>`
-        : `<div class="local-coming-soon"><div class="icon">🌟</div><h3>Coming soon to your area</h3><p>Local businesses are joining Hostie Hub in your area. Check back soon for restaurants, experiences and more.</p></div>`;
+    // Show/hide the "distances may be approximate" hint when we couldn't geocode
+    if (hint) hint.style.display = haveCoords ? 'none' : 'block';
+
+    // 1. Source: fresh partner_products pulled at load time (NOT the host's products table)
+    //    Already filtered for active=true, active partners, and listings with coords.
+    let listings = allPartnerListings.slice();
+
+    // 2. Calculate distance for each (if we have property coords)
+    listings = listings.map(p => {
+      const dist = haveCoords
+        ? haversineKmStore(hostGeoCache.lat, hostGeoCache.lng, p.listing_lat, p.listing_lng)
+        : null;
+      return { ...p, _distanceKm: dist };
+    });
+
+    // 3. Apply HARD CAP (35 km) — platform-wide, always on
+    //    + user's selected radius (≤ HARD_CAP_KM)
+    if (haveCoords) {
+      const cap = Math.min(localMaxDistanceKm || HARD_CAP_KM, HARD_CAP_KM);
+      listings = listings.filter(p => p._distanceKm != null && p._distanceKm <= cap);
+    }
+    // (If geocoding failed, we skip distance filtering and show everything unranked)
+
+    // 4. Apply category filter
+    if (localCategoryFilter !== 'all') {
+      listings = listings.filter(p => p.category === localCategoryFilter);
+    }
+
+    // 5. Sort: closest-first (if we have distances), else leave order as-is
+    if (haveCoords) {
+      listings.sort((a, b) => (a._distanceKm ?? Infinity) - (b._distanceKm ?? Infinity));
+    }
+
+    // 6. Empty states
+    if (!listings.length) {
+      const catLabel = { product: 'products', service: 'services', reservation: 'reservations', experience: 'experiences' }[localCategoryFilter] || 'places';
+      const selectedProperty = properties.find(pr => pr.id === selectedPropertyId);
+      const propertyLabel = selectedProperty?.nickname || 'your property';
+
+      if (localCategoryFilter !== 'all' || (haveCoords && localMaxDistanceKm < HARD_CAP_KM)) {
+        grid.innerHTML = `<div class="local-coming-soon"><div class="icon">📍</div><h3>No ${catLabel} within ${localMaxDistanceKm} km</h3><p>Try a wider radius or a different category.</p></div>`;
+      } else {
+        grid.innerHTML = `<div class="local-coming-soon"><div class="icon">🌟</div><h3>No local partners near ${propertyLabel} yet</h3><p>Hostie Hub is growing into your area — check back soon for restaurants, experiences and more.</p></div>`;
+      }
       return;
     }
 
-    grid.innerHTML = filtered.map((p, i) => {
+    // 7. Render cards
+    grid.innerHTML = listings.map((p, i) => {
       const isBookingLink = p.partner_product_type === 'booking' && p.partner_booking_url;
-      const isServiceReq = p.partner_product_type === 'service' || (!p.partner_product_type && p.partner_product_id);
       const hasVoucher = !!p.partner_voucher_pdf_url;
       const hasNotes = !!p.partner_notes;
       const isDemo = hostData && hostData.is_demo;
@@ -890,16 +973,12 @@
           : isBookingLink ? '<span style="font-size:12px;color:var(--muted)">🔗 Book direct</span>'
           : '<span style="font-size:12px;color:#1a5fa8;font-weight:600">🤝 Request service</span>';
 
-      // Distance calculation — use listing-specific location
+      // Distance tag — always shown when we have coords (every card)
       let distanceTag = '';
-      const bizLat = p.listing_lat;
-      const bizLng = p.listing_lng;
-      if (p.listing_address && bizLat && bizLng && hostGeoCache.lat && hostGeoCache.lng) {
-        const dist = haversineKmStore(hostGeoCache.lat, hostGeoCache.lng, bizLat, bizLng);
-        const distStr = dist < 1 ? Math.round(dist * 1000) + 'm away' : dist.toFixed(1) + 'km away';
+      if (p._distanceKm != null) {
+        const d = p._distanceKm;
+        const distStr = d < 1 ? Math.round(d * 1000) + 'm away' : d.toFixed(1) + ' km away';
         distanceTag = '<span style="font-size:11px;color:#1a5fa8;font-weight:600;background:#e8f0fb;padding:2px 8px;border-radius:50px;white-space:nowrap">📍 ' + distStr + '</span>';
-      } else if (bizLat && bizLng) {
-        distanceTag = '<span style="font-size:11px;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:50px;white-space:nowrap">📍 Available in your area</span>';
       }
 
       return `
@@ -910,7 +989,6 @@
         </div>
         <div class="product-img">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '✨')}</div>
         <div class="product-body">
-          ${p.partner_product_id ? '' : `<div class="product-category">${p.category || ''}</div>`}
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
             <div class="product-name" style="margin-bottom:0">${p.name}</div>
             ${distanceTag}

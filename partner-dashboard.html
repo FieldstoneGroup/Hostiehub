@@ -426,7 +426,7 @@
               <option value="reservation">🍽️ Reservation — table, venue or booking link</option>
               <option value="experience">🏄 Experience — activity, tour, lesson</option>
             </select>
-            <div class="field-hint">This tells hosts whether they can set their own price or not.</div>
+            <div class="field-hint">Guests filter the local reservations &amp; experiences tab by this category.</div>
           </div>
           <div class="field">
             <label>Description <span style="font-weight:300;font-size:12px" id="pDescCount">(0 / 220 characters)</span></label>
@@ -1078,10 +1078,15 @@
     document.getElementById('physicalFields').style.display = isPhysical ? 'block' : 'none';
     document.getElementById('serviceFields').style.display = isService ? 'block' : 'none';
     document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
-    // Category: hidden and auto-set for physical and service; visible for booking link
-    document.getElementById('categoryFieldWrap').style.display = isBooking ? 'block' : 'none';
-    if (isPhysical) document.getElementById('pCategory').value = 'product';
-    if (isService) document.getElementById('pCategory').value = 'service';
+    // Category visible for service + booking (physical is hidden globally). Set a sensible default
+    // if the current value is blank, but don't override if the partner has already chosen one.
+    document.getElementById('categoryFieldWrap').style.display = (isBooking || isService) ? 'block' : 'none';
+    const catEl = document.getElementById('pCategory');
+    if (!catEl.value) {
+      if (isPhysical) catEl.value = 'product';
+      else if (isService) catEl.value = 'service';
+      else if (isBooking) catEl.value = 'reservation';
+    }
     // Update preview button label
     const btn = document.getElementById('previewBtn');
     if (btn) btn.textContent = isBooking ? 'Book now →' : (isService ? 'Add →' : 'Add →');
@@ -1170,11 +1175,11 @@
     document.getElementById('pServicePrice').style.display = 'block';
     document.getElementById('priceDollarSign').style.display = 'block';
     document.getElementById('ptService').checked = true;
-    document.getElementById('physicalFields').style.display = 'block';
-    document.getElementById('serviceFields').style.display = 'none';
+    document.getElementById('physicalFields').style.display = 'none';
+    document.getElementById('serviceFields').style.display = 'block';
     document.getElementById('bookingFields').style.display = 'none';
-    document.getElementById('categoryFieldWrap').style.display = 'none';
-    document.getElementById('pCategory').value = 'product';
+    document.getElementById('categoryFieldWrap').style.display = 'block';
+    document.getElementById('pCategory').value = 'service';
     setSelectedDays(null);
     removeProductImage();
     removeVoucherPdf();
@@ -1352,9 +1357,13 @@
     document.getElementById('physicalFields').style.display = (!isBooking && !isService) ? 'block' : 'none';
     document.getElementById('serviceFields').style.display = isService ? 'block' : 'none';
     document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
-    document.getElementById('categoryFieldWrap').style.display = isBooking ? 'block' : 'none';
-    if (!isBooking && !isService) document.getElementById('pCategory').value = 'product';
-    if (isService) document.getElementById('pCategory').value = 'service';
+    document.getElementById('categoryFieldWrap').style.display = (isBooking || isService) ? 'block' : 'none';
+    // Preserve the saved category — only fall back to a default if blank
+    if (!p.category) {
+      if (!isBooking && !isService) document.getElementById('pCategory').value = 'product';
+      else if (isService) document.getElementById('pCategory').value = 'service';
+      else if (isBooking) document.getElementById('pCategory').value = 'reservation';
+    }
 
     if (!isBooking && !isService) {
       document.getElementById('pWholesalePrice').value = p.wholesale_price || '';

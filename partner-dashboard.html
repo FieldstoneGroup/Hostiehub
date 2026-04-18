@@ -486,35 +486,35 @@
             <div class="field">
               <label>Days available</label>
               <div class="field-hint" style="margin-bottom:10px">Which days of the week can you offer this service?</div>
-              <div id="daysDropdownWrap" style="position:relative">
-                <button type="button" id="daysDropdownBtn" onclick="toggleDaysDropdown()" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;color:var(--text);outline:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left">
+              <div id="daysDropdownWrap" style="position:relative;display:inline-block">
+                <button type="button" id="daysDropdownBtn" onclick="toggleDaysDropdown()" style="min-width:220px;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;color:var(--text);outline:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:space-between;gap:12px;text-align:left">
                   <span id="daysDropdownLabel">Select days</span>
                   <span style="color:var(--muted);font-size:12px">▾</span>
                 </button>
-                <div id="daysDropdownMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.08);z-index:50;overflow:hidden">
+                <div id="daysDropdownMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:220px;background:white;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.08);z-index:50;overflow:hidden">
                   <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;background:var(--partner-light);color:var(--partner);border-bottom:1.5px solid var(--border)">
-                    <input type="checkbox" id="dayAll" onchange="toggleAllDays(this)"> Select all days
+                    <input type="checkbox" id="dayAll" onchange="toggleAllDays(this)" style="width:auto;margin:0;padding:0"> Select all days
                   </label>
                   <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" id="dayMon" value="mon" onchange="updateAllDaysCheck()"> Monday
+                    <input type="checkbox" id="dayMon" value="mon" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Monday
                   </label>
                   <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" id="dayTue" value="tue" onchange="updateAllDaysCheck()"> Tuesday
+                    <input type="checkbox" id="dayTue" value="tue" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Tuesday
                   </label>
                   <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" id="dayWed" value="wed" onchange="updateAllDaysCheck()"> Wednesday
+                    <input type="checkbox" id="dayWed" value="wed" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Wednesday
                   </label>
                   <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" id="dayThu" value="thu" onchange="updateAllDaysCheck()"> Thursday
+                    <input type="checkbox" id="dayThu" value="thu" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Thursday
                   </label>
                   <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" id="dayFri" value="fri" onchange="updateAllDaysCheck()"> Friday
+                    <input type="checkbox" id="dayFri" value="fri" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Friday
                   </label>
                   <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" id="daySat" value="sat" onchange="updateAllDaysCheck()"> Saturday
+                    <input type="checkbox" id="daySat" value="sat" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Saturday
                   </label>
                   <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer">
-                    <input type="checkbox" id="daySun" value="sun" onchange="updateAllDaysCheck()"> Sunday
+                    <input type="checkbox" id="daySun" value="sun" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Sunday
                   </label>
                 </div>
               </div>

@@ -140,16 +140,14 @@
         <textarea id="businessDesc" placeholder="Tell hosts and guests what you offer..."></textarea>
       </div>
       <div class="field">
-        <label>Postcodes you service</label>
-        <div class="postcode-input-wrap">
-          <input type="text" id="postcodeInput" placeholder="e.g. 2300" maxlength="4" onkeydown="if(event.key==='Enter'){event.preventDefault();addPostcode()}">
-          <button class="add-postcode-btn" onclick="addPostcode()">+ Add</button>
+        <label>Business location</label>
+        <div class="field-hint" style="margin-bottom:8px">Enter your postcode <strong>or</strong> full street address — a full address lets guests see exactly how far away you are.</div>
+        <div style="position:relative">
+          <input type="text" id="businessLocation" placeholder="e.g. 2300 or 12 Hunter St, Newcastle NSW 2300" style="width:100%;padding:12px 14px;border:1.5px solid #e0dbd5;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" oninput="suggestSignupLocation(this.value)" autocomplete="off">
+          <div id="locationSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid #e0dbd5;border-radius:10px;overflow:hidden;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.1);margin-top:4px"></div>
         </div>
-        <div class="field-hint">Add all postcodes where you want your vouchers to appear. Hosts in these areas will see your vouchers.</div>
-        <div class="postcode-tags" id="postcodeTags"></div>
-        <div class="field-error" id="postcodeError">Please add at least one postcode.</div>
+        <div id="locationError" class="field-error">Please enter your business location.</div>
       </div>
-
       <button class="submit-btn" onclick="handleSignup()" id="signupBtn">
         <div class="spinner" id="signupSpinner"></div>
         <span id="signupBtnText">Create partner account →</span>
@@ -221,6 +219,33 @@
     ).join('');
   }
 
+  let selectedLocation = null;
+
+  async function suggestSignupLocation(query) {
+    if (query.length < 3) { document.getElementById('locationSuggestions').style.display = 'none'; return; }
+    try {
+      const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(query + ', Australia') + '&format=json&addressdetails=1&limit=5', {
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'HostieHub/1.0' }
+      });
+      const data = await res.json();
+      const box = document.getElementById('locationSuggestions');
+      if (!data.length) { box.style.display = 'none'; return; }
+      box.style.display = 'block';
+      box.innerHTML = data.map(r => {
+        const display = r.display_name.split(',').slice(0, 3).join(',');
+        const isDetailed = r.address?.road || r.address?.house_number;
+        return '<div onclick="selectSignupLocation(' + r.lat + ',' + r.lon + ',\'' + display.replace(/'/g, '') + '\',' + isDetailed + ')" style="padding:12px 16px;cursor:pointer;font-size:14px;border-bottom:1px solid #f0ece8" onmouseover="this.style.background=\'#f9f7f4\'" onmouseout="this.style.background=\'white\'">' + display + '</div>';
+      }).join('');
+    } catch(e) {}
+  }
+
+  function selectSignupLocation(lat, lng, name, isDetailed) {
+    selectedLocation = { lat: parseFloat(lat), lng: parseFloat(lng), name, isDetailed };
+    document.getElementById('businessLocation').value = name;
+    document.getElementById('locationSuggestions').style.display = 'none';
+    document.getElementById('locationError').style.display = 'none';
+  }
+
   async function handleSignup() {
     hideAlert();
     const businessName = document.getElementById('businessName').value.trim();
@@ -231,8 +256,8 @@
     if (!businessName) { showAlert('Please enter your business name.', 'error'); return; }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAlert('Please enter a valid email address.', 'error'); return; }
     if (password.length < 8) { showAlert('Password must be at least 8 characters.', 'error'); return; }
-    if (postcodes.length === 0) { document.getElementById('postcodeError').style.display = 'block'; return; }
-    document.getElementById('postcodeError').style.display = 'none';
+    if (!selectedLocation) { document.getElementById('locationError').style.display = 'block'; return; }
+    document.getElementById('locationError').style.display = 'none';
 
     setLoading('signup', true);
 
@@ -240,13 +265,25 @@
       const { data: authData, error: authError } = await sb.auth.signUp({ email, password });
       if (authError) throw authError;
 
-      const { error: insertError } = await sb.from('partners').insert({
+      const partnerData = {
         user_id: authData.user.id,
         business_name: businessName,
         email,
         description,
-        postcodes,
-      });
+        service_suburb: selectedLocation.name,
+        service_lat: selectedLocation.lat,
+        service_lng: selectedLocation.lng,
+        service_radius_km: 25,
+      };
+
+      // If full address entered, also save as business address for accurate distance
+      if (selectedLocation.isDetailed) {
+        partnerData.business_address = selectedLocation.name;
+        partnerData.business_lat = selectedLocation.lat;
+        partnerData.business_lng = selectedLocation.lng;
+      }
+
+      const { error: insertError } = await sb.from('partners').insert(partnerData);
 
       if (insertError) throw insertError;
 

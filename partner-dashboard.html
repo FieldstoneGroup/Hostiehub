@@ -1531,32 +1531,33 @@
   }
 
   let selectedListingLocation = null;
-  let googlePlacesAutocomplete = null;
 
   function initGooglePlacesAutocomplete() {
-    const input = document.getElementById('pListingLocation');
-    if (!input || !window.google) return;
-    googlePlacesAutocomplete = new google.maps.places.Autocomplete(input, {
-      componentRestrictions: { country: 'au' },
-      fields: ['geometry', 'formatted_address', 'address_components'],
-      types: ['address']
-    });
-    googlePlacesAutocomplete.addListener('place_changed', function() {
-      const place = googlePlacesAutocomplete.getPlace();
-      if (!place.geometry) return;
-      const unit = document.getElementById('pUnitNumber').value.trim();
-      const addr = place.formatted_address;
-      const fullName = unit ? 'Unit ' + unit + ', ' + addr : addr;
-      const isDetailed = true;
-      selectedListingLocation = {
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-        name: fullName,
-        isDetailed
-      };
-    });
+    // Poll until the input exists and is visible
+    const _interval = setInterval(function() {
+      const input = document.getElementById('pListingLocation');
+      if (!input || !window.google?.maps?.places) return;
+      clearInterval(_interval);
+      const autocomplete = new google.maps.places.Autocomplete(input, {
+        componentRestrictions: { country: 'au' },
+        fields: ['geometry', 'formatted_address'],
+        types: ['address']
+      });
+      autocomplete.addListener('place_changed', function() {
+        const place = autocomplete.getPlace();
+        if (!place.geometry) return;
+        const unit = document.getElementById('pUnitNumber').value.trim();
+        const addr = place.formatted_address;
+        const fullName = unit ? 'Unit ' + unit + ', ' + addr : addr;
+        selectedListingLocation = {
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng(),
+          name: fullName,
+          isDetailed: true
+        };
+      });
+    }, 500);
   }
-  window.initGooglePlacesAutocomplete = initGooglePlacesAutocomplete;
 
   function addProductPostcode() {
     const input = document.getElementById('pPostcodeInput');

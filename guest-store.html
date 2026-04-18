@@ -644,21 +644,21 @@
 
     applyBranding(host);
 
-    const [{ data: prods }, { data: props }, { data: livePartnerProducts }] = await Promise.all([
+    const [{ data: prods }, { data: props }, { data: livePartnerProducts, error: ppError }] = await Promise.all([
       sb.from('products').select('*').eq('host_id', host.id).eq('active', true).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true }),
       sb.from('properties').select('*').eq('host_id', host.id).order('nickname'),
-      sb.from('partner_products').select('*, partners(id, business_name, phone, contact_name, full_name, is_active)').eq('active', true),
+      sb.from('partner_products').select('*, partners(id, business_name, phone, contact_name, full_name)').eq('active', true),
     ]);
+    if (ppError) console.error('[Hostie] partner_products fetch error:', ppError);
 
     allProducts = prods || [];
     properties = props || [];
 
     // ── Build allPartnerListings from live partner_products (platform-wide, not host-curated) ──
-    // Each row is shaped like a "synthetic product" so existing handleAddToCart / handleBookingLink
-    // / logPartnerEvent continue to work without modification.
     allPartnerListings = (livePartnerProducts || [])
-      .filter(pp => pp.partners && pp.partners.is_active !== false)
-      .filter(pp => pp.listing_lat != null && pp.listing_lng != null)
+      .filter(pp => pp.partners)                                          // has a valid partner record
+      .filter(pp => pp.partners.is_active !== false)                      // tolerant: null/undefined = treat as active
+      .filter(pp => pp.listing_lat != null && pp.listing_lng != null)     // must have coords
       .map(pp => ({
         id: 'pp-' + pp.id,
         partner_product_id: pp.id,
@@ -1029,16 +1029,19 @@
 
   function toggleCatDropdown() {
     catDropdownOpen = !catDropdownOpen;
-    document.getElementById('catDropdownMenu').style.display = catDropdownOpen ? 'block' : 'none';
+    const el = document.getElementById('catDropdownMenu');
+    if (el) el.style.display = catDropdownOpen ? 'block' : 'none';
   }
 
   function closeCatDropdown() {
     catDropdownOpen = false;
-    document.getElementById('catDropdownMenu').style.display = 'none';
+    const el = document.getElementById('catDropdownMenu');
+    if (el) el.style.display = 'none';
   }
 
   document.addEventListener('click', e => {
-    if (!document.getElementById('catDropdownWrap')?.contains(e.target)) closeCatDropdown();
+    const wrap = document.getElementById('catDropdownWrap');
+    if (wrap && !wrap.contains(e.target)) closeCatDropdown();
   });
 
   function renderCategories(products) {

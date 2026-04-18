@@ -486,33 +486,34 @@
             <div class="field">
               <label>Days available</label>
               <div class="field-hint" style="margin-bottom:10px">Which days of the week can you offer this service?</div>
-              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+                <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;cursor:pointer;background:var(--partner-light);border:1.5px solid var(--partner);border-radius:8px;padding:7px 12px;color:var(--partner)">
+                  <input type="checkbox" id="dayAll" onchange="toggleAllDays(this)"> ✨ All days
+                </label>
+                <span style="width:1px;height:24px;background:var(--border);margin:0 4px"></span>
+                <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
                   <input type="checkbox" id="dayMon" value="mon" onchange="updateAllDaysCheck()"> Mon
                 </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
                   <input type="checkbox" id="dayTue" value="tue" onchange="updateAllDaysCheck()"> Tue
                 </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
                   <input type="checkbox" id="dayWed" value="wed" onchange="updateAllDaysCheck()"> Wed
                 </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
                   <input type="checkbox" id="dayThu" value="thu" onchange="updateAllDaysCheck()"> Thu
                 </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
                   <input type="checkbox" id="dayFri" value="fri" onchange="updateAllDaysCheck()"> Fri
                 </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
                   <input type="checkbox" id="daySat" value="sat" onchange="updateAllDaysCheck()"> Sat
                 </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                <label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
                   <input type="checkbox" id="daySun" value="sun" onchange="updateAllDaysCheck()"> Sun
                 </label>
               </div>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--partner)">
-                <input type="checkbox" id="dayAll" onchange="toggleAllDays(this)"> All days (7 days a week)
-              </label>
-              <div class="field-hint" style="margin-top:6px">Guests will see which days this service is available when they browse your listing.</div>
+              <div class="field-hint" style="margin-top:10px">Guests will see which days this service is available when they browse your listing.</div>
             </div>
           </div>
           <div id="bookingFields" style="display:none">

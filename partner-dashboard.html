@@ -553,12 +553,17 @@
           </div>
           <div class="field">
             <label>Listing location</label>
-            <div class="field-hint" style="margin-bottom:8px">Where is this listing based? Enter a postcode <strong>or</strong> full street address. A full address lets guests see exactly how far away you are.</div>
-            <div style="position:relative">
-              <input type="text" id="pListingLocation" placeholder="e.g. 2300 or 12 Hunter St, Newcastle NSW 2300" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" oninput="suggestListingLocation(this.value)" autocomplete="off">
-              <div id="listingLocationSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:4px"></div>
+            <div class="field-hint" style="margin-bottom:8px">Enter a postcode <strong>or</strong> street address. A full address lets guests see exactly how far away you are.</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <div style="width:100px;flex-shrink:0">
+                <input type="text" id="pUnitNumber" placeholder="Unit (opt.)" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
+              </div>
+              <div style="flex:1;position:relative">
+                <input type="text" id="pListingLocation" placeholder="e.g. 11 Honeysuckle Dr, Newcastle 2300" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" autocomplete="off">
+                <div id="listingLocationSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:4px"></div>
+              </div>
             </div>
-            <div class="field-hint" style="margin-top:6px">Postcode only → guests see "Available in your area". Full address → guests see exact distance e.g. "1.2km away".</div>
+            <div class="field-hint">If you have a unit number, enter it separately — e.g. Unit 2, then 11 Honeysuckle Dr. Postcode only → guests see "Available in your area". Full address → guests see exact distance.</div>
           </div>
           <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="saveProduct()">Publish listing →</button>
         </div>
@@ -1178,6 +1183,7 @@
     renderProductPostcodes();
     selectedListingLocation = null;
     document.getElementById('pListingLocation').value = '';
+    document.getElementById('pUnitNumber').value = '';
   }
 
   function previewVoucherPdf(input) {
@@ -1547,12 +1553,20 @@
   }
 
   function selectListingLocation(lat, lng, name, isDetailed) {
-    selectedListingLocation = { lat: parseFloat(lat), lng: parseFloat(lng), name, isDetailed };
+    const unit = document.getElementById('pUnitNumber').value.trim();
+    const fullName = unit ? 'Unit ' + unit + ', ' + name : name;
+    selectedListingLocation = { lat: parseFloat(lat), lng: parseFloat(lng), name: fullName, isDetailed };
     document.getElementById('pListingLocation').value = name;
     document.getElementById('listingLocationSuggestions').style.display = 'none';
   }
   window.suggestListingLocation = suggestListingLocation;
   window.selectListingLocation = selectListingLocation;
+
+  // Wire up listing location input via addEventListener (avoids Cloudflare oninput stripping)
+  document.addEventListener('DOMContentLoaded', function() {
+    const locEl = document.getElementById('pListingLocation');
+    if (locEl) locEl.addEventListener('input', function() { suggestListingLocation(this.value); });
+  });
 
   function addProductPostcode() {
     const input = document.getElementById('pPostcodeInput');

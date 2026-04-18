@@ -95,6 +95,18 @@
     .topbar { padding: 0 14px; height: 52px; }
     .field-row { grid-template-columns: 1fr; }
     .card { padding: 14px; }
+    /* Analytics */
+    #analyticsGrid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+    .analytics-stat { padding: 14px; }
+    .analytics-stat-val { font-size: 26px !important; }
+    .analytics-table { font-size: 12px; }
+    .analytics-table th, .analytics-table td { padding: 8px 6px; }
+    /* Hide less important columns on mobile */
+    .analytics-table th:nth-child(2),
+    .analytics-table td:nth-child(2),
+    .analytics-table th:nth-child(6),
+    .analytics-table td:nth-child(6) { display: none; }
+    .period-btn { font-size: 12px; padding: 6px 10px; }
   }
   .card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); padding: 24px; }
   .card-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 600; margin-bottom: 4px; }
@@ -312,7 +324,7 @@
       <!-- Per-product breakdown -->
       <div class="card">
         <div class="card-title" style="margin-bottom:16px">Performance by listing</div>
-        <div id="analyticsTable">
+        <div id="analyticsTable" style="overflow-x:auto">
           <div class="empty-state" style="padding:40px 20px"><div class="empty-icon">📊</div><h3>No data yet</h3><p>Analytics will appear once your products are live in host stores and guests start viewing them.</p></div>
         </div>
       </div>

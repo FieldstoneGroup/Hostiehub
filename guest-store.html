@@ -654,15 +654,15 @@
     });
     const bookingPartnerIds = allProducts.filter(p => p.partner_product_id).map(p => p.partner_product_id);
     if (bookingPartnerIds.length > 0) {
-      const { data: partnerProds } = await sb.from('partner_products').select('id, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit').in('id', bookingPartnerIds);
+      const { data: partnerProds } = await sb.from('partner_products').select('id, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng').in('id', bookingPartnerIds);
       console.log('[Hostie] partner_products voucher fetch:', partnerProds);
       if (partnerProds) {
         const voucherMap = {};
-        partnerProds.forEach(pp => { voucherMap[pp.id] = { url: pp.voucher_pdf_url, title: pp.voucher_title, service_price: pp.service_price, service_price_unit: pp.service_price_unit, lead_time_value: pp.lead_time_value, lead_time_unit: pp.lead_time_unit }; });
+        partnerProds.forEach(pp => { voucherMap[pp.id] = { url: pp.voucher_pdf_url, title: pp.voucher_title, service_price: pp.service_price, service_price_unit: pp.service_price_unit, lead_time_value: pp.lead_time_value, lead_time_unit: pp.lead_time_unit, listing_address: pp.listing_address, listing_lat: pp.listing_lat, listing_lng: pp.listing_lng }; });
         allProducts = allProducts.map(p => {
           if (p.partner_product_id && voucherMap[p.partner_product_id]) {
             const m = voucherMap[p.partner_product_id];
-            return { ...p, partner_voucher_pdf_url: m.url, partner_voucher_title: m.title, service_price: m.service_price, service_price_unit: m.service_price_unit, lead_time_value: m.lead_time_value, lead_time_unit: m.lead_time_unit };
+            return { ...p, partner_voucher_pdf_url: m.url, partner_voucher_title: m.title, service_price: m.service_price, service_price_unit: m.service_price_unit, lead_time_value: m.lead_time_value, lead_time_unit: m.lead_time_unit, listing_address: m.listing_address, listing_lat: m.listing_lat, listing_lng: m.listing_lng };
           }
           return p;
         });
@@ -856,16 +856,16 @@
           : isBookingLink ? '<span style="font-size:12px;color:var(--muted)">🔗 Book direct</span>'
           : '<span style="font-size:12px;color:#1a5fa8;font-weight:600">🤝 Request service</span>';
 
-      // Distance calculation
+      // Distance calculation — use listing-specific location
       let distanceTag = '';
-      const bizLat = p.partner_business_lat;
-      const bizLng = p.partner_business_lng;
-      if (bizLat && bizLng && hostGeoCache.lat && hostGeoCache.lng) {
+      const bizLat = p.listing_lat;
+      const bizLng = p.listing_lng;
+      if (p.listing_address && bizLat && bizLng && hostGeoCache.lat && hostGeoCache.lng) {
         const dist = haversineKmStore(hostGeoCache.lat, hostGeoCache.lng, bizLat, bizLng);
         const distStr = dist < 1 ? Math.round(dist * 1000) + 'm away' : dist.toFixed(1) + 'km away';
-        distanceTag = '<span style="font-size:11px;color:#1a5fa8;font-weight:600;background:#e8f0fb;padding:2px 8px;border-radius:50px">📍 ' + distStr + '</span>';
-      } else if (p.partner_service_lat || p.partner_service_lng) {
-        distanceTag = '<span style="font-size:11px;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:50px">📍 Available in your area</span>';
+        distanceTag = '<span style="font-size:11px;color:#1a5fa8;font-weight:600;background:#e8f0fb;padding:2px 8px;border-radius:50px;white-space:nowrap">📍 ' + distStr + '</span>';
+      } else if (bizLat && bizLng) {
+        distanceTag = '<span style="font-size:11px;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:50px;white-space:nowrap">📍 Available in your area</span>';
       }
 
       return `

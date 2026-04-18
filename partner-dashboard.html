@@ -552,20 +552,13 @@
             <div class="field-hint">Recommended: square image, at least 400x400px. JPG or PNG.</div>
           </div>
           <div class="field">
-            <label>Service area</label>
-            <div class="field-hint" style="margin-bottom:12px">Enter your suburb — we'll automatically cover all postcodes within 30km.</div>
-            <div style="display:flex;gap:8px;margin-bottom:10px">
-              <input type="text" id="pSuburbInput" placeholder="e.g. Newcastle, Honeysuckle, Maitland" style="flex:1;padding:14px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px" oninput="suggestSuburbs(this.value)" autocomplete="off">
-              <button class="add-postcode-btn" onclick="applyRadius()">Apply →</button>
+            <label>Listing location</label>
+            <div class="field-hint" style="margin-bottom:8px">Where is this listing based? Enter a postcode <strong>or</strong> full street address. A full address lets guests see exactly how far away you are.</div>
+            <div style="position:relative">
+              <input type="text" id="pListingLocation" placeholder="e.g. 2300 or 12 Hunter St, Newcastle NSW 2300" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" oninput="suggestListingLocation(this.value)" autocomplete="off">
+              <div id="listingLocationSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:4px"></div>
             </div>
-            <div id="suburbSuggestions" style="display:none;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,0.08)"></div>
-            <div id="radiusResult" style="display:none;background:var(--partner-light);border:1.5px solid var(--partner);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--partner);margin-bottom:8px"></div>
-            <div style="margin-bottom:6px;font-size:12px;color:var(--muted)">Or add individual postcodes:</div>
-            <div class="postcode-input-wrap">
-              <input type="text" id="pPostcodeInput" placeholder="e.g. 2300" maxlength="4" onkeydown="if(event.key==='Enter'){event.preventDefault();addProductPostcode()}">
-              <button class="add-postcode-btn" onclick="addProductPostcode()">+ Add</button>
-            </div>
-            <div class="postcode-tags" id="pPostcodeTags"></div>
+            <div class="field-hint" style="margin-top:6px">Postcode only → guests see "Available in your area". Full address → guests see exact distance e.g. "1.2km away".</div>
           </div>
           <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="saveProduct()">Publish listing →</button>
         </div>
@@ -1183,6 +1176,8 @@
     removeVoucherPdf();
     productPostcodes = [];
     renderProductPostcodes();
+    selectedListingLocation = null;
+    document.getElementById('pListingLocation').value = '';
   }
 
   function previewVoucherPdf(input) {
@@ -1236,8 +1231,6 @@
     const isBooking = document.getElementById('ptBooking').checked;
     const bookingUrl = document.getElementById('pBookingUrl').value.trim();
     if (isBooking && !bookingUrl) { showToast('Please enter a booking URL'); return; }
-    const codes = productPostcodes.length > 0 ? productPostcodes : accountPostcodes;
-    if (codes.length === 0) { showToast('⚠️ Please add at least one postcode or suburb area'); return; }
 
     // Lead time
     const leadTimeValue = isService ? (parseInt(document.getElementById('pLeadTimeValue').value) || 0) : null;
@@ -1247,8 +1240,13 @@
     const servicePriceUnit = isService ? document.getElementById('pServicePriceUnit').value : null;
     const servicePrice = isService && servicePriceUnit !== 'contact for pricing' ? (parseFloat(document.getElementById('pServicePrice').value) || 0) : null;
 
-    // Available days (physical only)
+    // Available days
     const availableDays = (isPhysical || isService) ? getSelectedDays() : null;
+
+    // Listing location
+    const listingAddress = selectedListingLocation?.isDetailed ? selectedListingLocation.name : null;
+    const listingLat = selectedListingLocation?.lat || null;
+    const listingLng = selectedListingLocation?.lng || null;
 
     const payload = {
       partner_id: partnerData.id,
@@ -1260,12 +1258,14 @@
       wholesale_price: isPhysical ? (parseFloat(document.getElementById('pWholesalePrice').value) || 0) : 0,
       booking_url: isBooking ? bookingUrl : null,
       voucher_title: isBooking ? (document.getElementById('pVoucherTitle').value.trim() || null) : null,
-      postcodes: codes,
       lead_time_value: leadTimeValue,
       lead_time_unit: leadTimeUnit,
       service_price: servicePrice,
       service_price_unit: servicePriceUnit,
       available_days: availableDays,
+      listing_address: listingAddress,
+      listing_lat: listingLat,
+      listing_lng: listingLng,
       active: true,
     };
 
@@ -1386,10 +1386,19 @@
       document.getElementById('pVoucherUploadLabel').style.display = 'flex';
     }
 
-    // Postcodes
-    const codes = Array.isArray(p.postcodes) ? p.postcodes : JSON.parse(p.postcodes || '[]');
-    productPostcodes = [...codes];
-    renderProductPostcodes();
+    // Listing location
+    selectedListingLocation = null;
+    const locInput = document.getElementById('pListingLocation');
+    if (p.listing_address) {
+      locInput.value = p.listing_address;
+      selectedListingLocation = { name: p.listing_address, lat: p.listing_lat, lng: p.listing_lng, isDetailed: true };
+    } else if (p.listing_lat && p.listing_lng) {
+      locInput.value = 'Suburb/postcode area';
+      selectedListingLocation = { name: 'Suburb/postcode area', lat: p.listing_lat, lng: p.listing_lng, isDetailed: false };
+    } else {
+      locInput.value = '';
+    }
+
     setTimeout(updatePreview, 50);
   }
 
@@ -1517,82 +1526,33 @@
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   }
 
-  let selectedSuburb = null;
-  let suburbSearchTimer = null;
+  let selectedListingLocation = null;
 
-  async function suggestSuburbs(val) {
-    const box = document.getElementById('suburbSuggestions');
-    if (!val || val.length < 2) { box.style.display = 'none'; return; }
-    clearTimeout(suburbSearchTimer);
-    suburbSearchTimer = setTimeout(async () => {
-      try {
-        const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(val + ', Australia') + '&format=json&limit=6&addressdetails=1&accept-language=en');
-        const data = await res.json();
-        const raw = data.filter(r => r.address && (r.address.suburb || r.address.town || r.address.city || r.address.village) && r.address.postcode);
-        // Deduplicate by postcode
-        const seen = new Set();
-        const matches = raw.filter(r => { if (seen.has(r.address.postcode)) return false; seen.add(r.address.postcode); return true; });
-        if (!matches.length) { box.style.display = 'none'; return; }
-        box.style.display = 'block';
-        box.innerHTML = matches.map(r => {
-          const name = r.address.suburb || r.address.town || r.address.city || r.address.village || r.display_name;
-          const pc = r.address.postcode;
-          const state = r.address.state_district || r.address.state || '';
-          return '<div onclick="selectSuburbFromApi(\'' + pc + '\',\'' + name.replace(/'/g, '') + '\',' + r.lat + ',' + r.lon + ')" style="padding:10px 14px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'\'"><strong>' + name + '</strong> <span style="color:var(--muted);font-size:12px">' + pc + ' · ' + state + '</span></div>';
-        }).join('');
-      } catch(e) { box.style.display = 'none'; }
-    }, 350);
-  }
-
-  function selectSuburbFromApi(postcode, name, lat, lng) {
-    selectedSuburb = { postcode, name, lat: parseFloat(lat), lng: parseFloat(lng) };
-    document.getElementById('pSuburbInput').value = name + ' (' + postcode + ')';
-    document.getElementById('suburbSuggestions').style.display = 'none';
-  }
-
-  // Keep old selectSuburb for backwards compat
-  function selectSuburb(postcode, name, lat, lng) {
-    selectSuburbFromApi(postcode, name, lat, lng);
-  }
-
-  async function applyRadius() {
-    if (!selectedSuburb) { showToast('Please select a suburb from the dropdown first'); return; }
-    const result = document.getElementById('radiusResult');
-    result.style.display = 'block';
-    result.textContent = '⏳ Finding postcodes within 30km...';
+  async function suggestListingLocation(val) {
+    const box = document.getElementById('listingLocationSuggestions');
+    if (!val || val.length < 3) { box.style.display = 'none'; return; }
     try {
-      // Search nearby postcodes using Nominatim bounding box
-      const radius = 30;
-      const latDeg = radius / 111;
-      const lngDeg = radius / (111 * Math.cos(selectedSuburb.lat * Math.PI / 180));
-      const bbox = [
-        selectedSuburb.lng - lngDeg,
-        selectedSuburb.lat - latDeg,
-        selectedSuburb.lng + lngDeg,
-        selectedSuburb.lat + latDeg
-      ].join(',');
-
-      // Always include the selected suburb's postcode
-      const foundCodes = new Set([selectedSuburb.postcode]);
-
-      // Also search NSW_SUBURBS fallback for nearby codes
-      NSW_SUBURBS.forEach(s => {
-        const dist = getDistance(selectedSuburb.lat, selectedSuburb.lng, s[2], s[3]);
-        if (dist <= radius) foundCodes.add(s[0]);
+      const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(val + ', Australia') + '&format=json&limit=5&addressdetails=1', {
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'HostieHub/1.0' }
       });
-
-      productPostcodes = [...foundCodes];
-      renderProductPostcodes();
-      result.textContent = '✓ Found ' + productPostcodes.length + ' postcodes within 30km of ' + selectedSuburb.name;
-    } catch(e) {
-      // Fallback — just add the suburb's own postcode
-      if (!productPostcodes.includes(selectedSuburb.postcode)) {
-        productPostcodes.push(selectedSuburb.postcode);
-        renderProductPostcodes();
-      }
-      result.textContent = '✓ Added postcode ' + selectedSuburb.postcode + ' for ' + selectedSuburb.name;
-    }
+      const data = await res.json();
+      if (!data.length) { box.style.display = 'none'; return; }
+      box.style.display = 'block';
+      box.innerHTML = data.map(r => {
+        const display = r.display_name.split(',').slice(0, 3).join(',');
+        const isDetailed = !!(r.address?.road || r.address?.house_number);
+        return '<div onclick="selectListingLocation(' + r.lat + ',' + r.lon + ',\'' + display.replace(/'/g, '') + '\',' + isDetailed + ')" style="padding:12px 16px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border)" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'white\'">' + display + '</div>';
+      }).join('');
+    } catch(e) { box.style.display = 'none'; }
   }
+
+  function selectListingLocation(lat, lng, name, isDetailed) {
+    selectedListingLocation = { lat: parseFloat(lat), lng: parseFloat(lng), name, isDetailed };
+    document.getElementById('pListingLocation').value = name;
+    document.getElementById('listingLocationSuggestions').style.display = 'none';
+  }
+  window.suggestListingLocation = suggestListingLocation;
+  window.selectListingLocation = selectListingLocation;
 
   function addProductPostcode() {
     const input = document.getElementById('pPostcodeInput');

@@ -2053,6 +2053,15 @@
         const orderData = JSON.parse(pendingOrderStr);
         if (sk) sessionStorage.removeItem(sk);
         else sessionStorage.removeItem('pending_order_' + username);
+
+        // Log purchase events for each item now that payment is confirmed
+        if (orderData.items) {
+          try {
+            const items = typeof orderData.items === 'string' ? JSON.parse(orderData.items) : orderData.items;
+            items.forEach(i => logStoreEvent('purchase', i.id, i.name));
+          } catch(e) {}
+        }
+
         fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-order-complete' },

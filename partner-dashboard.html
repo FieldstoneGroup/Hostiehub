@@ -287,15 +287,14 @@
             <button class="btn btn-primary" onclick="showPage('newproduct', document.querySelector('[onclick*=newproduct]'))">📦 &nbsp;Add a listing</button>
             <button class="btn btn-outline" onclick="showPage('analytics', document.querySelector('[onclick*=analytics]'))">📊 &nbsp;View analytics</button>
             <button class="btn btn-outline" onclick="showPage('newvoucher', document.querySelector('[onclick*=newvoucher]'))">🎟️ &nbsp;Add a voucher</button>
-            <button class="btn btn-outline" onclick="showPage('account', document.querySelector('[onclick*=account]'))">📍 &nbsp;Update my postcodes</button>
+            <button class="btn btn-outline" onclick="showPage('products', document.querySelector('[onclick*=products]'))">📋 &nbsp;Manage my listings</button>
           </div>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">Your service area</div>
-        <div class="card-desc">Hosts within your selected radius can see and add your products & services.</div>
-        <div id="overviewServiceArea" style="font-size:14px;color:var(--muted);margin-bottom:12px">Not set — go to Account to set your service area.</div>
-        <button class="btn btn-outline btn-sm" onclick="showPage('account', document.querySelector('[onclick*=account]'))">Edit service area →</button>
+        <div class="card-title">How visibility works</div>
+        <div class="card-desc">Each listing has its own address and service radius. Guests see your listing when their property sits within that radius (platform-wide hard cap: 35 km).</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:12px;line-height:1.6">Go to <strong>My listings</strong> to set or update any listing's address and travel radius.</div>
       </div>
     </div>
 
@@ -552,17 +551,28 @@
             <div class="field-hint">Recommended: square image, at least 400x400px. JPG or PNG.</div>
           </div>
           <div class="field">
-            <label>Listing location</label>
-            <div class="field-hint" style="margin-bottom:8px">Enter a postcode <strong>or</strong> street address. A full address lets guests see exactly how far away you are.</div>
+            <label>Listing location <span style="color:var(--error)">*</span></label>
+            <div class="field-hint" style="margin-bottom:8px">Enter your business street address — start typing and pick a match from the suggestions.</div>
             <div style="display:flex;gap:8px;margin-bottom:8px">
               <div style="width:100px;flex-shrink:0">
                 <input type="text" id="pUnitNumber" placeholder="Unit (opt.)" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
               </div>
               <div style="flex:1;position:relative">
-                <input type="text" id="pListingLocation" placeholder="e.g. 11 Honeysuckle Dr, Newcastle 2300" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" autocomplete="off">
+                <input type="text" id="pListingLocation" placeholder="e.g. 11 Honeysuckle Dr, Newcastle 2300" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" autocomplete="off" required>
               </div>
             </div>
-            <div class="field-hint">If you have a unit number, enter it separately — e.g. Unit 2, then 11 Honeysuckle Dr. Postcode only → guests see "Available in your area". Full address → guests see exact distance.</div>
+            <div class="field-hint">If you have a unit number, enter it separately — e.g. Unit 2, then 11 Honeysuckle Dr.</div>
+          </div>
+          <div class="field">
+            <label>Service radius</label>
+            <div class="field-hint" style="margin-bottom:8px">How far from this address will you travel or serve? Guests outside this radius won't see the listing.</div>
+            <select id="pServiceRadius" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:white;outline:none">
+              <option value="">No limit</option>
+              <option value="5">Within 5 km</option>
+              <option value="10">Within 10 km</option>
+              <option value="20" selected>Within 20 km</option>
+              <option value="35">Within 35 km</option>
+            </select>
           </div>
           <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="saveProduct()">Publish listing →</button>
         </div>
@@ -650,39 +660,6 @@
           </div>
 
           <!-- Email change -->
-          <!-- Service area -->
-          <div class="card" style="margin-bottom:16px">
-            <div class="card-title">Service area</div>
-            <div class="card-desc">Set your location and how far you're willing to travel or deliver. Hosts within this radius will see your listings.</div>
-            <div class="field">
-              <label>Your suburb</label>
-              <div style="position:relative">
-                <input type="text" id="serviceSuburbInput" placeholder="e.g. Newcastle, Honeysuckle, Maitland" style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" oninput="suggestServiceSuburb(this.value)" autocomplete="off">
-                <div id="serviceSuburbSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:4px"></div>
-              </div>
-            </div>
-            <div class="field">
-              <label>Radius</label>
-              <select id="serviceRadiusSelect" style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:white;outline:none">
-                <option value="5">5 km</option>
-                <option value="10">10 km</option>
-                <option value="25" selected>25 km</option>
-                <option value="50">50 km</option>
-                <option value="100">100 km</option>
-              </select>
-              <div class="field-hint">Hosts within this distance from your suburb will see your listings.</div>
-            </div>
-            <div class="field">
-              <label>Business address <span style="font-weight:300;font-size:12px">(optional — for accurate guest distance)</span></label>
-              <div style="position:relative">
-                <input type="text" id="businessAddressInput" placeholder="e.g. 12 Hunter St, Newcastle NSW 2300" style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" oninput="suggestBusinessAddress(this.value)" autocomplete="off">
-                <div id="businessAddressSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:4px"></div>
-              </div>
-              <div class="field-hint">Enter a full street address to show guests exactly how far away you are. If left as suburb only, guests will see "Available in your area".</div>
-            </div>
-            <div id="serviceAreaCurrent" style="display:none;background:var(--partner-light);border:1.5px solid var(--partner);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--partner);margin-bottom:12px"></div>
-            <button class="btn btn-primary btn-sm" onclick="saveServiceArea()">Save service area</button>
-          </div>
 
           <div class="card" style="margin-bottom:16px">
             <div class="card-desc">A verification link will be sent to your new email. Your login will update once you click it.</div>
@@ -834,16 +811,7 @@
     document.getElementById('accountPhone').value = partnerData.phone || '';
     accountPostcodes = Array.isArray(partnerData.postcodes) ? partnerData.postcodes : JSON.parse(partnerData.postcodes || '[]');
     renderAccountPostcodes();
-    if (partnerData.service_suburb) {
-      document.getElementById('serviceSuburbInput').value = partnerData.service_suburb;
-      selectedServiceSuburb = { name: partnerData.service_suburb, lat: partnerData.service_lat, lng: partnerData.service_lng };
-      if (partnerData.service_radius_km) document.getElementById('serviceRadiusSelect').value = partnerData.service_radius_km;
-    }
-    if (partnerData.business_address) {
-      document.getElementById('businessAddressInput').value = partnerData.business_address;
-      selectedBusinessAddress = { name: partnerData.business_address, lat: partnerData.business_lat, lng: partnerData.business_lng };
-    }
-    updateServiceAreaDisplay();
+    // NOTE: service-area fields removed from UI — each listing now carries its own address + service_radius_km
   }
 
   function checkTrial() {
@@ -1078,15 +1046,8 @@
     document.getElementById('physicalFields').style.display = isPhysical ? 'block' : 'none';
     document.getElementById('serviceFields').style.display = isService ? 'block' : 'none';
     document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
-    // Category visible for service + booking (physical is hidden globally). Set a sensible default
-    // if the current value is blank, but don't override if the partner has already chosen one.
+    // Category visible for service + booking (physical is hidden globally). Default set by openProductModal/editProduct.
     document.getElementById('categoryFieldWrap').style.display = (isBooking || isService) ? 'block' : 'none';
-    const catEl = document.getElementById('pCategory');
-    if (!catEl.value) {
-      if (isPhysical) catEl.value = 'product';
-      else if (isService) catEl.value = 'service';
-      else if (isBooking) catEl.value = 'reservation';
-    }
     // Update preview button label
     const btn = document.getElementById('previewBtn');
     if (btn) btn.textContent = isBooking ? 'Book now →' : (isService ? 'Add →' : 'Add →');
@@ -1188,6 +1149,7 @@
     selectedListingLocation = null;
     document.getElementById('pListingLocation').value = '';
     document.getElementById('pUnitNumber').value = '';
+    document.getElementById('pServiceRadius').value = '20'; // default radius per spec
   }
 
   function previewVoucherPdf(input) {
@@ -1253,10 +1215,18 @@
     // Available days
     const availableDays = (isPhysical || isService) ? getSelectedDays() : null;
 
-    // Listing location
-    const listingAddress = selectedListingLocation?.isDetailed ? selectedListingLocation.name : null;
-    const listingLat = selectedListingLocation?.lat || null;
-    const listingLng = selectedListingLocation?.lng || null;
+    // Listing location — REQUIRED, must be a detailed address selected from Google Places
+    if (!selectedListingLocation?.isDetailed || !selectedListingLocation?.lat || !selectedListingLocation?.lng) {
+      showToast('⚠️ Please select a street address from the suggestions');
+      return;
+    }
+    const listingAddress = selectedListingLocation.name;
+    const listingLat = selectedListingLocation.lat;
+    const listingLng = selectedListingLocation.lng;
+
+    // Service radius (null = no limit)
+    const serviceRadiusVal = document.getElementById('pServiceRadius').value;
+    const serviceRadiusKm = serviceRadiusVal === '' ? null : parseInt(serviceRadiusVal);
 
     const payload = {
       partner_id: partnerData.id,
@@ -1276,6 +1246,7 @@
       listing_address: listingAddress,
       listing_lat: listingLat,
       listing_lng: listingLng,
+      service_radius_km: serviceRadiusKm,
       active: true,
     };
 
@@ -1358,7 +1329,7 @@
     document.getElementById('serviceFields').style.display = isService ? 'block' : 'none';
     document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
     document.getElementById('categoryFieldWrap').style.display = (isBooking || isService) ? 'block' : 'none';
-    // Preserve the saved category — only fall back to a default if blank
+    // Preserve saved category — only set a default if blank
     if (!p.category) {
       if (!isBooking && !isService) document.getElementById('pCategory').value = 'product';
       else if (isService) document.getElementById('pCategory').value = 'service';
@@ -1412,6 +1383,10 @@
     } else {
       locInput.value = '';
     }
+
+    // Service radius (null = no limit)
+    const pRad = document.getElementById('pServiceRadius');
+    if (pRad) pRad.value = (p.service_radius_km == null) ? '' : String(p.service_radius_km);
 
     setTimeout(updatePreview, 50);
     setTimeout(initGooglePlacesAutocomplete, 100);

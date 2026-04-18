@@ -795,6 +795,29 @@
 </div>
 
 <!-- ADD USER MODAL -->
+<!-- REFUND MODAL -->
+<div class="modal-overlay" id="refundModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">💸 Process Refund</div>
+      <button class="modal-close" onclick="document.getElementById('refundModal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="refundOrderInfo" style="background:var(--bg);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px"></div>
+      <div class="field" id="refundAmountField" style="display:none">
+        <label>Refund amount ($)</label>
+        <input type="number" id="refundAmount" min="0.01" step="0.01" placeholder="e.g. 25.00" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
+        <div class="field-hint">Must be equal to or less than the order total.</div>
+      </div>
+      <div id="refundMsg" style="display:none;font-size:13px;padding:10px 12px;border-radius:8px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" style="flex:1;justify-content:center" onclick="document.getElementById('refundModal').classList.remove('open')">Cancel</button>
+        <button class="btn" id="refundConfirmBtn" style="flex:1;justify-content:center;background:#dc2626;color:white" onclick="processRefund()">Confirm refund</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="addUserModal">
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
@@ -1893,8 +1916,9 @@
             <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${items.map(i => `<span class="order-item-tag">${i.name} $${i.price}</span>`).join('')}</div>
             ${o.notes ? `<div class="order-notes">💬 "${o.notes}"</div>` : ''}
             ${noteEntries.length ? `<div class="order-notes" style="margin-top:6px">📝 ${noteEntries.map(([k,v]) => `<strong>${k}:</strong> ${v}`).join(' · ')}</div>` : ''}
-            <div style="display:flex;justify-content:flex-end;margin-top:12px">
-              ${o.status !== 'fulfilled' ? `<button class="btn btn-success btn-sm" onclick="fulfillOrder('${o.id}')">✓ Mark as fulfilled</button>` : '<span style="font-size:13px;color:var(--brand);font-weight:500">✓ Fulfilled</span>'}
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">
+              ${o.status !== 'fulfilled' ? '<button class="btn btn-success btn-sm" onclick="fulfillOrder(\'' + o.id + '\')">✓ Mark as fulfilled</button>' : '<span style="font-size:13px;color:var(--brand);font-weight:500">✓ Fulfilled</span>'}
+              ${o.stripe_session_id ? '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" onclick="openRefundModal(\'' + o.id + '\',\'' + o.stripe_session_id + '\',' + (parseFloat(o.total)||0) + ',\'full\')">💸 Refund full amount</button><button class="btn btn-sm" style="background:#fff7e6;color:#92600a;border:1.5px solid #fde68a" onclick="openRefundModal(\'' + o.id + '\',\'' + o.stripe_session_id + '\',' + (parseFloat(o.total)||0) + ',\'partial\')">💸 Partial refund</button></div>' : ''}
             </div>
           </div>
         </div>
@@ -1912,6 +1936,82 @@
     const sort = document.getElementById('orderSort')?.value || 'newest';
     renderOrders(search, sort);
   }
+
+  let refundOrderId = null;
+  let refundSessionId = null;
+  let refundTotal = 0;
+  let refundType = 'full';
+
+  function openRefundModal(orderId, sessionId, total, type) {
+    refundOrderId = orderId;
+    refundSessionId = sessionId;
+    refundTotal = total;
+    refundType = type;
+    const info = document.getElementById('refundOrderInfo');
+    const amountField = document.getElementById('refundAmountField');
+    const msg = document.getElementById('refundMsg');
+    msg.style.display = 'none';
+    if (type === 'full') {
+      info.innerHTML = '<strong>Full refund:</strong> $' + total.toFixed(2) + ' will be returned to the guest\'s card.';
+      amountField.style.display = 'none';
+    } else {
+      info.innerHTML = '<strong>Order total:</strong> $' + total.toFixed(2) + '<br>Enter the amount you want to refund below.';
+      amountField.style.display = 'block';
+      document.getElementById('refundAmount').value = '';
+    }
+    document.getElementById('refundModal').classList.add('open');
+  }
+  window.openRefundModal = openRefundModal;
+
+  async function processRefund() {
+    const msg = document.getElementById('refundMsg');
+    const btn = document.getElementById('refundConfirmBtn');
+    let amount = refundTotal;
+    if (refundType === 'partial') {
+      amount = parseFloat(document.getElementById('refundAmount').value);
+      if (!amount || amount <= 0 || amount > refundTotal) {
+        msg.style.display = 'block';
+        msg.style.background = '#fee2e2';
+        msg.style.color = '#dc2626';
+        msg.textContent = 'Please enter a valid amount between $0.01 and $' + refundTotal.toFixed(2);
+        return;
+      }
+    }
+    btn.textContent = 'Processing...';
+    btn.disabled = true;
+    try {
+      const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'process-refund' },
+        body: JSON.stringify({ sessionId: refundSessionId, amount: Math.round(amount * 100) })
+      });
+      const result = await res.json();
+      if (result.ok) {
+        msg.style.display = 'block';
+        msg.style.background = '#f0fdf4';
+        msg.style.color = '#15803d';
+        msg.textContent = '✓ Refund of $' + amount.toFixed(2) + ' processed successfully.';
+        await sb.from('orders').update({ status: 'refunded' }).eq('id', refundOrderId);
+        btn.textContent = 'Done';
+        setTimeout(() => {
+          document.getElementById('refundModal').classList.remove('open');
+          btn.textContent = 'Confirm refund';
+          btn.disabled = false;
+          loadOrders();
+        }, 2000);
+      } else {
+        throw new Error(result.error || 'Refund failed');
+      }
+    } catch(e) {
+      msg.style.display = 'block';
+      msg.style.background = '#fee2e2';
+      msg.style.color = '#dc2626';
+      msg.textContent = 'Error: ' + e.message;
+      btn.textContent = 'Confirm refund';
+      btn.disabled = false;
+    }
+  }
+  window.processRefund = processRefund;
 
   async function fulfillOrder(id) {
     await sb.from('orders').update({ status: 'fulfilled' }).eq('id', id);

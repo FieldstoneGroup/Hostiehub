@@ -1918,7 +1918,10 @@
             ${noteEntries.length ? `<div class="order-notes" style="margin-top:6px">📝 ${noteEntries.map(([k,v]) => `<strong>${k}:</strong> ${v}`).join(' · ')}</div>` : ''}
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">
               ${o.status !== 'fulfilled' ? '<button class="btn btn-success btn-sm" onclick="fulfillOrder(\'' + o.id + '\')">✓ Mark as fulfilled</button>' : '<span style="font-size:13px;color:var(--brand);font-weight:500">✓ Fulfilled</span>'}
-              ${o.stripe_session_id ? '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" onclick="openRefundModal(\'' + o.id + '\',\'' + o.stripe_session_id + '\',' + (parseFloat(o.total)||0) + ',\'full\')">💸 Refund full amount</button><button class="btn btn-sm" style="background:#fff7e6;color:#92600a;border:1.5px solid #fde68a" onclick="openRefundModal(\'' + o.id + '\',\'' + o.stripe_session_id + '\',' + (parseFloat(o.total)||0) + ',\'partial\')">💸 Partial refund</button></div>' : ''}
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                ${o.guest_email ? '<button class="btn btn-sm" style="background:var(--brand-light);color:var(--brand);border:1.5px solid var(--brand)" onclick="resendGuestConfirmation(\'' + o.id + '\')">📧 Resend Confirmation Email</button>' : ''}
+                ${o.stripe_session_id ? '<button class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" onclick="openRefundModal(\'' + o.id + '\',\'' + o.stripe_session_id + '\',' + (parseFloat(o.total)||0) + ',\'full\')">💸 Refund full amount</button><button class="btn btn-sm" style="background:#fff7e6;color:#92600a;border:1.5px solid #fde68a" onclick="openRefundModal(\'' + o.id + '\',\'' + o.stripe_session_id + '\',' + (parseFloat(o.total)||0) + ',\'partial\')">💸 Partial refund</button>' : ''}
+              </div>
             </div>
           </div>
         </div>
@@ -2012,6 +2015,38 @@
     }
   }
   window.processRefund = processRefund;
+
+  async function resendGuestConfirmation(orderId) {
+    const order = hostOrders.find(o => o.id === orderId);
+    if (!order) return;
+    try {
+      const items = typeof order.items === 'string' ? JSON.parse(order.items || '[]') : (order.items || []);
+      const productNotes = typeof order.product_notes === 'string' ? JSON.parse(order.product_notes || '{}') : (order.product_notes || {});
+      const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-order-complete' },
+        body: JSON.stringify({
+          host_id: currentUser.id,
+          guest_name: order.guest_name,
+          guest_email: order.guest_email,
+          checkin_date: order.checkin_date,
+          checkout_date: order.checkout_date,
+          property_name: order.property_name,
+          notes: order.notes,
+          total: order.total,
+          items: JSON.stringify(items),
+          product_notes: JSON.stringify(productNotes),
+          resend_only: true
+        })
+      });
+      const result = await res.json();
+      if (result.ok) showToast('✅ Confirmation email resent to ' + order.guest_email);
+      else showToast('⚠️ Failed to resend: ' + (result.error || 'unknown error'));
+    } catch(e) {
+      showToast('⚠️ Error: ' + e.message);
+    }
+  }
+  window.resendGuestConfirmation = resendGuestConfirmation;
 
   async function fulfillOrder(id) {
     await sb.from('orders').update({ status: 'fulfilled' }).eq('id', id);

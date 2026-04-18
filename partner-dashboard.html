@@ -1019,17 +1019,17 @@
       return;
     }
     list.innerHTML = partnerProducts.map(p => {
-      const codes = Array.isArray(p.postcodes) ? p.postcodes : JSON.parse(p.postcodes || '[]');
       const typeLabel = p.type === 'booking' ? '🔗 Booking link' : '📦 Physical';
       const catLabels = { product: '📦 Product', service: '🛎️ Service', reservation: '🍽️ Reservation', experience: '🏄 Experience' };
       const catLabel = catLabels[p.category] || '📦 Product';
       const priceLabel = p.type === 'booking' ? 'Free — booking link' : '$' + (p.wholesale_price || 0) + ' wholesale';
+      const radiusLabel = (p.service_radius_km == null) ? 'No limit' : 'Within ' + p.service_radius_km + ' km';
       return '<div class="item-row">' +
         '<div class="item-thumb">' + (p.image_url ? '<img src="' + p.image_url + '">' : (p.type === 'booking' ? '🔗' : '📦')) + '</div>' +
         '<div class="item-info"><div class="item-name">' + p.name +
           ' <span class="' + (p.active ? 'badge-active' : 'badge-inactive') + '">' + (p.active ? 'Active' : 'Inactive') + '</span>' +
           ' <span class="badge-type">' + catLabel + '</span></div>' +
-          '<div class="item-meta"><span>💰 ' + priceLabel + '</span><span>📍 ' + (codes.length ? codes.join(', ') : 'All areas') + '</span></div>' +
+          '<div class="item-meta"><span>💰 ' + priceLabel + '</span><span>📍 ' + radiusLabel + '</span></div>' +
         '</div>' +
         '<div style="display:flex;gap:8px;flex-shrink:0">' +
           '<button class="btn btn-outline btn-sm" onclick="editProduct(\'' + p.id + '\')">Edit</button>' +

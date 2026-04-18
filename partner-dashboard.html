@@ -1562,11 +1562,14 @@
   window.suggestListingLocation = suggestListingLocation;
   window.selectListingLocation = selectListingLocation;
 
-  // Wire up listing location input via addEventListener (avoids Cloudflare oninput stripping)
-  document.addEventListener('DOMContentLoaded', function() {
+  // Wire listing location input — use interval to wait until element exists
+  const _locInterval = setInterval(function() {
     const locEl = document.getElementById('pListingLocation');
-    if (locEl) locEl.addEventListener('input', function() { suggestListingLocation(this.value); });
-  });
+    if (locEl) {
+      locEl.addEventListener('input', function() { suggestListingLocation(this.value); });
+      clearInterval(_locInterval);
+    }
+  }, 300);
 
   function addProductPostcode() {
     const input = document.getElementById('pPostcodeInput');

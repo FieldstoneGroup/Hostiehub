@@ -629,14 +629,18 @@
     allProducts = prods || [];
     properties = props || [];
 
-    // Fetch business names for partner products
+    // Fetch business names and locations for partner products
     const partnerIds = [...new Set(allProducts.filter(p => p.partner_id).map(p => p.partner_id))];
     if (partnerIds.length > 0) {
-      const { data: partnerRows } = await sb.from('partners').select('id, business_name').in('id', partnerIds);
+      const { data: partnerRows } = await sb.from('partners').select('id, business_name, business_lat, business_lng, service_lat, service_lng').in('id', partnerIds);
       if (partnerRows) {
         const partnerMap = {};
-        partnerRows.forEach(p => { partnerMap[p.id] = p.business_name; });
-        allProducts = allProducts.map(p => ({ ...p, partner_business_name: p.partner_id ? (partnerMap[p.partner_id] || 'Local Partner') : null }));
+        partnerRows.forEach(p => { partnerMap[p.id] = p; });
+        allProducts = allProducts.map(p => {
+          if (!p.partner_id || !partnerMap[p.partner_id]) return p;
+          const pr = partnerMap[p.partner_id];
+          return { ...p, partner_business_name: pr.business_name || 'Local Partner', partner_business_lat: pr.business_lat, partner_business_lng: pr.business_lng, partner_service_lat: pr.service_lat, partner_service_lng: pr.service_lng };
+        });
       }
     }
 
@@ -783,7 +787,37 @@
   }
   window.switchStoreTab = switchStoreTab;
 
-  function renderLocalTab() {
+  let hostGeoCache = { lat: null, lng: null };
+
+  function haversineKmStore(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  async function geocodePropertyForDistance() {
+    if (hostGeoCache.lat) return; // already cached
+    const prop = properties.find(p => p.id === selectedPropertyId);
+    const addr = prop?.address || prop?.postcode;
+    if (!addr) return;
+    try {
+      const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(addr + ', Australia') + '&format=json&limit=1', {
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'HostieHub/1.0' }
+      });
+      const data = await res.json();
+      if (data?.[0]) {
+        hostGeoCache.lat = parseFloat(data[0].lat);
+        hostGeoCache.lng = parseFloat(data[0].lon);
+      }
+    } catch(e) {}
+  }
+
+  async function renderLocalTab() {
+    await geocodePropertyForDistance();
     const partnerCats = ['local_products', 'local_services', 'local_attractions'];
     const base = selectedPropertyId ? allProducts.filter(p => {
       if (p.available_all_properties !== false) return true;
@@ -822,6 +856,18 @@
           : isBookingLink ? '<span style="font-size:12px;color:var(--muted)">🔗 Book direct</span>'
           : '<span style="font-size:12px;color:#1a5fa8;font-weight:600">🤝 Request service</span>';
 
+      // Distance calculation
+      let distanceTag = '';
+      const bizLat = p.partner_business_lat;
+      const bizLng = p.partner_business_lng;
+      if (bizLat && bizLng && hostGeoCache.lat && hostGeoCache.lng) {
+        const dist = haversineKmStore(hostGeoCache.lat, hostGeoCache.lng, bizLat, bizLng);
+        const distStr = dist < 1 ? Math.round(dist * 1000) + 'm away' : dist.toFixed(1) + 'km away';
+        distanceTag = '<span style="font-size:11px;color:#1a5fa8;font-weight:600;background:#e8f0fb;padding:2px 8px;border-radius:50px">📍 ' + distStr + '</span>';
+      } else if (p.partner_service_lat || p.partner_service_lng) {
+        distanceTag = '<span style="font-size:11px;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:50px">📍 Available in your area</span>';
+      }
+
       return `
       <div class="partner-card" style="animation-delay:${i * 0.06}s">
         <div class="partner-card-header">
@@ -831,7 +877,10 @@
         <div class="product-img">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '✨')}</div>
         <div class="product-body">
           ${p.partner_product_id ? '' : `<div class="product-category">${p.category || ''}</div>`}
-          <div class="product-name">${p.name}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+            <div class="product-name" style="margin-bottom:0">${p.name}</div>
+            ${distanceTag}
+          </div>
           <div class="product-desc">${p.description || ''}</div>
         </div>
         ${hasNotes ? `<div class="pc-notes-box"><div class="pc-notes-box-inner">🎁 ${p.partner_notes}</div></div>` : ''}

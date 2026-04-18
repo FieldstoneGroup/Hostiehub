@@ -675,6 +675,14 @@
               </select>
               <div class="field-hint">Hosts within this distance from your suburb will see your listings.</div>
             </div>
+            <div class="field">
+              <label>Business address <span style="font-weight:300;font-size:12px">(optional — for accurate guest distance)</span></label>
+              <div style="position:relative">
+                <input type="text" id="businessAddressInput" placeholder="e.g. 12 Hunter St, Newcastle NSW 2300" style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" oninput="suggestBusinessAddress(this.value)" autocomplete="off">
+                <div id="businessAddressSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:4px"></div>
+              </div>
+              <div class="field-hint">Enter a full street address to show guests exactly how far away you are. If left as suburb only, guests will see "Available in your area".</div>
+            </div>
             <div id="serviceAreaCurrent" style="display:none;background:var(--partner-light);border:1.5px solid var(--partner);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--partner);margin-bottom:12px"></div>
             <button class="btn btn-primary btn-sm" onclick="saveServiceArea()">Save service area</button>
           </div>
@@ -833,6 +841,10 @@
       document.getElementById('serviceSuburbInput').value = partnerData.service_suburb;
       selectedServiceSuburb = { name: partnerData.service_suburb, lat: partnerData.service_lat, lng: partnerData.service_lng };
       if (partnerData.service_radius_km) document.getElementById('serviceRadiusSelect').value = partnerData.service_radius_km;
+    }
+    if (partnerData.business_address) {
+      document.getElementById('businessAddressInput').value = partnerData.business_address;
+      selectedBusinessAddress = { name: partnerData.business_address, lat: partnerData.business_lat, lng: partnerData.business_lng };
     }
     updateServiceAreaDisplay();
   }
@@ -1796,20 +1808,50 @@
     document.getElementById('serviceSuburbSuggestions').style.display = 'none';
   }
 
+  let selectedBusinessAddress = null;
+
+  async function suggestBusinessAddress(query) {
+    if (query.length < 4) { document.getElementById('businessAddressSuggestions').style.display = 'none'; return; }
+    try {
+      const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(query + ', Australia') + '&format=json&addressdetails=1&limit=5', {
+        headers: { 'Accept-Language': 'en', 'User-Agent': 'HostieHub/1.0' }
+      });
+      const data = await res.json();
+      const box = document.getElementById('businessAddressSuggestions');
+      if (!data.length) { box.style.display = 'none'; return; }
+      box.style.display = 'block';
+      box.innerHTML = data.map(r => {
+        const display = r.display_name.split(',').slice(0,3).join(',');
+        return '<div onclick="selectBusinessAddress(' + r.lat + ',' + r.lon + ',\'' + display.replace(/'/g,'') + '\')" style="padding:12px 16px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border)" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'white\'">' + display + '</div>';
+      }).join('');
+    } catch(e) {}
+  }
+
+  function selectBusinessAddress(lat, lng, name) {
+    selectedBusinessAddress = { lat: parseFloat(lat), lng: parseFloat(lng), name };
+    document.getElementById('businessAddressInput').value = name;
+    document.getElementById('businessAddressSuggestions').style.display = 'none';
+  }
+  window.suggestBusinessAddress = suggestBusinessAddress;
+  window.selectBusinessAddress = selectBusinessAddress;
+
   async function saveServiceArea() {
     if (!selectedServiceSuburb) { showToast('⚠️ Please select a suburb from the suggestions'); return; }
     const radius = parseInt(document.getElementById('serviceRadiusSelect').value);
-    const { error } = await sb.from('partners').update({
+    const updateData = {
       service_suburb: selectedServiceSuburb.name,
       service_lat: selectedServiceSuburb.lat,
       service_lng: selectedServiceSuburb.lng,
       service_radius_km: radius,
-    }).eq('user_id', currentUser.id);
+    };
+    if (selectedBusinessAddress) {
+      updateData.business_address = selectedBusinessAddress.name;
+      updateData.business_lat = selectedBusinessAddress.lat;
+      updateData.business_lng = selectedBusinessAddress.lng;
+    }
+    const { error } = await sb.from('partners').update(updateData).eq('user_id', currentUser.id);
     if (error) { showToast('Error: ' + error.message); return; }
-    partnerData.service_suburb = selectedServiceSuburb.name;
-    partnerData.service_lat = selectedServiceSuburb.lat;
-    partnerData.service_lng = selectedServiceSuburb.lng;
-    partnerData.service_radius_km = radius;
+    Object.assign(partnerData, updateData);
     updateServiceAreaDisplay();
     showToast('✓ Service area saved');
   }

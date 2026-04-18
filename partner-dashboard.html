@@ -560,7 +560,6 @@
               </div>
               <div style="flex:1;position:relative">
                 <input type="text" id="pListingLocation" placeholder="e.g. 11 Honeysuckle Dr, Newcastle 2300" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" autocomplete="off">
-                <div id="listingLocationSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:4px"></div>
               </div>
             </div>
             <div class="field-hint">If you have a unit number, enter it separately — e.g. Unit 2, then 11 Honeysuckle Dr. Postcode only → guests see "Available in your area". Full address → guests see exact distance.</div>
@@ -1533,43 +1532,32 @@
   }
 
   let selectedListingLocation = null;
+  let googlePlacesAutocomplete = null;
 
-  async function suggestListingLocation(val) {
-    const box = document.getElementById('listingLocationSuggestions');
-    if (!val || val.length < 3) { box.style.display = 'none'; return; }
-    try {
-      const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(val + ', Australia') + '&format=json&limit=5&addressdetails=1', {
-        headers: { 'Accept-Language': 'en', 'User-Agent': 'HostieHub/1.0' }
-      });
-      const data = await res.json();
-      if (!data.length) { box.style.display = 'none'; return; }
-      box.style.display = 'block';
-      box.innerHTML = data.map(r => {
-        const display = r.display_name.split(',').slice(0, 3).join(',');
-        const isDetailed = !!(r.address?.road || r.address?.house_number);
-        return '<div onclick="selectListingLocation(' + r.lat + ',' + r.lon + ',\'' + display.replace(/'/g, '') + '\',' + isDetailed + ')" style="padding:12px 16px;cursor:pointer;font-size:14px;border-bottom:1px solid var(--border)" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'white\'">' + display + '</div>';
-      }).join('');
-    } catch(e) { box.style.display = 'none'; }
+  function initGooglePlacesAutocomplete() {
+    const input = document.getElementById('pListingLocation');
+    if (!input || !window.google) return;
+    googlePlacesAutocomplete = new google.maps.places.Autocomplete(input, {
+      componentRestrictions: { country: 'au' },
+      fields: ['geometry', 'formatted_address', 'address_components'],
+      types: ['address']
+    });
+    googlePlacesAutocomplete.addListener('place_changed', function() {
+      const place = googlePlacesAutocomplete.getPlace();
+      if (!place.geometry) return;
+      const unit = document.getElementById('pUnitNumber').value.trim();
+      const addr = place.formatted_address;
+      const fullName = unit ? 'Unit ' + unit + ', ' + addr : addr;
+      const isDetailed = true;
+      selectedListingLocation = {
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+        name: fullName,
+        isDetailed
+      };
+    });
   }
-
-  function selectListingLocation(lat, lng, name, isDetailed) {
-    const unit = document.getElementById('pUnitNumber').value.trim();
-    const fullName = unit ? 'Unit ' + unit + ', ' + name : name;
-    selectedListingLocation = { lat: parseFloat(lat), lng: parseFloat(lng), name: fullName, isDetailed };
-    document.getElementById('pListingLocation').value = name;
-    document.getElementById('listingLocationSuggestions').style.display = 'none';
-  }
-  window.suggestListingLocation = suggestListingLocation;
-  window.selectListingLocation = selectListingLocation;
-
-  // Wire listing location input — use interval to wait until element exists
-  const _locInterval = setInterval(function() {
-    const locEl = document.getElementById('pListingLocation');
-    if (locEl) {
-      locEl.addEventListener('input', function() { suggestListingLocation(this.value); });
-      clearInterval(_locInterval);
-    }
-  }, 300);
+  window.initGooglePlacesAutocomplete = initGooglePlacesAutocomplete;
 
   function addProductPostcode() {
     const input = document.getElementById('pPostcodeInput');
@@ -2063,6 +2051,7 @@
     <div class="bn-icon-wrap"><span class="bn-icon">↩</span></div><span>Log out</span>
   </button>
 </nav>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyASHO2PnBzrMB482-CHVAcWV6pPo2chmig&libraries=places&callback=initGooglePlacesAutocomplete" async defer></script>
 <script src="support-widget.js"></script>
 </body>
 </html>

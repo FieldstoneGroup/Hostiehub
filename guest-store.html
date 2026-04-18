@@ -877,7 +877,17 @@
   async function geocodePropertyForDistance() {
     if (hostGeoCache.lat) return; // already cached
     const prop = properties.find(p => p.id === selectedPropertyId);
-    const addr = prop?.address || prop?.postcode;
+    if (!prop) return;
+
+    // Preferred: use coords saved when the host added the property via Google Places
+    if (prop.latitude != null && prop.longitude != null) {
+      hostGeoCache.lat = parseFloat(prop.latitude);
+      hostGeoCache.lng = parseFloat(prop.longitude);
+      return;
+    }
+
+    // Fallback for properties added before Google Places was wired in — geocode via Nominatim
+    const addr = prop.address || prop.postcode;
     if (!addr) return;
     try {
       const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(addr + ', Australia') + '&format=json&limit=1', {

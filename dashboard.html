@@ -1402,24 +1402,61 @@
     `).join('');
   }
 
+  let selectedPropertyLocation = null; // set by Google Places autocomplete
+
+  function initPropertyGooglePlaces() {
+    const input = document.getElementById('propAddress');
+    if (!input || !window.google?.maps?.places || input.dataset.gpWired === '1') return;
+    input.dataset.gpWired = '1';
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      componentRestrictions: { country: 'au' },
+      fields: ['geometry', 'formatted_address', 'address_components'],
+      types: ['address']
+    });
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (!place.geometry) return;
+      selectedPropertyLocation = {
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+        address: place.formatted_address,
+      };
+      input.value = place.formatted_address;
+      // Auto-fill postcode if present
+      const postcodeComp = (place.address_components || []).find(c => c.types.includes('postal_code'));
+      if (postcodeComp) {
+        const pcInput = document.getElementById('propPostcode');
+        if (pcInput && !pcInput.value) pcInput.value = postcodeComp.short_name;
+      }
+    });
+  }
+  window.initPropertyGooglePlaces = initPropertyGooglePlaces; // used as Google Maps JS API callback
+
   function openPropertyModal(id) {
     editingPropertyId = null;
+    selectedPropertyLocation = null;
     document.getElementById('propertyModalTitle').textContent = 'Add property';
     document.getElementById('propNickname').value = '';
     document.getElementById('propAddress').value = '';
     document.getElementById('propPostcode').value = '';
     document.getElementById('propertyModal').classList.add('open');
+    setTimeout(initPropertyGooglePlaces, 100);
   }
 
   function editProperty(id) {
     const p = properties.find(x => x.id === id);
     if (!p) return;
     editingPropertyId = id;
+    // Preload existing coords if previously saved, so editing without retyping address keeps them
+    selectedPropertyLocation = (p.latitude != null && p.longitude != null)
+      ? { lat: p.latitude, lng: p.longitude, address: p.address || '' }
+      : null;
     document.getElementById('propertyModalTitle').textContent = 'Edit property';
     document.getElementById('propNickname').value = p.nickname || '';
     document.getElementById('propAddress').value = p.address || '';
     document.getElementById('propPostcode').value = p.postcode || '';
     document.getElementById('propertyModal').classList.add('open');
+    setTimeout(initPropertyGooglePlaces, 100);
   }
 
   function closePropertyModal() { document.getElementById('propertyModal').classList.remove('open'); }
@@ -1442,7 +1479,16 @@
       }
     }
 
-    const data = { host_id: currentUser.id, nickname, address: document.getElementById('propAddress').value.trim(), postcode: document.getElementById('propPostcode').value.trim() };
+    const address = document.getElementById('propAddress').value.trim();
+    const data = {
+      host_id: currentUser.id,
+      nickname,
+      address,
+      postcode: document.getElementById('propPostcode').value.trim(),
+      // Only write coords if the address actually matches the Places-selected one — otherwise clear them
+      latitude: (selectedPropertyLocation && selectedPropertyLocation.address === address) ? selectedPropertyLocation.lat : null,
+      longitude: (selectedPropertyLocation && selectedPropertyLocation.address === address) ? selectedPropertyLocation.lng : null,
+    };
     if (editingPropertyId) {
       await sb.from('properties').update(data).eq('id', editingPropertyId);
       showToast('✅ Property updated');
@@ -3007,6 +3053,7 @@
     }
   });
 </script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCAuZsZ7pSq0EOoksNz__mSNAOQtLuFkk&libraries=places&callback=initPropertyGooglePlaces" async defer></script>
 <script src="support-widget.js"></script>
 </body>
 </html>

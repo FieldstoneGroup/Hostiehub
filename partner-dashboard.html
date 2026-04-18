@@ -267,7 +267,7 @@
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-label">Active Products</div><div class="stat-value" id="statProducts">0</div><div class="stat-sub">Live in stores</div></div>
         <div class="stat-card"><div class="stat-label">Active Vouchers</div><div class="stat-value" id="statVouchers">0</div><div class="stat-sub">Live in stores</div></div>
-        <div class="stat-card"><div class="stat-label">Views this month</div><div class="stat-value" id="statViews">0</div><div class="stat-sub">Guest impressions</div></div>
+        <div class="stat-card"><div class="stat-label">Clicks this month</div><div class="stat-value" id="statViews">0</div><div class="stat-sub">Listing clicks</div></div>
         <div class="stat-card"><div class="stat-label">Postcodes</div><div class="stat-value" id="statPostcodes">0</div><div class="stat-sub">Areas covered</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
@@ -314,10 +314,8 @@
       </div>
 
       <!-- Summary stats -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px" id="analyticsGrid">
-        <div class="analytics-stat"><div class="analytics-stat-val" id="aViews">–</div><div class="analytics-stat-label">👁 Total views</div></div>
-        <div class="analytics-stat"><div class="analytics-stat-val" id="aClicks">–</div><div class="analytics-stat-label">🖱 Clicks / Book now</div></div>
-        <div class="analytics-stat"><div class="analytics-stat-val" id="aCtr">–</div><div class="analytics-stat-label">% Click-through rate</div></div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px" id="analyticsGrid">
+        <div class="analytics-stat"><div class="analytics-stat-val" id="aClicks">–</div><div class="analytics-stat-label">🖱 Total Clicks / Bookings</div></div>
         <div class="analytics-stat"><div class="analytics-stat-val" id="aPurchases">–</div><div class="analytics-stat-label">✅ Purchases</div></div>
       </div>
 
@@ -934,25 +932,20 @@
     const cutoff = analyticsDays > 0 ? new Date(Date.now() - analyticsDays * 24 * 60 * 60 * 1000) : null;
     const filtered = cutoff ? allEvents.filter(e => new Date(e.created_at) >= cutoff) : allEvents;
 
-    const views = filtered.filter(e => e.event_type === 'view').length;
     const clicks = filtered.filter(e => e.event_type === 'click').length;
     const purchases = filtered.filter(e => e.event_type === 'purchase').length;
-    const ctr = views > 0 ? ((clicks / views) * 100).toFixed(1) + '%' : '–';
 
-    document.getElementById('aViews').textContent = views;
-    document.getElementById('aClicks').textContent = clicks;
-    document.getElementById('aCtr').textContent = ctr;
-    document.getElementById('aPurchases').textContent = purchases;
-    document.getElementById('statViews').textContent = views;
+    document.getElementById('aClicks').textContent = clicks || '–';
+    document.getElementById('aPurchases').textContent = purchases || '–';
+    document.getElementById('statViews').textContent = clicks;
 
-    // Per-product breakdown
+    // Per-product breakdown — ranked by clicks
     const byProduct = {};
     filtered.forEach(e => {
       const pid = e.partner_product_id;
       const name = e.partner_products ? e.partner_products.name : 'Unknown';
       const type = e.partner_products ? e.partner_products.type : '';
-      if (!byProduct[pid]) byProduct[pid] = { name, type, views: 0, clicks: 0, purchases: 0 };
-      if (e.event_type === 'view') byProduct[pid].views++;
+      if (!byProduct[pid]) byProduct[pid] = { name, type, clicks: 0, purchases: 0 };
       if (e.event_type === 'click') byProduct[pid].clicks++;
       if (e.event_type === 'purchase') byProduct[pid].purchases++;
     });
@@ -961,22 +954,18 @@
     const tableEl = document.getElementById('analyticsTable');
 
     if (!rows.length) {
-      tableEl.innerHTML = '<div class="empty-state" style="padding:40px 20px"><div class="empty-icon">📊</div><h3>No data yet</h3><p>Analytics will appear once guests start viewing your products in host stores.</p></div>';
+      tableEl.innerHTML = '<div class="empty-state" style="padding:40px 20px"><div class="empty-icon">📊</div><h3>No data yet</h3><p>Analytics will appear once guests start clicking your listings in host stores.</p></div>';
       return;
     }
 
-    const maxViews = Math.max(...rows.map(r => r.views), 1);
-    tableEl.innerHTML = '<table class="analytics-table"><thead><tr><th>Product</th><th>Type</th><th>Views</th><th>Clicks / Bookings</th><th>Purchases</th><th>CTR</th></tr></thead><tbody>' +
-      rows.sort((a, b) => b.views - a.views).map(r => {
-        const rowCtr = r.views > 0 ? ((r.clicks / r.views) * 100).toFixed(1) + '%' : '–';
-        const barWidth = Math.round((r.views / maxViews) * 100);
+    const maxClicks = Math.max(...rows.map(r => r.clicks), 1);
+    tableEl.innerHTML = '<table class="analytics-table"><thead><tr><th>Listing</th><th>Clicks</th><th>Purchases</th></tr></thead><tbody>' +
+      rows.sort((a, b) => b.clicks - a.clicks).map(r => {
+        const barWidth = Math.round((r.clicks / maxClicks) * 100);
         return '<tr>' +
           '<td><strong>' + r.name + '</strong><div class="bar-wrap" style="margin-top:6px"><div class="bar-fill" style="width:' + barWidth + '%"></div></div></td>' +
-          '<td><span class="badge-type" style="font-size:11px">' + (r.type === 'booking' ? '🔗 Booking' : '📦 Physical') + '</span></td>' +
-          '<td>' + r.views + '</td>' +
-          '<td>' + r.clicks + '</td>' +
+          '<td style="font-weight:700;color:var(--partner)">' + r.clicks + '</td>' +
           '<td>' + r.purchases + '</td>' +
-          '<td>' + rowCtr + '</td>' +
           '</tr>';
       }).join('') +
       '</tbody></table>';

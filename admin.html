@@ -147,6 +147,7 @@
       <button class="nav-item" id="nav-redemptions" onclick="showPage('redemptions',this)"><span class="nav-icon">🎟️</span>Voucher Redemptions</button>
       <button class="nav-item" id="nav-orders" onclick="showPage('orders',this)"><span class="nav-icon">📦</span>All Orders</button>
       <button class="nav-item" id="nav-events" onclick="showPage('events',this)"><span class="nav-icon">👁️</span>Store Events</button>
+      <button class="nav-item" id="nav-analytics" onclick="showPage('analytics',this)"><span class="nav-icon">📈</span>Analytics</button>
     </div>
     <div class="sidebar-footer">
       <button class="nav-item" onclick="doLogout()" style="color:rgba(255,255,255,0.4)"><span class="nav-icon">→</span>Log out</button>
@@ -309,6 +310,34 @@
         </div>
       </div>
 
+      <!-- ANALYTICS PAGE -->
+      <div class="page" id="page-analytics">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><div><div class="card-title">Store Views by Host</div><div class="card-sub">Total times each host's store was opened</div></div></div>
+          <table><thead><tr><th>Host</th><th>Store Name</th><th>Store Views</th><th>Orders</th><th>Revenue</th></tr></thead>
+          <tbody id="analyticsHostsTable"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Partner Listings — Ranked by Clicks</div><div class="card-sub">All partner listing clicks across all host stores</div></div></div>
+          <table><thead><tr><th>Listing</th><th>Partner</th><th>Type</th><th>Clicks</th><th>Purchases</th></tr></thead>
+          <tbody id="analyticsPartnerTable"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
+      <!-- ANALYTICS PAGE -->
+      <div class="page" id="page-analytics">
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><div><div class="card-title">Store Views by Host</div><div class="card-sub">Total times each host's store was opened</div></div></div>
+          <table><thead><tr><th>Host</th><th>Store Name</th><th>Store Views</th><th>Orders</th><th>Revenue</th></tr></thead>
+          <tbody id="analyticsHostTable"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Partner Listings — Ranked by Clicks</div><div class="card-sub">Total clicks across all host stores</div></div></div>
+          <table><thead><tr><th>Listing</th><th>Partner</th><th>Type</th><th>Clicks</th><th>Purchases</th></tr></thead>
+          <tbody id="analyticsPartnerTable"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody></table>
+        </div>
+      </div>
+
       <!-- ACTIVITY PAGE -->
       <div class="page" id="page-activity">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
@@ -347,7 +376,7 @@
   const ADMIN_EMAILS = ['hello@fieldstonegroup.com.au', 'luke@stayable.co'];
   const ADMIN_PASSWORD = 'Kahibah123';
 
-  let allHosts = [], allPartners = [], allOrders = [], allRedemptions = [], allEvents = [], allPartnerProducts = [];
+  let allHosts = [], allPartners = [], allOrders = [], allRedemptions = [], allEvents = [], allPartnerProducts = [], allPartnerEvents = [];
   let currentUser = null;
 
   // ── AUTH ──
@@ -389,8 +418,9 @@
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-' + name).classList.add('active');
     if (btn) btn.classList.add('active');
-    const titles = { overview:'Dashboard', hosts:'Host Accounts', partners:'Partner Accounts', redemptions:'Voucher Redemptions', orders:'All Orders', events:'Store Events', activity:'Live Activity', 'host-detail':'Host Detail', 'partner-detail':'Partner Detail' };
+    const titles = { overview:'Dashboard', hosts:'Host Accounts', partners:'Partner Accounts', redemptions:'Voucher Redemptions', orders:'All Orders', events:'Store Events', activity:'Live Activity', analytics:'Analytics', 'host-detail':'Host Detail', 'partner-detail':'Partner Detail' };
     document.getElementById('topbarTitle').textContent = titles[name] || name;
+    if (name === 'analytics') renderAdminAnalytics();
   }
 
   // ── BOOT ──
@@ -405,6 +435,7 @@
     renderAllOrders();
     renderEvents();
     renderActivity();
+    renderAdminAnalytics();
   }
 
   async function loadAllData() {
@@ -415,7 +446,8 @@
       { data: redemptions },
       { data: events },
       { data: partnerProducts },
-      { data: products }
+      { data: products },
+      { data: partnerEvents }
     ] = await Promise.all([
       sb.from('hosts').select('*').order('created_at', { ascending: false }),
       sb.from('partners').select('*').order('created_at', { ascending: false }),
@@ -424,6 +456,7 @@
       sb.from('store_events').select('*').order('created_at', { ascending: false }).limit(500),
       sb.from('partner_products').select('*').order('created_at', { ascending: false }),
       sb.from('products').select('*').order('created_at', { ascending: false }),
+      sb.from('partner_product_events').select('*, partner_products(name, type, partners(business_name))').order('created_at', { ascending: false }).limit(2000),
     ]);
     allHosts = hosts || [];
     allPartners = partners || [];
@@ -432,11 +465,58 @@
     allEvents = events || [];
     allPartnerProducts = partnerProducts || [];
     allProducts = products || [];
+    allPartnerEvents = partnerEvents || [];
   }
 
   let allProducts = [];
 
-  // ── OVERVIEW ──
+  function renderAdminAnalytics() {
+    // Store views per host
+    const viewsByHost = {};
+    allEvents.filter(e => e.event_type === 'open').forEach(e => {
+      viewsByHost[e.host_id] = (viewsByHost[e.host_id] || 0) + 1;
+    });
+
+    const hostRows = allHosts.map(h => {
+      const views = viewsByHost[h.id] || 0;
+      const orders = allOrders.filter(o => o.host_id === h.id);
+      const revenue = orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+      return { h, views, orderCount: orders.length, revenue };
+    }).sort((a, b) => b.views - a.views);
+
+    document.getElementById('analyticsHostTable').innerHTML = hostRows.map(({ h, views, orderCount, revenue }) =>
+      '<tr><td><strong>' + (h.full_name || h.username || '—') + '</strong></td>' +
+      '<td style="color:var(--muted)">' + (h.store_name || '—') + '</td>' +
+      '<td style="font-weight:700">' + views.toLocaleString() + '</td>' +
+      '<td>' + orderCount + '</td>' +
+      '<td style="color:var(--brand);font-weight:600">' + (revenue > 0 ? '$' + revenue.toFixed(0) : '–') + '</td></tr>'
+    ).join('') || '<tr><td colspan="5" class="empty">No data yet</td></tr>';
+
+    // Partner listings ranked by clicks
+    const clicksByProduct = {};
+    allPartnerEvents.filter(e => e.event_type === 'click').forEach(e => {
+      const pid = e.partner_product_id;
+      const name = e.partner_products?.name || 'Unknown';
+      const type = e.partner_products?.type || '';
+      const biz = e.partner_products?.partners?.business_name || '—';
+      if (!clicksByProduct[pid]) clicksByProduct[pid] = { name, type, biz, clicks: 0, purchases: 0 };
+      clicksByProduct[pid].clicks++;
+    });
+    allPartnerEvents.filter(e => e.event_type === 'purchase').forEach(e => {
+      const pid = e.partner_product_id;
+      if (clicksByProduct[pid]) clicksByProduct[pid].purchases++;
+    });
+
+    const partnerRows = Object.values(clicksByProduct).sort((a, b) => b.clicks - a.clicks);
+    document.getElementById('analyticsPartnerTable').innerHTML = partnerRows.map(r =>
+      '<tr><td><strong>' + r.name + '</strong></td>' +
+      '<td style="color:var(--muted)">' + r.biz + '</td>' +
+      '<td><span class="badge badge-grey">' + (r.type === 'booking' ? '🔗 Booking' : '🤝 Request') + '</span></td>' +
+      '<td style="font-weight:700;color:var(--brand)">' + r.clicks + '</td>' +
+      '<td>' + r.purchases + '</td></tr>'
+    ).join('') || '<tr><td colspan="5" class="empty">No click data yet</td></tr>';
+  }
+
   function renderOverview() {
     document.getElementById('statHosts').textContent = allHosts.length;
     document.getElementById('statPartners').textContent = allPartners.length;

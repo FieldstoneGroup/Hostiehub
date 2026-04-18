@@ -554,7 +554,7 @@
 
       <!-- Top stats -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
-        <div class="stat-card"><div class="stat-label">Store Opens</div><div class="stat-value" id="aStoreOpens">–</div><div class="stat-sub">Unique visits</div></div>
+        <div class="stat-card"><div class="stat-label">Store Views</div><div class="stat-value" id="aStoreOpens">–</div><div class="stat-sub">Total page loads</div></div>
         <div class="stat-card"><div class="stat-label">Product Clicks</div><div class="stat-value" id="aProductClicks">–</div><div class="stat-sub">Add to cart taps</div></div>
         <div class="stat-card"><div class="stat-label">Orders</div><div class="stat-value" id="aOrders">–</div><div class="stat-sub">Completed</div></div>
         <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value" id="aRevenue">–</div><div class="stat-sub">Total earnings</div></div>
@@ -2341,17 +2341,21 @@
       msg.style.background = '#fff7e6';
       msg.style.color = '#92600a';
       msg.textContent = 'Deleting your account...';
-      // Delete host data
-      await sb.from('products').delete().eq('host_id', currentUser.id);
-      await sb.from('orders').delete().eq('host_id', currentUser.id);
-      await sb.from('store_events').delete().eq('host_id', currentUser.id);
-      await sb.from('partner_interactions').delete().eq('host_id', currentUser.id);
-      await sb.from('properties').delete().eq('host_id', currentUser.id);
-      await sb.from('hosts').delete().eq('user_id', currentUser.id);
-      // Delete auth user
+      const hid = currentUser.id;
+      // Get host record id
+      const { data: hostRow } = await sb.from('hosts').select('id').eq('user_id', hid).maybeSingle();
+      const hostId = hostRow?.id;
+      // Delete all products in this host's store (host products + partner listings added to store)
+      await sb.from('products').delete().eq('host_id', hostId || hid);
+      await sb.from('orders').delete().eq('host_id', hostId || hid);
+      await sb.from('store_events').delete().eq('host_id', hostId || hid);
+      await sb.from('partner_interactions').delete().eq('host_id', hostId || hid);
+      await sb.from('properties').delete().eq('host_id', hostId || hid);
+      await sb.from('hosts').delete().eq('user_id', hid);
       await sb.auth.signOut();
       window.location.href = 'index.html';
     } catch(e) {
+      msg.style.display = 'block';
       msg.style.background = '#fee2e2';
       msg.style.color = '#dc2626';
       msg.textContent = 'Error deleting account: ' + e.message;

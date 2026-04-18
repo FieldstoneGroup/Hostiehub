@@ -808,7 +808,7 @@
 
       if (p.partner_product_id && p.partner_id && !loggedViews.has(p.id)) {
         loggedViews.add(p.id);
-        logPartnerEvent(p.partner_product_id, p.partner_id, 'view');
+        // Views no longer tracked — only clicks
       }
 
       const typeTag = isBookingLink ? '🔗 Book direct' : '🤝 Request';
@@ -953,10 +953,10 @@
       const isDemo = hostData && hostData.is_demo;
       const isBookingLink = p.partner_product_type === 'booking' && p.partner_booking_url;
 
-      // Log view event for partner products (once per product per session)
+      // Log click events for partner products only when guest interacts
       if (p.partner_product_id && p.partner_id && !loggedViews.has(p.id)) {
         loggedViews.add(p.id);
-        logPartnerEvent(p.partner_product_id, p.partner_id, 'view');
+        // No longer logging views — only clicks are tracked
       }
 
       if (isVoucher) {

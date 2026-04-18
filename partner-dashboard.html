@@ -866,7 +866,7 @@
     document.getElementById('page-' + name).classList.add('active');
     if (btn) btn.classList.add('active');
     document.getElementById('topbarTitle').textContent = pageTitles[name] || name;
-    if (name === 'newproduct') { editingProductId = null; clearProductForm(); toggleProductType(); updatePreview(); }
+    if (name === 'newproduct') { editingProductId = null; clearProductForm(); toggleProductType(); updatePreview(); setTimeout(initGooglePlacesAutocomplete, 100); }
     if (name === 'newvoucher') clearVoucherForm();
     if (name === 'analytics') renderAnalytics();
     // Sync bottom nav — map sub-pages to parent tab
@@ -1405,9 +1405,8 @@
     }
 
     setTimeout(updatePreview, 50);
+    setTimeout(initGooglePlacesAutocomplete, 100);
   }
-
-  // ── RADIUS POSTCODE PICKER ──
   // NSW suburb data: [postcode, suburb, lat, lng]
   const NSW_SUBURBS = [
     ['2000','Sydney CBD',-33.8688,151.2093],['2010','Surry Hills',-33.8882,151.2102],
@@ -1570,7 +1569,9 @@
   function removeProductPostcode(code) { productPostcodes = productPostcodes.filter(p => p !== code); renderProductPostcodes(); }
 
   function renderProductPostcodes() {
-    document.getElementById('pPostcodeTags').innerHTML = productPostcodes.map(p =>
+    const el = document.getElementById('pPostcodeTags');
+    if (!el) return;
+    el.innerHTML = productPostcodes.map(p =>
       '<div class="postcode-tag">' + p + ' <button onclick="removeProductPostcode(\'' + p + '\')">✕</button></div>'
     ).join('');
   }
@@ -2051,7 +2052,7 @@
     <div class="bn-icon-wrap"><span class="bn-icon">↩</span></div><span>Log out</span>
   </button>
 </nav>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyASHO2PnBzrMB482-CHVAcWV6pPo2chmig&libraries=places&callback=initGooglePlacesAutocomplete" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCAuZsZ7pSq0EOoksNz__mSNAOQtLuFkk&libraries=places&callback=initGooglePlacesAutocomplete" async defer></script>
 <script src="support-widget.js"></script>
 </body>
 </html>

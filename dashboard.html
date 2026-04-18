@@ -978,8 +978,7 @@
     </div>
     <div class="modal-body">
       <div class="field"><label>Property nickname</label><input type="text" id="propNickname" placeholder="e.g. The Beach House, Unit 4B, Darby St"></div>
-      <div class="field"><label>Full address</label><input type="text" id="propAddress" placeholder="e.g. 12 Ocean Drive, Newcastle NSW 2300"></div>
-      <div class="field"><label>Postcode</label><input type="text" id="propPostcode" placeholder="e.g. 2300"></div>
+      <div class="field"><label>Full address</label><input type="text" id="propAddress" placeholder="Start typing and pick a match" autocomplete="off"><div class="field-hint" style="margin-top:6px">Pick from the Google suggestions so distance to local partners is accurate.</div></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closePropertyModal()">Cancel</button>
@@ -1422,12 +1421,6 @@
         address: place.formatted_address,
       };
       input.value = place.formatted_address;
-      // Auto-fill postcode if present
-      const postcodeComp = (place.address_components || []).find(c => c.types.includes('postal_code'));
-      if (postcodeComp) {
-        const pcInput = document.getElementById('propPostcode');
-        if (pcInput && !pcInput.value) pcInput.value = postcodeComp.short_name;
-      }
     });
   }
   window.initPropertyGooglePlaces = initPropertyGooglePlaces; // used as Google Maps JS API callback
@@ -1438,7 +1431,6 @@
     document.getElementById('propertyModalTitle').textContent = 'Add property';
     document.getElementById('propNickname').value = '';
     document.getElementById('propAddress').value = '';
-    document.getElementById('propPostcode').value = '';
     document.getElementById('propertyModal').classList.add('open');
     setTimeout(initPropertyGooglePlaces, 100);
   }
@@ -1447,14 +1439,12 @@
     const p = properties.find(x => x.id === id);
     if (!p) return;
     editingPropertyId = id;
-    // Preload existing coords if previously saved, so editing without retyping address keeps them
     selectedPropertyLocation = (p.latitude != null && p.longitude != null)
       ? { lat: p.latitude, lng: p.longitude, address: p.address || '' }
       : null;
     document.getElementById('propertyModalTitle').textContent = 'Edit property';
     document.getElementById('propNickname').value = p.nickname || '';
     document.getElementById('propAddress').value = p.address || '';
-    document.getElementById('propPostcode').value = p.postcode || '';
     document.getElementById('propertyModal').classList.add('open');
     setTimeout(initPropertyGooglePlaces, 100);
   }
@@ -1484,8 +1474,7 @@
       host_id: currentUser.id,
       nickname,
       address,
-      postcode: document.getElementById('propPostcode').value.trim(),
-      // Only write coords if the address actually matches the Places-selected one — otherwise clear them
+      // Only write coords if the address matches the Places-selected one
       latitude: (selectedPropertyLocation && selectedPropertyLocation.address === address) ? selectedPropertyLocation.lat : null,
       longitude: (selectedPropertyLocation && selectedPropertyLocation.address === address) ? selectedPropertyLocation.lng : null,
     };

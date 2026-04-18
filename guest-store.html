@@ -647,7 +647,7 @@
     const [{ data: prods }, { data: props }, { data: livePartnerProducts, error: ppError }] = await Promise.all([
       sb.from('products').select('*').eq('host_id', host.id).eq('active', true).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true }),
       sb.from('properties').select('*').eq('host_id', host.id).order('nickname'),
-      sb.from('partner_products').select('*, partners(id, business_name, phone, contact_name, full_name)').eq('active', true),
+      sb.from('partner_products').select('*, partners(id, business_name, phone, contact_name)').eq('active', true),
     ]);
     if (ppError) console.error('[Hostie] partner_products fetch error:', ppError);
 

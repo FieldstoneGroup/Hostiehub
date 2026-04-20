@@ -1095,6 +1095,7 @@
     return data.publicUrl;
   }
   let selectedEmoji = '✨';
+  let sortedPresets = [];
 
   const emojis = ['🌸','🧺','🍾','🕐','🏄','🚗','🎁','🌿','☕','🍫','🧁','🎂','🌊','🏠','🧴','🛁','🎵','🐾','🎉','🍕','🥗','🍷','🎈','🍫','🛎️','🧹'];
   const swatchColours = ['#2C6E6A','#1d4d4a','#E8A838','#e74c3c','#8e44ad','#2980b9','#27ae60','#e67e22','#1a1a1a'];
@@ -1834,8 +1835,8 @@
 
   function openPresetModal() {
     const list = document.getElementById('presetList');
-    const sorted = [...PRESET_PRODUCTS].sort((a, b) => a.name.localeCompare(b.name));
-    list.innerHTML = sorted.map((p, i) => `
+    sortedPresets = [...PRESET_PRODUCTS].sort((a, b) => a.name.localeCompare(b.name));
+    list.innerHTML = sortedPresets.map((p, i) => `
       <label style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
         <input type="checkbox" class="preset-check" value="${i}" style="width:18px;height:18px;accent-color:var(--brand);flex-shrink:0">
         <div style="font-size:24px;flex-shrink:0">${p.emoji}</div>
@@ -1853,7 +1854,7 @@
   async function addSelectedPresets() {
     const selected = [...document.querySelectorAll('.preset-check:checked')].map(cb => parseInt(cb.value));
     if (selected.length === 0) { showToast('⚠️ Please select at least one product'); return; }
-    const inserts = selected.map(i => ({ ...sorted[i], host_id: currentUser.id, available_all_properties: true, active: true }));
+    const inserts = selected.map(i => ({ ...sortedPresets[i], host_id: currentUser.id, available_all_properties: true, active: true }));
     const { error } = await sb.from('products').insert(inserts);
     if (error) { showToast('⚠️ Error adding presets'); console.error(error); return; }
     showToast(`✅ ${selected.length} product${selected.length > 1 ? 's' : ''} added!`);

@@ -104,6 +104,19 @@
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   .product-img { height: 152px; background: white; display: flex; align-items: center; justify-content: center; font-size: 52px; position: relative; overflow: hidden; border-radius: var(--radius) var(--radius) 0 0; border-bottom: 1px solid #f0ece8; }
   .product-img img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius) var(--radius) 0 0; }
+  .product-img.carousel { touch-action: pan-y; cursor: grab; user-select: none; }
+  .product-img.carousel:active { cursor: grabbing; }
+  .carousel-track { display: flex; width: 100%; height: 100%; transition: transform 0.3s ease; }
+  .carousel-slide { flex: 0 0 100%; width: 100%; height: 100%; }
+  .carousel-slide img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
+  .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.92); border: none; color: #1a1a1a; font-size: 18px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.18); z-index: 2; padding: 0; line-height: 1; transition: background 0.15s, transform 0.15s; }
+  .carousel-btn:hover { background: white; }
+  .carousel-btn:active { transform: translateY(-50%) scale(0.93); }
+  .carousel-btn.prev { left: 8px; }
+  .carousel-btn.next { right: 8px; }
+  .carousel-dots { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 2; padding: 4px 8px; background: rgba(0,0,0,0.25); border-radius: 50px; }
+  .carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.55); border: none; cursor: pointer; padding: 0; transition: background 0.15s, transform 0.15s; }
+  .carousel-dot.active { background: white; transform: scale(1.25); }
   .product-body { padding: 12px 16px; flex: 1; display: flex; flex-direction: column; }
   .product-category { font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--brand); margin-bottom: 5px; }
   .product-name { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; line-height: 1.25; }
@@ -1000,6 +1013,115 @@
     } catch(e) {}
   }
 
+  // ── PRODUCT IMAGE CAROUSEL ──
+  // Global state keyed by product id, so the carousel knows which slide is active
+  const _carouselState = {};
+
+  function getProductImages(p) {
+    let urls = [];
+    if (Array.isArray(p.image_urls)) urls = p.image_urls.filter(Boolean);
+    else if (p.image_urls) { try { urls = (JSON.parse(p.image_urls) || []).filter(Boolean); } catch(e) {} }
+    if (!urls.length && p.image_url) urls = [p.image_url];
+    return urls;
+  }
+
+  function renderProductImageHtml(p, opts) {
+    opts = opts || {};
+    const fitStyle = opts.fit === 'contain'
+      ? 'width:100%;height:100%;object-fit:contain;padding:10px'
+      : 'width:100%;height:100%;object-fit:cover';
+    const urls = getProductImages(p);
+    const altName = (p.name || '').replace(/"/g, '&quot;');
+
+    // No images — emoji fallback
+    if (!urls.length) {
+      const emojiFontSize = opts.emojiFontSize || '';
+      return opts.emojiWrap
+        ? `<span style="${emojiFontSize ? 'font-size:' + emojiFontSize : ''}">${p.emoji || '✨'}</span>`
+        : (p.emoji || '✨');
+    }
+
+    // Single image — simple, no carousel
+    if (urls.length === 1) {
+      return `<img src="${urls[0]}" alt="${altName}" style="${fitStyle}">`;
+    }
+
+    // Multi-image carousel
+    const id = 'car-' + p.id;
+    _carouselState[id] = { index: 0, count: urls.length };
+    const slides = urls.map(u => `<img src="${u}" alt="${altName}" style="flex:0 0 100%;${fitStyle};min-width:0" draggable="false">`).join('');
+    const dots = urls.map((_, i) =>
+      `<button type="button" class="carousel-dot${i === 0 ? ' active' : ''}" data-idx="${i}" onclick="event.stopPropagation();carouselGoTo('${id}',${i})" aria-label="Go to image ${i + 1}" style="width:7px;height:7px;border-radius:50%;border:none;padding:0;cursor:pointer;background:${i === 0 ? 'white' : 'rgba(255,255,255,0.5)'};box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:background 0.2s"></button>`
+    ).join('');
+
+    return `
+      <div class="carousel" data-carousel-id="${id}" style="position:absolute;inset:0;overflow:hidden">
+        <div class="carousel-track" style="display:flex;width:100%;height:100%;transform:translateX(0%);transition:transform 0.25s ease;touch-action:pan-y">${slides}</div>
+        <button type="button" class="carousel-arrow carousel-prev" onclick="event.stopPropagation();carouselStep('${id}',-1)" aria-label="Previous image" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.92);border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;color:#1a1a1a;box-shadow:0 2px 6px rgba(0,0,0,0.18);padding:0;z-index:2">‹</button>
+        <button type="button" class="carousel-arrow carousel-next" onclick="event.stopPropagation();carouselStep('${id}',1)" aria-label="Next image" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.92);border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;color:#1a1a1a;box-shadow:0 2px 6px rgba(0,0,0,0.18);padding:0;z-index:2">›</button>
+        <div class="carousel-dots" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:2">${dots}</div>
+      </div>
+    `;
+  }
+
+  function carouselStep(id, delta) {
+    const s = _carouselState[id];
+    if (!s) return;
+    const next = (s.index + delta + s.count) % s.count;
+    carouselGoTo(id, next);
+  }
+
+  function carouselGoTo(id, index) {
+    const s = _carouselState[id];
+    if (!s) return;
+    s.index = Math.max(0, Math.min(index, s.count - 1));
+    const el = document.querySelector('.carousel[data-carousel-id="' + id + '"]');
+    if (!el) return;
+    const track = el.querySelector('.carousel-track');
+    if (track) track.style.transform = 'translateX(' + (-s.index * 100) + '%)';
+    el.querySelectorAll('.carousel-dot').forEach(d => {
+      const active = parseInt(d.getAttribute('data-idx')) === s.index;
+      d.classList.toggle('active', active);
+      d.style.background = active ? 'white' : 'rgba(255,255,255,0.5)';
+    });
+  }
+
+  // Pointer-based swipe for carousels — delegated so it works for dynamically rendered ones
+  (function installCarouselSwipe() {
+    let startX = 0, startY = 0, dragging = false, currentId = null, swiped = false;
+    const THRESHOLD = 40; // px horizontal movement to trigger a step
+
+    document.addEventListener('pointerdown', (e) => {
+      const el = e.target && e.target.closest && e.target.closest('.carousel[data-carousel-id]');
+      if (!el) return;
+      // Ignore swipe if they hit an arrow or dot directly
+      if (e.target.closest('.carousel-arrow,.carousel-dot')) return;
+      currentId = el.getAttribute('data-carousel-id');
+      startX = e.clientX; startY = e.clientY;
+      dragging = true; swiped = false;
+    }, { passive: true });
+
+    document.addEventListener('pointermove', (e) => {
+      if (!dragging || !currentId || swiped) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      // If vertical scroll dominates, release
+      if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 10) { dragging = false; return; }
+      if (Math.abs(dx) > THRESHOLD) {
+        carouselStep(currentId, dx < 0 ? 1 : -1);
+        swiped = true;
+        dragging = false;
+      }
+    }, { passive: true });
+
+    const release = () => { dragging = false; currentId = null; };
+    document.addEventListener('pointerup', release, { passive: true });
+    document.addEventListener('pointercancel', release, { passive: true });
+  })();
+
+  window.carouselStep = carouselStep;
+  window.carouselGoTo = carouselGoTo;
+
   function renderProducts(products) {
     // Host tab only shows non-partner products
     const hostProducts = products.filter(p => !p.partner_product_id);
@@ -1081,7 +1203,7 @@
 
       return `
       <div class="product-card" style="animation-delay:${i * 0.06}s;position:relative">
-        <div class="product-img">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '✨')}</div>
+        <div class="product-img">${renderProductImageHtml(p)}</div>
         <div class="product-body" style="padding-bottom:${p.partner_notes ? '56px' : '12px'}">
           ${p.partner_product_id ? '' : `<div class="product-category">${categoryLabels[p.category] || ''}</div>`}
           <div class="product-name">${p.name}</div>

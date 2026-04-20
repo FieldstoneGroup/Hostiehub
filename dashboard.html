@@ -958,16 +958,9 @@
         </div>
       </div>
       <div class="field">
-        <label>Product photo</label>
-        <div id="imagePreviewWrap" style="display:none;margin-bottom:10px;position:relative;width:100%;height:180px;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);">
-          <img id="imagePreview" src="" style="width:100%;height:100%;object-fit:cover;">
-          <button onclick="removeImage()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">✕</button>
-        </div>
-        <label id="imageUploadLabel" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;color:var(--muted);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
-          📷 Click to upload a photo
-          <input type="file" id="productImage" accept="image/*" style="display:none" onchange="previewImage(this)">
-        </label>
-        <div class="field-hint">Recommended: square image, at least 400x400px. JPG or PNG.</div>
+        <label>Product photos <span style="font-weight:300;font-size:12px;color:var(--muted)">(up to 3)</span></label>
+        <div id="imageSlots" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"></div>
+        <div class="field-hint">Recommended: square images, at least 400x400px. JPG or PNG. Guests can swipe between them.</div>
       </div>
       <div class="field">
         <label>Available for</label>
@@ -1128,35 +1121,100 @@
   let vouchers = [];
   let editingPropertyId = null;
   let editingProductId = null;
-  let currentImageUrl = null;
-  function previewImage(input) {
-    const file = input.files[0];
+  const MAX_IMAGES = 3;
+  let currentImageUrls = []; // existing URLs from DB (compacted)
+  let pendingImageFiles = []; // File objects awaiting upload (parallel, compacted)
+  let pendingImageDataUrls = []; // data URLs for preview (parallel, compacted)
+
+  function resetImageSlots() {
+    currentImageUrls = [];
+    pendingImageFiles = [];
+    pendingImageDataUrls = [];
+  }
+
+  function loadImageSlotsFromProduct(p) {
+    resetImageSlots();
+    let urls = [];
+    if (Array.isArray(p.image_urls)) urls = p.image_urls.filter(Boolean);
+    else if (p.image_urls) { try { urls = (JSON.parse(p.image_urls) || []).filter(Boolean); } catch (e) {} }
+    if (!urls.length && p.image_url) urls = [p.image_url];
+    currentImageUrls = urls.slice(0, MAX_IMAGES);
+    pendingImageFiles = new Array(currentImageUrls.length).fill(null);
+    pendingImageDataUrls = new Array(currentImageUrls.length).fill(null);
+  }
+
+  function renderImageSlots() {
+    const grid = document.getElementById('imageSlots');
+    if (!grid) return;
+    const slots = [];
+    const filledCount = currentImageUrls.length;
+    // Filled slots
+    for (let i = 0; i < filledCount; i++) {
+      const src = pendingImageDataUrls[i] || currentImageUrls[i];
+      slots.push(`
+        <div style="position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);background:var(--bg)">
+          <img src="${src}" style="width:100%;height:100%;object-fit:cover" alt="">
+          <button type="button" onclick="removeImageSlot(${i})" title="Remove" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.65);color:white;border:none;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;padding:0">✕</button>
+          ${i === 0 ? '<div style="position:absolute;bottom:6px;left:6px;background:rgba(44,110,106,0.9);color:white;font-size:10px;font-weight:700;padding:3px 7px;border-radius:50px;letter-spacing:0.5px">COVER</div>' : ''}
+        </div>
+      `);
+    }
+    // One "Add image" slot if under cap
+    if (filledCount < MAX_IMAGES) {
+      slots.push(`
+        <label style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:12px;color:var(--muted);transition:border-color 0.2s;text-align:center;padding:8px" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:20px">📷</div>
+          <div>+ Add image</div>
+          <input type="file" class="image-slot-input" accept="image/*" style="display:none" onchange="addImageFromInput(this)">
+        </label>
+      `);
+    }
+    // Remaining slots as disabled placeholders to keep grid rhythm
+    const used = filledCount + (filledCount < MAX_IMAGES ? 1 : 0);
+    for (let i = used; i < MAX_IMAGES; i++) {
+      slots.push(`
+        <div style="aspect-ratio:1;border:2px dashed var(--border);border-radius:10px;opacity:0.4;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;background:var(--bg)">Locked</div>
+      `);
+    }
+    grid.innerHTML = slots.join('');
+  }
+
+  function addImageFromInput(input) {
+    const file = input.files && input.files[0];
     if (!file) return;
+    if (currentImageUrls.length >= MAX_IMAGES) return;
     const reader = new FileReader();
     reader.onload = e => {
-      document.getElementById('imagePreview').src = e.target.result;
-      document.getElementById('imagePreviewWrap').style.display = 'block';
-      document.getElementById('imageUploadLabel').style.display = 'none';
+      // Append a new slot
+      currentImageUrls.push(''); // placeholder — pending file takes precedence
+      pendingImageFiles.push(file);
+      pendingImageDataUrls.push(e.target.result);
+      renderImageSlots();
     };
     reader.readAsDataURL(file);
+    // Clear the input so selecting the same file again still triggers onchange
+    input.value = '';
   }
 
-  function removeImage() {
-    document.getElementById('productImage').value = '';
-    document.getElementById('imagePreview').src = '';
-    document.getElementById('imagePreviewWrap').style.display = 'none';
-    document.getElementById('imageUploadLabel').style.display = 'flex';
-    currentImageUrl = null;
+  function removeImageSlot(index) {
+    currentImageUrls.splice(index, 1);
+    pendingImageFiles.splice(index, 1);
+    pendingImageDataUrls.splice(index, 1);
+    renderImageSlots();
   }
 
-  async function uploadProductImage(file, productId) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    const path = `${currentUser.id}/${productId}.${ext}`;
+  async function uploadProductImage(file, productId, index) {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const suffix = (typeof index === 'number') ? `-${index}` : '';
+    const path = `${currentUser.id}/${productId}${suffix}.${ext}`;
     const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
     if (error) { console.error(error); return null; }
     const { data } = sb.storage.from('product-images').getPublicUrl(path);
     return data.publicUrl;
   }
+
+  window.addImageFromInput = addImageFromInput;
+  window.removeImageSlot = removeImageSlot;
   let selectedEmoji = '✨';
   let sortedPresets = [];
   let currentVariants = []; // [{label, price}]
@@ -1762,11 +1820,8 @@
     document.getElementById('pAllProperties').checked = true;
     document.getElementById('propertyChecks').style.display = 'none';
     selectedEmoji = '✨';
-    currentImageUrl = null;
-    document.getElementById('productImage').value = '';
-    document.getElementById('imagePreview').src = '';
-    document.getElementById('imagePreviewWrap').style.display = 'none';
-    document.getElementById('imageUploadLabel').style.display = 'flex';
+    resetImageSlots();
+    renderImageSlots();
     currentVariants = [];
     renderVariants();
     buildEmojiGrid();
@@ -1807,16 +1862,8 @@
     document.getElementById('pCategory').closest('.field').style.display = isPartner ? 'none' : '';
 
     selectedEmoji = p.emoji || '✨';
-    currentImageUrl = p.image_url || null;
-    if (p.image_url) {
-      document.getElementById('imagePreview').src = p.image_url;
-      document.getElementById('imagePreviewWrap').style.display = 'block';
-      document.getElementById('imageUploadLabel').style.display = 'none';
-    } else {
-      document.getElementById('imagePreview').src = '';
-      document.getElementById('imagePreviewWrap').style.display = 'none';
-      document.getElementById('imageUploadLabel').style.display = 'flex';
-    }
+    loadImageSlotsFromProduct(p);
+    renderImageSlots();
     const allProps = p.available_all_properties !== false;
     document.getElementById('pAllProperties').checked = allProps;
     document.getElementById('propertyChecks').style.display = allProps ? 'none' : 'flex';
@@ -1963,8 +2010,9 @@
     const category = document.getElementById('pCategory').value;
     const isExperience = category === 'experience';
 
-    const imageFile = document.getElementById('productImage').files[0];
-    let imageUrl = currentImageUrl;
+    // Capture image state before upload. currentImageUrls holds existing URLs;
+    // pendingImageFiles[i] being truthy means slot i has a new file that needs uploading.
+    const hasAnyPending = pendingImageFiles.some(f => !!f);
 
     const data = {
       host_id: currentUser.id, name, price,
@@ -1985,21 +2033,36 @@
       variants: collectedVariants.length > 0 ? collectedVariants : null,
     };
 
-    if (editingProductId) {
-      if (imageFile) {
-        showToast('⏳ Uploading image...');
-        imageUrl = await uploadProductImage(imageFile, editingProductId);
+    async function buildFinalUrls(productId) {
+      const finalUrls = [];
+      for (let i = 0; i < currentImageUrls.length; i++) {
+        const file = pendingImageFiles[i];
+        if (file) {
+          const uploaded = await uploadProductImage(file, productId, i);
+          if (uploaded) finalUrls.push(uploaded);
+        } else if (currentImageUrls[i]) {
+          finalUrls.push(currentImageUrls[i]);
+        }
       }
-      data.image_url = imageUrl;
+      return finalUrls;
+    }
+
+    if (editingProductId) {
+      if (hasAnyPending) showToast('⏳ Uploading images...');
+      const finalUrls = await buildFinalUrls(editingProductId);
+      data.image_urls = finalUrls.length ? finalUrls : null;
+      data.image_url = finalUrls[0] || null;
       await sb.from('products').update(data).eq('id', editingProductId);
       showToast('✅ Product updated');
     } else {
       const { data: inserted, error } = await sb.from('products').insert(data).select().single();
       if (error) { showToast('⚠️ Error saving product'); return; }
-      if (imageFile) {
-        showToast('⏳ Uploading image...');
-        imageUrl = await uploadProductImage(imageFile, inserted.id);
-        if (imageUrl) await sb.from('products').update({ image_url: imageUrl }).eq('id', inserted.id);
+      if (hasAnyPending || currentImageUrls.length) {
+        showToast('⏳ Uploading images...');
+        const finalUrls = await buildFinalUrls(inserted.id);
+        if (finalUrls.length) {
+          await sb.from('products').update({ image_urls: finalUrls, image_url: finalUrls[0] }).eq('id', inserted.id);
+        }
       }
       showToast('✅ Product added');
     }
@@ -3261,8 +3324,8 @@
   window.onDragOver = onDragOver;
   window.onDrop = onDrop;
   window.onHandleTouchStart = onHandleTouchStart;
-  window.removeImage = removeImage;
-  window.previewImage = previewImage;
+  window.removeImage = function() {}; // deprecated — kept as no-op for any stale references
+  window.previewImage = function() {}; // deprecated — kept as no-op for any stale references
   window.requestUpgradeContact = requestUpgradeContact;
   window.handleLogout = handleLogout;
   window.openAddUserModal =   window.openAddUserModal = openAddUserModal;

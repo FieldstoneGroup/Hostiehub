@@ -1274,47 +1274,54 @@
   ];
 
   async function init() {
-    // Get session — retry up to 3 times to handle token refresh on hard refresh
-    let session = null;
-    for (let i = 0; i < 3; i++) {
-      const { data: { session: s } } = await sb.auth.getSession();
-      if (s) { session = s; break; }
-      await new Promise(r => setTimeout(r, 500));
-    }
+    try {
+      // Get session — retry up to 3 times to handle token refresh on hard refresh
+      let session = null;
+      for (let i = 0; i < 3; i++) {
+        const { data: { session: s } } = await sb.auth.getSession();
+        if (s) { session = s; break; }
+        await new Promise(r => setTimeout(r, 500));
+      }
 
-    // If still no session, wait briefly for onAuthStateChange
-    if (!session) {
-      session = await new Promise(resolve => {
-        const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
-          if (s) { subscription.unsubscribe(); resolve(s); }
+      // If still no session, wait briefly for onAuthStateChange
+      if (!session) {
+        session = await new Promise(resolve => {
+          const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
+            if (s) { subscription.unsubscribe(); resolve(s); }
+          });
+          setTimeout(() => resolve(null), 3000);
         });
-        setTimeout(() => resolve(null), 3000);
-      });
-    }
+      }
 
-    if (!session) { window.location.href = 'signup.html'; return; }
-    currentUser = session.user;
+      if (!session) { window.location.href = 'signup.html'; return; }
+      currentUser = session.user;
 
-    // Set the session explicitly so all subsequent requests use the correct JWT
-    await sb.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
+      // Set the session explicitly so all subsequent requests use the correct JWT
+      await sb.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
 
-    const { data: host } = await sb.from('hosts').select('*').eq('id', currentUser.id).maybeSingle();
-    if (!host && currentUser.email) {
-      const { data: byEmail } = await sb.from('hosts').select('*').eq('email', currentUser.email).maybeSingle();
-      if (byEmail) { currentHost = byEmail; populateUI(); }
-    } else if (host) {
-      currentHost = host; populateUI();
-    }
+      const { data: host } = await sb.from('hosts').select('*').eq('id', currentUser.id).maybeSingle();
+      if (!host && currentUser.email) {
+        const { data: byEmail } = await sb.from('hosts').select('*').eq('email', currentUser.email).maybeSingle();
+        if (byEmail) { currentHost = byEmail; populateUI(); }
+      } else if (host) {
+        currentHost = host; populateUI();
+      }
 
-    await Promise.all([loadProducts(), loadProperties(), loadOrders()]);
-    loadVouchers();
-    loadLocalProducts();
-    loadHostAnalytics();
-    loadNotifEmails();
-    buildEmojiGrid();
-    buildSwatches();
+      // Run each loader independently — one failure mustn't kill the others
+      const safe = async (fn, label) => { try { await fn(); } catch(e) { console.error('[Hostie] ' + label + ' failed:', e); } };
+      await Promise.all([
+        safe(loadProducts, 'loadProducts'),
+        safe(loadProperties, 'loadProperties'),
+        safe(loadOrders, 'loadOrders'),
+      ]);
+      safe(loadVouchers, 'loadVouchers');
+      safe(loadLocalProducts, 'loadLocalProducts');
+      safe(loadHostAnalytics, 'loadHostAnalytics');
+      safe(loadNotifEmails, 'loadNotifEmails');
+      try { buildEmojiGrid(); } catch(e) { console.error('[Hostie] buildEmojiGrid:', e); }
+      try { buildSwatches(); } catch(e) { console.error('[Hostie] buildSwatches:', e); }
 
-    // Handle Stripe Connect return
+      // Handle Stripe Connect return
     const params = new URLSearchParams(window.location.search);
     if (params.get('stripe') === 'success') {
       await sb.from('hosts').update({ stripe_connected: true }).eq('id', currentUser.id);
@@ -1327,8 +1334,11 @@
       showToast('✅ Stripe connected successfully!');
       window.history.replaceState({}, '', 'dashboard.html');
     } else if (params.get('stripe') === 'refresh') {
-      showToast('⚠️ Stripe setup incomplete. Please try again.');
-      window.history.replaceState({}, '', 'dashboard.html');
+        showToast('⚠️ Stripe setup incomplete. Please try again.');
+        window.history.replaceState({}, '', 'dashboard.html');
+      }
+    } catch(e) {
+      console.error('[Hostie] init() failed:', e);
     }
   }
 
@@ -1503,24 +1513,32 @@
   let selectedPropertyLocation = null; // set by Google Places autocomplete
 
   function initPropertyGooglePlaces() {
-    const input = document.getElementById('propAddress');
-    if (!input || !window.google?.maps?.places || input.dataset.gpWired === '1') return;
-    input.dataset.gpWired = '1';
-    const autocomplete = new google.maps.places.Autocomplete(input, {
-      componentRestrictions: { country: 'au' },
-      fields: ['geometry', 'formatted_address', 'address_components'],
-      types: ['address']
-    });
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace();
-      if (!place.geometry) return;
-      selectedPropertyLocation = {
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-        address: place.formatted_address,
-      };
-      input.value = place.formatted_address;
-    });
+    try {
+      const input = document.getElementById('propAddress');
+      if (!input || !window.google?.maps?.places || input.dataset.gpWired === '1') return;
+      if (typeof google.maps.places.Autocomplete !== 'function') {
+        console.warn('[Hostie] google.maps.places.Autocomplete not available — address autocomplete disabled');
+        return;
+      }
+      input.dataset.gpWired = '1';
+      const autocomplete = new google.maps.places.Autocomplete(input, {
+        componentRestrictions: { country: 'au' },
+        fields: ['geometry', 'formatted_address', 'address_components'],
+        types: ['address']
+      });
+      autocomplete.addListener('place_changed', () => {
+        try {
+          const place = autocomplete.getPlace();
+          if (!place.geometry) return;
+          selectedPropertyLocation = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+            address: place.formatted_address,
+          };
+          input.value = place.formatted_address;
+        } catch(e) { console.warn('[Hostie] place_changed handler:', e); }
+      });
+    } catch(e) { console.warn('[Hostie] Google Places init failed:', e); }
   }
   window.initPropertyGooglePlaces = initPropertyGooglePlaces; // used as Google Maps JS API callback
 

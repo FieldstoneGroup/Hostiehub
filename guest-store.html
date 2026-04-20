@@ -401,6 +401,19 @@
   </div>
 </div>
 
+<!-- VARIANT PICKER MODAL -->
+<div class="notes-modal-overlay" id="variantModalOverlay">
+  <div class="notes-modal" style="max-width:440px">
+    <div style="font-size:32px;text-align:center;margin-bottom:10px" id="variantModalEmoji">🧺</div>
+    <h3 style="text-align:center;margin-bottom:4px" id="variantModalTitle">Choose an option</h3>
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:20px" id="variantModalDesc"></p>
+    <div id="variantList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px"></div>
+    <div class="notes-modal-actions" style="flex-direction:column;gap:8px">
+      <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="closeVariantModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- PARTNER REQUEST MODAL -->
 <div class="notes-modal-overlay" id="partnerRequestOverlay">
   <div class="notes-modal" style="max-width:420px">
@@ -1082,7 +1095,9 @@
               : p.service_price
                 ? '<span style="font-size:13px;font-weight:700;color:#2C6E6A">$' + p.service_price + '</span> <small style="font-size:11px;color:#6b7280">' + (p.service_price_unit || '') + '</small>'
                 : '<span style="font-size:12px;color:#92600a;font-weight:600">🤝 Request service</span>')
-            : ('$' + p.price + ' <small>' + (p.partner_product_id ? '' : (p.unit ? '/ ' + p.unit : '')) + '</small>')}</div>
+            : (Array.isArray(p.variants) && p.variants.length > 0
+              ? '<small style="font-size:12px;color:var(--muted);font-weight:400">From </small>$' + Math.min(...p.variants.map(v => Number(v.price) || 0).filter(n => n > 0))
+              : '$' + p.price + ' <small>' + (p.partner_product_id ? '' : (p.unit ? '/ ' + p.unit : '')) + '</small>')}</div>
           ${isDemo
             ? `<button class="add-btn" onclick="handleDemoAdd()">Add +</button>`
             : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">${p.partner_product_type === 'service' ? 'Add →' : 'Add'}</button>`
@@ -1283,9 +1298,19 @@
   // ── CART WITH NOTES ──
   let pendingExpProduct = null;
   let pendingExpBtn = null;
+  let pendingVariantProduct = null;
+  let pendingVariantBtn = null;
 
   function handleAddToCart(product, btn) {
     if (cart.find(i => i.id === product.id)) return;
+
+    // Variant product — show variant picker
+    if (Array.isArray(product.variants) && product.variants.length > 0) {
+      pendingVariantProduct = product;
+      pendingVariantBtn = btn;
+      openVariantModal(product);
+      return;
+    }
 
     // Partner product without booking URL — show request popup
     const isPartnerRequest = !!product.partner_product_id && product.partner_product_type !== 'booking';
@@ -1458,6 +1483,67 @@
     pendingExpBtn = null;
   }
   window.confirmExperience = confirmExperience;
+
+  // ── VARIANT PICKER ──
+  function openVariantModal(p) {
+    document.getElementById('variantModalEmoji').textContent = p.emoji || '🧺';
+    document.getElementById('variantModalTitle').textContent = p.name;
+    document.getElementById('variantModalDesc').textContent = p.description || 'Choose an option to continue.';
+    const list = document.getElementById('variantList');
+    const variants = Array.isArray(p.variants) ? p.variants : [];
+    list.innerHTML = variants.map((v, i) => `
+      <button onclick="confirmVariant(${i})" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:white;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:border-color 0.2s,transform 0.1s;text-align:left;width:100%" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'" onmousedown="this.style.transform='scale(0.99)'" onmouseup="this.style.transform=''">
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:600;color:var(--text)">${v.label || ('Option ' + (i + 1))}</div>
+        </div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--brand);flex-shrink:0">$${v.price || 0}</div>
+      </button>
+    `).join('');
+    document.getElementById('variantModalOverlay').classList.add('open');
+  }
+
+  function closeVariantModal() {
+    document.getElementById('variantModalOverlay').classList.remove('open');
+    pendingVariantProduct = null;
+    pendingVariantBtn = null;
+  }
+
+  function confirmVariant(variantIndex) {
+    const p = pendingVariantProduct;
+    if (!p) return;
+    const variants = Array.isArray(p.variants) ? p.variants : [];
+    const v = variants[variantIndex];
+    if (!v) return;
+
+    // Close variant modal
+    document.getElementById('variantModalOverlay').classList.remove('open');
+
+    // Build a synthetic product for this variant — keep everything else but override id/name/price
+    const variantProduct = {
+      ...p,
+      id: String(p.id) + ':' + variantIndex,
+      name: p.name + ' — ' + (v.label || 'Option ' + (variantIndex + 1)),
+      price: Number(v.price) || 0,
+      variants: null, // prevent infinite loop if somehow re-routed
+    };
+
+    // If host set a notes prompt, chain into the notes modal; else add directly
+    if (p.notes_prompt) {
+      pendingCartItem = { product: variantProduct, btn: pendingVariantBtn };
+      document.getElementById('notesModalTitle').textContent = variantProduct.name;
+      document.getElementById('notesModalPrompt').textContent = p.notes_prompt;
+      document.getElementById('notesModalInput').value = '';
+      document.getElementById('notesModalOverlay').classList.add('open');
+    } else {
+      addToCart(variantProduct, pendingVariantBtn, '');
+    }
+    pendingVariantProduct = null;
+    pendingVariantBtn = null;
+  }
+
+  window.openVariantModal = openVariantModal;
+  window.closeVariantModal = closeVariantModal;
+  window.confirmVariant = confirmVariant;
 
   function confirmNotes() {
     if (!pendingCartItem) return;

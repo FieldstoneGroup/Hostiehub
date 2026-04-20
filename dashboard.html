@@ -884,8 +884,19 @@
       <div class="field"><label>Product name</label><input type="text" id="pName" placeholder="e.g. Welcome Flower Arrangement"></div>
       <div class="field"><label>Description</label><textarea id="pDesc" placeholder="What does this include? What should guests know?"></textarea></div>
       <div class="field-row">
-        <div class="field"><label>Price ($)</label><input type="number" id="pPrice" placeholder="45" min="1"></div>
+        <div class="field"><label id="pPriceLabel">Price ($)</label><input type="number" id="pPrice" placeholder="45" min="1"></div>
         <div class="field"><label>Price label</label><input type="text" id="pUnit" placeholder="e.g. per stay, per person"></div>
+      </div>
+
+      <!-- VARIANTS -->
+      <div class="field" id="variantsField">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <label style="margin:0">Variants <span style="font-weight:300;font-size:12px;color:var(--muted)">(optional)</span></label>
+          <button type="button" class="btn btn-outline btn-sm" id="addVariantBtn" onclick="addVariantRow()">+ Add variant</button>
+        </div>
+        <div class="field-hint" style="margin-bottom:10px">Offer different sizes or options with their own prices. Your starting price will auto-update to the lowest variant price.</div>
+        <div id="variantsList" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div id="variantsEmpty" style="font-size:13px;color:var(--muted);padding:12px;text-align:center;background:var(--bg);border-radius:10px;border:1.5px dashed var(--border)">No variants yet — tap "+ Add variant" to add one (e.g. "2 people — $45").</div>
       </div>
       <div class="field">
         <label>Guest notes prompt <span style="font-weight:300;font-size:12px">(optional)</span></label>
@@ -1141,6 +1152,8 @@
   }
   let selectedEmoji = '✨';
   let sortedPresets = [];
+  let currentVariants = []; // [{label, price}]
+  const MAX_VARIANTS = 6;
 
   const emojis = ['🌸','🧺','🍾','🕐','🏄','🚗','🎁','🌿','☕','🍫','🧁','🎂','🌊','🏠','🧴','🛁','🎵','🐾','🎉','🍕','🥗','🍷','🎈','🍫','🛎️','🧹'];
   const swatchColours = ['#2C6E6A','#1d4d4a','#E8A838','#e74c3c','#8e44ad','#2980b9','#27ae60','#e67e22','#1a1a1a'];
@@ -1169,7 +1182,12 @@
     { name: 'Toiletry Restock', description: 'Fresh shampoo, conditioner, body wash, soap and hand lotion replenished mid-stay.', price: 25, unit: 'per restock', category: 'product', emoji: '🧴', notes_prompt: 'Any specific products or brands you prefer? Any allergies or sensitivities?' },
 
     // FOOD & DRINK
-    { name: 'Breakfast Hamper', description: 'A beautiful hamper of local produce — fresh pastries, artisan coffee, local honey, seasonal fruit and more waiting on arrival.', price: 65, unit: 'per hamper', category: 'product', emoji: '🧺', notes_prompt: 'How many guests? Any dietary requirements or allergies?' },
+    { name: 'Hamper', description: 'A curated hamper of local produce for your guests to enjoy during their stay. Choose the size that suits the group.', price: 45, unit: 'per hamper', category: 'product', emoji: '🧺', notes_prompt: 'Any dietary requirements or allergies? Any favourite items you\'d like included?', variants: [
+      { label: '2 people', price: 45 },
+      { label: '4 people', price: 85 },
+      { label: '6 people', price: 120 },
+      { label: '8 people', price: 155 }
+    ] },
     { name: 'BBQ Pack', description: 'Everything you need for a great BBQ — premium meat selection, fresh salads, condiments and sides. Fire up the grill!', price: 75, unit: 'per pack', category: 'product', emoji: '🍖', notes_prompt: 'How many guests? Any dietary requirements? (vegetarian options available)' },
     { name: 'Wine & Cheese Platter', description: 'A curated selection of local wines paired with artisan cheeses, crackers, grapes and accompaniments.', price: 70, unit: 'per platter', category: 'product', emoji: '🧀', notes_prompt: 'Red, white or mixed wines? Any dietary requirements or cheese preferences?' },
     { name: 'Local Craft Beer Bundle', description: 'A selection of the best local craft beers — a great way to explore the region\'s brewing scene.', price: 45, unit: 'per bundle', category: 'product', emoji: '🍺', notes_prompt: 'Any style preferences? (pale ale / IPA / lager / stout) How many people?' },
@@ -1742,6 +1760,8 @@
     document.getElementById('imagePreview').src = '';
     document.getElementById('imagePreviewWrap').style.display = 'none';
     document.getElementById('imageUploadLabel').style.display = 'flex';
+    currentVariants = [];
+    renderVariants();
     buildEmojiGrid();
     buildPropertyChecks();
     document.getElementById('productModal').classList.add('open');
@@ -1792,6 +1812,12 @@
     const allProps = p.available_all_properties !== false;
     document.getElementById('pAllProperties').checked = allProps;
     document.getElementById('propertyChecks').style.display = allProps ? 'none' : 'flex';
+    // Load variants
+    try {
+      const v = p.variants;
+      currentVariants = Array.isArray(v) ? v.map(x => ({ label: x.label || '', price: Number(x.price) || 0 })) : (v ? JSON.parse(v) : []);
+    } catch (e) { currentVariants = []; }
+    renderVariants();
     buildEmojiGrid();
     buildPropertyChecks();
     if (!allProps && p.property_ids) {
@@ -1812,10 +1838,105 @@
   }
   window.toggleExperienceFields = toggleExperienceFields;
 
+  // ── VARIANTS ──
+  function renderVariants() {
+    const list = document.getElementById('variantsList');
+    const empty = document.getElementById('variantsEmpty');
+    const addBtn = document.getElementById('addVariantBtn');
+    const priceInput = document.getElementById('pPrice');
+    const priceLabel = document.getElementById('pPriceLabel');
+    if (!list) return;
+
+    if (!currentVariants.length) {
+      list.innerHTML = '';
+      if (empty) empty.style.display = 'block';
+      if (priceLabel) priceLabel.textContent = 'Price ($)';
+      if (priceInput) { priceInput.readOnly = false; priceInput.style.background = ''; }
+    } else {
+      if (empty) empty.style.display = 'none';
+      list.innerHTML = currentVariants.map((v, i) => `
+        <div class="variant-row" style="display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);padding:8px">
+          <input type="text" class="variant-label" placeholder="e.g. 4 people" value="${(v.label || '').replace(/"/g, '&quot;')}" oninput="onVariantInput()" style="flex:2;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;background:white">
+          <div style="display:flex;align-items:center;gap:4px;flex:1">
+            <span style="font-size:13px;color:var(--muted)">$</span>
+            <input type="number" class="variant-price" placeholder="45" min="0" step="0.01" value="${v.price || ''}" oninput="onVariantInput()" style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;background:white;min-width:0">
+          </div>
+          <button type="button" onclick="removeVariantRow(${i})" title="Remove" style="background:transparent;border:none;cursor:pointer;font-size:16px;color:#e53e3e;padding:4px 8px;border-radius:6px;flex-shrink:0" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">✕</button>
+        </div>
+      `).join('');
+      if (priceLabel) priceLabel.textContent = 'Starting price ($) — auto';
+      if (priceInput) {
+        // Auto-update starting price to lowest variant price
+        const validPrices = currentVariants.map(v => Number(v.price)).filter(n => !isNaN(n) && n > 0);
+        if (validPrices.length) priceInput.value = Math.min(...validPrices);
+        priceInput.readOnly = true;
+        priceInput.style.background = 'var(--bg)';
+      }
+    }
+
+    if (addBtn) {
+      addBtn.disabled = currentVariants.length >= MAX_VARIANTS;
+      addBtn.textContent = currentVariants.length >= MAX_VARIANTS ? 'Max ' + MAX_VARIANTS + ' variants' : '+ Add variant';
+      addBtn.style.opacity = currentVariants.length >= MAX_VARIANTS ? '0.5' : '1';
+    }
+  }
+
+  function addVariantRow() {
+    if (currentVariants.length >= MAX_VARIANTS) return;
+    currentVariants.push({ label: '', price: '' });
+    renderVariants();
+    // Focus the newly added label input
+    setTimeout(() => {
+      const inputs = document.querySelectorAll('.variant-label');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    }, 50);
+  }
+
+  function removeVariantRow(index) {
+    currentVariants.splice(index, 1);
+    // Sync DOM values back into state before re-render
+    syncVariantsFromDom();
+    renderVariants();
+  }
+
+  function onVariantInput() {
+    syncVariantsFromDom();
+    // Recompute starting price live
+    const priceInput = document.getElementById('pPrice');
+    const validPrices = currentVariants.map(v => Number(v.price)).filter(n => !isNaN(n) && n > 0);
+    if (priceInput && validPrices.length) priceInput.value = Math.min(...validPrices);
+  }
+
+  function syncVariantsFromDom() {
+    const rows = document.querySelectorAll('.variant-row');
+    currentVariants = [...rows].map(row => ({
+      label: (row.querySelector('.variant-label').value || '').trim(),
+      price: parseFloat(row.querySelector('.variant-price').value) || 0,
+    }));
+  }
+
+  window.addVariantRow = addVariantRow;
+  window.removeVariantRow = removeVariantRow;
+  window.onVariantInput = onVariantInput;
+
   async function saveProduct() {
     const name = document.getElementById('pName').value.trim();
-    const price = parseFloat(document.getElementById('pPrice').value);
-    if (!name || !price) { showToast('⚠️ Name and price are required'); return; }
+    // Collect variant rows from the DOM
+    const collectedVariants = [];
+    document.querySelectorAll('.variant-row').forEach(row => {
+      const label = (row.querySelector('.variant-label').value || '').trim();
+      const price = parseFloat(row.querySelector('.variant-price').value);
+      if (label && !isNaN(price) && price >= 0) collectedVariants.push({ label, price });
+    });
+    currentVariants = collectedVariants;
+
+    let price = parseFloat(document.getElementById('pPrice').value);
+    // If variants exist, auto-use the lowest variant price as starting price
+    if (collectedVariants.length > 0) {
+      price = Math.min(...collectedVariants.map(v => v.price));
+    }
+    if (!name || !price || isNaN(price)) { showToast('⚠️ Name and price are required'); return; }
+
     const allProps = document.getElementById('pAllProperties').checked;
     const selectedProps = allProps ? [] : [...document.querySelectorAll('.prop-check:checked')].map(cb => cb.value);
     const category = document.getElementById('pCategory').value;
@@ -1840,6 +1961,7 @@
       lead_time_days: isExperience ? (parseInt(document.getElementById('pLeadTime').value) || 0) : null,
       gst_type: isExperience ? document.getElementById('pGst').value : null,
       booking_instructions: isExperience ? document.getElementById('pInstructions').value.trim() : null,
+      variants: collectedVariants.length > 0 ? collectedVariants : null,
     };
 
     if (editingProductId) {

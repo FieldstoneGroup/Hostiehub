@@ -27,7 +27,7 @@ export default async function middleware(request) {
   let host;
   try {
     const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/hosts_public?username=eq.${encodeURIComponent(username)}&select=store_name,store_tagline,brand_colour&limit=1`,
+      `${SUPABASE_URL}/rest/v1/hosts?username=eq.${encodeURIComponent(username)}&select=store_name,store_tagline,brand_colour&limit=1`,
       {
         headers: {
           apikey: SUPABASE_ANON_KEY,
@@ -45,9 +45,8 @@ export default async function middleware(request) {
 
   const storeName = host.store_name || 'Guest Extras';
   const colour = /^#[0-9A-Fa-f]{6}$/.test(host.brand_colour) ? host.brand_colour : '#2C6E6A';
-  const tagline = host.store_tagline || 'Extras & experiences for your stay';
   const desc = `Browse add-ons, experiences and local offers for your stay at ${storeName}.`;
-  const ogImage = `https://hostiehub.com.au/api/og?name=${encodeURIComponent(storeName)}&color=${encodeURIComponent(colour)}&tagline=${encodeURIComponent(tagline)}`;
+  const ogImage = `https://hostiehub.com.au/api/og?name=${encodeURIComponent(storeName)}&color=${encodeURIComponent(colour)}`;
 
   // Fetch the base guest-store.html with bypass flag
   const bypassUrl = new URL('/guest-store.html', request.url);

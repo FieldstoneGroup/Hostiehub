@@ -1303,9 +1303,8 @@
       }
     }
 
-    const wasEditing = editingProductId !== null;
     editingProductId = null;
-    showToast(wasEditing ? 'Product updated!' : 'Product saved!');
+    showToast(editingProductId === null ? 'Product saved!' : 'Product updated!');
     loadProducts();
     showPage('products', document.querySelector('[onclick*=products]'));
   }

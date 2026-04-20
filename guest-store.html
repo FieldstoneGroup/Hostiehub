@@ -107,6 +107,22 @@
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   .product-img { height: 152px; background: white; display: flex; align-items: center; justify-content: center; font-size: 52px; position: relative; overflow: hidden; border-radius: var(--radius) var(--radius) 0 0; border-bottom: 1px solid #f0ece8; }
   .product-img img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius) var(--radius) 0 0; }
+  /* CAROUSEL */
+  .carousel-wrap { padding: 0; }
+  .carousel-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; height: 100%; width: 100%; scrollbar-width: none; -ms-overflow-style: none; }
+  .carousel-track::-webkit-scrollbar { display: none; }
+  .carousel-slide { flex: 0 0 100%; scroll-snap-align: start; height: 100%; display: flex; align-items: center; justify-content: center; background: white; }
+  .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
+  .carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(255,255,255,0.9); color: #1a1a1a; font-size: 20px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); opacity: 0; transition: opacity 0.2s; line-height: 1; padding: 0; z-index: 2; }
+  .carousel-wrap:hover .carousel-arrow { opacity: 1; }
+  .carousel-arrow-prev { left: 8px; }
+  .carousel-arrow-next { right: 8px; }
+  .carousel-dots { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 2; }
+  .carousel-dot { width: 7px; height: 7px; border-radius: 50%; border: none; background: rgba(255,255,255,0.6); cursor: pointer; padding: 0; transition: background 0.2s, transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+  .carousel-dot.active { background: white; transform: scale(1.3); }
+  @media (max-width: 700px) {
+    .carousel-arrow { display: none; }
+  }
   .product-body { padding: 12px 16px; flex: 1; display: flex; flex-direction: column; }
   .product-category { font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--brand); margin-bottom: 5px; }
   .product-name { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; margin-bottom: 6px; line-height: 1.25; }
@@ -390,6 +406,20 @@
   </div>
 </div>
 
+<!-- VARIANT PICKER MODAL (size / quantity options) -->
+<div class="notes-modal-overlay" id="variantModalOverlay">
+  <div class="notes-modal" style="max-width:420px">
+    <div style="font-size:32px;text-align:center;margin-bottom:10px" id="variantModalEmoji">🧺</div>
+    <h3 style="text-align:center;margin-bottom:4px" id="variantModalTitle">Choose an option</h3>
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:18px">Select the size or quantity that suits your stay.</p>
+    <div id="variantModalOptions" style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px"></div>
+    <div class="notes-modal-actions">
+      <button class="btn btn-outline" onclick="closeVariantModal()">Cancel</button>
+      <button class="btn btn-primary" id="variantModalConfirm" onclick="confirmVariantPick()" disabled style="opacity:0.5">Add to cart →</button>
+    </div>
+  </div>
+</div>
+
 <!-- EXPERIENCE BOOKING MODAL -->
 <div class="notes-modal-overlay" id="experienceModalOverlay">
   <div class="notes-modal" style="max-width:440px">
@@ -572,6 +602,73 @@
   );
 
   let cart = [], allProducts = [], allPartnerListings = [], properties = [], hostData = null;
+
+  // ── PRODUCT IMAGE CAROUSEL (host products can have up to 3 images) ──
+  function getProductImages(p) {
+    let urls = [];
+    if (Array.isArray(p.image_urls)) urls = p.image_urls.filter(Boolean);
+    else if (typeof p.image_urls === 'string') {
+      try { urls = (JSON.parse(p.image_urls) || []).filter(Boolean); } catch(e) {}
+    }
+    if (urls.length === 0 && p.image_url) urls = [p.image_url];
+    return urls.slice(0, 3);
+  }
+
+  function buildProductImageSlot(p) {
+    const urls = getProductImages(p);
+    if (urls.length === 0) {
+      return `<div class="product-img">${p.emoji || '✨'}</div>`;
+    }
+    if (urls.length === 1) {
+      return `<div class="product-img"><img src="${urls[0]}" alt="${(p.name || '').replace(/"/g, '&quot;')}"></div>`;
+    }
+    // Multi-image: build a scroll-snap carousel
+    const carouselId = 'carousel-' + p.id;
+    const slides = urls.map((u, idx) => `
+      <div class="carousel-slide"><img src="${u}" alt="${(p.name || '').replace(/"/g, '&quot;')} ${idx + 1}"></div>
+    `).join('');
+    const dots = urls.map((_, idx) => `
+      <button type="button" class="carousel-dot${idx === 0 ? ' active' : ''}" data-idx="${idx}" onclick="event.stopPropagation(); goToCarouselSlide('${carouselId}', ${idx})" aria-label="Image ${idx + 1}"></button>
+    `).join('');
+    return `
+      <div class="product-img carousel-wrap" id="${carouselId}" data-count="${urls.length}">
+        <div class="carousel-track" onscroll="updateCarouselDots('${carouselId}')">${slides}</div>
+        <button type="button" class="carousel-arrow carousel-arrow-prev" onclick="event.stopPropagation(); scrollCarousel('${carouselId}', -1)" aria-label="Previous image">‹</button>
+        <button type="button" class="carousel-arrow carousel-arrow-next" onclick="event.stopPropagation(); scrollCarousel('${carouselId}', 1)" aria-label="Next image">›</button>
+        <div class="carousel-dots">${dots}</div>
+      </div>`;
+  }
+
+  function scrollCarousel(id, direction) {
+    const wrap = document.getElementById(id);
+    if (!wrap) return;
+    const track = wrap.querySelector('.carousel-track');
+    const slideWidth = track.clientWidth;
+    const count = parseInt(wrap.dataset.count, 10) || 1;
+    const currentIdx = Math.round(track.scrollLeft / slideWidth);
+    let next = currentIdx + direction;
+    if (next < 0) next = count - 1;
+    if (next >= count) next = 0;
+    track.scrollTo({ left: next * slideWidth, behavior: 'smooth' });
+  }
+  window.scrollCarousel = scrollCarousel;
+
+  function goToCarouselSlide(id, idx) {
+    const wrap = document.getElementById(id);
+    if (!wrap) return;
+    const track = wrap.querySelector('.carousel-track');
+    track.scrollTo({ left: idx * track.clientWidth, behavior: 'smooth' });
+  }
+  window.goToCarouselSlide = goToCarouselSlide;
+
+  function updateCarouselDots(id) {
+    const wrap = document.getElementById(id);
+    if (!wrap) return;
+    const track = wrap.querySelector('.carousel-track');
+    const idx = Math.round(track.scrollLeft / track.clientWidth);
+    wrap.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+  }
+  window.updateCarouselDots = updateCarouselDots;
   let selectedPropertyId = '', selectedPropertyName = '';
   let pendingCartItem = null;
   let pendingPartnerRequestProduct = null, pendingPartnerRequestBtn = null;
@@ -1191,7 +1288,7 @@
 
       return `
       <div class="product-card" style="animation-delay:${i * 0.06}s;position:relative">
-        <div class="product-img">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '✨')}</div>
+        ${buildProductImageSlot(p)}
         <div class="product-body" style="padding-bottom:${p.partner_notes ? '56px' : '12px'}">
           ${p.partner_product_id ? '' : `<div class="product-category">${categoryLabels[p.category] || ''}</div>`}
           <div class="product-name">${p.name}</div>
@@ -1205,7 +1302,9 @@
               : p.service_price
                 ? '<span style="font-size:13px;font-weight:700;color:#2C6E6A">$' + p.service_price + '</span> <small style="font-size:11px;color:#6b7280">' + (p.service_price_unit || '') + '</small>'
                 : '<span style="font-size:12px;color:#92600a;font-weight:600">🤝 Request service</span>')
-            : ('$' + p.price + ' <small>' + (p.partner_product_id ? '' : (p.unit ? '/ ' + p.unit : '')) + '</small>')}</div>
+            : (Array.isArray(p.variants) && p.variants.length > 0
+              ? '<small style="font-size:11px;color:var(--muted)">from</small> $' + Math.min(...p.variants.map(v => v.price)) + ' <small style="font-size:11px;color:var(--muted)">· choose size</small>'
+              : ('$' + p.price + ' <small>' + (p.partner_product_id ? '' : (p.unit ? '/ ' + p.unit : '')) + '</small>'))}</div>
           ${isDemo
             ? `<button class="add-btn" onclick="handleDemoAdd()">Add +</button>`
             : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">${p.partner_product_type === 'service' ? 'Add →' : 'Add'}</button>`
@@ -1457,6 +1556,15 @@
       return;
     }
 
+    // Product with variants (size/quantity options) — show variant picker before notes
+    const variants = Array.isArray(product.variants)
+      ? product.variants
+      : (typeof product.variants === 'string' ? (function(){ try { return JSON.parse(product.variants); } catch(e){ return null; } })() : null);
+    if (variants && variants.length > 0) {
+      openVariantModal(product, variants, btn);
+      return;
+    }
+
     if (product.notes_prompt) {
       pendingCartItem = { product, btn };
       document.getElementById('notesModalTitle').textContent = product.name;
@@ -1585,14 +1693,14 @@
   function confirmNotes() {
     if (!pendingCartItem) return;
     const note = document.getElementById('notesModalInput').value.trim();
-    addToCart(pendingCartItem.product, pendingCartItem.btn, note);
+    addToCart(pendingCartItem.product, pendingCartItem.btn, note, null, pendingCartItem.variant || null);
     document.getElementById('notesModalOverlay').classList.remove('open');
     pendingCartItem = null;
   }
 
   function skipNotes() {
     if (!pendingCartItem) return;
-    addToCart(pendingCartItem.product, pendingCartItem.btn, '');
+    addToCart(pendingCartItem.product, pendingCartItem.btn, '', null, pendingCartItem.variant || null);
     document.getElementById('notesModalOverlay').classList.remove('open');
     pendingCartItem = null;
   }
@@ -1672,12 +1780,90 @@
   }
   window.confirmPartnerRequest = confirmPartnerRequest;
 
-  function addToCart(product, btn, note, partnerRequestData) {
+  // ── VARIANT PICKER (size/quantity options for host products) ──
+  let pendingVariantProduct = null;
+  let pendingVariantBtn = null;
+  let pendingVariantSelection = null; // {label, price}
+
+  function openVariantModal(product, variants, btn) {
+    pendingVariantProduct = product;
+    pendingVariantBtn = btn;
+    pendingVariantSelection = null;
+    document.getElementById('variantModalEmoji').textContent = product.emoji || '🧺';
+    document.getElementById('variantModalTitle').textContent = product.name;
+    const confirmBtn = document.getElementById('variantModalConfirm');
+    confirmBtn.disabled = true;
+    confirmBtn.style.opacity = '0.5';
+
+    const list = document.getElementById('variantModalOptions');
+    list.innerHTML = variants.map((v, i) => `
+      <label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;background:var(--bg);border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="if(!this.querySelector('input').checked)this.style.borderColor='var(--border)'">
+        <div style="display:flex;align-items:center;gap:12px;flex:1">
+          <input type="radio" name="variantPick" value="${i}" onchange="pickVariant(${i}, this)" style="width:18px;height:18px;accent-color:var(--brand);flex-shrink:0">
+          <span style="font-size:15px;font-weight:500">${v.label}</span>
+        </div>
+        <span style="font-size:15px;font-weight:700;color:var(--brand)">$${v.price}</span>
+      </label>
+    `).join('');
+    document.getElementById('variantModalOverlay').classList.add('open');
+  }
+  window.openVariantModal = openVariantModal;
+
+  function pickVariant(idx, radio) {
+    const variants = Array.isArray(pendingVariantProduct.variants)
+      ? pendingVariantProduct.variants
+      : JSON.parse(pendingVariantProduct.variants || '[]');
+    pendingVariantSelection = variants[idx] || null;
+    document.querySelectorAll('#variantModalOptions label').forEach(l => {
+      const checked = l.querySelector('input').checked;
+      l.style.borderColor = checked ? 'var(--brand)' : 'var(--border)';
+      l.style.background = checked ? '#e6f2f1' : 'var(--bg)';
+    });
+    const confirmBtn = document.getElementById('variantModalConfirm');
+    confirmBtn.disabled = false;
+    confirmBtn.style.opacity = '1';
+  }
+  window.pickVariant = pickVariant;
+
+  function closeVariantModal() {
+    document.getElementById('variantModalOverlay').classList.remove('open');
+    pendingVariantProduct = null;
+    pendingVariantBtn = null;
+    pendingVariantSelection = null;
+  }
+  window.closeVariantModal = closeVariantModal;
+
+  function confirmVariantPick() {
+    if (!pendingVariantSelection || !pendingVariantProduct) return;
+    const product = pendingVariantProduct;
+    const btn = pendingVariantBtn;
+    const picked = pendingVariantSelection;
+    document.getElementById('variantModalOverlay').classList.remove('open');
+
+    if (product.notes_prompt) {
+      pendingCartItem = { product, btn, variant: picked };
+      document.getElementById('notesModalTitle').textContent = product.name + ' — ' + picked.label;
+      document.getElementById('notesModalPrompt').textContent = product.notes_prompt;
+      document.getElementById('notesModalInput').value = '';
+      document.getElementById('notesModalOverlay').classList.add('open');
+    } else {
+      addToCart(product, btn, '', null, picked);
+    }
+    pendingVariantProduct = null;
+    pendingVariantBtn = null;
+    pendingVariantSelection = null;
+  }
+  window.confirmVariantPick = confirmVariantPick;
+
+  function addToCart(product, btn, note, partnerRequestData, variant) {
     const isPartnerRequest = !!product.partner_product_id && product.partner_product_type !== 'booking';
+    // If a variant was picked, use its price and append the label to the display name
+    const effectivePrice = variant ? variant.price : (isPartnerRequest ? 0 : product.price);
+    const displayName = variant ? (product.name + ' — ' + variant.label) : product.name;
     cart.push({
       id: product.id,
-      name: product.name,
-      price: isPartnerRequest ? 0 : product.price,
+      name: displayName,
+      price: effectivePrice,
       icon: product.emoji || '✨',
       note,
       partner_product_id: product.partner_product_id || null,
@@ -1686,6 +1872,7 @@
       partnerBusinessName: product.partner_business_name || null,
       preferredDate: partnerRequestData ? partnerRequestData.preferredDate : '',
       partnerNotes: partnerRequestData ? partnerRequestData.partnerNotes : '',
+      variant_label: variant ? variant.label : null,
     });
     btn.textContent = isPartnerRequest ? '✓ Requested' : '✓ Added';
     btn.classList.add('added');

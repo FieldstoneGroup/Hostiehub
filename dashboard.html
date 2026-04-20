@@ -997,11 +997,56 @@
     </div>
     <div class="modal-body">
       <p style="font-size:14px;color:var(--muted);margin-bottom:20px">Select the products you'd like to add to your store. You can edit them after adding.</p>
+
+      <!-- Need a custom item? card -->
+      <div style="background:var(--accent-light);border:1.5px solid rgba(232,168,56,0.35);border-radius:12px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:14px;font-weight:700;color:#92600a;margin-bottom:2px">Need a custom item?</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.5">Can't find what you need? Tell us what to add — we'll build it for you.</div>
+        </div>
+        <button class="btn btn-accent btn-sm" onclick="openCustomRequestModal()">Request a custom item →</button>
+      </div>
+
+      <!-- Search bar -->
+      <div style="margin-bottom:16px">
+        <input type="text" id="presetSearch" placeholder="🔎  Search presets..." oninput="filterPresets(this.value)" autocomplete="off" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color 0.2s;box-sizing:border-box" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'">
+        <div id="presetSearchEmpty" style="display:none;font-size:13px;color:var(--muted);text-align:center;padding:20px 10px">No presets match your search.</div>
+      </div>
+
       <div id="presetList" style="display:flex;flex-direction:column;gap:10px"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closePresetModal()">Cancel</button>
       <button class="btn btn-primary" onclick="addSelectedPresets()">Add selected →</button>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOM REQUEST MODAL (sub-modal of preset modal) -->
+<div class="modal-overlay" id="customRequestModal" style="z-index:300">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <div class="modal-title">Request a custom item</div>
+      <button class="modal-close" onclick="closeCustomRequestModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:18px">Tell us what you'd like us to add and we'll be in touch. We build custom presets based on what hosts like you need.</p>
+      <div class="field">
+        <label>Your name</label>
+        <input type="text" id="crName" placeholder="Jane Smith" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>Your email</label>
+        <input type="email" id="crEmail" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>What product do you want us to add?</label>
+        <textarea id="crMessage" placeholder="e.g. A pre-stocked BBQ pack with meat, marinades and sides for 4 people…" rows="5"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeCustomRequestModal()">Cancel</button>
+      <button class="btn btn-primary" id="crSendBtn" onclick="sendCustomRequest()">Send request →</button>
     </div>
   </div>
 </div>
@@ -1846,10 +1891,26 @@
         </div>
       </label>
     `).join('');
+    // Reset search + hide sub-modal on open
+    const searchInput = document.getElementById('presetSearch');
+    if (searchInput) searchInput.value = '';
+    const emptyMsg = document.getElementById('presetSearchEmpty');
+    if (emptyMsg) emptyMsg.style.display = 'none';
+    const sub = document.getElementById('customRequestModal');
+    if (sub) sub.classList.remove('open');
     document.getElementById('presetModal').classList.add('open');
   }
 
-  function closePresetModal() { document.getElementById('presetModal').classList.remove('open'); }
+  function closePresetModal() {
+    document.getElementById('presetModal').classList.remove('open');
+    // Also hide sub-modal and clear search
+    const sub = document.getElementById('customRequestModal');
+    if (sub) sub.classList.remove('open');
+    const searchInput = document.getElementById('presetSearch');
+    if (searchInput) searchInput.value = '';
+    const emptyMsg = document.getElementById('presetSearchEmpty');
+    if (emptyMsg) emptyMsg.style.display = 'none';
+  }
 
   async function addSelectedPresets() {
     const selected = [...document.querySelectorAll('.preset-check:checked')].map(cb => parseInt(cb.value));
@@ -1860,6 +1921,117 @@
     showToast(`✅ ${selected.length} product${selected.length > 1 ? 's' : ''} added!`);
     closePresetModal();
     loadProducts();
+  }
+
+  // ── PRESET SEARCH ──
+  function filterPresets(query) {
+    const q = (query || '').trim().toLowerCase();
+    const labels = document.querySelectorAll('#presetList label');
+    let visible = 0;
+    labels.forEach((label, idx) => {
+      const p = sortedPresets[idx];
+      if (!p) { label.style.display = 'none'; return; }
+      if (!q) { label.style.display = ''; visible++; return; }
+      const haystack = ((p.name || '') + ' ' + (p.category || '') + ' ' + (p.description || '')).toLowerCase();
+      const match = haystack.includes(q);
+      label.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    const emptyMsg = document.getElementById('presetSearchEmpty');
+    if (emptyMsg) emptyMsg.style.display = (q && visible === 0) ? 'block' : 'none';
+  }
+
+  // ── CUSTOM ITEM REQUEST ──
+  function openCustomRequestModal() {
+    const nameEl = document.getElementById('crName');
+    const emailEl = document.getElementById('crEmail');
+    const msgEl = document.getElementById('crMessage');
+    if (nameEl) nameEl.value = (currentHost && currentHost.full_name) || '';
+    if (emailEl) emailEl.value = (currentHost && currentHost.email) || '';
+    if (msgEl) msgEl.value = '';
+    document.getElementById('customRequestModal').classList.add('open');
+    setTimeout(() => { if (msgEl) msgEl.focus(); }, 150);
+  }
+
+  function closeCustomRequestModal() {
+    document.getElementById('customRequestModal').classList.remove('open');
+  }
+
+  async function sendCustomRequest() {
+    const name = (document.getElementById('crName').value || '').trim();
+    const email = (document.getElementById('crEmail').value || '').trim();
+    const message = (document.getElementById('crMessage').value || '').trim();
+
+    if (!name) { showToast('⚠️ Please enter your name'); return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('⚠️ Please enter a valid email'); return; }
+    if (!message) { showToast('⚠️ Please describe the product you need'); return; }
+
+    const btn = document.getElementById('crSendBtn');
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Sending...';
+
+    const usernameLine = (currentHost && currentHost.username)
+      ? `<p style="margin:0 0 8px"><strong>Username:</strong> ${currentHost.username}</p>`
+      : '';
+    const safeMsg = message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f4f6f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f5;padding:40px 20px">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+        <tr><td style="background:linear-gradient(135deg,#2C6E6A,#1d4d4a);border-radius:16px 16px 0 0;padding:24px 32px">
+          <div style="font-size:20px;font-weight:700;color:white;font-family:Georgia,serif">Hostie Hub</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:4px">Custom product request</div>
+        </td></tr>
+        <tr><td style="background:white;padding:32px;border-radius:0 0 16px 16px">
+          <h2 style="font-size:18px;color:#1a1a1a;margin:0 0 16px;font-family:Georgia,serif">New custom product request</h2>
+          <div style="background:#f4f6f5;border-radius:12px;padding:16px 18px;margin-bottom:20px;font-size:14px;line-height:1.7;color:#1a1a1a">
+            <p style="margin:0 0 8px"><strong>Name:</strong> ${name}</p>
+            <p style="margin:0 0 8px"><strong>Email:</strong> <a href="mailto:${email}" style="color:#2C6E6A">${email}</a></p>
+            ${usernameLine}
+          </div>
+          <div style="font-size:13px;color:#6b7280;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Their request</div>
+          <div style="background:#fdf3e0;border-left:4px solid #E8A838;border-radius:0 12px 12px 0;padding:14px 18px;font-size:14px;line-height:1.6;color:#1a1a1a">${safeMsg}</div>
+          <p style="font-size:12px;color:#9ca3af;margin-top:24px;margin-bottom:0">Reply directly to this email to respond.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+    try {
+      const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+        body: JSON.stringify({
+          from: 'Hostie Hub <hello@hostiehub.com.au>',
+          to: 'hello@hostiehub.com.au',
+          reply_to: email,
+          subject: 'Custom product request from ' + name,
+          html
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) throw new Error((data.error && data.error.message) || 'Send failed');
+
+      closeCustomRequestModal();
+      showToast("✅ Request sent — we'll be in touch");
+      document.getElementById('crName').value = '';
+      document.getElementById('crEmail').value = '';
+      document.getElementById('crMessage').value = '';
+    } catch (err) {
+      console.error('Custom request send failed:', err);
+      showToast("⚠️ Couldn't send — email hello@hostiehub.com.au");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
   }
 
   // ── ORDERS ──
@@ -2921,6 +3093,10 @@
   window.openPresetModal = openPresetModal;
   window.closePresetModal = closePresetModal;
   window.addSelectedPresets = addSelectedPresets;
+  window.filterPresets = filterPresets;
+  window.openCustomRequestModal = openCustomRequestModal;
+  window.closeCustomRequestModal = closeCustomRequestModal;
+  window.sendCustomRequest = sendCustomRequest;
   window.toggleOrderDetail = toggleOrderDetail;
   window.fulfillOrder = fulfillOrder;
   window.filterOrders = filterOrders;

@@ -372,12 +372,21 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8'
   );
 
-  // ADMIN EMAILS — add yours here
-  const ADMIN_EMAILS = ['hello@fieldstonegroup.com.au', 'luke@stayable.co'];
-  const ADMIN_PASSWORD = 'Kahibah123';
+  // ── ADMIN WHITELIST ──
+  // Authentication is enforced by Supabase Auth + RLS policies on the DB.
+  // This list is used only to gate the UI and to show a friendly "this
+  // account isn't an admin" message. The real protection lives in the
+  // database: every admin-only query is backed by an RLS policy that
+  // checks auth.jwt() ->> 'email' against the same whitelist server-side.
+  const ADMIN_EMAILS = ['hello@fieldstonegroup.com.au'];
 
   let allHosts = [], allPartners = [], allOrders = [], allRedemptions = [], allEvents = [], allPartnerProducts = [], allPartnerEvents = [];
   let currentUser = null;
+
+  function isAdminEmail(email) {
+    if (!email) return false;
+    return ADMIN_EMAILS.map(e => e.toLowerCase()).includes(email.toLowerCase());
+  }
 
   // ── AUTH ──
   async function doLogin() {
@@ -386,21 +395,38 @@
     const err = document.getElementById('loginError');
     err.style.display = 'none';
 
-    const validEmails = ADMIN_EMAILS.map(e => e.toLowerCase());
-    if (!validEmails.includes(email) || password !== ADMIN_PASSWORD) {
+    if (!email || !password) {
+      err.textContent = 'Please enter your email and password.';
+      err.style.display = 'block';
+      return;
+    }
+
+    // Real Supabase Auth login — password is verified server-side
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
       err.textContent = 'Invalid credentials.';
       err.style.display = 'block';
       return;
     }
 
-    currentUser = { email };
-    sessionStorage.setItem('hh_admin', email);
+    // After successful auth, confirm the email is on the admin whitelist.
+    // If it isn't, sign them out and show an error. RLS policies on the DB
+    // will also refuse admin queries for non-whitelisted emails, so this
+    // is belt-and-braces.
+    if (!isAdminEmail(data.user?.email || email)) {
+      await sb.auth.signOut();
+      err.textContent = 'This account does not have admin access.';
+      err.style.display = 'block';
+      return;
+    }
+
+    currentUser = { email: data.user.email, id: data.user.id };
     bootAdmin();
   }
 
   async function doLogout() {
-    sessionStorage.removeItem('hh_admin');
     await sb.auth.signOut();
+    currentUser = null;
     document.getElementById('adminShell').style.display = 'none';
     document.getElementById('loginScreen').style.display = 'flex';
   }
@@ -719,12 +745,17 @@
 
   // ── INIT ──
   async function init() {
-    const savedEmail = sessionStorage.getItem('hh_admin');
-    const validEmails = ADMIN_EMAILS.map(e => e.toLowerCase());
-    if (savedEmail && validEmails.includes(savedEmail.toLowerCase())) {
-      currentUser = { email: savedEmail };
+    // Check for an active Supabase session. No more sessionStorage bypass —
+    // the user must have an actual signed-in auth session to see the UI.
+    const { data: { session } } = await sb.auth.getSession();
+    if (session && isAdminEmail(session.user?.email)) {
+      currentUser = { email: session.user.email, id: session.user.id };
       bootAdmin();
     } else {
+      if (session) {
+        // Signed in but not an admin — sign them out.
+        await sb.auth.signOut();
+      }
       document.getElementById('loginScreen').style.display = 'flex';
       document.getElementById('adminShell').style.display = 'none';
     }

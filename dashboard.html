@@ -2992,7 +2992,7 @@
       const actionBtn = paid
         ? (isAdded
           ? '<button class="btn btn-outline btn-sm" style="color:#e53e3e;border-color:#e53e3e" onclick="hidePartnerListing(\'' + p.id + '\')">Hide from store</button>'
-          : '<button class="btn btn-primary btn-sm" onclick="showPartnerListing(\'' + p.id + '\')">Show in store</button>')
+          : '<button class="btn btn-primary btn-sm" onclick="openLocalProductModal(\'' + p.id + '\')">Show in store</button>')
         : '<span style="font-size:12px;color:var(--muted);background:var(--bg);padding:4px 10px;border-radius:50px;border:1px solid var(--border)">🔒 Mandatory</span>';
 
       return '<div class="product-row" style="' + (!isAdded ? 'opacity:0.6' : '') + '">' +
@@ -3017,36 +3017,6 @@
     showToast('Listing hidden from your store');
   }
   window.hidePartnerListing = hidePartnerListing;
-
-  async function showPartnerListing(partnerProductId) {
-    const p = localPartnerProducts.find(x => x.id === partnerProductId);
-    if (!p) return;
-    const isBooking = p.type === 'booking';
-    await sb.from('products').insert({
-      host_id: currentUser.id,
-      name: p.name,
-      description: p.description || '',
-      price: isBooking ? 0 : (p.wholesale_price || 0),
-      unit: 'per stay',
-      category: p.category || 'product',
-      emoji: isBooking ? '🔗' : '📦',
-      image_url: p.image_url || null,
-      available_all_properties: true,
-      active: true,
-      partner_product_id: p.id,
-      partner_id: p.partner_id,
-      partner_product_type: p.type,
-      partner_booking_url: isBooking ? p.booking_url : null,
-      partner_notes: p.notes || null,
-      partner_voucher_pdf_url: isBooking ? (p.voucher_pdf_url || null) : null,
-      wholesale_price: p.wholesale_price || 0,
-    });
-    addedPartnerProductIds.add(partnerProductId);
-    renderLocalProducts();
-    loadProducts();
-    showToast('Listing now showing in your store');
-  }
-  window.showPartnerListing = showPartnerListing;
 
   function openLocalProductModal(productId) {
     const p = localPartnerProducts.find(x => x.id === productId);

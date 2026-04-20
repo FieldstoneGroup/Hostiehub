@@ -25,7 +25,7 @@ export default {
     try {
       // Look up host by username
       const hostRes = await fetch(
-        `${env.SUPABASE_URL}/rest/v1/hosts?username=eq.${encodeURIComponent(username)}&select=id,full_name`,
+        `${env.SUPABASE_URL}/rest/v1/hosts_public?username=eq.${encodeURIComponent(username)}&select=id,full_name`,
         {
           headers: {
             apikey: env.SUPABASE_ANON_KEY,

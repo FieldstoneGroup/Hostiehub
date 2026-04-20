@@ -404,9 +404,9 @@
         <div class="card">
           <div class="field">
             <label>What type of listing is this?</label>
-            <label class="type-option" style="display:none">
-              <input type="radio" name="productType" value="physical" id="ptPhysical" onchange="toggleProductType();updatePreview()">
-              <div><div class="type-option-label">📦 Physical product</div><div class="type-option-desc">e.g. flowers, hampers, firewood — delivered or ready on arrival</div></div>
+            <label class="type-option">
+              <input type="radio" name="productType" value="product" id="ptProduct" onchange="toggleProductType();updatePreview()">
+              <div><div class="type-option-label">📦 Products for sale</div><div class="type-option-desc">e.g. hampers, firewood, flowers — add multiple products under one listing. Host pays you, collects on behalf of guest.</div></div>
             </label>
             <label class="type-option">
               <input type="radio" name="productType" value="service" id="ptService" onchange="toggleProductType();updatePreview()" checked>
@@ -438,7 +438,16 @@
             <input type="text" id="pNotes" placeholder="e.g. Please arrive 10 mins before your lesson" oninput="updatePreview()">
             <div class="field-hint">Appears as a tip on the product listing in the host's store.</div>
           </div>
-          <div id="physicalFields">
+          <div id="productFields" style="display:none">
+            <div class="field">
+              <label>Products in this listing</label>
+              <div class="field-hint" style="margin-bottom:10px">Add each product you sell. Guests will see these when they open your listing on the store.</div>
+              <div id="productItemsList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px"></div>
+              <button type="button" onclick="addProductItem()" style="width:100%;padding:12px;background:var(--bg);color:var(--partner);border:1.5px dashed var(--partner);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer">+ Add another product</button>
+              <div class="field-hint" style="margin-top:8px">Prices are what the host pays you (wholesale). Hosts set their own retail price on top and keep the margin.</div>
+            </div>
+          </div>
+          <div id="physicalFields" style="display:none">
             <div class="field">
               <label>Wholesale price ($) — what the host pays you</label>
               <input type="number" id="pWholesalePrice" placeholder="e.g. 45" min="0" oninput="updatePreview()">
@@ -809,19 +818,13 @@
 
     // Retry partner lookup up to 3 times — JWT may not be attached yet on hard refresh
     let partner = null;
-    let lastError = null;
     for (let i = 0; i < 3; i++) {
-      const { data, error } = await sb.from('partners').select('*').eq('user_id', currentUser.id).maybeSingle();
-      if (error) { lastError = error; }
+      const { data } = await sb.from('partners').select('*').eq('user_id', currentUser.id).maybeSingle();
       if (data) { partner = data; break; }
       if (i < 2) await new Promise(r => setTimeout(r, 500));
     }
 
-    if (!partner) {
-      // Show diagnostic error instead of redirecting
-      document.body.innerHTML = '<div style="max-width:600px;margin:80px auto;padding:40px;font-family:sans-serif;background:white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08)"><h2 style="color:#2C6E6A;margin-bottom:16px">Cannot load partner dashboard</h2><p style="color:#444;line-height:1.6">Logged in as: <strong>' + (currentUser.email || '?') + '</strong></p><p style="color:#444;line-height:1.6">User ID: <code>' + currentUser.id + '</code></p><p style="color:#444;line-height:1.6;margin-top:16px">Partner row lookup failed.</p>' + (lastError ? '<pre style="background:#f5f5f5;padding:14px;border-radius:8px;font-size:13px;overflow:auto;white-space:pre-wrap">' + JSON.stringify(lastError, null, 2) + '</pre>' : '<p style="color:#666">No error returned — no partner row exists for this user.</p>') + '<div style="margin-top:24px;display:flex;gap:10px"><button onclick="sb.auth.signOut().then(()=>location.href=\'partner-signup.html\')" style="background:#2C6E6A;color:white;border:none;border-radius:8px;padding:10px 20px;cursor:pointer">Sign out</button></div></div>';
-      return;
-    }
+    if (!partner) { window.location.href = 'partner-signup.html'; return; }
     partnerData = partner;
     populateUI();
     checkTrial();
@@ -1058,10 +1061,11 @@
     }
     list.innerHTML = partnerProducts.map(p => {
       const codes = Array.isArray(p.postcodes) ? p.postcodes : JSON.parse(p.postcodes || '[]');
-      const typeLabel = p.type === 'booking' ? '🔗 Booking link' : '📦 Physical';
+      const isProductType = p.type === 'product' || p.type === 'physical';
+      const typeLabel = p.type === 'booking' ? '🔗 Booking link' : (p.type === 'service' ? '🛎️ Service' : '📦 Products for sale');
       const catLabels = { product: '📦 Product', service: '🛎️ Service', reservation: '🍽️ Reservation', experience: '🏄 Experience' };
-      const catLabel = catLabels[p.category] || '📦 Product';
-      const priceLabel = p.type === 'booking' ? 'Free — booking link' : '$' + (p.wholesale_price || 0) + ' wholesale';
+      const catLabel = catLabels[p.category] || typeLabel;
+      const priceLabel = p.type === 'booking' ? 'Free — booking link' : (p.type === 'service' ? (p.service_price ? '$' + p.service_price + ' ' + (p.service_price_unit || '') : 'Contact for pricing') : 'Multiple products');
       return '<div class="item-row">' +
         '<div class="item-thumb">' + (p.image_url ? '<img src="' + p.image_url + '">' : (p.type === 'booking' ? '🔗' : '📦')) + '</div>' +
         '<div class="item-info"><div class="item-name">' + p.name +
@@ -1078,20 +1082,126 @@
   }
 
   function toggleProductType() {
-    const isPhysical = document.getElementById('ptPhysical').checked;
+    const isProduct = document.getElementById('ptProduct').checked;
     const isService = document.getElementById('ptService').checked;
     const isBooking = document.getElementById('ptBooking').checked;
-    document.getElementById('physicalFields').style.display = isPhysical ? 'block' : 'none';
+    document.getElementById('productFields').style.display = isProduct ? 'block' : 'none';
     document.getElementById('serviceFields').style.display = isService ? 'block' : 'none';
     document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
-    // Category: hidden and auto-set for physical and service; visible for booking link
+    // Legacy physicalFields hidden — replaced by productFields
+    const pf = document.getElementById('physicalFields');
+    if (pf) pf.style.display = 'none';
+    // Category: auto-set and hidden for product + service; visible for booking link
     document.getElementById('categoryFieldWrap').style.display = isBooking ? 'block' : 'none';
-    if (isPhysical) document.getElementById('pCategory').value = 'product';
+    if (isProduct) document.getElementById('pCategory').value = 'product';
     if (isService) document.getElementById('pCategory').value = 'service';
     // Update preview button label
     const btn = document.getElementById('previewBtn');
-    if (btn) btn.textContent = isBooking ? 'Book now →' : (isService ? 'Add →' : 'Add →');
+    if (btn) btn.textContent = isBooking ? 'Book now →' : 'Add →';
   }
+
+  // ── PRODUCT ITEMS (for 'product' type listings) ──
+  let productItems = []; // { id?, name, description, wholesale_price, unit, image_url?, active, _new?, _deleted? }
+
+  function renderProductItems() {
+    const list = document.getElementById('productItemsList');
+    if (!list) return;
+    const visible = productItems.filter(it => !it._deleted);
+    if (visible.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No products added yet — click below to add your first.</div>';
+      return;
+    }
+    list.innerHTML = visible.map((it, i) => {
+      const idx = productItems.indexOf(it);
+      return '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:14px">' +
+        '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">' +
+          '<input type="text" placeholder="Product name (e.g. Cheese Board)" value="' + escapeAttr(it.name || '') + '" oninput="updateProductItem(' + idx + ',\'name\',this.value)" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px;outline:none;box-sizing:border-box">' +
+          '<button type="button" onclick="removeProductItem(' + idx + ')" style="padding:10px 12px;background:white;color:var(--error);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px">✕</button>' +
+        '</div>' +
+        '<textarea placeholder="Description (optional)" oninput="updateProductItem(' + idx + ',\'description\',this.value)" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:8px;resize:vertical;min-height:50px">' + escapeHtml(it.description || '') + '</textarea>' +
+        '<div style="display:flex;gap:8px;align-items:center">' +
+          '<div style="position:relative;flex:1;max-width:140px">' +
+            '<span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none">$</span>' +
+            '<input type="number" min="0" step="0.01" placeholder="0" value="' + (it.wholesale_price || '') + '" oninput="updateProductItem(' + idx + ',\'wholesale_price\',parseFloat(this.value)||0)" style="width:100%;padding:9px 10px 9px 24px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px;outline:none;box-sizing:border-box">' +
+          '</div>' +
+          '<input type="text" placeholder="Unit (e.g. each, box, kg)" value="' + escapeAttr(it.unit || '') + '" oninput="updateProductItem(' + idx + ',\'unit\',this.value)" style="flex:1;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px;outline:none;box-sizing:border-box">' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function escapeAttr(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+  function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  function addProductItem() {
+    productItems.push({ name: '', description: '', wholesale_price: 0, unit: '', active: true, _new: true });
+    renderProductItems();
+  }
+
+  function updateProductItem(idx, field, value) {
+    if (!productItems[idx]) return;
+    productItems[idx][field] = value;
+    if (!productItems[idx]._new && !productItems[idx]._dirty) productItems[idx]._dirty = true;
+  }
+
+  function removeProductItem(idx) {
+    if (!productItems[idx]) return;
+    if (productItems[idx]._new) {
+      productItems.splice(idx, 1);
+    } else {
+      productItems[idx]._deleted = true;
+    }
+    renderProductItems();
+  }
+
+  async function loadProductItemsFor(partnerProductId) {
+    productItems = [];
+    if (!partnerProductId) { renderProductItems(); return; }
+    const { data, error } = await sb.from('partner_product_items')
+      .select('*')
+      .eq('partner_product_id', partnerProductId)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true });
+    if (error) { console.warn('Load items error:', error); renderProductItems(); return; }
+    productItems = (data || []).map(d => ({ ...d }));
+    renderProductItems();
+  }
+
+  async function saveProductItemsFor(partnerProductId) {
+    if (!partnerProductId) return;
+    // Deletes
+    const toDelete = productItems.filter(it => it._deleted && it.id);
+    if (toDelete.length) {
+      await sb.from('partner_product_items').delete().in('id', toDelete.map(it => it.id));
+    }
+    // Inserts
+    const toInsert = productItems.filter(it => it._new && !it._deleted && (it.name || '').trim()).map((it, i) => ({
+      partner_product_id: partnerProductId,
+      name: it.name.trim(),
+      description: it.description || null,
+      wholesale_price: parseFloat(it.wholesale_price) || 0,
+      unit: it.unit || null,
+      sort_order: i,
+      active: true,
+    }));
+    if (toInsert.length) {
+      const { error } = await sb.from('partner_product_items').insert(toInsert);
+      if (error) console.warn('Insert items error:', error);
+    }
+    // Updates
+    const toUpdate = productItems.filter(it => !it._new && !it._deleted && it._dirty && it.id);
+    for (const it of toUpdate) {
+      await sb.from('partner_product_items').update({
+        name: (it.name || '').trim(),
+        description: it.description || null,
+        wholesale_price: parseFloat(it.wholesale_price) || 0,
+        unit: it.unit || null,
+      }).eq('id', it.id);
+    }
+  }
+  window.addProductItem = addProductItem;
+  window.updateProductItem = updateProductItem;
+  window.removeProductItem = removeProductItem;
 
   function toggleAllDays(cb) {
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -1176,11 +1286,15 @@
     document.getElementById('pServicePrice').style.display = 'block';
     document.getElementById('priceDollarSign').style.display = 'block';
     document.getElementById('ptService').checked = true;
-    document.getElementById('physicalFields').style.display = 'block';
-    document.getElementById('serviceFields').style.display = 'none';
+    const legacyPhys2 = document.getElementById('physicalFields');
+    if (legacyPhys2) legacyPhys2.style.display = 'none';
+    document.getElementById('productFields').style.display = 'none';
+    document.getElementById('serviceFields').style.display = 'block';
     document.getElementById('bookingFields').style.display = 'none';
     document.getElementById('categoryFieldWrap').style.display = 'none';
-    document.getElementById('pCategory').value = 'product';
+    document.getElementById('pCategory').value = 'service';
+    productItems = [];
+    renderProductItems();
     setSelectedDays(null);
     removeProductImage();
     removeVoucherPdf();
@@ -1237,11 +1351,15 @@
 
     const name = document.getElementById('pName').value.trim();
     if (!name) { showToast('Please enter a product name'); return; }
-    const isPhysical = document.getElementById('ptPhysical').checked;
+    const isProduct = document.getElementById('ptProduct').checked;
     const isService = document.getElementById('ptService').checked;
     const isBooking = document.getElementById('ptBooking').checked;
     const bookingUrl = document.getElementById('pBookingUrl').value.trim();
     if (isBooking && !bookingUrl) { showToast('Please enter a booking URL'); return; }
+    if (isProduct) {
+      const validItems = productItems.filter(it => !it._deleted && (it.name || '').trim());
+      if (validItems.length === 0) { showToast('Please add at least one product'); return; }
+    }
 
     // Lead time
     const leadTimeValue = isService ? (parseInt(document.getElementById('pLeadTimeValue').value) || 0) : null;
@@ -1252,7 +1370,7 @@
     const servicePrice = isService && servicePriceUnit !== 'contact for pricing' ? (parseFloat(document.getElementById('pServicePrice').value) || 0) : null;
 
     // Available days
-    const availableDays = (isPhysical || isService) ? getSelectedDays() : null;
+    const availableDays = (isProduct || isService) ? getSelectedDays() : null;
 
     // Listing location
     const listingAddress = selectedListingLocation?.isDetailed ? selectedListingLocation.name : null;
@@ -1264,9 +1382,9 @@
       name,
       description: document.getElementById('pDesc').value.trim(),
       notes: document.getElementById('pNotes').value.trim(),
-      type: isBooking ? 'booking' : (isService ? 'service' : 'physical'),
+      type: isBooking ? 'booking' : (isService ? 'service' : 'product'),
       category: document.getElementById('pCategory').value,
-      wholesale_price: isPhysical ? (parseFloat(document.getElementById('pWholesalePrice').value) || 0) : 0,
+      wholesale_price: 0,
       booking_url: isBooking ? bookingUrl : null,
       voucher_title: isBooking ? (document.getElementById('pVoucherTitle').value.trim() || null) : null,
       lead_time_value: leadTimeValue,
@@ -1291,6 +1409,11 @@
       const { data: inserted, error } = await sb.from('partner_products').insert(payload).select().single();
       if (error) { showToast('Error: ' + error.message); return; }
       productId = inserted.id;
+    }
+
+    // Save product items (only if listing is of type 'product')
+    if (isProduct) {
+      await saveProductItemsFor(productId);
     }
 
     const imageFile = document.getElementById('pImageFile').files[0];
@@ -1352,19 +1475,23 @@
 
     const isBooking = p.type === 'booking';
     const isService = p.type === 'service';
-    document.getElementById('ptPhysical').checked = !isBooking && !isService;
+    const isProduct = !isBooking && !isService; // covers 'product' and legacy 'physical'
+    document.getElementById('ptProduct').checked = isProduct;
     document.getElementById('ptService').checked = isService;
     document.getElementById('ptBooking').checked = isBooking;
-    document.getElementById('physicalFields').style.display = (!isBooking && !isService) ? 'block' : 'none';
+    document.getElementById('productFields').style.display = isProduct ? 'block' : 'none';
     document.getElementById('serviceFields').style.display = isService ? 'block' : 'none';
     document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
+    const legacyPhys = document.getElementById('physicalFields');
+    if (legacyPhys) legacyPhys.style.display = 'none';
     document.getElementById('categoryFieldWrap').style.display = isBooking ? 'block' : 'none';
-    if (!isBooking && !isService) document.getElementById('pCategory').value = 'product';
+    if (isProduct) document.getElementById('pCategory').value = 'product';
     if (isService) document.getElementById('pCategory').value = 'service';
 
-    if (!isBooking && !isService) {
-      document.getElementById('pWholesalePrice').value = p.wholesale_price || '';
+    if (isProduct) {
       setSelectedDays(Array.isArray(p.available_days) ? p.available_days : null);
+      // Load items for this listing
+      loadProductItemsFor(p.id);
     }
     if (isService) {
       document.getElementById('pLeadTimeValue').value = p.lead_time_value || '';

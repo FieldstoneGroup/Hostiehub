@@ -287,14 +287,15 @@
             <button class="btn btn-primary" onclick="showPage('newproduct', document.querySelector('[onclick*=newproduct]'))">📦 &nbsp;Add a listing</button>
             <button class="btn btn-outline" onclick="showPage('analytics', document.querySelector('[onclick*=analytics]'))">📊 &nbsp;View analytics</button>
             <button class="btn btn-outline" onclick="showPage('newvoucher', document.querySelector('[onclick*=newvoucher]'))">🎟️ &nbsp;Add a voucher</button>
-            <button class="btn btn-outline" onclick="showPage('products', document.querySelector('[onclick*=products]'))">📋 &nbsp;Manage my listings</button>
+            <button class="btn btn-outline" onclick="showPage('account', document.querySelector('[onclick*=account]'))">📍 &nbsp;Update my postcodes</button>
           </div>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">How visibility works</div>
-        <div class="card-desc">Each listing has its own address and service radius. Guests see your listing when their property sits within that radius (platform-wide hard cap: 35 km).</div>
-        <div style="font-size:13px;color:var(--muted);margin-top:12px;line-height:1.6">Go to <strong>My listings</strong> to set or update any listing's address and travel radius.</div>
+        <div class="card-title">Your service area</div>
+        <div class="card-desc">Hosts within your selected radius can see and add your products & services.</div>
+        <div id="overviewServiceArea" style="font-size:14px;color:var(--muted);margin-bottom:12px">Not set — go to Account to set your service area.</div>
+        <button class="btn btn-outline btn-sm" onclick="showPage('account', document.querySelector('[onclick*=account]'))">Edit service area →</button>
       </div>
     </div>
 
@@ -425,7 +426,7 @@
               <option value="reservation">🍽️ Reservation — table, venue or booking link</option>
               <option value="experience">🏄 Experience — activity, tour, lesson</option>
             </select>
-            <div class="field-hint">Guests filter the local reservations &amp; experiences tab by this category.</div>
+            <div class="field-hint">This tells hosts whether they can set their own price or not.</div>
           </div>
           <div class="field">
             <label>Description <span style="font-weight:300;font-size:12px" id="pDescCount">(0 / 220 characters)</span></label>
@@ -486,39 +487,33 @@
             <div class="field">
               <label>Days available</label>
               <div class="field-hint" style="margin-bottom:10px">Which days of the week can you offer this service?</div>
-              <div id="daysDropdownWrap" style="position:relative;display:inline-block">
-                <button type="button" id="daysDropdownBtn" onclick="toggleDaysDropdown()" style="min-width:220px;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:white;color:var(--text);outline:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:space-between;gap:12px;text-align:left">
-                  <span id="daysDropdownLabel">Select days</span>
-                  <span style="color:var(--muted);font-size:12px">▾</span>
-                </button>
-                <div id="daysDropdownMenu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;min-width:220px;background:white;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.08);z-index:50;overflow:hidden">
-                  <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;font-weight:600;cursor:pointer;background:var(--partner-light);color:var(--partner);border-bottom:1.5px solid var(--border)">
-                    <input type="checkbox" id="dayAll" onchange="toggleAllDays(this)" style="width:auto;margin:0;padding:0"> Select all days
-                  </label>
-                  <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" id="dayMon" value="mon" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Monday
-                  </label>
-                  <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" id="dayTue" value="tue" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Tuesday
-                  </label>
-                  <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" id="dayWed" value="wed" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Wednesday
-                  </label>
-                  <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" id="dayThu" value="thu" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Thursday
-                  </label>
-                  <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" id="dayFri" value="fri" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Friday
-                  </label>
-                  <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--border)">
-                    <input type="checkbox" id="daySat" value="sat" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Saturday
-                  </label>
-                  <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:14px;cursor:pointer">
-                    <input type="checkbox" id="daySun" value="sun" onchange="updateAllDaysCheck()" style="width:auto;margin:0;padding:0"> Sunday
-                  </label>
-                </div>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayMon" value="mon" onchange="updateAllDaysCheck()"> Mon
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayTue" value="tue" onchange="updateAllDaysCheck()"> Tue
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayWed" value="wed" onchange="updateAllDaysCheck()"> Wed
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayThu" value="thu" onchange="updateAllDaysCheck()"> Thu
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="dayFri" value="fri" onchange="updateAllDaysCheck()"> Fri
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="daySat" value="sat" onchange="updateAllDaysCheck()"> Sat
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
+                  <input type="checkbox" id="daySun" value="sun" onchange="updateAllDaysCheck()"> Sun
+                </label>
               </div>
-              <div class="field-hint" style="margin-top:10px">Guests will see which days this service is available when they browse your listing.</div>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--partner)">
+                <input type="checkbox" id="dayAll" onchange="toggleAllDays(this)"> All days (7 days a week)
+              </label>
+              <div class="field-hint" style="margin-top:6px">Guests will see which days this service is available when they browse your listing.</div>
             </div>
           </div>
           <div id="bookingFields" style="display:none">
@@ -557,28 +552,17 @@
             <div class="field-hint">Recommended: square image, at least 400x400px. JPG or PNG.</div>
           </div>
           <div class="field">
-            <label>Listing location <span style="color:var(--error)">*</span></label>
-            <div class="field-hint" style="margin-bottom:8px">Enter your business street address — start typing and pick a match from the suggestions.</div>
+            <label>Listing location</label>
+            <div class="field-hint" style="margin-bottom:8px">Enter a postcode <strong>or</strong> street address. A full address lets guests see exactly how far away you are.</div>
             <div style="display:flex;gap:8px;margin-bottom:8px">
               <div style="width:100px;flex-shrink:0">
                 <input type="text" id="pUnitNumber" placeholder="Unit (opt.)" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
               </div>
               <div style="flex:1;position:relative">
-                <input type="text" id="pListingLocation" placeholder="e.g. 11 Honeysuckle Dr, Newcastle 2300" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" autocomplete="off" required>
+                <input type="text" id="pListingLocation" placeholder="e.g. 11 Honeysuckle Dr, Newcastle 2300" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" autocomplete="off">
               </div>
             </div>
-            <div class="field-hint">If you have a unit number, enter it separately — e.g. Unit 2, then 11 Honeysuckle Dr.</div>
-          </div>
-          <div class="field">
-            <label>Service radius</label>
-            <div class="field-hint" style="margin-bottom:8px">Distance is measured from the address above. No limit for venues guests come to (restaurants, cafes, attractions). Set a radius if you travel to them (massage, cleaning, chef services).</div>
-            <select id="pServiceRadius" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:white;outline:none">
-              <option value="">No limit</option>
-              <option value="5">Within 5 km</option>
-              <option value="10">Within 10 km</option>
-              <option value="20" selected>Within 20 km</option>
-              <option value="35">Within 35 km</option>
-            </select>
+            <div class="field-hint">If you have a unit number, enter it separately — e.g. Unit 2, then 11 Honeysuckle Dr. Postcode only → guests see "Available in your area". Full address → guests see exact distance.</div>
           </div>
           <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="saveProduct()">Publish listing →</button>
         </div>
@@ -666,6 +650,39 @@
           </div>
 
           <!-- Email change -->
+          <!-- Service area -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title">Service area</div>
+            <div class="card-desc">Set your location and how far you're willing to travel or deliver. Hosts within this radius will see your listings.</div>
+            <div class="field">
+              <label>Your suburb</label>
+              <div style="position:relative">
+                <input type="text" id="serviceSuburbInput" placeholder="e.g. Newcastle, Honeysuckle, Maitland" style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" oninput="suggestServiceSuburb(this.value)" autocomplete="off">
+                <div id="serviceSuburbSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:4px"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Radius</label>
+              <select id="serviceRadiusSelect" style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:white;outline:none">
+                <option value="5">5 km</option>
+                <option value="10">10 km</option>
+                <option value="25" selected>25 km</option>
+                <option value="50">50 km</option>
+                <option value="100">100 km</option>
+              </select>
+              <div class="field-hint">Hosts within this distance from your suburb will see your listings.</div>
+            </div>
+            <div class="field">
+              <label>Business address <span style="font-weight:300;font-size:12px">(optional — for accurate guest distance)</span></label>
+              <div style="position:relative">
+                <input type="text" id="businessAddressInput" placeholder="e.g. 12 Hunter St, Newcastle NSW 2300" style="width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box" oninput="suggestBusinessAddress(this.value)" autocomplete="off">
+                <div id="businessAddressSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-top:4px"></div>
+              </div>
+              <div class="field-hint">Enter a full street address to show guests exactly how far away you are. If left as suburb only, guests will see "Available in your area".</div>
+            </div>
+            <div id="serviceAreaCurrent" style="display:none;background:var(--partner-light);border:1.5px solid var(--partner);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--partner);margin-bottom:12px"></div>
+            <button class="btn btn-primary btn-sm" onclick="saveServiceArea()">Save service area</button>
+          </div>
 
           <div class="card" style="margin-bottom:16px">
             <div class="card-desc">A verification link will be sent to your new email. Your login will update once you click it.</div>
@@ -817,7 +834,16 @@
     document.getElementById('accountPhone').value = partnerData.phone || '';
     accountPostcodes = Array.isArray(partnerData.postcodes) ? partnerData.postcodes : JSON.parse(partnerData.postcodes || '[]');
     renderAccountPostcodes();
-    // NOTE: service-area fields removed from UI — each listing now carries its own address + service_radius_km
+    if (partnerData.service_suburb) {
+      document.getElementById('serviceSuburbInput').value = partnerData.service_suburb;
+      selectedServiceSuburb = { name: partnerData.service_suburb, lat: partnerData.service_lat, lng: partnerData.service_lng };
+      if (partnerData.service_radius_km) document.getElementById('serviceRadiusSelect').value = partnerData.service_radius_km;
+    }
+    if (partnerData.business_address) {
+      document.getElementById('businessAddressInput').value = partnerData.business_address;
+      selectedBusinessAddress = { name: partnerData.business_address, lat: partnerData.business_lat, lng: partnerData.business_lng };
+    }
+    updateServiceAreaDisplay();
   }
 
   function checkTrial() {
@@ -1025,17 +1051,17 @@
       return;
     }
     list.innerHTML = partnerProducts.map(p => {
+      const codes = Array.isArray(p.postcodes) ? p.postcodes : JSON.parse(p.postcodes || '[]');
       const typeLabel = p.type === 'booking' ? '🔗 Booking link' : '📦 Physical';
       const catLabels = { product: '📦 Product', service: '🛎️ Service', reservation: '🍽️ Reservation', experience: '🏄 Experience' };
       const catLabel = catLabels[p.category] || '📦 Product';
       const priceLabel = p.type === 'booking' ? 'Free — booking link' : '$' + (p.wholesale_price || 0) + ' wholesale';
-      const radiusLabel = (p.service_radius_km == null) ? 'No limit' : 'Within ' + p.service_radius_km + ' km';
       return '<div class="item-row">' +
         '<div class="item-thumb">' + (p.image_url ? '<img src="' + p.image_url + '">' : (p.type === 'booking' ? '🔗' : '📦')) + '</div>' +
         '<div class="item-info"><div class="item-name">' + p.name +
           ' <span class="' + (p.active ? 'badge-active' : 'badge-inactive') + '">' + (p.active ? 'Active' : 'Inactive') + '</span>' +
           ' <span class="badge-type">' + catLabel + '</span></div>' +
-          '<div class="item-meta"><span>💰 ' + priceLabel + '</span><span>📍 ' + radiusLabel + '</span></div>' +
+          '<div class="item-meta"><span>💰 ' + priceLabel + '</span><span>📍 ' + (codes.length ? codes.join(', ') : 'All areas') + '</span></div>' +
         '</div>' +
         '<div style="display:flex;gap:8px;flex-shrink:0">' +
           '<button class="btn btn-outline btn-sm" onclick="editProduct(\'' + p.id + '\')">Edit</button>' +
@@ -1052,8 +1078,10 @@
     document.getElementById('physicalFields').style.display = isPhysical ? 'block' : 'none';
     document.getElementById('serviceFields').style.display = isService ? 'block' : 'none';
     document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
-    // Category visible for service + booking (physical is hidden globally). Default set by openProductModal/editProduct.
-    document.getElementById('categoryFieldWrap').style.display = (isBooking || isService) ? 'block' : 'none';
+    // Category: hidden and auto-set for physical and service; visible for booking link
+    document.getElementById('categoryFieldWrap').style.display = isBooking ? 'block' : 'none';
+    if (isPhysical) document.getElementById('pCategory').value = 'product';
+    if (isService) document.getElementById('pCategory').value = 'service';
     // Update preview button label
     const btn = document.getElementById('previewBtn');
     if (btn) btn.textContent = isBooking ? 'Book now →' : (isService ? 'Add →' : 'Add →');
@@ -1062,32 +1090,6 @@
   function toggleAllDays(cb) {
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
     days.forEach(d => { document.getElementById('day' + d).checked = cb.checked; });
-    updateDaysDropdownLabel();
-  }
-
-  function toggleDaysDropdown() {
-    const menu = document.getElementById('daysDropdownMenu');
-    if (!menu) return;
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-  }
-  window.toggleDaysDropdown = toggleDaysDropdown;
-
-  // Close dropdown when clicking outside
-  document.addEventListener('click', e => {
-    const wrap = document.getElementById('daysDropdownWrap');
-    const menu = document.getElementById('daysDropdownMenu');
-    if (wrap && menu && !wrap.contains(e.target)) menu.style.display = 'none';
-  });
-
-  function updateDaysDropdownLabel() {
-    const label = document.getElementById('daysDropdownLabel');
-    if (!label) return;
-    const shortDays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    const selected = shortDays.filter(d => document.getElementById('day' + d)?.checked);
-    if (selected.length === 0) label.textContent = 'Select days';
-    else if (selected.length === 7) label.textContent = 'All days';
-    else if (selected.length <= 3) label.textContent = selected.join(', ');
-    else label.textContent = selected.length + ' days selected';
   }
 
   function toggleServicePriceInput() {
@@ -1104,7 +1106,6 @@
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
     const allChecked = days.every(d => document.getElementById('day' + d).checked);
     document.getElementById('dayAll').checked = allChecked;
-    updateDaysDropdownLabel();
   }
 
   function getSelectedDays() {
@@ -1122,7 +1123,6 @@
       days.forEach(d => { document.getElementById('day' + d).checked = availableDays.includes(d.toLowerCase()); });
       document.getElementById('dayAll').checked = availableDays.length === 7;
     }
-    updateDaysDropdownLabel();
   }
 
   function previewProductImage(input) {
@@ -1170,11 +1170,11 @@
     document.getElementById('pServicePrice').style.display = 'block';
     document.getElementById('priceDollarSign').style.display = 'block';
     document.getElementById('ptService').checked = true;
-    document.getElementById('physicalFields').style.display = 'none';
-    document.getElementById('serviceFields').style.display = 'block';
+    document.getElementById('physicalFields').style.display = 'block';
+    document.getElementById('serviceFields').style.display = 'none';
     document.getElementById('bookingFields').style.display = 'none';
-    document.getElementById('categoryFieldWrap').style.display = 'block';
-    document.getElementById('pCategory').value = 'service';
+    document.getElementById('categoryFieldWrap').style.display = 'none';
+    document.getElementById('pCategory').value = 'product';
     setSelectedDays(null);
     removeProductImage();
     removeVoucherPdf();
@@ -1183,7 +1183,6 @@
     selectedListingLocation = null;
     document.getElementById('pListingLocation').value = '';
     document.getElementById('pUnitNumber').value = '';
-    document.getElementById('pServiceRadius').value = '20'; // default radius per spec
   }
 
   function previewVoucherPdf(input) {
@@ -1249,18 +1248,10 @@
     // Available days
     const availableDays = (isPhysical || isService) ? getSelectedDays() : null;
 
-    // Listing location — REQUIRED, must be a detailed address selected from Google Places
-    if (!selectedListingLocation?.isDetailed || !selectedListingLocation?.lat || !selectedListingLocation?.lng) {
-      showToast('⚠️ Please select a street address from the suggestions');
-      return;
-    }
-    const listingAddress = selectedListingLocation.name;
-    const listingLat = selectedListingLocation.lat;
-    const listingLng = selectedListingLocation.lng;
-
-    // Service radius (null = no limit)
-    const serviceRadiusVal = document.getElementById('pServiceRadius').value;
-    const serviceRadiusKm = serviceRadiusVal === '' ? null : parseInt(serviceRadiusVal);
+    // Listing location
+    const listingAddress = selectedListingLocation?.isDetailed ? selectedListingLocation.name : null;
+    const listingLat = selectedListingLocation?.lat || null;
+    const listingLng = selectedListingLocation?.lng || null;
 
     const payload = {
       partner_id: partnerData.id,
@@ -1280,7 +1271,6 @@
       listing_address: listingAddress,
       listing_lat: listingLat,
       listing_lng: listingLng,
-      service_radius_km: serviceRadiusKm,
       active: true,
     };
 
@@ -1362,13 +1352,9 @@
     document.getElementById('physicalFields').style.display = (!isBooking && !isService) ? 'block' : 'none';
     document.getElementById('serviceFields').style.display = isService ? 'block' : 'none';
     document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
-    document.getElementById('categoryFieldWrap').style.display = (isBooking || isService) ? 'block' : 'none';
-    // Preserve saved category — only set a default if blank
-    if (!p.category) {
-      if (!isBooking && !isService) document.getElementById('pCategory').value = 'product';
-      else if (isService) document.getElementById('pCategory').value = 'service';
-      else if (isBooking) document.getElementById('pCategory').value = 'reservation';
-    }
+    document.getElementById('categoryFieldWrap').style.display = isBooking ? 'block' : 'none';
+    if (!isBooking && !isService) document.getElementById('pCategory').value = 'product';
+    if (isService) document.getElementById('pCategory').value = 'service';
 
     if (!isBooking && !isService) {
       document.getElementById('pWholesalePrice').value = p.wholesale_price || '';
@@ -1417,10 +1403,6 @@
     } else {
       locInput.value = '';
     }
-
-    // Service radius (null = no limit)
-    const pRad = document.getElementById('pServiceRadius');
-    if (pRad) pRad.value = (p.service_radius_km == null) ? '' : String(p.service_radius_km);
 
     setTimeout(updatePreview, 50);
     setTimeout(initGooglePlacesAutocomplete, 100);

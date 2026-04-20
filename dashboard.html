@@ -887,18 +887,6 @@
         <div class="field"><label>Price ($)</label><input type="number" id="pPrice" placeholder="45" min="1"></div>
         <div class="field"><label>Price label</label><input type="text" id="pUnit" placeholder="e.g. per stay, per person"></div>
       </div>
-
-      <!-- VARIANTS (optional) — e.g. "For 2 / For 4 / For 6" with different prices -->
-      <div class="field" id="variantsField">
-        <label style="display:flex;align-items:center;justify-content:space-between">
-          <span>Size / quantity options <span style="font-weight:300;font-size:12px">(optional)</span></span>
-          <button type="button" id="pVariantsToggle" onclick="toggleVariantsEnabled()" style="background:var(--bg);border:1.5px solid var(--border);border-radius:50px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--brand);cursor:pointer">Enable</button>
-        </label>
-        <div class="field-hint" style="margin-top:4px">Offer different sizes or serving amounts at different prices (e.g. "For 2 people — $65", "For 4 — $110"). Overrides the main price above.</div>
-        <div id="pVariantsList" style="display:none;margin-top:10px;flex-direction:column;gap:8px"></div>
-        <button type="button" id="pAddVariantBtn" onclick="addVariantRow()" style="display:none;margin-top:8px;background:none;border:1.5px dashed var(--border);border-radius:10px;padding:8px 14px;font-size:13px;color:var(--muted);cursor:pointer;width:100%">+ Add another option</button>
-      </div>
-
       <div class="field">
         <label>Guest notes prompt <span style="font-weight:300;font-size:12px">(optional)</span></label>
         <input type="text" id="pNotesPrompt" placeholder="e.g. Please describe your flower preference (roses, natives, white, mixed colours)">
@@ -952,41 +940,16 @@
         </div>
       </div>
       <div class="field">
-        <label>Product photos <span style="font-weight:300;font-size:12px">(up to 3)</span></label>
-        <div class="field-hint" style="margin-bottom:10px">Add up to 3 photos. Guests can swipe through them in the store.</div>
-        <div id="imageSlotsGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-          <!-- Slot 1 -->
-          <div class="image-slot" data-slot="0" style="position:relative;aspect-ratio:1;border:2px dashed var(--border);border-radius:10px;overflow:hidden;background:var(--bg)">
-            <img class="slot-preview" style="display:none;width:100%;height:100%;object-fit:cover">
-            <label class="slot-upload" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-size:12px;color:var(--muted)">
-              <span style="font-size:22px">📷</span>
-              <span>Photo 1</span>
-              <input type="file" accept="image/*" onchange="previewSlotImage(this, 0)" style="display:none">
-            </label>
-            <button type="button" class="slot-remove" onclick="removeSlotImage(0)" style="display:none;position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;align-items:center;justify-content:center">✕</button>
-          </div>
-          <!-- Slot 2 -->
-          <div class="image-slot" data-slot="1" style="position:relative;aspect-ratio:1;border:2px dashed var(--border);border-radius:10px;overflow:hidden;background:var(--bg)">
-            <img class="slot-preview" style="display:none;width:100%;height:100%;object-fit:cover">
-            <label class="slot-upload" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-size:12px;color:var(--muted)">
-              <span style="font-size:22px">📷</span>
-              <span>Photo 2</span>
-              <input type="file" accept="image/*" onchange="previewSlotImage(this, 1)" style="display:none">
-            </label>
-            <button type="button" class="slot-remove" onclick="removeSlotImage(1)" style="display:none;position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;align-items:center;justify-content:center">✕</button>
-          </div>
-          <!-- Slot 3 -->
-          <div class="image-slot" data-slot="2" style="position:relative;aspect-ratio:1;border:2px dashed var(--border);border-radius:10px;overflow:hidden;background:var(--bg)">
-            <img class="slot-preview" style="display:none;width:100%;height:100%;object-fit:cover">
-            <label class="slot-upload" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-size:12px;color:var(--muted)">
-              <span style="font-size:22px">📷</span>
-              <span>Photo 3</span>
-              <input type="file" accept="image/*" onchange="previewSlotImage(this, 2)" style="display:none">
-            </label>
-            <button type="button" class="slot-remove" onclick="removeSlotImage(2)" style="display:none;position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:12px;align-items:center;justify-content:center">✕</button>
-          </div>
+        <label>Product photo</label>
+        <div id="imagePreviewWrap" style="display:none;margin-bottom:10px;position:relative;width:100%;height:180px;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);">
+          <img id="imagePreview" src="" style="width:100%;height:100%;object-fit:cover;">
+          <button onclick="removeImage()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">✕</button>
         </div>
-        <div class="field-hint" style="margin-top:8px">Recommended: square images, at least 400×400px. JPG or PNG.</div>
+        <label id="imageUploadLabel" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:14px;color:var(--muted);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+          📷 Click to upload a photo
+          <input type="file" id="productImage" accept="image/*" style="display:none" onchange="previewImage(this)">
+        </label>
+        <div class="field-hint">Recommended: square image, at least 400x400px. JPG or PNG.</div>
       </div>
       <div class="field">
         <label>Available for</label>
@@ -1015,7 +978,8 @@
     </div>
     <div class="modal-body">
       <div class="field"><label>Property nickname</label><input type="text" id="propNickname" placeholder="e.g. The Beach House, Unit 4B, Darby St"></div>
-      <div class="field"><label>Full address</label><input type="text" id="propAddress" placeholder="Start typing and pick a match" autocomplete="off"><div class="field-hint" style="margin-top:6px">Pick from the Google suggestions so distance to local partners is accurate.</div></div>
+      <div class="field"><label>Full address</label><input type="text" id="propAddress" placeholder="e.g. 12 Ocean Drive, Newcastle NSW 2300"></div>
+      <div class="field"><label>Postcode</label><input type="text" id="propPostcode" placeholder="e.g. 2300"></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closePropertyModal()">Cancel</button>
@@ -1032,21 +996,8 @@
       <button class="modal-close" onclick="closePresetModal()">✕</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:14px;color:var(--muted);margin-bottom:14px">Select the products you'd like to add to your store. You can edit them after adding.</p>
-      <div style="position:relative;margin-bottom:14px">
-        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--muted)">🔍</span>
-        <input type="text" id="presetSearchInput" placeholder="Search products…" oninput="filterPresetList()" style="width:100%;padding:11px 14px 11px 40px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;outline:none;box-sizing:border-box">
-      </div>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:20px">Select the products you'd like to add to your store. You can edit them after adding.</p>
       <div id="presetList" style="display:flex;flex-direction:column;gap:10px"></div>
-      <div id="presetEmptyState" style="display:none;text-align:center;padding:28px 12px;color:var(--muted);font-size:14px">No matches — try a different search term.</div>
-
-      <!-- Custom request panel -->
-      <div style="margin-top:20px;padding:16px;background:var(--bg);border-radius:10px;border:1.5px dashed var(--border)">
-        <div style="font-size:14px;font-weight:600;margin-bottom:4px">Can't find what you need?</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Tell us what product or service you'd like to offer and we'll look into adding it.</div>
-        <textarea id="productRequestInput" placeholder="e.g. Grazing board for 20 people, late-night pizza delivery, e-bike hire..." rows="2" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;outline:none;box-sizing:border-box;background:white"></textarea>
-        <button type="button" class="btn btn-outline btn-sm" onclick="submitProductRequest()" style="margin-top:8px">Send request →</button>
-      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closePresetModal()">Cancel</button>
@@ -1114,83 +1065,34 @@
   let vouchers = [];
   let editingPropertyId = null;
   let editingProductId = null;
-  // ── PRODUCT IMAGES (up to 3 slots) ──
-  // imageSlotFiles[i] = File object (newly picked, not yet uploaded) | null
-  // imageSlotUrls[i]  = existing URL (already uploaded) | null
-  let imageSlotFiles = [null, null, null];
-  let imageSlotUrls  = [null, null, null];
-
-  function previewSlotImage(input, idx) {
+  let currentImageUrl = null;
+  function previewImage(input) {
     const file = input.files[0];
     if (!file) return;
-    imageSlotFiles[idx] = file;
     const reader = new FileReader();
-    reader.onload = e => { renderSlotPreview(idx, e.target.result); };
+    reader.onload = e => {
+      document.getElementById('imagePreview').src = e.target.result;
+      document.getElementById('imagePreviewWrap').style.display = 'block';
+      document.getElementById('imageUploadLabel').style.display = 'none';
+    };
     reader.readAsDataURL(file);
   }
-  window.previewSlotImage = previewSlotImage;
 
-  function renderSlotPreview(idx, src) {
-    const slot = document.querySelector(`.image-slot[data-slot="${idx}"]`);
-    if (!slot) return;
-    const img = slot.querySelector('.slot-preview');
-    const uploadLabel = slot.querySelector('.slot-upload');
-    const removeBtn = slot.querySelector('.slot-remove');
-    if (src) {
-      img.src = src;
-      img.style.display = 'block';
-      uploadLabel.style.display = 'none';
-      removeBtn.style.display = 'flex';
-      slot.style.border = '1.5px solid var(--border)';
-    } else {
-      img.src = '';
-      img.style.display = 'none';
-      uploadLabel.style.display = 'flex';
-      removeBtn.style.display = 'none';
-      slot.style.border = '2px dashed var(--border)';
-      // reset input
-      const input = slot.querySelector('input[type="file"]');
-      if (input) input.value = '';
-    }
+  function removeImage() {
+    document.getElementById('productImage').value = '';
+    document.getElementById('imagePreview').src = '';
+    document.getElementById('imagePreviewWrap').style.display = 'none';
+    document.getElementById('imageUploadLabel').style.display = 'flex';
+    currentImageUrl = null;
   }
 
-  function removeSlotImage(idx) {
-    imageSlotFiles[idx] = null;
-    imageSlotUrls[idx]  = null;
-    renderSlotPreview(idx, null);
-  }
-  window.removeSlotImage = removeSlotImage;
-
-  function resetImageSlots() {
-    imageSlotFiles = [null, null, null];
-    imageSlotUrls  = [null, null, null];
-    for (let i = 0; i < 3; i++) renderSlotPreview(i, null);
-  }
-
-  function loadImageSlotsFromProduct(p) {
-    resetImageSlots();
-    // image_urls (array) is canonical; fall back to image_url for legacy single-image products
-    let urls = [];
-    if (Array.isArray(p.image_urls)) urls = p.image_urls.filter(Boolean);
-    else if (typeof p.image_urls === 'string') {
-      try { urls = JSON.parse(p.image_urls) || []; } catch(e) { urls = []; }
-    }
-    if (urls.length === 0 && p.image_url) urls = [p.image_url];
-    urls.slice(0, 3).forEach((url, i) => {
-      imageSlotUrls[i] = url;
-      renderSlotPreview(i, url);
-    });
-  }
-
-  async function uploadProductImage(file, productId, slotIdx) {
+  async function uploadProductImage(file, productId) {
     const ext = file.name.split('.').pop().toLowerCase();
-    const slotSuffix = (slotIdx == null || slotIdx === 0) ? '' : ('_' + slotIdx);
-    const path = `${currentUser.id}/${productId}${slotSuffix}.${ext}`;
+    const path = `${currentUser.id}/${productId}.${ext}`;
     const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
     if (error) { console.error(error); return null; }
     const { data } = sb.storage.from('product-images').getPublicUrl(path);
-    // Append cache-buster so updated images don't get stuck behind CDN cache
-    return data.publicUrl + '?v=' + Date.now();
+    return data.publicUrl;
   }
   let selectedEmoji = '✨';
 
@@ -1221,7 +1123,7 @@
     { name: 'Toiletry Restock', description: 'Fresh shampoo, conditioner, body wash, soap and hand lotion replenished mid-stay.', price: 25, unit: 'per restock', category: 'product', emoji: '🧴', notes_prompt: 'Any specific products or brands you prefer? Any allergies or sensitivities?' },
 
     // FOOD & DRINK
-    { name: 'Hamper', description: 'A beautiful hamper of local produce — fresh pastries, artisan coffee, local honey, seasonal fruit and more waiting on arrival.', price: 65, unit: 'per hamper', category: 'product', emoji: '🧺', notes_prompt: 'Any dietary requirements or allergies?', variants: [{ label: 'For 2 people', price: 65 }, { label: 'For 4 people', price: 110 }, { label: 'For 6 people', price: 155 }, { label: 'For 8 people', price: 200 }] },
+    { name: 'Breakfast Hamper', description: 'A beautiful hamper of local produce — fresh pastries, artisan coffee, local honey, seasonal fruit and more waiting on arrival.', price: 65, unit: 'per hamper', category: 'product', emoji: '🧺', notes_prompt: 'How many guests? Any dietary requirements or allergies?' },
     { name: 'BBQ Pack', description: 'Everything you need for a great BBQ — premium meat selection, fresh salads, condiments and sides. Fire up the grill!', price: 75, unit: 'per pack', category: 'product', emoji: '🍖', notes_prompt: 'How many guests? Any dietary requirements? (vegetarian options available)' },
     { name: 'Wine & Cheese Platter', description: 'A curated selection of local wines paired with artisan cheeses, crackers, grapes and accompaniments.', price: 70, unit: 'per platter', category: 'product', emoji: '🧀', notes_prompt: 'Red, white or mixed wines? Any dietary requirements or cheese preferences?' },
     { name: 'Local Craft Beer Bundle', description: 'A selection of the best local craft beers — a great way to explore the region\'s brewing scene.', price: 45, unit: 'per bundle', category: 'product', emoji: '🍺', notes_prompt: 'Any style preferences? (pale ale / IPA / lager / stout) How many people?' },
@@ -1274,54 +1176,47 @@
   ];
 
   async function init() {
-    try {
-      // Get session — retry up to 3 times to handle token refresh on hard refresh
-      let session = null;
-      for (let i = 0; i < 3; i++) {
-        const { data: { session: s } } = await sb.auth.getSession();
-        if (s) { session = s; break; }
-        await new Promise(r => setTimeout(r, 500));
-      }
+    // Get session — retry up to 3 times to handle token refresh on hard refresh
+    let session = null;
+    for (let i = 0; i < 3; i++) {
+      const { data: { session: s } } = await sb.auth.getSession();
+      if (s) { session = s; break; }
+      await new Promise(r => setTimeout(r, 500));
+    }
 
-      // If still no session, wait briefly for onAuthStateChange
-      if (!session) {
-        session = await new Promise(resolve => {
-          const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
-            if (s) { subscription.unsubscribe(); resolve(s); }
-          });
-          setTimeout(() => resolve(null), 3000);
+    // If still no session, wait briefly for onAuthStateChange
+    if (!session) {
+      session = await new Promise(resolve => {
+        const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
+          if (s) { subscription.unsubscribe(); resolve(s); }
         });
-      }
+        setTimeout(() => resolve(null), 3000);
+      });
+    }
 
-      if (!session) { window.location.href = 'signup.html'; return; }
-      currentUser = session.user;
+    if (!session) { window.location.href = 'signup.html'; return; }
+    currentUser = session.user;
 
-      // Set the session explicitly so all subsequent requests use the correct JWT
-      await sb.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
+    // Set the session explicitly so all subsequent requests use the correct JWT
+    await sb.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
 
-      const { data: host } = await sb.from('hosts').select('*').eq('id', currentUser.id).maybeSingle();
-      if (!host && currentUser.email) {
-        const { data: byEmail } = await sb.from('hosts').select('*').eq('email', currentUser.email).maybeSingle();
-        if (byEmail) { currentHost = byEmail; populateUI(); }
-      } else if (host) {
-        currentHost = host; populateUI();
-      }
+    const { data: host } = await sb.from('hosts').select('*').eq('id', currentUser.id).maybeSingle();
+    if (!host && currentUser.email) {
+      const { data: byEmail } = await sb.from('hosts').select('*').eq('email', currentUser.email).maybeSingle();
+      if (byEmail) { currentHost = byEmail; populateUI(); }
+    } else if (host) {
+      currentHost = host; populateUI();
+    }
 
-      // Run each loader independently — one failure mustn't kill the others
-      const safe = async (fn, label) => { try { await fn(); } catch(e) { console.error('[Hostie] ' + label + ' failed:', e); } };
-      await Promise.all([
-        safe(loadProducts, 'loadProducts'),
-        safe(loadProperties, 'loadProperties'),
-        safe(loadOrders, 'loadOrders'),
-      ]);
-      safe(loadVouchers, 'loadVouchers');
-      safe(loadLocalProducts, 'loadLocalProducts');
-      safe(loadHostAnalytics, 'loadHostAnalytics');
-      safe(loadNotifEmails, 'loadNotifEmails');
-      try { buildEmojiGrid(); } catch(e) { console.error('[Hostie] buildEmojiGrid:', e); }
-      try { buildSwatches(); } catch(e) { console.error('[Hostie] buildSwatches:', e); }
+    await Promise.all([loadProducts(), loadProperties(), loadOrders()]);
+    loadVouchers();
+    loadLocalProducts();
+    loadHostAnalytics();
+    loadNotifEmails();
+    buildEmojiGrid();
+    buildSwatches();
 
-      // Handle Stripe Connect return
+    // Handle Stripe Connect return
     const params = new URLSearchParams(window.location.search);
     if (params.get('stripe') === 'success') {
       await sb.from('hosts').update({ stripe_connected: true }).eq('id', currentUser.id);
@@ -1334,11 +1229,8 @@
       showToast('✅ Stripe connected successfully!');
       window.history.replaceState({}, '', 'dashboard.html');
     } else if (params.get('stripe') === 'refresh') {
-        showToast('⚠️ Stripe setup incomplete. Please try again.');
-        window.history.replaceState({}, '', 'dashboard.html');
-      }
-    } catch(e) {
-      console.error('[Hostie] init() failed:', e);
+      showToast('⚠️ Stripe setup incomplete. Please try again.');
+      window.history.replaceState({}, '', 'dashboard.html');
     }
   }
 
@@ -1510,60 +1402,24 @@
     `).join('');
   }
 
-  let selectedPropertyLocation = null; // set by Google Places autocomplete
-
-  function initPropertyGooglePlaces() {
-    try {
-      const input = document.getElementById('propAddress');
-      if (!input || !window.google?.maps?.places || input.dataset.gpWired === '1') return;
-      if (typeof google.maps.places.Autocomplete !== 'function') {
-        console.warn('[Hostie] google.maps.places.Autocomplete not available — address autocomplete disabled');
-        return;
-      }
-      input.dataset.gpWired = '1';
-      const autocomplete = new google.maps.places.Autocomplete(input, {
-        componentRestrictions: { country: 'au' },
-        fields: ['geometry', 'formatted_address', 'address_components'],
-        types: ['address']
-      });
-      autocomplete.addListener('place_changed', () => {
-        try {
-          const place = autocomplete.getPlace();
-          if (!place.geometry) return;
-          selectedPropertyLocation = {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-            address: place.formatted_address,
-          };
-          input.value = place.formatted_address;
-        } catch(e) { console.warn('[Hostie] place_changed handler:', e); }
-      });
-    } catch(e) { console.warn('[Hostie] Google Places init failed:', e); }
-  }
-  window.initPropertyGooglePlaces = initPropertyGooglePlaces; // used as Google Maps JS API callback
-
   function openPropertyModal(id) {
     editingPropertyId = null;
-    selectedPropertyLocation = null;
     document.getElementById('propertyModalTitle').textContent = 'Add property';
     document.getElementById('propNickname').value = '';
     document.getElementById('propAddress').value = '';
+    document.getElementById('propPostcode').value = '';
     document.getElementById('propertyModal').classList.add('open');
-    setTimeout(initPropertyGooglePlaces, 100);
   }
 
   function editProperty(id) {
     const p = properties.find(x => x.id === id);
     if (!p) return;
     editingPropertyId = id;
-    selectedPropertyLocation = (p.latitude != null && p.longitude != null)
-      ? { lat: p.latitude, lng: p.longitude, address: p.address || '' }
-      : null;
     document.getElementById('propertyModalTitle').textContent = 'Edit property';
     document.getElementById('propNickname').value = p.nickname || '';
     document.getElementById('propAddress').value = p.address || '';
+    document.getElementById('propPostcode').value = p.postcode || '';
     document.getElementById('propertyModal').classList.add('open');
-    setTimeout(initPropertyGooglePlaces, 100);
   }
 
   function closePropertyModal() { document.getElementById('propertyModal').classList.remove('open'); }
@@ -1586,15 +1442,7 @@
       }
     }
 
-    const address = document.getElementById('propAddress').value.trim();
-    const data = {
-      host_id: currentUser.id,
-      nickname,
-      address,
-      // Only write coords if the address matches the Places-selected one
-      latitude: (selectedPropertyLocation && selectedPropertyLocation.address === address) ? selectedPropertyLocation.lat : null,
-      longitude: (selectedPropertyLocation && selectedPropertyLocation.address === address) ? selectedPropertyLocation.lng : null,
-    };
+    const data = { host_id: currentUser.id, nickname, address: document.getElementById('propAddress').value.trim(), postcode: document.getElementById('propPostcode').value.trim() };
     if (editingPropertyId) {
       await sb.from('properties').update(data).eq('id', editingPropertyId);
       showToast('✅ Property updated');
@@ -1843,8 +1691,11 @@
     document.getElementById('pAllProperties').checked = true;
     document.getElementById('propertyChecks').style.display = 'none';
     selectedEmoji = '✨';
-    resetImageSlots();
-    setVariantsEnabled(false);
+    currentImageUrl = null;
+    document.getElementById('productImage').value = '';
+    document.getElementById('imagePreview').src = '';
+    document.getElementById('imagePreviewWrap').style.display = 'none';
+    document.getElementById('imageUploadLabel').style.display = 'flex';
     buildEmojiGrid();
     buildPropertyChecks();
     document.getElementById('productModal').classList.add('open');
@@ -1882,14 +1733,16 @@
     document.getElementById('pCategory').closest('.field').style.display = isPartner ? 'none' : '';
 
     selectedEmoji = p.emoji || '✨';
-    // Variants
-    const savedVariants = Array.isArray(p.variants) ? p.variants : (p.variants ? JSON.parse(p.variants) : null);
-    if (savedVariants && savedVariants.length > 0) {
-      setVariantsEnabled(true, savedVariants);
+    currentImageUrl = p.image_url || null;
+    if (p.image_url) {
+      document.getElementById('imagePreview').src = p.image_url;
+      document.getElementById('imagePreviewWrap').style.display = 'block';
+      document.getElementById('imageUploadLabel').style.display = 'none';
     } else {
-      setVariantsEnabled(false);
+      document.getElementById('imagePreview').src = '';
+      document.getElementById('imagePreviewWrap').style.display = 'none';
+      document.getElementById('imageUploadLabel').style.display = 'flex';
     }
-    loadImageSlotsFromProduct(p);
     const allProps = p.available_all_properties !== false;
     document.getElementById('pAllProperties').checked = allProps;
     document.getElementById('propertyChecks').style.display = allProps ? 'none' : 'flex';
@@ -1904,62 +1757,6 @@
 
   function closeProductModal() { document.getElementById('productModal').classList.remove('open'); }
 
-  // ── VARIANTS ──
-  let productVariantsEnabled = false;
-
-  function renderVariantRows(variants) {
-    const wrap = document.getElementById('pVariantsList');
-    wrap.innerHTML = (variants || []).map((v, i) => `
-      <div class="variant-row" style="display:flex;gap:8px;align-items:center">
-        <input type="text" class="variant-label" placeholder="e.g. For 2 people" value="${(v.label || '').replace(/"/g, '&quot;')}" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;outline:none">
-        <div style="position:relative;width:120px">
-          <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px">$</span>
-          <input type="number" class="variant-price" placeholder="65" min="0" step="0.01" value="${v.price != null ? v.price : ''}" style="width:100%;padding:10px 12px 10px 22px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;outline:none">
-        </div>
-        <button type="button" onclick="removeVariantRow(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px 8px" title="Remove">✕</button>
-      </div>
-    `).join('');
-  }
-
-  function getCurrentVariants() {
-    return [...document.querySelectorAll('#pVariantsList .variant-row')].map(row => ({
-      label: row.querySelector('.variant-label').value.trim(),
-      price: parseFloat(row.querySelector('.variant-price').value) || 0,
-    }));
-  }
-
-  function addVariantRow() {
-    const current = getCurrentVariants();
-    current.push({ label: '', price: '' });
-    renderVariantRows(current);
-  }
-  window.addVariantRow = addVariantRow;
-
-  function removeVariantRow(idx) {
-    const current = getCurrentVariants();
-    current.splice(idx, 1);
-    renderVariantRows(current);
-  }
-  window.removeVariantRow = removeVariantRow;
-
-  function setVariantsEnabled(enabled, initialVariants) {
-    productVariantsEnabled = enabled;
-    document.getElementById('pVariantsList').style.display = enabled ? 'flex' : 'none';
-    document.getElementById('pAddVariantBtn').style.display = enabled ? 'block' : 'none';
-    document.getElementById('pVariantsToggle').textContent = enabled ? 'Disable' : 'Enable';
-    document.getElementById('pVariantsToggle').style.color = enabled ? 'var(--error, #dc2626)' : 'var(--brand)';
-    if (enabled) {
-      renderVariantRows(initialVariants && initialVariants.length ? initialVariants : [{ label: '', price: '' }, { label: '', price: '' }]);
-    } else {
-      document.getElementById('pVariantsList').innerHTML = '';
-    }
-  }
-
-  function toggleVariantsEnabled() {
-    setVariantsEnabled(!productVariantsEnabled);
-  }
-  window.toggleVariantsEnabled = toggleVariantsEnabled;
-
   function toggleExperienceFields() {
     const isExp = document.getElementById('pCategory').value === 'experience';
     document.getElementById('experienceFields').style.display = isExp ? 'block' : 'none';
@@ -1972,28 +1769,17 @@
   async function saveProduct() {
     const name = document.getElementById('pName').value.trim();
     const price = parseFloat(document.getElementById('pPrice').value);
-
-    // Variants (jsonb on DB) — null when disabled; when enabled, strip any blank rows
-    let variants = null;
-    if (productVariantsEnabled) {
-      variants = getCurrentVariants().filter(v => v.label && v.price > 0);
-      if (variants.length < 2) { showToast('⚠️ Add at least 2 size/quantity options, or disable them'); return; }
-    }
-
-    if (!name) { showToast('⚠️ Name is required'); return; }
-    // Need either a base price or at least one valid variant
-    if (!variants && !(price > 0)) { showToast('⚠️ Price is required'); return; }
-
+    if (!name || !price) { showToast('⚠️ Name and price are required'); return; }
     const allProps = document.getElementById('pAllProperties').checked;
     const selectedProps = allProps ? [] : [...document.querySelectorAll('.prop-check:checked')].map(cb => cb.value);
     const category = document.getElementById('pCategory').value;
     const isExperience = category === 'experience';
 
-    // When variants are enabled, use the cheapest as the "from" price stored in p.price
-    const effectivePrice = variants ? Math.min(...variants.map(v => v.price)) : price;
+    const imageFile = document.getElementById('productImage').files[0];
+    let imageUrl = currentImageUrl;
 
     const data = {
-      host_id: currentUser.id, name, price: effectivePrice,
+      host_id: currentUser.id, name, price,
       description: document.getElementById('pDesc').value.trim(),
       unit: document.getElementById('pUnit').value.trim(),
       notes_prompt: document.getElementById('pNotesPrompt').value.trim(),
@@ -2002,7 +1788,6 @@
       available_all_properties: allProps,
       property_ids: selectedProps,
       active: true,
-      variants,
       is_experience: isExperience,
       min_guests: isExperience ? (parseInt(document.getElementById('pMinGuests').value) || 1) : null,
       max_guests: isExperience ? (parseInt(document.getElementById('pMaxGuests').value) || 12) : null,
@@ -2011,35 +1796,22 @@
       booking_instructions: isExperience ? document.getElementById('pInstructions').value.trim() : null,
     };
 
-    async function finaliseImages(productId) {
-      // For each slot: if a fresh File was picked, upload; else keep existing URL.
-      const finalUrls = [];
-      const anyNewFile = imageSlotFiles.some(f => f);
-      if (anyNewFile) showToast('⏳ Uploading images...');
-      for (let i = 0; i < 3; i++) {
-        if (imageSlotFiles[i]) {
-          const url = await uploadProductImage(imageSlotFiles[i], productId, i);
-          if (url) finalUrls.push(url);
-        } else if (imageSlotUrls[i]) {
-          finalUrls.push(imageSlotUrls[i]);
-        }
-      }
-      // image_url = first image (for backward compat with anything still reading it)
-      // image_urls = full ordered array (canonical source of truth)
-      await sb.from('products').update({
-        image_url: finalUrls[0] || null,
-        image_urls: finalUrls,
-      }).eq('id', productId);
-    }
-
     if (editingProductId) {
+      if (imageFile) {
+        showToast('⏳ Uploading image...');
+        imageUrl = await uploadProductImage(imageFile, editingProductId);
+      }
+      data.image_url = imageUrl;
       await sb.from('products').update(data).eq('id', editingProductId);
-      await finaliseImages(editingProductId);
       showToast('✅ Product updated');
     } else {
       const { data: inserted, error } = await sb.from('products').insert(data).select().single();
       if (error) { showToast('⚠️ Error saving product'); return; }
-      await finaliseImages(inserted.id);
+      if (imageFile) {
+        showToast('⏳ Uploading image...');
+        imageUrl = await uploadProductImage(imageFile, inserted.id);
+        if (imageUrl) await sb.from('products').update({ image_url: imageUrl }).eq('id', inserted.id);
+      }
       showToast('✅ Product added');
     }
 
@@ -2060,128 +1832,28 @@
     loadProducts();
   }
 
-  let presetSortedList = [];
-
   function openPresetModal() {
     const list = document.getElementById('presetList');
-    presetSortedList = [...PRESET_PRODUCTS].sort((a, b) => a.name.localeCompare(b.name));
-    renderPresetList(presetSortedList);
-    // Reset search + request field on open
-    const search = document.getElementById('presetSearchInput');
-    if (search) search.value = '';
-    const req = document.getElementById('productRequestInput');
-    if (req) req.value = '';
-    document.getElementById('presetEmptyState').style.display = 'none';
-    document.getElementById('presetModal').classList.add('open');
-  }
-
-  function renderPresetList(items) {
-    const list = document.getElementById('presetList');
-    const empty = document.getElementById('presetEmptyState');
-    if (!items.length) {
-      list.innerHTML = '';
-      empty.style.display = 'block';
-      return;
-    }
-    empty.style.display = 'none';
-    list.innerHTML = items.map(p => {
-      // Use the original index in presetSortedList so addSelectedPresets still works after filtering
-      const i = presetSortedList.indexOf(p);
-      const hasVariants = Array.isArray(p.variants) && p.variants.length > 0;
-      const priceLabel = hasVariants
-        ? 'from $' + Math.min(...p.variants.map(v => v.price)) + ' · ' + p.variants.length + ' size options'
-        : '$' + p.price + ' / ' + p.unit;
-      return `
+    const sorted = [...PRESET_PRODUCTS].sort((a, b) => a.name.localeCompare(b.name));
+    list.innerHTML = sorted.map((p, i) => `
       <label style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
         <input type="checkbox" class="preset-check" value="${i}" style="width:18px;height:18px;accent-color:var(--brand);flex-shrink:0">
         <div style="font-size:24px;flex-shrink:0">${p.emoji}</div>
         <div style="flex:1">
           <div style="font-size:14px;font-weight:600;margin-bottom:2px">${p.name}</div>
-          <div style="font-size:12px;color:var(--muted)">${priceLabel} · ${p.category}</div>
+          <div style="font-size:12px;color:var(--muted)">$${p.price} / ${p.unit} · ${p.category}</div>
         </div>
-      </label>`;
-    }).join('');
+      </label>
+    `).join('');
+    document.getElementById('presetModal').classList.add('open');
   }
-
-  function filterPresetList() {
-    const q = (document.getElementById('presetSearchInput').value || '').trim().toLowerCase();
-    if (!q) { renderPresetList(presetSortedList); return; }
-    const filtered = presetSortedList.filter(p =>
-      (p.name || '').toLowerCase().includes(q) ||
-      (p.description || '').toLowerCase().includes(q) ||
-      (p.category || '').toLowerCase().includes(q)
-    );
-    renderPresetList(filtered);
-  }
-  window.filterPresetList = filterPresetList;
-
-  async function submitProductRequest() {
-    const input = document.getElementById('productRequestInput');
-    const text = (input.value || '').trim();
-    if (!text) { showToast('⚠️ Please describe what you need'); return; }
-    if (text.length < 5) { showToast('⚠️ Please give us a bit more detail'); return; }
-
-    const btn = event?.target;
-    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
-
-    // 1. Log to Supabase
-    const { error: insertErr } = await sb.from('product_requests').insert({
-      host_id: currentUser.id,
-      host_email: currentHost?.email || currentUser.email || null,
-      host_name: currentHost?.full_name || null,
-      request_text: text,
-    });
-    if (insertErr) console.error('[product_requests] insert:', insertErr);
-
-    // 2. Notify Hostie Hub via Resend (fire-and-forget; don't block UX on failure)
-    try {
-      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
-        body: JSON.stringify({
-          from: 'Hostie Hub <hello@hostiehub.com.au>',
-          to: 'hello@hostiehub.com.au',
-          reply_to: currentHost?.email || currentUser.email || undefined,
-          subject: '💡 New product request from ' + (currentHost?.full_name || currentHost?.email || 'a host'),
-          html: '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;background:#f4f6f5;border-radius:12px">'
-            + '<h2 style="font-family:Georgia,serif;color:#2C6E6A;margin:0 0 12px">New product request</h2>'
-            + '<p style="margin:0 0 8px"><strong>Host:</strong> ' + (currentHost?.full_name || '—') + '</p>'
-            + '<p style="margin:0 0 8px"><strong>Email:</strong> ' + (currentHost?.email || currentUser.email || '—') + '</p>'
-            + '<p style="margin:0 0 16px"><strong>Store:</strong> ' + (currentHost?.username || '—') + '</p>'
-            + '<div style="background:white;border-left:3px solid #2C6E6A;padding:14px 18px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.5">'
-            + text.replace(/</g, '&lt;').replace(/\n/g, '<br>')
-            + '</div></div>'
-        })
-      });
-    } catch(e) { console.error('[product_requests] email:', e); }
-
-    input.value = '';
-    if (btn) { btn.disabled = false; btn.textContent = 'Send request →'; }
-    showToast("✅ Thanks! We'll review and get back to you within 48 hours.");
-  }
-  window.submitProductRequest = submitProductRequest;
 
   function closePresetModal() { document.getElementById('presetModal').classList.remove('open'); }
 
   async function addSelectedPresets() {
     const selected = [...document.querySelectorAll('.preset-check:checked')].map(cb => parseInt(cb.value));
     if (selected.length === 0) { showToast('⚠️ Please select at least one product'); return; }
-    const inserts = selected.map(i => {
-      const preset = presetSortedList[i];
-      return {
-        name: preset.name,
-        description: preset.description,
-        price: preset.price,
-        unit: preset.unit,
-        category: preset.category,
-        emoji: preset.emoji,
-        notes_prompt: preset.notes_prompt,
-        variants: preset.variants || null,
-        host_id: currentUser.id,
-        available_all_properties: true,
-        active: true,
-      };
-    });
+    const inserts = selected.map(i => ({ ...sorted[i], host_id: currentUser.id, available_all_properties: true, active: true }));
     const { error } = await sb.from('products').insert(inserts);
     if (error) { showToast('⚠️ Error adding presets'); console.error(error); return; }
     showToast(`✅ ${selected.length} product${selected.length > 1 ? 's' : ''} added!`);
@@ -3335,7 +3007,6 @@
     }
   });
 </script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCAuZsZ7pSq0EOoksNz__mSNAOQtLuFkk&libraries=places&callback=initPropertyGooglePlaces" async defer></script>
 <script src="support-widget.js"></script>
 </body>
 </html>

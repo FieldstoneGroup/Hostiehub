@@ -882,7 +882,14 @@
     </div>
     <div class="modal-body">
       <div class="field"><label>Product name</label><input type="text" id="pName" placeholder="e.g. Welcome Flower Arrangement"></div>
-      <div class="field"><label>Description</label><textarea id="pDesc" placeholder="What does this include? What should guests know?"></textarea></div>
+      <div class="field">
+        <label>Listing description</label>
+        <textarea id="pDesc" maxlength="400" placeholder="Please outline exactly what you are offering — what's included, how it works, what guests should know." oninput="updateDescCount()"></textarea>
+        <div style="display:flex;justify-content:space-between;margin-top:4px">
+          <div class="field-hint">Please outline exactly what you are offering.</div>
+          <div id="pDescCount" style="font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums">0 / 400</div>
+        </div>
+      </div>
       <div class="field-row">
         <div class="field"><label id="pPriceLabel">Price ($)</label><input type="number" id="pPrice" placeholder="45" min="1"></div>
         <div class="field"><label>Price label</label><input type="text" id="pUnit" placeholder="e.g. per stay, per person"></div>
@@ -1764,6 +1771,7 @@
     renderVariants();
     buildEmojiGrid();
     buildPropertyChecks();
+    updateDescCount();
     document.getElementById('productModal').classList.add('open');
   }
 
@@ -1824,6 +1832,7 @@
       const ids = Array.isArray(p.property_ids) ? p.property_ids : JSON.parse(p.property_ids || '[]');
       document.querySelectorAll('.prop-check').forEach(cb => { cb.checked = ids.includes(cb.value); });
     }
+    updateDescCount();
     document.getElementById('productModal').classList.add('open');
   }
 
@@ -1893,9 +1902,11 @@
   }
 
   function removeVariantRow(index) {
-    currentVariants.splice(index, 1);
-    // Sync DOM values back into state before re-render
+    // Sync DOM values back into state FIRST so we capture any edits,
+    // THEN splice, THEN re-render. (Previously we spliced first and the
+    // sync re-added the deleted row from the still-present DOM.)
     syncVariantsFromDom();
+    currentVariants.splice(index, 1);
     renderVariants();
   }
 
@@ -1918,6 +1929,16 @@
   window.addVariantRow = addVariantRow;
   window.removeVariantRow = removeVariantRow;
   window.onVariantInput = onVariantInput;
+
+  function updateDescCount() {
+    const el = document.getElementById('pDesc');
+    const counter = document.getElementById('pDescCount');
+    if (!el || !counter) return;
+    const len = (el.value || '').length;
+    counter.textContent = len + ' / 400';
+    counter.style.color = len >= 400 ? '#e53e3e' : (len >= 360 ? '#92600a' : 'var(--muted)');
+  }
+  window.updateDescCount = updateDescCount;
 
   async function saveProduct() {
     const name = document.getElementById('pName').value.trim();

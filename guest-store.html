@@ -1815,14 +1815,99 @@
   }
   window.stepSubProduct = stepSubProduct;
 
+  // Holds the multi-product items between modal confirm and (optionally)
+  // the notes modal commit. When set, confirmNotes/skipNotes commit the
+  // multi-product batch instead of handling a single-product note.
+  let pendingMultiAdd = null; // { p, chosen: [{sp, qty}] }
+
   function confirmMultiProduct() {
-    // Phase C will wire this into the real cart. Phase B just logs and closes.
-    console.log('[multi] confirmed basket:', multiBasket, pendingMultiProduct);
+    const p = pendingMultiProduct;
+    if (!p) return;
+    const subs = Array.isArray(p.sub_products) ? p.sub_products : [];
+    const chosen = Object.entries(multiBasket)
+      .filter(([, qty]) => qty > 0)
+      .map(([id, qty]) => {
+        const sp = subs.find(s => s && s.id === id);
+        return sp ? { sp, qty } : null;
+      })
+      .filter(Boolean);
+
+    if (!chosen.length) return;
+
+    // Close the multi modal first so notes modal can appear cleanly
     document.getElementById('multiProductModal').classList.remove('open');
+
+    if (p.notes_prompt) {
+      // Ask the outer notes_prompt once — applies to every sub-product line
+      pendingMultiAdd = { p, chosen };
+      const titleEl = document.getElementById('notesModalTitle');
+      const promptEl = document.getElementById('notesModalPrompt');
+      const inputEl = document.getElementById('notesModalInput');
+      if (titleEl) titleEl.textContent = p.name;
+      if (promptEl) promptEl.textContent = p.notes_prompt;
+      if (inputEl) inputEl.value = '';
+      document.getElementById('notesModalOverlay').classList.add('open');
+    } else {
+      pendingMultiAdd = { p, chosen };
+      commitMultiProduct('');
+    }
+  }
+  window.confirmMultiProduct = confirmMultiProduct;
+
+  function commitMultiProduct(note) {
+    if (!pendingMultiAdd) return;
+    const { p, chosen } = pendingMultiAdd;
+    const doneBtn = document.getElementById('btn-' + p.id);
+
+    chosen.forEach(({ sp, qty }) => {
+      const lineId = p.id + ':' + sp.id;
+      const unitRrp = Number(sp.price) || 0;
+      const unitWholesale = Number(sp.wholesale_price) || 0;
+
+      // If this sub-product is already in the cart, merge quantities
+      const existing = cart.find(i => i.id === lineId);
+      if (existing) {
+        existing.qty = (existing.qty || 1) + qty;
+        existing.price = unitRrp * existing.qty;
+        existing.name = p.name + ': ' + sp.name + (existing.qty > 1 ? ' × ' + existing.qty : '');
+        if (note && !existing.note) existing.note = note;
+      } else {
+        cart.push({
+          id: lineId,
+          name: p.name + ': ' + sp.name + (qty > 1 ? ' × ' + qty : ''),
+          price: unitRrp * qty,
+          icon: sp.emoji || '📦',
+          note,
+
+          // Vendor-email payload
+          is_supplier_product: !!p.is_supplier_product,
+          outer_product_id: p.id,
+          outer_product_name: p.name,
+          sub_product_id: sp.id,
+          sub_product_name: sp.name,
+          qty,
+          unit_rrp: unitRrp,
+          unit_wholesale: unitWholesale,
+          vendor_name: p.vendor_name || null,
+          vendor_email: p.vendor_email || null,
+          share_address_with_vendor: !!p.share_address_with_vendor,
+        });
+      }
+
+      logStoreEvent('click', lineId, p.name + ': ' + sp.name);
+    });
+
+    updateCartUI();
+    if (doneBtn) {
+      doneBtn.textContent = '✓ Added';
+      doneBtn.classList.add('added');
+    }
+
+    pendingMultiAdd = null;
     pendingMultiProduct = null;
     multiBasket = {};
   }
-  window.confirmMultiProduct = confirmMultiProduct;
+  window.commitMultiProduct = commitMultiProduct;
 
   // Small HTML-escape helper for the multi-product modal rows
   function escapeHtmlGuest(str) {
@@ -1831,6 +1916,13 @@
   }
 
   function confirmNotes() {
+    // Multi-product branch takes priority
+    if (pendingMultiAdd) {
+      const note = (document.getElementById('notesModalInput').value || '').trim();
+      commitMultiProduct(note);
+      document.getElementById('notesModalOverlay').classList.remove('open');
+      return;
+    }
     if (!pendingCartItem) return;
     const note = document.getElementById('notesModalInput').value.trim();
     addToCart(pendingCartItem.product, pendingCartItem.btn, note);
@@ -1839,6 +1931,12 @@
   }
 
   function skipNotes() {
+    // Multi-product branch takes priority
+    if (pendingMultiAdd) {
+      commitMultiProduct('');
+      document.getElementById('notesModalOverlay').classList.remove('open');
+      return;
+    }
     if (!pendingCartItem) return;
     addToCart(pendingCartItem.product, pendingCartItem.btn, '');
     document.getElementById('notesModalOverlay').classList.remove('open');
@@ -1934,6 +2032,19 @@
       partnerBusinessName: product.partner_business_name || null,
       preferredDate: partnerRequestData ? partnerRequestData.preferredDate : '',
       partnerNotes: partnerRequestData ? partnerRequestData.partnerNotes : '',
+
+      // Vendor-email payload (null/false for non-supplier products)
+      is_supplier_product: !!product.is_supplier_product,
+      outer_product_id: product.id,
+      outer_product_name: product.name,
+      sub_product_id: null,
+      sub_product_name: null,
+      qty: 1,
+      unit_rrp: Number(product.price) || 0,
+      unit_wholesale: Number(product.wholesale_price) || 0,
+      vendor_name: product.vendor_name || null,
+      vendor_email: product.vendor_email || null,
+      share_address_with_vendor: !!product.share_address_with_vendor,
     });
     btn.textContent = isPartnerRequest ? '✓ Requested' : '✓ Added';
     btn.classList.add('added');
@@ -2019,6 +2130,31 @@
       const sessionKey = 'po_' + Date.now();
       sessionStorage.setItem(sessionKey, JSON.stringify(orderData));
 
+      // Build a short po_id and persist the full cart to pending_orders
+      // so the worker can read it back without metadata truncation
+      const propObj = properties.find(pr => pr.id === propId);
+      const propertyAddress = propObj?.address || '';
+      let poId = null;
+      try {
+        poId = 'po_' + (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '').slice(0, 14) : Math.random().toString(36).slice(2, 16));
+        const { error: poErr } = await sb.from('pending_orders').insert({
+          id: poId,
+          host_id: hostData.id,
+          cart,
+          guest_name: guestName,
+          guest_email: guestEmail,
+          guest_phone: guestPhone,
+          checkin_date: checkin || null,
+          checkout_date: checkout || null,
+          property_id: propId || null,
+          property_name: propName,
+          property_address: propertyAddress,
+          notes,
+          total,
+        });
+        if (poErr) { console.error('[po] insert failed', poErr); poId = null; }
+      } catch (e) { console.error('[po] insert exception', e); poId = null; }
+
       const baseUrl = 'https://www.hostiehub.com.au/store/' + getUsername();
       const successUrl = baseUrl + '?order=success&guest=' + encodeURIComponent(guestName) + '&sk=' + sessionKey;
 
@@ -2033,6 +2169,7 @@
           cancel_url: baseUrl,
           metadata: {
             host_id: hostData.id,
+            po_id: poId || '',
             guest_name: guestName,
             guest_email: guestEmail,
             guest_phone: guestPhone,
@@ -2054,6 +2191,22 @@
     }
 
     // No Stripe — save order directly
+    const freePathPropAddress = (properties.find(pr => pr.id === propId)?.address) || '';
+    let vendorLog = [];
+    try {
+      vendorLog = await sendVendorNotifications({
+        storeName: hostData.store_name || hostData.username,
+        hostName: hostData.full_name || hostData.store_name || 'Host',
+        hostEmail: hostData.email,
+        hostPhone: hostData.phone || '',
+        guestName, guestEmail, guestPhone,
+        checkin, propName,
+        propertyAddress: freePathPropAddress,
+        notes,
+        cart,
+      });
+    } catch (e) { console.error('[vendor email] batch failed', e); }
+
     await sb.from('orders').insert({
       host_id: hostData.id,
       guest_name: guestName,
@@ -2065,7 +2218,8 @@
       items: cart.map(i => ({ id: i.id, name: i.name, price: i.price })),
       product_notes: productNotes,
       total,
-      status: 'paid'
+      status: 'paid',
+      vendor_emails_sent: vendorLog.length ? vendorLog : null,
     });
 
     cart.forEach(i => logStoreEvent('purchase', i.id, i.name));
@@ -2157,6 +2311,189 @@
       const result = await res.json();
       console.log('[sendPartnerGuestConfirmation] result:', JSON.stringify(result));
     } catch(e) { console.error('Partner guest confirmation failed:', e); }
+  }
+
+  // ── VENDOR NOTIFICATIONS ──
+  function formatVendorDate(isoDate) {
+    if (!isoDate) return '';
+    try {
+      const d = new Date(isoDate + (isoDate.length === 10 ? 'T00:00:00' : ''));
+      if (isNaN(d.getTime())) return isoDate;
+      return d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    } catch (e) { return isoDate; }
+  }
+
+  function escapeVendorHtml(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function groupCartByVendor(cartArr) {
+    const map = new Map();
+    (cartArr || []).forEach(item => {
+      if (!item || !item.is_supplier_product) return;
+      const email = (item.vendor_email || '').trim().toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+      let g = map.get(email);
+      if (!g) {
+        g = {
+          vendor_email: item.vendor_email.trim(),
+          vendor_name: item.vendor_name || '',
+          share_address_with_vendor: !!item.share_address_with_vendor,
+          items: [],
+        };
+        map.set(email, g);
+      }
+      g.items.push(item);
+    });
+    return map;
+  }
+
+  function buildVendorEmailHtml({ storeName, hostName, hostEmail, hostPhone, guestName, guestEmail, guestPhone, checkin, propName, propertyAddress, notes, items, includeAddress }) {
+    const readyBy = formatVendorDate(checkin);
+    const itemsRows = items.map(i => {
+      const label = escapeVendorHtml(i.sub_product_id
+        ? (i.outer_product_name + ' — ' + (i.sub_product_name || ''))
+        : (i.outer_product_name || i.name || ''));
+      const qty = i.qty || 1;
+      const wholesaleLine = (Number(i.unit_wholesale) || 0) * qty;
+      return `<tr>
+        <td style="padding:10px 0;border-bottom:1px solid #e8e4df;font-size:14px;color:#1a1a1a">${label}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #e8e4df;font-size:14px;text-align:center;color:#4b5563">× ${qty}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #e8e4df;font-size:14px;text-align:right;font-weight:600;color:#1a1a1a">$${wholesaleLine.toFixed(2).replace(/\.00$/, '')}</td>
+      </tr>`;
+    }).join('');
+    const totalWholesale = items.reduce((s, i) => s + ((Number(i.unit_wholesale) || 0) * (i.qty || 1)), 0);
+
+    const addressRow = (includeAddress && propertyAddress)
+      ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:35%">Address</td><td style="font-size:14px;color:#1a1a1a">${escapeVendorHtml(propertyAddress)}</td></tr>` : '';
+    const guestEmailRow = guestEmail
+      ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Guest email</td><td style="font-size:14px"><a href="mailto:${escapeVendorHtml(guestEmail)}" style="color:#2C6E6A;text-decoration:none">${escapeVendorHtml(guestEmail)}</a></td></tr>` : '';
+    const guestPhoneRow = guestPhone
+      ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Guest phone</td><td style="font-size:14px"><a href="tel:${escapeVendorHtml(guestPhone)}" style="color:#2C6E6A;text-decoration:none">${escapeVendorHtml(guestPhone)}</a></td></tr>` : '';
+    const notesRow = notes
+      ? `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;vertical-align:top">Guest notes</td><td style="font-size:14px;font-style:italic;color:#1a1a1a">"${escapeVendorHtml(notes)}"</td></tr>` : '';
+    const hostPhoneLine = hostPhone
+      ? `<div style="margin-top:6px"><a href="tel:${escapeVendorHtml(hostPhone)}" style="color:#2C6E6A;text-decoration:none;font-weight:500">${escapeVendorHtml(hostPhone)}</a></div>` : '';
+
+    return `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f6f5;font-family:'DM Sans',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f5;padding:40px 20px"><tr><td align="center">
+  <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+    <!-- HEADER -->
+    <tr><td style="background:linear-gradient(135deg,#2C6E6A,#1d4d4a);border-radius:16px 16px 0 0;padding:28px 36px;text-align:center">
+      <div style="font-size:22px;font-weight:700;color:white;font-family:Georgia,serif;letter-spacing:-0.5px">📦 New order for you</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:6px">via ${escapeVendorHtml(storeName || hostName)} on Hostie Hub</div>
+    </td></tr>
+
+    <!-- PAID CONFIRMATION -->
+    <tr><td style="background:white;padding:24px 36px 0">
+      <div style="background:#f0fdf4;border:1.5px solid #16a34a;border-radius:12px;padding:18px 20px;margin-bottom:20px">
+        <div style="font-size:15px;font-weight:700;color:#15803d;margin-bottom:4px">✅ Guest has paid — no invoice needed right now</div>
+        <div style="font-size:13px;color:#166534;line-height:1.5">${escapeVendorHtml(hostName || 'The host')} will be in touch to settle payment and arrange pickup/delivery.</div>
+      </div>
+    </td></tr>
+
+    <!-- ORDER DETAILS -->
+    <tr><td style="background:white;padding:0 36px 8px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">Order details</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px">
+        <tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:35%">Ready by</td><td style="font-size:14px;font-weight:700;color:#2C6E6A">${escapeVendorHtml(readyBy)}</td></tr>
+        <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Guest name</td><td style="font-size:14px;color:#1a1a1a">${escapeVendorHtml(guestName)}</td></tr>
+        ${guestEmailRow}
+        ${guestPhoneRow}
+        <tr><td style="padding:6px 0;color:#6b7280;font-size:13px">Property</td><td style="font-size:14px;color:#1a1a1a">${escapeVendorHtml(propName || '—')}</td></tr>
+        ${addressRow}
+        ${notesRow}
+      </table>
+    </td></tr>
+
+    <!-- ITEMS -->
+    <tr><td style="background:white;padding:0 36px 8px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:10px">Items ordered</div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px">
+        <thead>
+          <tr style="background:#f4f6f5">
+            <th align="left" style="padding:10px 8px;font-size:12px;color:#6b7280;font-weight:600">Item</th>
+            <th align="center" style="padding:10px 8px;font-size:12px;color:#6b7280;font-weight:600">Qty</th>
+            <th align="right" style="padding:10px 8px;font-size:12px;color:#6b7280;font-weight:600">Your price</th>
+          </tr>
+        </thead>
+        <tbody>${itemsRows}</tbody>
+        <tfoot>
+          <tr><td colspan="2" style="padding:12px 8px 0;font-size:13px;font-weight:700;color:#1a1a1a;text-align:right">Total (wholesale)</td><td style="padding:12px 8px 0;font-size:15px;font-weight:700;color:#2C6E6A;text-align:right">$${totalWholesale.toFixed(2).replace(/\.00$/, '')}</td></tr>
+        </tfoot>
+      </table>
+      <div style="font-size:12px;color:#9ca3af;font-style:italic;margin-bottom:20px">Prices shown are what the host pays you.</div>
+    </td></tr>
+
+    <!-- HOST CONTACT -->
+    <tr><td style="background:white;padding:0 36px 32px;border-radius:0 0 16px 16px">
+      <div style="background:var(--brand-light, #e6f2f1);border-radius:12px;padding:18px 20px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:6px">Questions? Contact the host</div>
+        <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:4px">${escapeVendorHtml(hostName)}</div>
+        <a href="mailto:${escapeVendorHtml(hostEmail)}" style="color:#2C6E6A;text-decoration:none;font-weight:500">${escapeVendorHtml(hostEmail)}</a>
+        ${hostPhoneLine}
+        <div style="font-size:12px;color:#6b7280;margin-top:12px;line-height:1.5">Reply to this email to go directly to the host.</div>
+      </div>
+    </td></tr>
+
+    <!-- FOOTER -->
+    <tr><td style="padding:24px 0;text-align:center;font-size:12px;color:#9ca3af">Powered by Hostie Hub · hostiehub.com.au</td></tr>
+  </table>
+</td></tr></table>
+</body>
+</html>`;
+  }
+
+  async function sendVendorNotifications({ storeName, hostName, hostEmail, hostPhone, guestName, guestEmail, guestPhone, checkin, propName, propertyAddress, notes, cart: cartArr }) {
+    const groups = groupCartByVendor(cartArr);
+    const log = [];
+    for (const g of groups.values()) {
+      try {
+        const subject = 'New order from ' + (storeName || hostName || 'Hostie Hub') + ' — ready by ' + formatVendorDate(checkin);
+        const html = buildVendorEmailHtml({
+          storeName, hostName, hostEmail, hostPhone,
+          guestName, guestEmail, guestPhone,
+          checkin, propName, propertyAddress, notes,
+          items: g.items,
+          includeAddress: g.share_address_with_vendor,
+        });
+        const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Service': 'resend' },
+          body: JSON.stringify({
+            from: 'Hostie Hub <hello@hostiehub.com.au>',
+            to: g.vendor_email,
+            reply_to: hostEmail,
+            subject,
+            html,
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        log.push({
+          vendor_email: g.vendor_email,
+          vendor_name: g.vendor_name,
+          item_count: g.items.length,
+          sent_at: new Date().toISOString(),
+          ok: !data.error,
+          error: data.error ? (data.error.message || String(data.error)) : null,
+        });
+      } catch (e) {
+        console.error('[vendor email] send failed for', g.vendor_email, e);
+        log.push({
+          vendor_email: g.vendor_email,
+          vendor_name: g.vendor_name,
+          item_count: g.items.length,
+          sent_at: new Date().toISOString(),
+          ok: false,
+          error: e.message || String(e),
+        });
+      }
+    }
+    return log;
   }
 
   async function sendHostNotification({ hostEmail, notifEmails = [], hostName, storeName, guestName, checkin, checkout, propName, notes, productNotes, items, total }) {

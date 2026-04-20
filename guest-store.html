@@ -648,8 +648,8 @@
     applyBranding(host);
 
     const [{ data: prods }, { data: props }] = await Promise.all([
-      sb.from('products').select('*').eq('host_id', host.id).eq('active', true).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true }),
-      sb.from('properties').select('*').eq('host_id', host.id).order('nickname'),
+      sb.from('products_public').select('*').eq('host_id', host.id).eq('active', true).order('sort_order', { ascending: true, nullsFirst: false }).order('created_at', { ascending: true }),
+      sb.from('properties_public').select('*').eq('host_id', host.id).order('nickname'),
     ]);
 
     allProducts = prods || [];
@@ -658,7 +658,7 @@
     // Fetch business names and locations for partner products
     const partnerIds = [...new Set(allProducts.filter(p => p.partner_id).map(p => p.partner_id))];
     if (partnerIds.length > 0) {
-      const { data: partnerRows } = await sb.from('partners').select('id, business_name, business_lat, business_lng, service_lat, service_lng').in('id', partnerIds);
+      const { data: partnerRows } = await sb.from('partners_public').select('id, business_name, business_lat, business_lng, service_lat, service_lng').in('id', partnerIds);
       if (partnerRows) {
         const partnerMap = {};
         partnerRows.forEach(p => { partnerMap[p.id] = p; });

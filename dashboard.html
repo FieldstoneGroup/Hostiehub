@@ -920,6 +920,33 @@
         </select>
       </div>
 
+      <!-- LISTING TYPE — toggle between single and multi-product -->
+      <div class="field" id="listingTypeField">
+        <label>Listing type</label>
+        <div style="display:flex;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:4px">
+          <label style="flex:1;cursor:pointer;padding:10px 12px;border-radius:7px;text-align:center;font-size:13px;font-weight:600;transition:background 0.15s,color 0.15s" id="listingTypeSingleLabel">
+            <input type="radio" name="pListingType" value="single" onchange="setListingType('single')" style="display:none" checked>
+            <span>📦 Single product</span>
+          </label>
+          <label style="flex:1;cursor:pointer;padding:10px 12px;border-radius:7px;text-align:center;font-size:13px;font-weight:600;transition:background 0.15s,color 0.15s" id="listingTypeMultiLabel">
+            <input type="radio" name="pListingType" value="multi" onchange="setListingType('multi')" style="display:none">
+            <span>🛒 Multi-product listing</span>
+          </label>
+        </div>
+        <div class="field-hint">Multi-product lets you bundle multiple items from one vendor under a single listing (e.g. a pantry box with cheese, flowers, chocolate).</div>
+      </div>
+
+      <!-- SUB-PRODUCTS — shown when listing type = multi -->
+      <div class="field" id="subProductsField" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <label style="margin:0">Sub-products <span style="font-weight:300;font-size:12px;color:var(--muted)">(up to 10 items)</span></label>
+          <button type="button" class="btn btn-outline btn-sm" id="addSubProductBtn" onclick="openSubProductModal()">+ Add sub-product</button>
+        </div>
+        <div class="field-hint" style="margin-bottom:10px">Each sub-product appears inside this listing's guest modal. The starting price shown to guests will be the lowest sub-product price.</div>
+        <div id="subProductsList" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div id="subProductsEmpty" style="font-size:13px;color:var(--muted);padding:12px;text-align:center;background:var(--bg);border-radius:10px;border:1.5px dashed var(--border)">No sub-products yet — tap "+ Add sub-product" to start.</div>
+      </div>
+
       <!-- EXPERIENCE FIELDS — shown only when category = experience -->
       <div id="experienceFields" style="display:none;background:#f4f6f5;border-radius:12px;padding:16px;margin-bottom:4px;border:1.5px solid var(--border)">
         <div style="font-size:12px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--brand);margin-bottom:14px">🏄 Experience Settings</div>
@@ -1058,6 +1085,58 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeCustomRequestModal()">Cancel</button>
       <button class="btn btn-primary" id="crSendBtn" onclick="sendCustomRequest()">Send request →</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUB-PRODUCT MODAL (sub-modal of product modal, z-index 300) -->
+<div class="modal-overlay" id="subProductModal" style="z-index:300">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title" id="subProductModalTitle">Add sub-product</div>
+      <button class="modal-close" onclick="closeSubProductModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Name <span style="color:#e53e3e">*</span></label>
+        <input type="text" id="spName" placeholder="e.g. Local Cheese Board" maxlength="80">
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <textarea id="spDesc" maxlength="300" placeholder="What's included?" oninput="updateSpDescCount()"></textarea>
+        <div style="display:flex;justify-content:space-between;margin-top:4px">
+          <div class="field-hint">Keep it concise — shown in a tight list.</div>
+          <div id="spDescCount" style="font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums">0 / 300</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Price ($) <span style="color:#e53e3e">*</span></label><input type="number" id="spPrice" placeholder="45" min="0" step="0.01"></div>
+        <div class="field" style="display:flex;align-items:flex-end">
+          <label class="property-check" style="cursor:pointer;width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="spActive" checked>
+            <span class="property-check-label" style="font-size:13px">Active — show to guests</span>
+          </label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Emoji</label>
+        <div id="spEmojiGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:6px;max-height:140px;overflow-y:auto;padding:8px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)"></div>
+      </div>
+      <div class="field">
+        <label>Photo <span style="font-weight:300;font-size:12px;color:var(--muted)">(optional)</span></label>
+        <div id="spImagePreviewWrap" style="display:none;margin-bottom:10px;position:relative;width:100%;height:160px;border-radius:10px;overflow:hidden;border:1.5px solid var(--border);">
+          <img id="spImagePreview" src="" style="width:100%;height:100%;object-fit:cover;">
+          <button type="button" onclick="removeSubProductImage()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">✕</button>
+        </div>
+        <label id="spImageUploadLabel" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:2px dashed var(--border);border-radius:10px;cursor:pointer;font-size:13px;color:var(--muted);transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
+          📷 Click to upload a photo
+          <input type="file" id="spImage" accept="image/*" style="display:none" onchange="previewSubProductImage(this)">
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeSubProductModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSubProduct()">Save</button>
     </div>
   </div>
 </div>
@@ -1219,6 +1298,14 @@
   let sortedPresets = [];
   let currentVariants = []; // [{label, price}]
   const MAX_VARIANTS = 6;
+  let currentSubProducts = [];
+  let editingSubProductIndex = null;
+  let selectedSubProductEmoji = '📦';
+  let pendingSubProductImage = null;         // File awaiting upload
+  let pendingSubProductImageDataUrl = null;  // preview data URL
+  let subProductDragIndex = null;
+  const MAX_SUB_PRODUCTS = 10;
+  const SUB_PRODUCT_EMOJIS = ['📦','🍾','🧀','🍫','🌸','🍷','🧺','🎁','☕','🍫','🧁','🎂','🍞','🥂','🍯','🌿','🍎','🥗','🥖','🍪','🎈','🎉','🍕','🥑','🌶️','🍓','🍋','🥬','🥩','🐟','🍄','🥜','🫒','🍇','🍑'];
 
   const emojis = ['🌸','🧺','🍾','🕐','🏄','🚗','🎁','🌿','☕','🍫','🧁','🎂','🌊','🏠','🧴','🛁','🎵','🐾','🎉','🍕','🥗','🍷','🎈','🍫','🛎️','🧹'];
   const swatchColours = ['#2C6E6A','#1d4d4a','#E8A838','#e74c3c','#8e44ad','#2980b9','#27ae60','#e67e22','#1a1a1a'];
@@ -1824,6 +1911,9 @@
     renderImageSlots();
     currentVariants = [];
     renderVariants();
+    currentSubProducts = [];
+    setListingType('single');
+    renderSubProducts();
     buildEmojiGrid();
     buildPropertyChecks();
     updateDescCount();
@@ -1873,6 +1963,13 @@
       currentVariants = Array.isArray(v) ? v.map(x => ({ label: x.label || '', price: Number(x.price) || 0 })) : (v ? JSON.parse(v) : []);
     } catch (e) { currentVariants = []; }
     renderVariants();
+    // Load sub-products
+    try {
+      const sp = p.sub_products;
+      currentSubProducts = Array.isArray(sp) ? sp.slice() : (sp ? JSON.parse(sp) : []);
+    } catch (e) { currentSubProducts = []; }
+    setListingType(currentSubProducts.length > 0 ? 'multi' : 'single');
+    renderSubProducts();
     buildEmojiGrid();
     buildPropertyChecks();
     if (!allProps && p.property_ids) {
@@ -1987,31 +2084,310 @@
   }
   window.updateDescCount = updateDescCount;
 
+  // ── SUB-PRODUCTS (multi-product listings) ──
+  function setListingType(type) {
+    const isMulti = type === 'multi';
+    // Radio buttons
+    document.querySelector('input[name="pListingType"][value="single"]').checked = !isMulti;
+    document.querySelector('input[name="pListingType"][value="multi"]').checked = isMulti;
+    // Label styling
+    const singleLbl = document.getElementById('listingTypeSingleLabel');
+    const multiLbl = document.getElementById('listingTypeMultiLabel');
+    if (singleLbl && multiLbl) {
+      singleLbl.style.background = !isMulti ? 'white' : 'transparent';
+      singleLbl.style.color = !isMulti ? 'var(--brand)' : 'var(--muted)';
+      singleLbl.style.boxShadow = !isMulti ? '0 1px 3px rgba(0,0,0,0.08)' : 'none';
+      multiLbl.style.background = isMulti ? 'white' : 'transparent';
+      multiLbl.style.color = isMulti ? 'var(--brand)' : 'var(--muted)';
+      multiLbl.style.boxShadow = isMulti ? '0 1px 3px rgba(0,0,0,0.08)' : 'none';
+    }
+    // Show/hide sections
+    const priceRow = document.getElementById('pPrice').closest('.field-row');
+    const variantsField = document.getElementById('variantsField');
+    const subProductsField = document.getElementById('subProductsField');
+    if (priceRow) priceRow.style.display = isMulti ? 'none' : '';
+    if (variantsField) variantsField.style.display = isMulti ? 'none' : '';
+    if (subProductsField) subProductsField.style.display = isMulti ? '' : 'none';
+    if (!isMulti) {
+      // Toggling back to single clears sub-products (they'll be re-rendered if toggled back in same session from session state)
+      // but do NOT wipe currentSubProducts while the modal is open, so toggling multi→single→multi preserves data
+    }
+    if (isMulti) renderSubProducts();
+  }
+  window.setListingType = setListingType;
+
+  function renderSubProducts() {
+    const list = document.getElementById('subProductsList');
+    const empty = document.getElementById('subProductsEmpty');
+    const addBtn = document.getElementById('addSubProductBtn');
+    if (!list) return;
+
+    if (!currentSubProducts.length) {
+      list.innerHTML = '';
+      if (empty) empty.style.display = 'block';
+    } else {
+      if (empty) empty.style.display = 'none';
+      list.innerHTML = currentSubProducts.map((sp, i) => {
+        const thumb = sp.image_url
+          ? `<img src="${sp.image_url}" style="width:100%;height:100%;object-fit:cover" alt="">`
+          : `<span style="font-size:22px">${sp.emoji || '📦'}</span>`;
+        const inactive = sp.active === false;
+        return `
+          <div class="sub-product-row" draggable="true" data-idx="${i}"
+               ondragstart="onSubProductDragStart(event,${i})"
+               ondragover="onSubProductDragOver(event)"
+               ondrop="onSubProductDrop(event,${i})"
+               ondragend="onSubProductDragEnd()"
+               style="display:flex;align-items:center;gap:10px;padding:10px;background:${inactive ? '#fafafa' : 'var(--bg)'};border-radius:10px;border:1.5px solid var(--border);opacity:${inactive ? '0.6' : '1'}">
+            <div style="color:var(--muted);cursor:grab;font-size:16px;padding:0 4px;user-select:none" title="Drag to reorder">≡</div>
+            <div style="width:44px;height:44px;border-radius:8px;overflow:hidden;background:white;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);flex-shrink:0">${thumb}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(sp.name)}${inactive ? ' <span style="font-size:11px;font-weight:400;color:var(--muted)">· hidden</span>' : ''}</div>
+              <div style="font-size:12px;color:var(--muted)">$${sp.price}</div>
+            </div>
+            <button type="button" onclick="editSubProduct(${i})" title="Edit" style="background:transparent;border:none;cursor:pointer;font-size:14px;padding:6px;border-radius:6px;color:var(--brand)" onmouseover="this.style.background='var(--brand-light)'" onmouseout="this.style.background='transparent'">✎</button>
+            <button type="button" onclick="deleteSubProduct(${i})" title="Delete" style="background:transparent;border:none;cursor:pointer;font-size:14px;padding:6px;border-radius:6px;color:#e53e3e" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='transparent'">✕</button>
+          </div>`;
+      }).join('');
+    }
+
+    if (addBtn) {
+      const atCap = currentSubProducts.length >= MAX_SUB_PRODUCTS;
+      addBtn.disabled = atCap;
+      addBtn.textContent = atCap ? 'Max ' + MAX_SUB_PRODUCTS + ' reached' : '+ Add sub-product';
+      addBtn.style.opacity = atCap ? '0.5' : '1';
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Drag-to-reorder
+  function onSubProductDragStart(e, i) {
+    subProductDragIndex = i;
+    e.dataTransfer.effectAllowed = 'move';
+    e.currentTarget.style.opacity = '0.4';
+  }
+  function onSubProductDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+  function onSubProductDrop(e, targetIndex) {
+    e.preventDefault();
+    if (subProductDragIndex === null || subProductDragIndex === targetIndex) return;
+    const [moved] = currentSubProducts.splice(subProductDragIndex, 1);
+    currentSubProducts.splice(targetIndex, 0, moved);
+    subProductDragIndex = null;
+    renderSubProducts();
+  }
+  function onSubProductDragEnd() {
+    subProductDragIndex = null;
+    document.querySelectorAll('.sub-product-row').forEach(el => el.style.opacity = '');
+  }
+  window.onSubProductDragStart = onSubProductDragStart;
+  window.onSubProductDragOver = onSubProductDragOver;
+  window.onSubProductDrop = onSubProductDrop;
+  window.onSubProductDragEnd = onSubProductDragEnd;
+
+  // Sub-product sub-modal
+  function openSubProductModal(index) {
+    if (typeof index !== 'number' && currentSubProducts.length >= MAX_SUB_PRODUCTS) return;
+    editingSubProductIndex = (typeof index === 'number') ? index : null;
+    const isEdit = editingSubProductIndex !== null;
+    const sp = isEdit ? currentSubProducts[editingSubProductIndex] : null;
+
+    document.getElementById('subProductModalTitle').textContent = isEdit ? 'Edit sub-product' : 'Add sub-product';
+    document.getElementById('spName').value = sp ? (sp.name || '') : '';
+    document.getElementById('spDesc').value = sp ? (sp.description || '') : '';
+    document.getElementById('spPrice').value = sp ? (sp.price || '') : '';
+    document.getElementById('spActive').checked = sp ? (sp.active !== false) : true;
+    selectedSubProductEmoji = sp ? (sp.emoji || '📦') : '📦';
+    pendingSubProductImage = null;
+    pendingSubProductImageDataUrl = null;
+    document.getElementById('spImage').value = '';
+
+    // Image preview
+    const prevSrc = sp && sp.image_url ? sp.image_url : null;
+    if (prevSrc) {
+      document.getElementById('spImagePreview').src = prevSrc;
+      document.getElementById('spImagePreviewWrap').style.display = 'block';
+      document.getElementById('spImageUploadLabel').style.display = 'none';
+    } else {
+      document.getElementById('spImagePreview').src = '';
+      document.getElementById('spImagePreviewWrap').style.display = 'none';
+      document.getElementById('spImageUploadLabel').style.display = 'flex';
+    }
+
+    buildSubProductEmojiGrid();
+    updateSpDescCount();
+    document.getElementById('subProductModal').classList.add('open');
+  }
+  window.openSubProductModal = openSubProductModal;
+
+  function closeSubProductModal() {
+    document.getElementById('subProductModal').classList.remove('open');
+    editingSubProductIndex = null;
+    pendingSubProductImage = null;
+    pendingSubProductImageDataUrl = null;
+  }
+  window.closeSubProductModal = closeSubProductModal;
+
+  function buildSubProductEmojiGrid() {
+    const grid = document.getElementById('spEmojiGrid');
+    if (!grid) return;
+    grid.innerHTML = SUB_PRODUCT_EMOJIS.map(e => {
+      const active = e === selectedSubProductEmoji;
+      return `<button type="button" onclick="selectSubProductEmoji('${e}')" style="background:${active ? 'var(--brand)' : 'white'};color:${active ? 'white' : 'inherit'};border:1.5px solid ${active ? 'var(--brand)' : 'var(--border)'};border-radius:8px;padding:6px;font-size:18px;cursor:pointer;aspect-ratio:1;display:flex;align-items:center;justify-content:center">${e}</button>`;
+    }).join('');
+  }
+
+  function selectSubProductEmoji(e) {
+    selectedSubProductEmoji = e;
+    buildSubProductEmojiGrid();
+  }
+  window.selectSubProductEmoji = selectSubProductEmoji;
+
+  function previewSubProductImage(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    pendingSubProductImage = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      pendingSubProductImageDataUrl = e.target.result;
+      document.getElementById('spImagePreview').src = e.target.result;
+      document.getElementById('spImagePreviewWrap').style.display = 'block';
+      document.getElementById('spImageUploadLabel').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+  window.previewSubProductImage = previewSubProductImage;
+
+  function removeSubProductImage() {
+    pendingSubProductImage = null;
+    pendingSubProductImageDataUrl = null;
+    document.getElementById('spImage').value = '';
+    document.getElementById('spImagePreview').src = '';
+    document.getElementById('spImagePreviewWrap').style.display = 'none';
+    document.getElementById('spImageUploadLabel').style.display = 'flex';
+    // If editing an existing one, clear its image_url so save wipes it
+    if (editingSubProductIndex !== null && currentSubProducts[editingSubProductIndex]) {
+      currentSubProducts[editingSubProductIndex]._clearImage = true;
+    }
+  }
+  window.removeSubProductImage = removeSubProductImage;
+
+  function updateSpDescCount() {
+    const el = document.getElementById('spDesc');
+    const counter = document.getElementById('spDescCount');
+    if (!el || !counter) return;
+    const len = (el.value || '').length;
+    counter.textContent = len + ' / 300';
+    counter.style.color = len >= 300 ? '#e53e3e' : (len >= 270 ? '#92600a' : 'var(--muted)');
+  }
+  window.updateSpDescCount = updateSpDescCount;
+
+  function saveSubProduct() {
+    const name = document.getElementById('spName').value.trim();
+    const desc = document.getElementById('spDesc').value.trim();
+    const price = parseFloat(document.getElementById('spPrice').value);
+    const active = document.getElementById('spActive').checked;
+
+    if (!name) { showToast('⚠️ Name is required'); return; }
+    if (isNaN(price) || price < 0) { showToast('⚠️ Please enter a valid price'); return; }
+
+    const isEdit = editingSubProductIndex !== null;
+    const existing = isEdit ? currentSubProducts[editingSubProductIndex] : null;
+
+    const spObj = {
+      id: existing?.id || ('sp_' + Math.random().toString(36).slice(2, 12)),
+      name,
+      description: desc,
+      price,
+      emoji: selectedSubProductEmoji,
+      active,
+      image_url: existing?._clearImage ? null : (existing?.image_url || null),
+    };
+
+    // Attach pending file for later upload (stays on the object, saveProduct uploads it)
+    if (pendingSubProductImage) {
+      spObj._pendingImageFile = pendingSubProductImage;
+      spObj._pendingImageDataUrl = pendingSubProductImageDataUrl;
+      // Preview URL for immediate display until the real upload completes
+      spObj.image_url = pendingSubProductImageDataUrl;
+    }
+
+    if (isEdit) currentSubProducts[editingSubProductIndex] = spObj;
+    else currentSubProducts.push(spObj);
+
+    closeSubProductModal();
+    renderSubProducts();
+    showToast(isEdit ? '✅ Sub-product updated' : '✅ Sub-product added');
+  }
+  window.saveSubProduct = saveSubProduct;
+
+  function editSubProduct(i) { openSubProductModal(i); }
+  window.editSubProduct = editSubProduct;
+
+  function deleteSubProduct(i) {
+    const sp = currentSubProducts[i];
+    if (!sp) return;
+    if (!confirm('Remove "' + sp.name + '" from this listing?')) return;
+    currentSubProducts.splice(i, 1);
+    renderSubProducts();
+  }
+  window.deleteSubProduct = deleteSubProduct;
+
+  async function uploadSubProductImage(file, productId, subProductId) {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${currentUser.id}/${productId}-sub-${subProductId}.${ext}`;
+    const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
+    if (error) { console.error('Sub-product upload error:', error); return null; }
+    const { data } = sb.storage.from('product-images').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
   async function saveProduct() {
     const name = document.getElementById('pName').value.trim();
-    // Collect variant rows from the DOM
-    const collectedVariants = [];
-    document.querySelectorAll('.variant-row').forEach(row => {
-      const label = (row.querySelector('.variant-label').value || '').trim();
-      const price = parseFloat(row.querySelector('.variant-price').value);
-      if (label && !isNaN(price) && price >= 0) collectedVariants.push({ label, price });
-    });
-    currentVariants = collectedVariants;
+    if (!name) { showToast('⚠️ Name is required'); return; }
 
-    let price = parseFloat(document.getElementById('pPrice').value);
-    // If variants exist, auto-use the lowest variant price as starting price
-    if (collectedVariants.length > 0) {
-      price = Math.min(...collectedVariants.map(v => v.price));
+    // Determine listing type
+    const listingType = document.querySelector('input[name="pListingType"]:checked')?.value || 'single';
+    const isMulti = listingType === 'multi';
+
+    // Collect variant rows (only relevant for single)
+    const collectedVariants = [];
+    if (!isMulti) {
+      document.querySelectorAll('.variant-row').forEach(row => {
+        const label = (row.querySelector('.variant-label').value || '').trim();
+        const price = parseFloat(row.querySelector('.variant-price').value);
+        if (label && !isNaN(price) && price >= 0) collectedVariants.push({ label, price });
+      });
+      currentVariants = collectedVariants;
     }
-    if (!name || !price || isNaN(price)) { showToast('⚠️ Name and price are required'); return; }
+
+    // Determine price
+    let price;
+    if (isMulti) {
+      // Validate sub-products
+      if (!currentSubProducts.length) { showToast('⚠️ Add at least one sub-product'); return; }
+      for (const sp of currentSubProducts) {
+        if (!sp.name || !sp.name.trim()) { showToast('⚠️ Every sub-product needs a name'); return; }
+        if (isNaN(Number(sp.price)) || Number(sp.price) < 0) { showToast('⚠️ Every sub-product needs a valid price'); return; }
+      }
+      const activeSubs = currentSubProducts.filter(sp => sp.active !== false);
+      const pricePool = (activeSubs.length ? activeSubs : currentSubProducts).map(sp => Number(sp.price)).filter(n => !isNaN(n) && n >= 0);
+      price = pricePool.length ? Math.min(...pricePool) : 0;
+    } else {
+      price = parseFloat(document.getElementById('pPrice').value);
+      if (collectedVariants.length > 0) {
+        price = Math.min(...collectedVariants.map(v => v.price));
+      }
+      if (!price || isNaN(price)) { showToast('⚠️ Price is required'); return; }
+    }
 
     const allProps = document.getElementById('pAllProperties').checked;
     const selectedProps = allProps ? [] : [...document.querySelectorAll('.prop-check:checked')].map(cb => cb.value);
     const category = document.getElementById('pCategory').value;
-    const isExperience = category === 'experience';
+    const isExperience = category === 'experience' && !isMulti;
 
-    // Capture image state before upload. currentImageUrls holds existing URLs;
-    // pendingImageFiles[i] being truthy means slot i has a new file that needs uploading.
     const hasAnyPending = pendingImageFiles.some(f => !!f);
 
     const data = {
@@ -2030,7 +2406,8 @@
       lead_time_days: isExperience ? (parseInt(document.getElementById('pLeadTime').value) || 0) : null,
       gst_type: isExperience ? document.getElementById('pGst').value : null,
       booking_instructions: isExperience ? document.getElementById('pInstructions').value.trim() : null,
-      variants: collectedVariants.length > 0 ? collectedVariants : null,
+      variants: (!isMulti && collectedVariants.length > 0) ? collectedVariants : null,
+      sub_products: null, // filled in below after any sub-product image uploads
     };
 
     async function buildFinalUrls(productId) {
@@ -2047,22 +2424,64 @@
       return finalUrls;
     }
 
+    // Upload any pending sub-product images, then produce clean sub_products array
+    async function finalizeSubProducts(productId) {
+      if (!isMulti) return null;
+      const finalSubs = [];
+      for (const sp of currentSubProducts) {
+        const clean = {
+          id: sp.id,
+          name: (sp.name || '').trim(),
+          description: (sp.description || '').trim(),
+          price: Number(sp.price) || 0,
+          emoji: sp.emoji || '📦',
+          active: sp.active !== false,
+          image_url: null,
+        };
+        if (sp._pendingImageFile) {
+          const url = await uploadSubProductImage(sp._pendingImageFile, productId, sp.id);
+          clean.image_url = url || null;
+        } else if (sp.image_url && !sp._pendingImageDataUrl) {
+          clean.image_url = sp.image_url;
+        }
+        finalSubs.push(clean);
+      }
+      return finalSubs;
+    }
+
     if (editingProductId) {
       if (hasAnyPending) showToast('⏳ Uploading images...');
       const finalUrls = await buildFinalUrls(editingProductId);
       data.image_urls = finalUrls.length ? finalUrls : null;
       data.image_url = finalUrls[0] || null;
-      await sb.from('products').update(data).eq('id', editingProductId);
+      if (isMulti) {
+        const hasSubPending = currentSubProducts.some(sp => sp._pendingImageFile);
+        if (hasSubPending) showToast('⏳ Uploading sub-product images...');
+        data.sub_products = await finalizeSubProducts(editingProductId);
+      }
+      const { error } = await sb.from('products').update(data).eq('id', editingProductId);
+      if (error) { showToast('⚠️ Error saving: ' + error.message); return; }
       showToast('✅ Product updated');
     } else {
+      // Insert first so we have an id for storage paths
       const { data: inserted, error } = await sb.from('products').insert(data).select().single();
       if (error) { showToast('⚠️ Error saving product'); return; }
+      let updates = {};
       if (hasAnyPending || currentImageUrls.length) {
         showToast('⏳ Uploading images...');
         const finalUrls = await buildFinalUrls(inserted.id);
         if (finalUrls.length) {
-          await sb.from('products').update({ image_urls: finalUrls, image_url: finalUrls[0] }).eq('id', inserted.id);
+          updates.image_urls = finalUrls;
+          updates.image_url = finalUrls[0];
         }
+      }
+      if (isMulti) {
+        const hasSubPending = currentSubProducts.some(sp => sp._pendingImageFile);
+        if (hasSubPending) showToast('⏳ Uploading sub-product images...');
+        updates.sub_products = await finalizeSubProducts(inserted.id);
+      }
+      if (Object.keys(updates).length) {
+        await sb.from('products').update(updates).eq('id', inserted.id);
       }
       showToast('✅ Product added');
     }

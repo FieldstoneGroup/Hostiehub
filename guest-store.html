@@ -613,7 +613,7 @@
     const username = getUsername();
     if (!username) { hideLoading(); document.getElementById('notFound').style.display = 'block'; return; }
 
-    const { data: host } = await sb.from('hosts').select('*').eq('username', username).single();
+    const { data: host } = await sb.from('hosts_public').select('*').eq('username', username).single();
     if (!host) { hideLoading(); document.getElementById('notFound').style.display = 'block'; return; }
     hostData = host;
 

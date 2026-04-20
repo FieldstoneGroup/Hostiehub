@@ -809,13 +809,19 @@
 
     // Retry partner lookup up to 3 times — JWT may not be attached yet on hard refresh
     let partner = null;
+    let lastError = null;
     for (let i = 0; i < 3; i++) {
-      const { data } = await sb.from('partners').select('*').eq('user_id', currentUser.id).maybeSingle();
+      const { data, error } = await sb.from('partners').select('*').eq('user_id', currentUser.id).maybeSingle();
+      if (error) { lastError = error; }
       if (data) { partner = data; break; }
       if (i < 2) await new Promise(r => setTimeout(r, 500));
     }
 
-    if (!partner) { window.location.href = 'partner-signup.html'; return; }
+    if (!partner) {
+      // Show diagnostic error instead of redirecting
+      document.body.innerHTML = '<div style="max-width:600px;margin:80px auto;padding:40px;font-family:sans-serif;background:white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08)"><h2 style="color:#2C6E6A;margin-bottom:16px">Cannot load partner dashboard</h2><p style="color:#444;line-height:1.6">Logged in as: <strong>' + (currentUser.email || '?') + '</strong></p><p style="color:#444;line-height:1.6">User ID: <code>' + currentUser.id + '</code></p><p style="color:#444;line-height:1.6;margin-top:16px">Partner row lookup failed.</p>' + (lastError ? '<pre style="background:#f5f5f5;padding:14px;border-radius:8px;font-size:13px;overflow:auto;white-space:pre-wrap">' + JSON.stringify(lastError, null, 2) + '</pre>' : '<p style="color:#666">No error returned — no partner row exists for this user.</p>') + '<div style="margin-top:24px;display:flex;gap:10px"><button onclick="sb.auth.signOut().then(()=>location.href=\'partner-signup.html\')" style="background:#2C6E6A;color:white;border:none;border-radius:8px;padding:10px 20px;cursor:pointer">Sign out</button></div></div>';
+      return;
+    }
     partnerData = partner;
     populateUI();
     checkTrial();

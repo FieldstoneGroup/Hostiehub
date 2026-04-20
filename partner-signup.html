@@ -221,26 +221,87 @@
 
   let selectedLocation = null;
 
+  // ── Google Places Autocomplete (AU-biased) ──
+  const GOOGLE_PLACES_KEY = 'AIzaSyCCAuZsZ7pSq0EOoksNz__mSNAOQtLuFkk';
+  let _sessionToken = null;
+  function getSessionToken() {
+    if (_sessionToken) return _sessionToken;
+    _sessionToken = 'stk_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    return _sessionToken;
+  }
+  let _debounceTimer = null;
+
   async function suggestSignupLocation(query) {
-    if (query.length < 3) { document.getElementById('locationSuggestions').style.display = 'none'; return; }
+    clearTimeout(_debounceTimer);
+    if (!query || query.length < 3) {
+      document.getElementById('locationSuggestions').style.display = 'none';
+      return;
+    }
+    _debounceTimer = setTimeout(() => fetchPlacesAutocomplete(query), 200);
+  }
+
+  async function fetchPlacesAutocomplete(query) {
     try {
-      const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(query + ', Australia') + '&format=json&addressdetails=1&limit=5', {
-        headers: { 'Accept-Language': 'en', 'User-Agent': 'HostieHub/1.0' }
+      const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': GOOGLE_PLACES_KEY },
+        body: JSON.stringify({
+          input: query,
+          includedRegionCodes: ['au'],
+          sessionToken: getSessionToken(),
+        }),
       });
       const data = await res.json();
       const box = document.getElementById('locationSuggestions');
-      if (!data.length) { box.style.display = 'none'; return; }
+      const suggestions = data.suggestions || [];
+      if (!suggestions.length) { box.style.display = 'none'; return; }
       box.style.display = 'block';
-      box.innerHTML = data.map(r => {
-        const display = r.display_name.split(',').slice(0, 3).join(',');
-        const isDetailed = r.address?.road || r.address?.house_number;
-        return '<div onclick="selectSignupLocation(' + r.lat + ',' + r.lon + ',\'' + display.replace(/'/g, '') + '\',' + isDetailed + ')" style="padding:12px 16px;cursor:pointer;font-size:14px;border-bottom:1px solid #f0ece8" onmouseover="this.style.background=\'#f9f7f4\'" onmouseout="this.style.background=\'white\'">' + display + '</div>';
+      box.innerHTML = suggestions.map(s => {
+        const p = s.placePrediction;
+        if (!p) return '';
+        const text = (p.text && p.text.text) || '';
+        const placeId = p.placeId || '';
+        const safeText = text.replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        return '<div data-place-id="' + placeId + '" data-text="' + safeText + '" style="padding:12px 16px;cursor:pointer;font-size:14px;border-bottom:1px solid #f0ece8" onmouseover="this.style.background=\'#f9f7f4\'" onmouseout="this.style.background=\'white\'">' + text + '</div>';
       }).join('');
-    } catch(e) {}
+      // Attach click handlers (avoids quote-escaping hell)
+      box.querySelectorAll('[data-place-id]').forEach(el => {
+        el.addEventListener('click', () => selectGooglePlace(el.dataset.placeId, el.dataset.text));
+      });
+    } catch (e) {
+      console.warn('Places autocomplete error:', e);
+    }
   }
 
+  async function selectGooglePlace(placeId, text) {
+    document.getElementById('businessLocation').value = text;
+    document.getElementById('locationSuggestions').style.display = 'none';
+    document.getElementById('locationError').style.display = 'none';
+    try {
+      const res = await fetch('https://places.googleapis.com/v1/places/' + encodeURIComponent(placeId) + '?sessionToken=' + encodeURIComponent(getSessionToken()), {
+        headers: { 'X-Goog-Api-Key': GOOGLE_PLACES_KEY, 'X-Goog-FieldMask': 'id,formattedAddress,location,addressComponents' },
+      });
+      const place = await res.json();
+      const lat = place.location && place.location.latitude;
+      const lng = place.location && place.location.longitude;
+      const fullAddress = place.formattedAddress || text;
+      // Decide if "detailed" — does it have a street number or route?
+      const comps = place.addressComponents || [];
+      const isDetailed = comps.some(c => (c.types || []).includes('street_number') || (c.types || []).includes('route'));
+      selectedLocation = { lat: parseFloat(lat), lng: parseFloat(lng), name: fullAddress, isDetailed: !!isDetailed };
+      document.getElementById('businessLocation').value = fullAddress;
+      // Reset session token — one "session" ends at place selection
+      _sessionToken = null;
+    } catch (e) {
+      console.warn('Place details error:', e);
+      // Fall back: keep text, no coords — form will show location error on submit
+      selectedLocation = null;
+    }
+  }
+
+  // Retain the old name in case other code calls it
   function selectSignupLocation(lat, lng, name, isDetailed) {
-    selectedLocation = { lat: parseFloat(lat), lng: parseFloat(lng), name, isDetailed };
+    selectedLocation = { lat: parseFloat(lat), lng: parseFloat(lng), name, isDetailed: !!isDetailed };
     document.getElementById('businessLocation').value = name;
     document.getElementById('locationSuggestions').style.display = 'none';
     document.getElementById('locationError').style.display = 'none';

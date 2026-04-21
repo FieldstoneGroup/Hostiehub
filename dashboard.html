@@ -912,7 +912,7 @@
       </div>
       <div class="field">
         <label>Guest notes prompt <span style="font-weight:300;font-size:12px">(optional)</span></label>
-        <input type="text" id="pNotesPrompt" placeholder="e.g. Please describe your flower preference (roses, natives, white, mixed colours)">
+        <input type="text" id="pNotesPrompt" placeholder="e.g. anything we need to know">
         <div class="field-hint">This question appears when guests add this product to their cart at checkout.</div>
       </div>
       <div class="field">
@@ -1925,7 +1925,7 @@
       if (empty) empty.style.display = 'none';
       list.innerHTML = currentVariants.map((v, i) => `
         <div class="variant-row" style="display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);padding:8px">
-          <input type="text" class="variant-label" placeholder="e.g. 4 people" value="${(v.label || '').replace(/"/g, '&quot;')}" oninput="onVariantInput()" style="flex:2;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;background:white">
+          <input type="text" class="variant-label" placeholder="e.g. white or red wine, colour variant" value="${(v.label || '').replace(/"/g, '&quot;')}" oninput="onVariantInput()" style="flex:2;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;background:white">
           <div style="display:flex;align-items:center;gap:4px;flex:1">
             <span style="font-size:13px;color:var(--muted)">$</span>
             <input type="number" class="variant-price" placeholder="45" min="0" step="0.01" value="${v.price || ''}" oninput="onVariantInput()" style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;background:white;min-width:0">

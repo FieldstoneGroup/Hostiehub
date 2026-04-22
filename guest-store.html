@@ -301,7 +301,7 @@
     <div class="store-tab-bar">
       <div class="store-tab-inner">
         <button id="tabHost" onclick="switchStoreTab('host')" class="store-tab store-tab-active-host">
-          <span style="font-size:20px">🏠</span><span>Host Products & Services</span>
+          <span style="font-size:20px">🏠</span><span>Products & Services</span>
         </button>
         <button id="tabLocal" onclick="switchStoreTab('local')" class="store-tab store-tab-inactive">
           <span style="font-size:20px">🌟</span><span>Local Reservations & Experiences</span>
@@ -318,18 +318,6 @@
   <!-- LOCAL TAB -->
   <div id="storePageLocal" style="display:none">
 
-    <!-- TAB BAR (duplicate) -->
-    <div class="store-tab-bar">
-      <div class="store-tab-inner">
-        <button id="tabHost2" onclick="switchStoreTab('host')" class="store-tab store-tab-inactive">
-          <span style="font-size:20px">🏠</span><span>Host Products & Services</span>
-        </button>
-        <button id="tabLocal2" onclick="switchStoreTab('local')" class="store-tab store-tab-active-local">
-          <span style="font-size:20px">🌟</span><span>Local Reservations & Experiences</span>
-        </button>
-      </div>
-    </div>
-
     <div style="background:linear-gradient(135deg,#0f3d6e 0%,#1a5fa8 100%);padding:40px 24px 32px;text-align:center">
       <div style="max-width:600px;margin:0 auto">
         <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:12px">Local Reservations & Experiences</div>
@@ -337,6 +325,19 @@
         <p style="font-size:15px;color:rgba(255,255,255,0.8);font-weight:300;line-height:1.6;max-width:420px;margin:0 auto">Book directly with local businesses — restaurants, tours, photography and more.</p>
       </div>
     </div>
+
+    <!-- TAB BAR (duplicate) -->
+    <div class="store-tab-bar">
+      <div class="store-tab-inner">
+        <button id="tabHost2" onclick="switchStoreTab('host')" class="store-tab store-tab-inactive">
+          <span style="font-size:20px">🏠</span><span>Products & Services</span>
+        </button>
+        <button id="tabLocal2" onclick="switchStoreTab('local')" class="store-tab store-tab-active-local">
+          <span style="font-size:20px">🌟</span><span>Local Reservations & Experiences</span>
+        </button>
+      </div>
+    </div>
+
     <div class="products-section">
       <div class="products-grid" id="localProductsGrid"></div>
     </div>
@@ -851,7 +852,7 @@
       return ids.includes(selectedPropertyId);
     }) : allProducts;
 
-    const partnerProducts = base.filter(p => partnerCats.includes(p.category) || p.partner_product_id);
+    const partnerProducts = base.filter(p => (partnerCats.includes(p.category) || p.partner_product_id) && p.partner_product_type !== 'product');
     const grid = document.getElementById('localProductsGrid');
 
     if (!partnerProducts.length) {
@@ -1123,8 +1124,8 @@
   window.carouselGoTo = carouselGoTo;
 
   function renderProducts(products) {
-    // Host tab only shows non-partner products
-    const hostProducts = products.filter(p => !p.partner_product_id);
+    // Host tab shows: host's own products + partner products of type 'product' (sellable)
+    const hostProducts = products.filter(p => !p.partner_product_id || p.partner_product_type === 'product');
     const grid = document.getElementById('productsGrid');
     if (!hostProducts.length) {
       grid.innerHTML = `<div class="empty-state"><div class="icon">🛍️</div><p>No extras available for this property yet.<br>Check back soon!</p></div>`;
@@ -1452,7 +1453,7 @@
     }
 
     // Partner product without booking URL — show request popup
-    const isPartnerRequest = !!product.partner_product_id && product.partner_product_type !== 'booking';
+    const isPartnerRequest = !!product.partner_product_id && product.partner_product_type === 'service';
     if (isPartnerRequest) {
       pendingPartnerRequestProduct = product;
       pendingPartnerRequestBtn = btn;
@@ -1776,7 +1777,7 @@
   window.confirmPartnerRequest = confirmPartnerRequest;
 
   function addToCart(product, btn, note, partnerRequestData) {
-    const isPartnerRequest = !!product.partner_product_id && product.partner_product_type !== 'booking';
+    const isPartnerRequest = !!product.partner_product_id && product.partner_product_type === 'service';
     cart.push({
       id: product.id,
       name: product.name,

@@ -364,36 +364,35 @@
     <!-- ADD PRODUCT -->
     <div class="page" id="page-newproduct">
       <div style="display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start">
-      <!-- LIVE PREVIEW — left side -->
+      <!-- LIVE PREVIEW — left side (mirrors guest store card) -->
       <div style="position:sticky;top:24px">
         <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Live preview</div>
-        <div id="listingPreview" style="background:white;border-radius:14px;border:1.5px solid var(--border);overflow:hidden;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.08)">
-          <!-- Banner -->
-          <div id="previewBanner" style="background:linear-gradient(135deg,#E8A838,#d4952e);padding:7px 12px;display:flex;align-items:center;justify-content:space-between">
-            <div style="display:flex;align-items:center;gap:5px">
-              <span style="font-size:11px">🤝</span>
-              <span style="font-size:10px;font-weight:700;color:white;letter-spacing:0.8px;text-transform:uppercase">Local Partner</span>
-            </div>
-            <span id="previewVoucherBadge" style="display:none;font-size:10px;font-weight:700;color:#92600a;background:white;padding:2px 8px;border-radius:50px">🎟️ Free voucher</span>
-          </div>
-          <!-- Image — tall, cover fill -->
-          <div id="previewImageWrap" style="width:100%;height:200px;background:#f4f6f5;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #f0ece8;overflow:hidden">
+        <div id="listingPreview" style="background:white;border-radius:14px;border:1.5px solid #e5e7eb;overflow:hidden;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.08);position:relative">
+          <!-- Local Partner chip (top-right, dark blue) -->
+          <div id="previewPartnerChip" style="position:absolute;top:10px;right:10px;background:#1a5fa8;color:white;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:4px 10px;border-radius:50px;z-index:2;box-shadow:0 2px 6px rgba(26,95,168,0.3)">Local Partner</div>
+          <!-- Voucher badge (booking links only) -->
+          <div id="previewVoucherBadge" style="display:none;position:absolute;top:10px;left:10px;font-size:10px;font-weight:700;color:#92600a;background:white;padding:4px 10px;border-radius:50px;z-index:2">🎟️ Free voucher</div>
+          <!-- Logo strip (white bg, 48px, centered logo) — shown only if logo uploaded -->
+          <div id="previewLogoStrip" style="display:none;background:white;border-bottom:1px solid #f0ece8;padding:8px 14px;align-items:center;justify-content:center;height:48px"><img id="previewLogoImg" src="" alt="" style="max-height:32px;max-width:120px;object-fit:contain"></div>
+          <!-- Product image -->
+          <div id="previewImageWrap" style="width:100%;height:180px;background:#f4f6f5;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #f0ece8;overflow:hidden">
             <span style="font-size:48px;color:#d1d5db">🏪</span>
           </div>
-          <!-- Content -->
-          <div style="padding:12px 14px 0">
-            <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:2px" id="previewCategory">OTHER</div>
-            <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#1a1a1a;line-height:1.2;margin-bottom:6px" id="previewName">Your listing name</div>
-            <div style="font-size:14px;color:#6b7280;line-height:1.45;margin-bottom:8px;min-height:18px" id="previewDesc"></div>
-            <div id="previewNotes" style="display:none;background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 6px 6px 0;padding:6px 9px;font-size:12px;font-weight:600;color:#15803d;line-height:1.35;margin-bottom:8px"></div>
-            <div id="previewVoucherRow" style="display:none;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:6px 9px;font-size:11px;font-weight:600;color:#92600a;margin-bottom:10px"><span>🎟️</span><span>Free voucher emailed on booking</span></div>
-            <div id="previewPriceRow" style="display:none;margin-bottom:10px">
-              <span id="previewPrice" style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#2C6E6A"></span>
-            </div>
+          <!-- Body -->
+          <div style="padding:14px 16px 12px">
+            <div style="font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:#1a1a1a;line-height:1.2;margin-bottom:6px" id="previewName">Your listing name</div>
+            <div style="font-size:13px;color:#6b7280;line-height:1.5;margin-bottom:8px;min-height:20px" id="previewDesc"></div>
+            <div id="previewVoucherRow" style="display:none;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:6px 9px;font-size:11px;font-weight:600;color:#92600a;margin-bottom:8px"><span>🎟️</span><span>Free voucher emailed on booking</span></div>
+            <div id="previewDistPill" style="display:none;align-items:center;gap:4px;background:#f0f7ff;color:#1a5fa8;font-size:11px;font-weight:600;padding:3px 8px;border-radius:50px;margin-top:4px"><span>📍</span><span id="previewDistText">Visit in-store or order here</span></div>
           </div>
-          <!-- Button -->
-          <div style="padding:10px 14px 14px;border-top:1px solid #f0ece8;margin-top:4px">
-            <div id="previewBtn" style="width:100%;border-radius:9px;padding:11px;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;color:white;background:linear-gradient(135deg,#2C6E6A,#1d4d4a);text-align:center">Book now →</div>
+          <!-- Notes box (if notes set) -->
+          <div id="previewNotes" style="display:none;background:#f0fdf4;border-left:3px solid #16a34a;padding:8px 14px;font-size:12px;font-weight:600;color:#15803d;line-height:1.4"></div>
+          <!-- Footer: price + button -->
+          <div style="padding:10px 16px;background:white;border-top:1px solid #f0ece8;display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <div id="previewPriceRow" style="display:none">
+              <span id="previewPrice" style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#2C6E6A"></span>
+            </div>
+            <div id="previewBtn" style="border-radius:50px;padding:9px 18px;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif;color:#2C6E6A;background:white;border:1.5px solid #2C6E6A;text-align:center;margin-left:auto">Add →</div>
           </div>
         </div>
         <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px">This is how guests will see your listing</div>
@@ -429,8 +428,8 @@
             <div class="field-hint">This tells hosts whether they can set their own price or not.</div>
           </div>
           <div class="field">
-            <label>Description <span style="font-weight:300;font-size:12px" id="pDescCount">(0 / 220 characters)</span></label>
-            <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="220" oninput="document.getElementById('pDescCount').textContent = '(' + this.value.length + ' / 220 characters)'; document.getElementById('pDescCount').style.color = this.value.length > 190 ? '#e53e3e' : 'var(--muted)'; updatePreview()"></textarea>
+            <label>Description <span style="font-weight:300;font-size:12px" id="pDescCount">(0 / 400 characters)</span></label>
+            <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="400" oninput="document.getElementById('pDescCount').textContent = '(' + this.value.length + ' / 400 characters)'; document.getElementById('pDescCount').style.color = this.value.length > 360 ? '#e53e3e' : 'var(--muted)'; updatePreview()"></textarea>
             <div class="field-hint">Shown in the guest store — keep it punchy. Maximum 220 characters.</div>
           </div>
           <div class="field">
@@ -1223,6 +1222,7 @@
       document.getElementById('pLogoPreview').src = e.target.result;
       document.getElementById('pLogoPreviewWrap').style.display = 'block';
       document.getElementById('pLogoUploadLabel').style.display = 'none';
+      updatePreview();
     };
     reader.readAsDataURL(file);
   }
@@ -1233,6 +1233,7 @@
     document.getElementById('pLogoPreview').src = '';
     document.getElementById('pLogoPreviewWrap').style.display = 'none';
     document.getElementById('pLogoUploadLabel').style.display = 'flex';
+    updatePreview();
   }
   window.previewLogoImage = previewLogoImage;
   window.removeLogoImage = removeLogoImage;
@@ -2206,28 +2207,48 @@
 
     el('previewName').textContent = name || 'Your listing name';
     el('previewDesc').textContent = desc;
-    el('previewCategory').textContent = catLabels[category] || '✨ Other';
 
+    // Notes box
     if (notes) {
       el('previewNotes').style.display = 'block';
-      el('previewNotes').textContent = '🎁 ' + notes;
+      el('previewNotes').innerHTML = '🎁 ' + notes;
     } else {
       el('previewNotes').style.display = 'none';
     }
 
-    // Voucher only for booking links
+    // Logo strip (mirrors guest store card)
+    const logoPreview = document.getElementById('pLogoPreview');
+    const logoSrc = logoPreview && logoPreview.src && !logoPreview.src.endsWith('/') && logoPreview.src !== window.location.href ? logoPreview.src : '';
+    const logoVisible = document.getElementById('pLogoPreviewWrap')?.style.display === 'block';
+    if (logoSrc && logoVisible) {
+      el('previewLogoStrip').style.display = 'flex';
+      document.getElementById('previewLogoImg').src = logoSrc;
+      el('previewImageWrap').style.height = '140px';
+    } else {
+      el('previewLogoStrip').style.display = 'none';
+      el('previewImageWrap').style.height = '180px';
+    }
+
+    // Distance pill — if listing address selected
+    if (selectedListingLocation && selectedListingLocation.name) {
+      el('previewDistPill').style.display = 'inline-flex';
+      document.getElementById('previewDistText').textContent = 'Visit in-store or order here';
+    } else {
+      el('previewDistPill').style.display = 'none';
+    }
+
+    // Voucher (only for booking type)
     if (isBooking && hasVoucherFile) {
-      el('previewVoucherBadge').style.display = 'inline';
+      el('previewVoucherBadge').style.display = 'inline-block';
       el('previewVoucherRow').style.display = 'flex';
     } else {
       el('previewVoucherBadge').style.display = 'none';
       el('previewVoucherRow').style.display = 'none';
     }
 
-    // Price row
-    el('previewPrice').style.fontSize = '20px';
+    // Price row + button
+    el('previewPrice').style.fontSize = '18px';
     if (isProduct) {
-      // Collect all wholesale prices across shop products (variants + flat)
       const allWholesales = [];
       shopProducts.forEach(p => {
         if (Array.isArray(p.variants) && p.variants.length > 0) {
@@ -2239,27 +2260,30 @@
       if (allWholesales.length) {
         const minW = Math.min(...allWholesales);
         el('previewPriceRow').style.display = 'block';
-        el('previewPrice').innerHTML = (allWholesales.length > 1 ? '<small style="font-size:13px;font-weight:400;color:#6b7280">From </small>' : '') + '$' + minW + ' <small style="font-size:12px;font-weight:400;color:#6b7280">wholesale (host sets retail)</small>';
-        el('previewPrice').style.fontSize = '16px';
+        el('previewPrice').innerHTML = '<small style="font-size:11px;font-weight:400;color:#6b7280">From </small>$' + minW + '<small style="font-size:10px;font-weight:400;color:#92600a;display:block;margin-top:1px">wholesale — host marks up</small>';
       } else {
         el('previewPriceRow').style.display = 'none';
       }
+      el('previewBtn').textContent = shopProducts.length > 0 ? 'View shop →' : 'Add';
     } else if (isService && servicePriceUnit === 'contact for pricing') {
       el('previewPriceRow').style.display = 'block';
-      el('previewPrice').textContent = 'Contact for pricing';
-      el('previewPrice').style.fontSize = '14px';
+      el('previewPrice').textContent = '💬 Contact for pricing';
+      el('previewPrice').style.fontSize = '13px';
+      el('previewBtn').textContent = 'Add →';
     } else if (isService && servicePrice) {
       el('previewPriceRow').style.display = 'block';
-      el('previewPrice').textContent = '$' + servicePrice + ' ' + servicePriceUnit;
+      el('previewPrice').innerHTML = '$' + servicePrice + ' <small style="font-size:11px;color:#6b7280">' + (servicePriceUnit || '') + '</small>';
       el('previewPrice').style.fontSize = '16px';
+      el('previewBtn').textContent = 'Add →';
+    } else if (isBooking) {
+      el('previewPriceRow').style.display = 'none';
+      el('previewBtn').textContent = 'Book now →';
     } else {
       el('previewPriceRow').style.display = 'none';
+      el('previewBtn').textContent = 'Add →';
     }
 
-    // Button label
-    el('previewBtn').textContent = isProduct ? 'Add to cart +' : (isService ? 'Add →' : 'Book now →');
-
-    // Image
+    // Product image
     if (hasImage) {
       el('previewImageWrap').innerHTML = '<img src="' + imagePreview + '" style="width:100%;height:100%;object-fit:cover">';
     } else {

@@ -440,11 +440,19 @@
           </div>
           <div id="productFields" style="display:none">
             <div class="field">
-              <label>Products in this listing</label>
-              <div class="field-hint" style="margin-bottom:10px">Add each product you sell. Guests will see these when they open your listing on the store.</div>
-              <div id="productItemsList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px"></div>
-              <button type="button" onclick="addProductItem()" style="width:100%;padding:12px;background:var(--bg);color:var(--partner);border:1.5px dashed var(--partner);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer">+ Add another product</button>
-              <div class="field-hint" style="margin-top:8px">Prices are what the host pays you (wholesale). Hosts set their own retail price on top and keep the margin.</div>
+              <label>Wholesale price ($) — what the host pays you</label>
+              <input type="number" id="pWholesalePriceNew" placeholder="e.g. 45" min="0" step="0.01" oninput="updatePreview()">
+              <div class="field-hint">Hosts set their own retail price on top. They keep the difference as their margin.</div>
+            </div>
+            <div class="field">
+              <label>Unit <span style="font-weight:300;font-size:12px">(optional)</span></label>
+              <input type="text" id="pUnitNew" placeholder="e.g. each, box, kg" oninput="updatePreview()">
+            </div>
+            <div class="field">
+              <label>Variants <span style="font-weight:300;font-size:12px">(optional)</span></label>
+              <div class="field-hint" style="margin-bottom:10px">Add variants if this product comes in different sizes or options (e.g. "Serves 2", "Serves 4"). Each variant has its own price.</div>
+              <div id="variantsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+              <button type="button" onclick="addVariantRow()" style="width:100%;padding:10px;background:var(--bg);color:var(--partner);border:1.5px dashed var(--partner);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">+ Add variant</button>
             </div>
           </div>
           <div id="physicalFields" style="display:none">
@@ -559,6 +567,23 @@
               <input type="file" id="pImageFile" accept="image/*" style="display:none" onchange="previewProductImage(this)">
             </label>
             <div class="field-hint">Recommended: square image, at least 400x400px. JPG or PNG.</div>
+          </div>
+          <div class="field">
+            <label>Business logo <span style="font-weight:300;font-size:12px">(optional)</span></label>
+            <div class="field-hint" style="margin-bottom:8px">📐 Best size: <strong>square, 400 × 400px</strong>. PNG or JPG. Max 2MB. Shown at the top of your listing.</div>
+            <div id="pLogoPreviewWrap" style="display:none" class="image-preview-wrap">
+              <img id="pLogoPreview" src="">
+              <button class="image-remove-btn" onclick="removeLogoImage()">✕</button>
+            </div>
+            <label id="pLogoUploadLabel" class="image-upload-label">
+              🏷️ Click to upload your logo
+              <input type="file" id="pLogoFile" accept="image/*" style="display:none" onchange="previewLogoImage(this)">
+            </label>
+          </div>
+          <div class="field">
+            <label>Order notification email</label>
+            <input type="email" id="pNotificationEmail" placeholder="e.g. orders@yourbusiness.com.au">
+            <div class="field-hint">This email receives a notification whenever a guest orders this product. Includes what was ordered, check-in date, and the host's contact details.</div>
           </div>
           <div class="field">
             <label>Listing location</label>
@@ -1100,108 +1125,87 @@
     if (btn) btn.textContent = isBooking ? 'Book now →' : 'Add →';
   }
 
-  // ── PRODUCT ITEMS (for 'product' type listings) ──
-  let productItems = []; // { id?, name, description, wholesale_price, unit, image_url?, active, _new?, _deleted? }
+  // ── PARTNER PRODUCT VARIANTS (simple label + description + price) ──
+  let productVariants = []; // { label, description, price }
 
-  function renderProductItems() {
-    const list = document.getElementById('productItemsList');
+  function renderVariantRows() {
+    const list = document.getElementById('variantsList');
     if (!list) return;
-    const visible = productItems.filter(it => !it._deleted);
-    if (visible.length === 0) {
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">No products added yet — click below to add your first.</div>';
+    if (productVariants.length === 0) {
+      list.innerHTML = '';
       return;
     }
-    list.innerHTML = visible.map((it, i) => {
-      const idx = productItems.indexOf(it);
-      return '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:14px">' +
-        '<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:8px">' +
-          '<input type="text" placeholder="Product name (e.g. Cheese Board)" value="' + escapeAttr(it.name || '') + '" oninput="updateProductItem(' + idx + ',\'name\',this.value)" style="flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px;outline:none;box-sizing:border-box">' +
-          '<button type="button" onclick="removeProductItem(' + idx + ')" style="padding:10px 12px;background:white;color:var(--error);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px">✕</button>' +
-        '</div>' +
-        '<textarea placeholder="Description (optional)" oninput="updateProductItem(' + idx + ',\'description\',this.value)" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:8px;resize:vertical;min-height:50px">' + escapeHtml(it.description || '') + '</textarea>' +
-        '<div style="display:flex;gap:8px;align-items:center">' +
-          '<div style="position:relative;flex:1;max-width:140px">' +
+    list.innerHTML = productVariants.map((v, i) => {
+      const lbl = String(v.label || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const desc = String(v.description || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const price = v.price != null ? v.price : '';
+      return '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px">' +
+        '<div style="display:flex;gap:8px;margin-bottom:8px">' +
+          '<input type="text" placeholder="Label (e.g. Serves 4)" value="' + lbl + '" oninput="updateVariantField(' + i + ',\'label\',this.value)" maxlength="60" style="flex:2;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box">' +
+          '<div style="position:relative;flex:1;max-width:120px">' +
             '<span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none">$</span>' +
-            '<input type="number" min="0" step="0.01" placeholder="0" value="' + (it.wholesale_price || '') + '" oninput="updateProductItem(' + idx + ',\'wholesale_price\',parseFloat(this.value)||0)" style="width:100%;padding:9px 10px 9px 24px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px;outline:none;box-sizing:border-box">' +
+            '<input type="number" min="0" step="0.01" placeholder="0" value="' + price + '" oninput="updateVariantField(' + i + ',\'price\',parseFloat(this.value)||0)" style="width:100%;padding:9px 10px 9px 24px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box">' +
           '</div>' +
-          '<input type="text" placeholder="Unit (e.g. each, box, kg)" value="' + escapeAttr(it.unit || '') + '" oninput="updateProductItem(' + idx + ',\'unit\',this.value)" style="flex:1;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px;outline:none;box-sizing:border-box">' +
+          '<button type="button" onclick="removeVariantRow(' + i + ')" style="padding:9px 12px;background:white;color:var(--error);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px">✕</button>' +
         '</div>' +
+        '<input type="text" placeholder="Short description (optional, max 120 chars)" value="' + desc + '" oninput="updateVariantField(' + i + ',\'description\',this.value)" maxlength="120" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:12px;outline:none;box-sizing:border-box">' +
       '</div>';
     }).join('');
   }
 
-  function escapeAttr(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
-  function escapeHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
-
-  function addProductItem() {
-    productItems.push({ name: '', description: '', wholesale_price: 0, unit: '', active: true, _new: true });
-    renderProductItems();
+  function addVariantRow() {
+    productVariants.push({ label: '', description: '', price: 0 });
+    renderVariantRows();
   }
-
-  function updateProductItem(idx, field, value) {
-    if (!productItems[idx]) return;
-    productItems[idx][field] = value;
-    if (!productItems[idx]._new && !productItems[idx]._dirty) productItems[idx]._dirty = true;
+  function updateVariantField(i, field, value) {
+    if (!productVariants[i]) return;
+    productVariants[i][field] = value;
   }
-
-  function removeProductItem(idx) {
-    if (!productItems[idx]) return;
-    if (productItems[idx]._new) {
-      productItems.splice(idx, 1);
-    } else {
-      productItems[idx]._deleted = true;
-    }
-    renderProductItems();
+  function removeVariantRow(i) {
+    productVariants.splice(i, 1);
+    renderVariantRows();
   }
+  window.addVariantRow = addVariantRow;
+  window.updateVariantField = updateVariantField;
+  window.removeVariantRow = removeVariantRow;
 
-  async function loadProductItemsFor(partnerProductId) {
-    productItems = [];
-    if (!partnerProductId) { renderProductItems(); return; }
-    const { data, error } = await sb.from('partner_product_items')
-      .select('*')
-      .eq('partner_product_id', partnerProductId)
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: true });
-    if (error) { console.warn('Load items error:', error); renderProductItems(); return; }
-    productItems = (data || []).map(d => ({ ...d }));
-    renderProductItems();
+  // ── LOGO UPLOAD PREVIEW ──
+  let pendingLogoFile = null;
+  let existingLogoUrl = null;
+  function previewLogoImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { showToast('Logo must be 2MB or smaller'); input.value = ''; return; }
+    pendingLogoFile = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      document.getElementById('pLogoPreview').src = e.target.result;
+      document.getElementById('pLogoPreviewWrap').style.display = 'block';
+      document.getElementById('pLogoUploadLabel').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
   }
+  function removeLogoImage() {
+    pendingLogoFile = null;
+    existingLogoUrl = null;
+    document.getElementById('pLogoFile').value = '';
+    document.getElementById('pLogoPreview').src = '';
+    document.getElementById('pLogoPreviewWrap').style.display = 'none';
+    document.getElementById('pLogoUploadLabel').style.display = 'flex';
+  }
+  window.previewLogoImage = previewLogoImage;
+  window.removeLogoImage = removeLogoImage;
 
-  async function saveProductItemsFor(partnerProductId) {
-    if (!partnerProductId) return;
-    // Deletes
-    const toDelete = productItems.filter(it => it._deleted && it.id);
-    if (toDelete.length) {
-      await sb.from('partner_product_items').delete().in('id', toDelete.map(it => it.id));
-    }
-    // Inserts
-    const toInsert = productItems.filter(it => it._new && !it._deleted && (it.name || '').trim()).map((it, i) => ({
-      partner_product_id: partnerProductId,
-      name: it.name.trim(),
-      description: it.description || null,
-      wholesale_price: parseFloat(it.wholesale_price) || 0,
-      unit: it.unit || null,
-      sort_order: i,
-      active: true,
-    }));
-    if (toInsert.length) {
-      const { error } = await sb.from('partner_product_items').insert(toInsert);
-      if (error) console.warn('Insert items error:', error);
-    }
-    // Updates
-    const toUpdate = productItems.filter(it => !it._new && !it._deleted && it._dirty && it.id);
-    for (const it of toUpdate) {
-      await sb.from('partner_product_items').update({
-        name: (it.name || '').trim(),
-        description: it.description || null,
-        wholesale_price: parseFloat(it.wholesale_price) || 0,
-        unit: it.unit || null,
-      }).eq('id', it.id);
-    }
+  async function uploadLogoToStorage(file, partnerId) {
+    try {
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = partnerId + '/logos/' + Date.now() + '.' + ext;
+      const { error } = await sb.storage.from('partner-branding').upload(path, file, { upsert: true, contentType: file.type });
+      if (error) { console.warn('Logo upload error:', error); return null; }
+      const { data } = sb.storage.from('partner-branding').getPublicUrl(path);
+      return data.publicUrl;
+    } catch(e) { console.warn('Logo upload exception:', e); return null; }
   }
-  window.addProductItem = addProductItem;
-  window.updateProductItem = updateProductItem;
-  window.removeProductItem = removeProductItem;
 
   function toggleAllDays(cb) {
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -1293,8 +1297,12 @@
     document.getElementById('bookingFields').style.display = 'none';
     document.getElementById('categoryFieldWrap').style.display = 'none';
     document.getElementById('pCategory').value = 'service';
-    productItems = [];
-    renderProductItems();
+    productVariants = [];
+    renderVariantRows();
+    document.getElementById('pWholesalePriceNew') && (document.getElementById('pWholesalePriceNew').value = '');
+    document.getElementById('pUnitNew') && (document.getElementById('pUnitNew').value = '');
+    document.getElementById('pNotificationEmail') && (document.getElementById('pNotificationEmail').value = '');
+    removeLogoImage();
     setSelectedDays(null);
     removeProductImage();
     removeVoucherPdf();
@@ -1357,8 +1365,10 @@
     const bookingUrl = document.getElementById('pBookingUrl').value.trim();
     if (isBooking && !bookingUrl) { showToast('Please enter a booking URL'); return; }
     if (isProduct) {
-      const validItems = productItems.filter(it => !it._deleted && (it.name || '').trim());
-      if (validItems.length === 0) { showToast('Please add at least one product'); return; }
+      const wp = parseFloat(document.getElementById('pWholesalePriceNew').value);
+      const hasBasePrice = !isNaN(wp) && wp > 0;
+      const validVariants = productVariants.filter(v => (v.label || '').trim() && (parseFloat(v.price) || 0) > 0);
+      if (!hasBasePrice && validVariants.length === 0) { showToast('Please enter a wholesale price, or add at least one variant with a price'); return; }
     }
 
     // Lead time
@@ -1377,6 +1387,12 @@
     const listingLat = selectedListingLocation?.lat || null;
     const listingLng = selectedListingLocation?.lng || null;
 
+    // Product fields
+    const productWholesalePrice = isProduct ? (parseFloat(document.getElementById('pWholesalePriceNew').value) || 0) : 0;
+    const productUnit = isProduct ? (document.getElementById('pUnitNew').value.trim() || null) : null;
+    const productVariantsPayload = isProduct ? productVariants.filter(v => (v.label || '').trim()).map(v => ({ label: v.label.trim(), description: (v.description || '').trim().substring(0, 120), price: parseFloat(v.price) || 0 })) : null;
+    const notificationEmail = document.getElementById('pNotificationEmail').value.trim() || null;
+
     const payload = {
       partner_id: partnerData.id,
       name,
@@ -1384,7 +1400,10 @@
       notes: document.getElementById('pNotes').value.trim(),
       type: isBooking ? 'booking' : (isService ? 'service' : 'product'),
       category: document.getElementById('pCategory').value,
-      wholesale_price: 0,
+      wholesale_price: productWholesalePrice,
+      unit: productUnit,
+      variants: productVariantsPayload,
+      notification_email: notificationEmail,
       booking_url: isBooking ? bookingUrl : null,
       voucher_title: isBooking ? (document.getElementById('pVoucherTitle').value.trim() || null) : null,
       lead_time_value: leadTimeValue,
@@ -1411,9 +1430,13 @@
       productId = inserted.id;
     }
 
-    // Save product items (only if listing is of type 'product')
-    if (isProduct) {
-      await saveProductItemsFor(productId);
+    // Upload logo if a new one was picked
+    if (pendingLogoFile && partnerData.id) {
+      const logoUrl = await uploadLogoToStorage(pendingLogoFile, partnerData.id);
+      if (logoUrl) await sb.from('partner_products').update({ logo_url: logoUrl }).eq('id', productId);
+    } else if (!existingLogoUrl && editingProductId) {
+      // User removed the existing logo
+      await sb.from('partner_products').update({ logo_url: null }).eq('id', productId);
     }
 
     const imageFile = document.getElementById('pImageFile').files[0];
@@ -1490,8 +1513,22 @@
 
     if (isProduct) {
       setSelectedDays(Array.isArray(p.available_days) ? p.available_days : null);
-      // Load items for this listing
-      loadProductItemsFor(p.id);
+      // Populate price, unit, variants
+      document.getElementById('pWholesalePriceNew').value = p.wholesale_price || '';
+      document.getElementById('pUnitNew').value = p.unit || '';
+      productVariants = Array.isArray(p.variants) ? p.variants.map(v => ({ label: v.label || '', description: v.description || '', price: v.price || 0 })) : [];
+      renderVariantRows();
+    }
+    // Notification email (applies to all types)
+    document.getElementById('pNotificationEmail').value = p.notification_email || '';
+    // Logo
+    existingLogoUrl = p.logo_url || null;
+    if (p.logo_url) {
+      document.getElementById('pLogoPreview').src = p.logo_url;
+      document.getElementById('pLogoPreviewWrap').style.display = 'block';
+      document.getElementById('pLogoUploadLabel').style.display = 'none';
+    } else {
+      removeLogoImage();
     }
     if (isService) {
       document.getElementById('pLeadTimeValue').value = p.lead_time_value || '';

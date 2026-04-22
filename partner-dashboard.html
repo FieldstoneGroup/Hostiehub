@@ -430,7 +430,7 @@
           <div class="field">
             <label>Description <span style="font-weight:300;font-size:12px" id="pDescCount">(0 / 400 characters)</span></label>
             <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="400" oninput="document.getElementById('pDescCount').textContent = '(' + this.value.length + ' / 400 characters)'; document.getElementById('pDescCount').style.color = this.value.length > 360 ? '#e53e3e' : 'var(--muted)'; updatePreview()"></textarea>
-            <div class="field-hint">Shown in the guest store — keep it punchy. Maximum 220 characters.</div>
+            <div class="field-hint">Shown in the guest store — keep it punchy. Maximum 400 characters.</div>
           </div>
           <div class="field">
             <label>Notes for guests <span style="font-weight:300;font-size:12px">(optional)</span></label>
@@ -1563,7 +1563,7 @@
     document.getElementById('pCategory').value = p.category || 'product';
     document.getElementById('pDesc').value = p.description || '';
     const descCount = document.getElementById('pDescCount');
-    if (descCount) { const l = (p.description || '').length; descCount.textContent = '(' + l + ' / 220 characters)'; descCount.style.color = l > 190 ? '#e53e3e' : 'var(--muted)'; }
+    if (descCount) { const l = (p.description || '').length; descCount.textContent = '(' + l + ' / 400 characters)'; descCount.style.color = l > 360 ? '#e53e3e' : 'var(--muted)'; }
     document.getElementById('pNotes').value = p.notes || '';
 
     const isBooking = p.type === 'booking';

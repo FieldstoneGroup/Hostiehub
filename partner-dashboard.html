@@ -440,19 +440,15 @@
           </div>
           <div id="productFields" style="display:none">
             <div class="field">
-              <label>Wholesale price ($) — what the host pays you</label>
-              <input type="number" id="pWholesalePriceNew" placeholder="e.g. 45" min="0" step="0.01" oninput="updatePreview()">
-              <div class="field-hint">Hosts set their own retail price on top. They keep the difference as their margin.</div>
+              <label>Products</label>
+              <div class="field-hint" style="margin-bottom:10px">Add at least one product. Each product has a wholesale price (what the host pays you) and a suggested RRP (what guests will pay). Hosts can tweak the RRP in their own store.</div>
+              <div id="variantsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
+              <button type="button" onclick="addVariantRow()" style="width:100%;padding:10px;background:var(--bg);color:var(--partner);border:1.5px dashed var(--partner);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">+ Add product</button>
             </div>
             <div class="field">
               <label>Unit <span style="font-weight:300;font-size:12px">(optional)</span></label>
-              <input type="text" id="pUnitNew" placeholder="e.g. each, box, kg" oninput="updatePreview()">
-            </div>
-            <div class="field">
-              <label>Variants <span style="font-weight:300;font-size:12px">(optional)</span></label>
-              <div class="field-hint" style="margin-bottom:10px">Add variants if this product comes in different sizes or options (e.g. "Serves 2", "Serves 4"). Each variant has its own price.</div>
-              <div id="variantsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-              <button type="button" onclick="addVariantRow()" style="width:100%;padding:10px;background:var(--bg);color:var(--partner);border:1.5px dashed var(--partner);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">+ Add variant</button>
+              <input type="text" id="pUnitNew" placeholder="e.g. each, box, kg, hamper" oninput="updatePreview()">
+              <div class="field-hint">Shown next to the price in the guest store (e.g. "$60 / hamper").</div>
             </div>
           </div>
           <div id="physicalFields" style="display:none">
@@ -1125,37 +1121,51 @@
     if (btn) btn.textContent = isBooking ? 'Book now →' : 'Add →';
   }
 
-  // ── PARTNER PRODUCT VARIANTS (simple label + description + price) ──
-  let productVariants = []; // { label, description, price }
+  // ── PARTNER PRODUCTS (label + description + wholesale + RRP) ──
+  let productVariants = []; // { label, description, wholesale_price, rrp }
 
   function renderVariantRows() {
     const list = document.getElementById('variantsList');
     if (!list) return;
     if (productVariants.length === 0) {
-      list.innerHTML = '';
+      list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:12px;text-align:center;background:var(--bg);border-radius:10px;border:1.5px dashed var(--border)">No products yet — tap "+ Add product" below.</div>';
       return;
     }
     list.innerHTML = productVariants.map((v, i) => {
       const lbl = String(v.label || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
       const desc = String(v.description || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      const price = v.price != null ? v.price : '';
+      const wp = v.wholesale_price != null ? v.wholesale_price : '';
+      const rrp = v.rrp != null ? v.rrp : '';
       return '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px">' +
-        '<div style="display:flex;gap:8px;margin-bottom:8px">' +
-          '<input type="text" placeholder="Label (e.g. Serves 4)" value="' + lbl + '" oninput="updateVariantField(' + i + ',\'label\',this.value)" maxlength="60" style="flex:2;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box">' +
-          '<div style="position:relative;flex:1;max-width:120px">' +
-            '<span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none">$</span>' +
-            '<input type="number" min="0" step="0.01" placeholder="0" value="' + price + '" oninput="updateVariantField(' + i + ',\'price\',parseFloat(this.value)||0)" style="width:100%;padding:9px 10px 9px 24px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box">' +
-          '</div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">' +
+          '<input type="text" placeholder="Product name (e.g. Cheese Hamper)" value="' + lbl + '" oninput="updateVariantField(' + i + ',\'label\',this.value)" maxlength="60" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box">' +
           '<button type="button" onclick="removeVariantRow(' + i + ')" style="padding:9px 12px;background:white;color:var(--error);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px">✕</button>' +
         '</div>' +
-        '<input type="text" placeholder="Short description (optional, max 120 chars)" value="' + desc + '" oninput="updateVariantField(' + i + ',\'description\',this.value)" maxlength="120" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:12px;outline:none;box-sizing:border-box">' +
+        '<input type="text" placeholder="Short description (optional, max 120 chars)" value="' + desc + '" oninput="updateVariantField(' + i + ',\'description\',this.value)" maxlength="120" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:12px;outline:none;box-sizing:border-box;margin-bottom:8px">' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+          '<div>' +
+            '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px">Wholesale</div>' +
+            '<div style="position:relative">' +
+              '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none">$</span>' +
+              '<input type="number" min="0" step="0.01" placeholder="0" value="' + wp + '" oninput="updateVariantField(' + i + ',\'wholesale_price\',parseFloat(this.value)||0);updatePreview()" style="width:100%;padding:9px 10px 9px 22px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box">' +
+            '</div>' +
+          '</div>' +
+          '<div>' +
+            '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px">Suggested RRP</div>' +
+            '<div style="position:relative">' +
+              '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none">$</span>' +
+              '<input type="number" min="0" step="0.01" placeholder="0" value="' + rrp + '" oninput="updateVariantField(' + i + ',\'rrp\',parseFloat(this.value)||0);updatePreview()" style="width:100%;padding:9px 10px 9px 22px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box">' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
       '</div>';
     }).join('');
   }
 
   function addVariantRow() {
-    productVariants.push({ label: '', description: '', price: 0 });
+    productVariants.push({ label: '', description: '', wholesale_price: 0, rrp: 0 });
     renderVariantRows();
+    updatePreview();
   }
   function updateVariantField(i, field, value) {
     if (!productVariants[i]) return;
@@ -1164,6 +1174,7 @@
   function removeVariantRow(i) {
     productVariants.splice(i, 1);
     renderVariantRows();
+    updatePreview();
   }
   window.addVariantRow = addVariantRow;
   window.updateVariantField = updateVariantField;
@@ -1299,7 +1310,6 @@
     document.getElementById('pCategory').value = 'service';
     productVariants = [];
     renderVariantRows();
-    document.getElementById('pWholesalePriceNew') && (document.getElementById('pWholesalePriceNew').value = '');
     document.getElementById('pUnitNew') && (document.getElementById('pUnitNew').value = '');
     document.getElementById('pNotificationEmail') && (document.getElementById('pNotificationEmail').value = '');
     removeLogoImage();
@@ -1365,10 +1375,8 @@
     const bookingUrl = document.getElementById('pBookingUrl').value.trim();
     if (isBooking && !bookingUrl) { showToast('Please enter a booking URL'); return; }
     if (isProduct) {
-      const wp = parseFloat(document.getElementById('pWholesalePriceNew').value);
-      const hasBasePrice = !isNaN(wp) && wp > 0;
-      const validVariants = productVariants.filter(v => (v.label || '').trim() && (parseFloat(v.price) || 0) > 0);
-      if (!hasBasePrice && validVariants.length === 0) { showToast('Please enter a wholesale price, or add at least one variant with a price'); return; }
+      const validVariants = productVariants.filter(v => (v.label || '').trim() && (parseFloat(v.wholesale_price) || 0) > 0 && (parseFloat(v.rrp) || 0) > 0);
+      if (validVariants.length === 0) { showToast('Please add at least one product with a wholesale price and RRP'); return; }
     }
 
     // Lead time
@@ -1388,9 +1396,19 @@
     const listingLng = selectedListingLocation?.lng || null;
 
     // Product fields
-    const productWholesalePrice = isProduct ? (parseFloat(document.getElementById('pWholesalePriceNew').value) || 0) : 0;
+    const cleanedVariants = isProduct ? productVariants
+      .filter(v => (v.label || '').trim())
+      .map(v => ({
+        label: v.label.trim(),
+        description: (v.description || '').trim().substring(0, 120),
+        wholesale_price: parseFloat(v.wholesale_price) || 0,
+        rrp: parseFloat(v.rrp) || 0,
+      })) : null;
+    const productWholesalePrice = cleanedVariants && cleanedVariants.length
+      ? Math.min(...cleanedVariants.map(v => v.wholesale_price).filter(n => n > 0))
+      : 0;
     const productUnit = isProduct ? (document.getElementById('pUnitNew').value.trim() || null) : null;
-    const productVariantsPayload = isProduct ? productVariants.filter(v => (v.label || '').trim()).map(v => ({ label: v.label.trim(), description: (v.description || '').trim().substring(0, 120), price: parseFloat(v.price) || 0 })) : null;
+    const productVariantsPayload = cleanedVariants;
     const notificationEmail = document.getElementById('pNotificationEmail').value.trim() || null;
 
     const payload = {
@@ -1513,10 +1531,13 @@
 
     if (isProduct) {
       setSelectedDays(Array.isArray(p.available_days) ? p.available_days : null);
-      // Populate price, unit, variants
-      document.getElementById('pWholesalePriceNew').value = p.wholesale_price || '';
       document.getElementById('pUnitNew').value = p.unit || '';
-      productVariants = Array.isArray(p.variants) ? p.variants.map(v => ({ label: v.label || '', description: v.description || '', price: v.price || 0 })) : [];
+      productVariants = Array.isArray(p.variants) ? p.variants.map(v => ({
+        label: v.label || '',
+        description: v.description || '',
+        wholesale_price: v.wholesale_price != null ? v.wholesale_price : (v.price || 0),
+        rrp: v.rrp != null ? v.rrp : 0,
+      })) : [];
       renderVariantRows();
     }
     // Notification email (applies to all types)
@@ -2114,9 +2135,10 @@
     const desc = (document.getElementById('pDesc')?.value || '').trim();
     const notes = (document.getElementById('pNotes')?.value || '').trim();
     const category = document.getElementById('pCategory')?.value || 'other';
-    const isPhysical = document.getElementById('ptPhysical')?.checked;
+    const isProduct = document.getElementById('ptProduct')?.checked;
     const isService = document.getElementById('ptService')?.checked;
-    const price = document.getElementById('pWholesalePrice')?.value || '';
+    const isBooking = document.getElementById('ptBooking')?.checked;
+    const unit = (document.getElementById('pUnitNew')?.value || '').trim();
     const servicePrice = document.getElementById('pServicePrice')?.value || '';
     const servicePriceUnit = document.getElementById('pServicePriceUnit')?.value || '';
     const hasVoucherFile = document.getElementById('pVoucherFile')?.files?.length > 0 ||
@@ -2141,7 +2163,7 @@
     }
 
     // Voucher only for booking links
-    if (!isPhysical && hasVoucherFile) {
+    if (isBooking && hasVoucherFile) {
       el('previewVoucherBadge').style.display = 'inline';
       el('previewVoucherRow').style.display = 'flex';
     } else {
@@ -2149,10 +2171,17 @@
       el('previewVoucherRow').style.display = 'none';
     }
 
-    // Price row — physical products show wholesale price, service shows service price
-    if (isPhysical && price) {
-      el('previewPriceRow').style.display = 'block';
-      el('previewPrice').textContent = '$' + price;
+    // Price row
+    el('previewPrice').style.fontSize = '20px';
+    if (isProduct) {
+      const validRrps = productVariants.map(v => parseFloat(v.rrp) || 0).filter(n => n > 0);
+      if (validRrps.length) {
+        const minRrp = Math.min(...validRrps);
+        el('previewPriceRow').style.display = 'block';
+        el('previewPrice').innerHTML = (validRrps.length > 1 ? '<small style="font-size:13px;font-weight:400;color:#6b7280">From </small>' : '') + '$' + minRrp + (unit ? ' <small style="font-size:13px;font-weight:400;color:#6b7280">/ ' + unit + '</small>' : '');
+      } else {
+        el('previewPriceRow').style.display = 'none';
+      }
     } else if (isService && servicePriceUnit === 'contact for pricing') {
       el('previewPriceRow').style.display = 'block';
       el('previewPrice').textContent = 'Contact for pricing';
@@ -2166,7 +2195,7 @@
     }
 
     // Button label
-    el('previewBtn').textContent = isPhysical ? 'Add to cart +' : (isService ? 'Add →' : 'Book now →');
+    el('previewBtn').textContent = isProduct ? 'Add to cart +' : (isService ? 'Add →' : 'Book now →');
 
     // Image
     if (hasImage) {

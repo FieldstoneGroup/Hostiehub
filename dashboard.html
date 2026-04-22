@@ -1105,13 +1105,12 @@
           <div class="field-hint" id="localProductPriceHint">This is what guests pay. You keep everything above the wholesale price.</div>
         </div>
       </div>
-      <div id="localProductMarkupField" style="display:none">
+      <div id="localProductRowsField" style="display:none">
         <div class="field">
-          <label>Your markup %</label>
-          <input type="number" id="localProductMarkupPercent" placeholder="e.g. 25" min="0" step="1" oninput="updateMarkupPreview()">
-          <div class="field-hint">Applied to the wholesale price AND all variants. You keep the markup.</div>
+          <label>Set your prices</label>
+          <div class="field-hint">Pre-filled with the supplier's suggested RRP. Tweak any price — you keep the difference.</div>
+          <div id="localProductRows" style="margin-top:10px;display:flex;flex-direction:column;gap:10px"></div>
         </div>
-        <div id="localProductMarkupPreview" style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--brand-dark);line-height:1.6;display:none;margin-top:4px"></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -2660,39 +2659,55 @@
     const businessName = p.partners ? p.partners.business_name : 'Local Business';
     const catLabels = { product: '📦 Product', service: '🛎️ Service', reservation: '🍽️ Reservation', experience: '🏄 Experience' };
     const catLabel = catLabels[p.category] || '📦 Product';
-    // Product-type listings (new model) use variants + markup. Legacy partner products have a flat wholesale price.
     const isNewProductListing = p.type === 'product';
-    const hasVariants = Array.isArray(p.variants) && p.variants.length > 0;
+    const variants = Array.isArray(p.variants) ? p.variants : [];
 
     document.getElementById('localProductModalTitle').textContent = 'Add to your store — ' + p.name;
-    let variantList = '';
-    if (hasVariants) {
-      variantList = '<div style="margin-top:10px;font-size:12px;color:#92600a"><strong>Variants:</strong><ul style="margin:4px 0 0 18px;padding:0">' +
-        p.variants.map(v => '<li>' + (v.label || 'Option') + ' — $' + (v.price || 0) + (v.description ? ' <span style="color:var(--muted)">· ' + v.description + '</span>' : '') + '</li>').join('') +
-        '</ul></div>';
-    }
     document.getElementById('localProductInfo').innerHTML =
       '<div style="font-size:14px;font-weight:600;margin-bottom:4px">' + p.name + '</div>' +
       '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">By ' + businessName + ' · ' + catLabel + '</div>' +
       (isBooking
         ? '<div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;font-size:13px;color:var(--brand-dark)">🔗 Guests click "Book now" and go straight to the booking page. No payment through your store.</div>'
         : isNewProductListing
-          ? '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 Wholesale: <strong>$' + (p.wholesale_price || 0) + '</strong>' + (hasVariants ? ' (base)' : '') + ' — you pay ' + businessName + ' this amount. Set your markup % below — it applies to the base price and all variants.' + variantList + '</div>'
+          ? '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 You pay ' + businessName + ' the wholesale price for each product sold. Guests pay your retail price. You keep the difference.</div>'
           : isProduct
             ? '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 Wholesale: <strong>$' + (p.wholesale_price || 0) + '</strong> — you pay ' + businessName + ' this amount. Set your retail price below and keep the difference.</div>'
             : '<div style="background:var(--brand-light);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--brand-dark)">ℹ️ This listing will appear in your store at the partner\'s set price. You cannot edit the price for ' + (p.category || 'service') + 's.</div>'
       );
 
     const priceField = document.getElementById('localProductPriceField');
-    const markupField = document.getElementById('localProductMarkupField');
-    // Reset visibility
+    const rowsField = document.getElementById('localProductRowsField');
     priceField.style.display = 'none';
-    markupField.style.display = 'none';
+    rowsField.style.display = 'none';
 
-    if (isNewProductListing) {
-      markupField.style.display = 'block';
-      document.getElementById('localProductMarkupPercent').value = '25';
-      updateMarkupPreview();
+    if (isNewProductListing && variants.length > 0) {
+      rowsField.style.display = 'block';
+      const rowsHtml = variants.map((v, i) => {
+        const wp = parseFloat(v.wholesale_price != null ? v.wholesale_price : v.price) || 0;
+        const rrp = parseFloat(v.rrp) || wp;
+        return '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px">' +
+          '<div style="font-size:14px;font-weight:600;margin-bottom:2px">' + (v.label || 'Product ' + (i+1)) + '</div>' +
+          (v.description ? '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">' + v.description + '</div>' : '<div style="margin-bottom:8px"></div>') +
+          '<div style="display:flex;gap:10px;align-items:center">' +
+            '<div style="flex:1">' +
+              '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px">Wholesale</div>' +
+              '<div style="font-size:14px;font-weight:600;color:#92600a">$' + wp.toFixed(2) + '</div>' +
+            '</div>' +
+            '<div style="flex:1">' +
+              '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px">Your price</div>' +
+              '<div style="position:relative">' +
+                '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none">$</span>' +
+                '<input type="number" min="0" step="0.01" data-row-idx="' + i + '" data-wholesale="' + wp + '" value="' + rrp.toFixed(2) + '" oninput="updateLocalMargin(this)" style="width:100%;padding:9px 10px 9px 22px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;outline:none;box-sizing:border-box">' +
+              '</div>' +
+            '</div>' +
+            '<div style="flex:1">' +
+              '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px">Margin</div>' +
+              '<div id="localMargin-' + i + '" style="font-size:14px;font-weight:600;color:#2C6E6A">$' + (rrp - wp).toFixed(2) + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+      document.getElementById('localProductRows').innerHTML = rowsHtml;
     } else if (!isBooking && isProduct) {
       priceField.style.display = 'block';
       document.getElementById('localProductRetailPrice').value = '';
@@ -2704,27 +2719,18 @@
     document.getElementById('localProductModal').classList.add('open');
   }
 
-  function updateMarkupPreview() {
-    const p = pendingLocalProduct;
-    if (!p) return;
-    const pct = parseFloat(document.getElementById('localProductMarkupPercent').value) || 0;
-    const multiplier = 1 + (pct / 100);
-    const preview = document.getElementById('localProductMarkupPreview');
-    const basePrice = p.wholesale_price || 0;
-    const baseRetail = Math.round(basePrice * multiplier * 100) / 100;
-    let html = '<div style="font-weight:600;margin-bottom:4px">Preview with ' + pct + '% markup:</div>';
-    html += '<div>Base: $' + basePrice + ' → <strong>$' + baseRetail + '</strong></div>';
-    if (Array.isArray(p.variants) && p.variants.length > 0) {
-      p.variants.forEach(v => {
-        const vPrice = parseFloat(v.price) || 0;
-        const vRetail = Math.round(vPrice * multiplier * 100) / 100;
-        html += '<div>' + (v.label || 'Option') + ': $' + vPrice + ' → <strong>$' + vRetail + '</strong></div>';
-      });
+  function updateLocalMargin(input) {
+    const idx = input.getAttribute('data-row-idx');
+    const wp = parseFloat(input.getAttribute('data-wholesale')) || 0;
+    const retail = parseFloat(input.value) || 0;
+    const margin = retail - wp;
+    const el = document.getElementById('localMargin-' + idx);
+    if (el) {
+      el.textContent = '$' + margin.toFixed(2);
+      el.style.color = margin < 0 ? '#dc2626' : '#2C6E6A';
     }
-    preview.innerHTML = html;
-    preview.style.display = 'block';
   }
-  window.updateMarkupPreview = updateMarkupPreview;
+  window.updateLocalMargin = updateLocalMargin;
 
   function closeLocalProductModal() {
     document.getElementById('localProductModal').classList.remove('open');
@@ -2739,23 +2745,28 @@
     const isLegacyProduct = !isNewProductListing && (p.category || 'product') === 'product';
 
     let retailPrice;
-    let markupPercent = null;
-    let markedUpVariants = null;
+    let finalVariants = null;
 
     if (isBooking) {
       retailPrice = p.wholesale_price || 0;
     } else if (isNewProductListing) {
-      markupPercent = parseFloat(document.getElementById('localProductMarkupPercent').value);
-      if (isNaN(markupPercent) || markupPercent < 0) { showToast('⚠️ Please enter a markup percentage'); return; }
-      const multiplier = 1 + (markupPercent / 100);
-      retailPrice = Math.round((p.wholesale_price || 0) * multiplier * 100) / 100;
-      if (Array.isArray(p.variants) && p.variants.length > 0) {
-        markedUpVariants = p.variants.map(v => ({
-          label: v.label,
-          description: v.description || '',
-          price: Math.round((parseFloat(v.price) || 0) * multiplier * 100) / 100,
-        }));
+      const inputs = document.querySelectorAll('#localProductRows input[data-row-idx]');
+      if (!inputs.length) { showToast('⚠️ No products to add'); return; }
+      const rows = [];
+      for (const input of inputs) {
+        const idx = parseInt(input.getAttribute('data-row-idx'));
+        const retail = parseFloat(input.value);
+        if (isNaN(retail) || retail <= 0) { showToast('⚠️ Please set a price for every product'); return; }
+        const source = p.variants[idx] || {};
+        rows.push({
+          label: source.label || 'Product',
+          description: source.description || '',
+          wholesale_price: parseFloat(source.wholesale_price != null ? source.wholesale_price : source.price) || 0,
+          price: retail,
+        });
       }
+      finalVariants = rows;
+      retailPrice = Math.min(...rows.map(r => r.price));
     } else if (isLegacyProduct) {
       retailPrice = parseFloat(document.getElementById('localProductRetailPrice').value);
       if (!retailPrice || retailPrice <= 0) { showToast('⚠️ Please enter a retail price'); return; }
@@ -2787,12 +2798,11 @@
 
     // New product-listing extras
     if (isNewProductListing) {
-      insertData.variants = markedUpVariants;
+      insertData.variants = finalVariants;
       insertData.logo_url = p.logo_url || null;
       insertData.listing_address = p.listing_address || null;
       insertData.listing_lat = p.listing_lat || null;
       insertData.listing_lng = p.listing_lng || null;
-      insertData.partner_markup_percent = markupPercent;
     }
 
     const { error } = await sb.from('products').insert(insertData);

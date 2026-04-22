@@ -1105,6 +1105,14 @@
           <div class="field-hint" id="localProductPriceHint">This is what guests pay. You keep everything above the wholesale price.</div>
         </div>
       </div>
+      <div id="localProductMarkupField" style="display:none">
+        <div class="field">
+          <label>Your markup %</label>
+          <input type="number" id="localProductMarkupPercent" placeholder="e.g. 25" min="0" step="1" oninput="updateMarkupPreview()">
+          <div class="field-hint">Applied to the wholesale price AND all variants. You keep the markup.</div>
+        </div>
+        <div id="localProductMarkupPreview" style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--brand-dark);line-height:1.6;display:none;margin-top:4px"></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeLocalProductModal()">Cancel</button>
@@ -2652,22 +2660,40 @@
     const businessName = p.partners ? p.partners.business_name : 'Local Business';
     const catLabels = { product: '📦 Product', service: '🛎️ Service', reservation: '🍽️ Reservation', experience: '🏄 Experience' };
     const catLabel = catLabels[p.category] || '📦 Product';
+    // Product-type listings (new model) use variants + markup. Legacy partner products have a flat wholesale price.
+    const isNewProductListing = p.type === 'product';
+    const hasVariants = Array.isArray(p.variants) && p.variants.length > 0;
 
     document.getElementById('localProductModalTitle').textContent = 'Add to your store — ' + p.name;
+    let variantList = '';
+    if (hasVariants) {
+      variantList = '<div style="margin-top:10px;font-size:12px;color:#92600a"><strong>Variants:</strong><ul style="margin:4px 0 0 18px;padding:0">' +
+        p.variants.map(v => '<li>' + (v.label || 'Option') + ' — $' + (v.price || 0) + (v.description ? ' <span style="color:var(--muted)">· ' + v.description + '</span>' : '') + '</li>').join('') +
+        '</ul></div>';
+    }
     document.getElementById('localProductInfo').innerHTML =
       '<div style="font-size:14px;font-weight:600;margin-bottom:4px">' + p.name + '</div>' +
       '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">By ' + businessName + ' · ' + catLabel + '</div>' +
       (isBooking
         ? '<div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;font-size:13px;color:var(--brand-dark)">🔗 Guests click "Book now" and go straight to the booking page. No payment through your store.</div>'
-        : isProduct
-          ? '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 Wholesale: <strong>$' + (p.wholesale_price || 0) + '</strong> — you pay ' + businessName + ' this amount. Set your retail price below and keep the difference.</div>'
-          : '<div style="background:var(--brand-light);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--brand-dark)">ℹ️ This listing will appear in your store at the partner\'s set price. You cannot edit the price for ' + (p.category || 'service') + 's.</div>'
+        : isNewProductListing
+          ? '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 Wholesale: <strong>$' + (p.wholesale_price || 0) + '</strong>' + (hasVariants ? ' (base)' : '') + ' — you pay ' + businessName + ' this amount. Set your markup % below — it applies to the base price and all variants.' + variantList + '</div>'
+          : isProduct
+            ? '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 Wholesale: <strong>$' + (p.wholesale_price || 0) + '</strong> — you pay ' + businessName + ' this amount. Set your retail price below and keep the difference.</div>'
+            : '<div style="background:var(--brand-light);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--brand-dark)">ℹ️ This listing will appear in your store at the partner\'s set price. You cannot edit the price for ' + (p.category || 'service') + 's.</div>'
       );
 
     const priceField = document.getElementById('localProductPriceField');
-    if (isBooking || !isProduct) {
-      priceField.style.display = 'none';
-    } else {
+    const markupField = document.getElementById('localProductMarkupField');
+    // Reset visibility
+    priceField.style.display = 'none';
+    markupField.style.display = 'none';
+
+    if (isNewProductListing) {
+      markupField.style.display = 'block';
+      document.getElementById('localProductMarkupPercent').value = '25';
+      updateMarkupPreview();
+    } else if (!isBooking && isProduct) {
       priceField.style.display = 'block';
       document.getElementById('localProductRetailPrice').value = '';
       document.getElementById('localProductRetailPrice').placeholder = 'e.g. ' + ((p.wholesale_price || 0) + 20);
@@ -2678,6 +2704,28 @@
     document.getElementById('localProductModal').classList.add('open');
   }
 
+  function updateMarkupPreview() {
+    const p = pendingLocalProduct;
+    if (!p) return;
+    const pct = parseFloat(document.getElementById('localProductMarkupPercent').value) || 0;
+    const multiplier = 1 + (pct / 100);
+    const preview = document.getElementById('localProductMarkupPreview');
+    const basePrice = p.wholesale_price || 0;
+    const baseRetail = Math.round(basePrice * multiplier * 100) / 100;
+    let html = '<div style="font-weight:600;margin-bottom:4px">Preview with ' + pct + '% markup:</div>';
+    html += '<div>Base: $' + basePrice + ' → <strong>$' + baseRetail + '</strong></div>';
+    if (Array.isArray(p.variants) && p.variants.length > 0) {
+      p.variants.forEach(v => {
+        const vPrice = parseFloat(v.price) || 0;
+        const vRetail = Math.round(vPrice * multiplier * 100) / 100;
+        html += '<div>' + (v.label || 'Option') + ': $' + vPrice + ' → <strong>$' + vRetail + '</strong></div>';
+      });
+    }
+    preview.innerHTML = html;
+    preview.style.display = 'block';
+  }
+  window.updateMarkupPreview = updateMarkupPreview;
+
   function closeLocalProductModal() {
     document.getElementById('localProductModal').classList.remove('open');
     pendingLocalProduct = null;
@@ -2687,24 +2735,42 @@
     if (!pendingLocalProduct) return;
     const p = pendingLocalProduct;
     const isBooking = p.type === 'booking';
-    const isProduct = (p.category || 'product') === 'product';
+    const isNewProductListing = p.type === 'product';
+    const isLegacyProduct = !isNewProductListing && (p.category || 'product') === 'product';
 
     let retailPrice;
-    if (isBooking || !isProduct) {
+    let markupPercent = null;
+    let markedUpVariants = null;
+
+    if (isBooking) {
       retailPrice = p.wholesale_price || 0;
-    } else {
+    } else if (isNewProductListing) {
+      markupPercent = parseFloat(document.getElementById('localProductMarkupPercent').value);
+      if (isNaN(markupPercent) || markupPercent < 0) { showToast('⚠️ Please enter a markup percentage'); return; }
+      const multiplier = 1 + (markupPercent / 100);
+      retailPrice = Math.round((p.wholesale_price || 0) * multiplier * 100) / 100;
+      if (Array.isArray(p.variants) && p.variants.length > 0) {
+        markedUpVariants = p.variants.map(v => ({
+          label: v.label,
+          description: v.description || '',
+          price: Math.round((parseFloat(v.price) || 0) * multiplier * 100) / 100,
+        }));
+      }
+    } else if (isLegacyProduct) {
       retailPrice = parseFloat(document.getElementById('localProductRetailPrice').value);
       if (!retailPrice || retailPrice <= 0) { showToast('⚠️ Please enter a retail price'); return; }
+    } else {
+      retailPrice = p.wholesale_price || 0;
     }
 
     const businessName = p.partners ? p.partners.business_name : 'Local Business';
 
-    const { error } = await sb.from('products').insert({
+    const insertData = {
       host_id: currentUser.id,
       name: p.name,
       description: p.description || '',
       price: retailPrice,
-      unit: 'per stay',
+      unit: p.unit || 'per stay',
       category: 'product',
       emoji: isBooking ? '🔗' : '📦',
       image_url: p.image_url || null,
@@ -2717,7 +2783,19 @@
       partner_notes: p.notes || null,
       partner_voucher_pdf_url: isBooking ? (p.voucher_pdf_url || null) : null,
       wholesale_price: p.wholesale_price || 0,
-    });
+    };
+
+    // New product-listing extras
+    if (isNewProductListing) {
+      insertData.variants = markedUpVariants;
+      insertData.logo_url = p.logo_url || null;
+      insertData.listing_address = p.listing_address || null;
+      insertData.listing_lat = p.listing_lat || null;
+      insertData.listing_lng = p.listing_lng || null;
+      insertData.partner_markup_percent = markupPercent;
+    }
+
+    const { error } = await sb.from('products').insert(insertData);
 
     if (error) { showToast('⚠️ Error: ' + error.message); return; }
 

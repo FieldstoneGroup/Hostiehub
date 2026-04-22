@@ -1098,18 +1098,19 @@
     </div>
     <div class="modal-body">
       <div id="localProductInfo" style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px"></div>
+      <div id="localShopMarkupField" style="display:none">
+        <div class="field">
+          <label>Your markup % for this shop</label>
+          <input type="number" id="localShopMarkupPercent" value="25" min="0" max="500" step="1" oninput="updateShopMarkupPreview()">
+          <div class="field-hint">Applied to every product and variant. You keep the markup.</div>
+        </div>
+        <div id="localShopPreview" style="background:var(--bg);border-radius:10px;padding:12px;margin-top:10px;font-size:13px;max-height:280px;overflow-y:auto"></div>
+      </div>
       <div id="localProductPriceField">
         <div class="field">
           <label>Your retail price ($)</label>
           <input type="number" id="localProductRetailPrice" placeholder="e.g. 65" min="0">
           <div class="field-hint" id="localProductPriceHint">This is what guests pay. You keep everything above the wholesale price.</div>
-        </div>
-      </div>
-      <div id="localProductRowsField" style="display:none">
-        <div class="field">
-          <label>Set your prices</label>
-          <div class="field-hint">Pre-filled with the supplier's suggested RRP. Tweak any price — you keep the difference.</div>
-          <div id="localProductRows" style="margin-top:10px;display:flex;flex-direction:column;gap:10px"></div>
         </div>
       </div>
     </div>
@@ -2659,8 +2660,7 @@
     const businessName = p.partners ? p.partners.business_name : 'Local Business';
     const catLabels = { product: '📦 Product', service: '🛎️ Service', reservation: '🍽️ Reservation', experience: '🏄 Experience' };
     const catLabel = catLabels[p.category] || '📦 Product';
-    const isNewProductListing = p.type === 'product';
-    const variants = Array.isArray(p.variants) ? p.variants : [];
+    const isNewShopListing = p.type === 'product' && Array.isArray(p.shop_products) && p.shop_products.length > 0;
 
     document.getElementById('localProductModalTitle').textContent = 'Add to your store — ' + p.name;
     document.getElementById('localProductInfo').innerHTML =
@@ -2668,46 +2668,22 @@
       '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">By ' + businessName + ' · ' + catLabel + '</div>' +
       (isBooking
         ? '<div style="background:#f0fdf4;border-radius:8px;padding:10px 12px;font-size:13px;color:var(--brand-dark)">🔗 Guests click "Book now" and go straight to the booking page. No payment through your store.</div>'
-        : isNewProductListing
-          ? '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 You pay ' + businessName + ' the wholesale price for each product sold. Guests pay your retail price. You keep the difference.</div>'
+        : isNewShopListing
+          ? '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 This is a shop with ' + p.shop_products.length + ' product' + (p.shop_products.length === 1 ? '' : 's') + '. You pay ' + businessName + ' the wholesale price for each item sold. Set your markup % below — it applies to every product and variant in the shop.</div>'
           : isProduct
             ? '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 Wholesale: <strong>$' + (p.wholesale_price || 0) + '</strong> — you pay ' + businessName + ' this amount. Set your retail price below and keep the difference.</div>'
             : '<div style="background:var(--brand-light);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--brand-dark)">ℹ️ This listing will appear in your store at the partner\'s set price. You cannot edit the price for ' + (p.category || 'service') + 's.</div>'
       );
 
     const priceField = document.getElementById('localProductPriceField');
-    const rowsField = document.getElementById('localProductRowsField');
+    const markupField = document.getElementById('localShopMarkupField');
     priceField.style.display = 'none';
-    rowsField.style.display = 'none';
+    markupField.style.display = 'none';
 
-    if (isNewProductListing && variants.length > 0) {
-      rowsField.style.display = 'block';
-      const rowsHtml = variants.map((v, i) => {
-        const wp = parseFloat(v.wholesale_price != null ? v.wholesale_price : v.price) || 0;
-        const rrp = parseFloat(v.rrp) || wp;
-        return '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px">' +
-          '<div style="font-size:14px;font-weight:600;margin-bottom:2px">' + (v.label || 'Product ' + (i+1)) + '</div>' +
-          (v.description ? '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">' + v.description + '</div>' : '<div style="margin-bottom:8px"></div>') +
-          '<div style="display:flex;gap:10px;align-items:center">' +
-            '<div style="flex:1">' +
-              '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px">Wholesale</div>' +
-              '<div style="font-size:14px;font-weight:600;color:#92600a">$' + wp.toFixed(2) + '</div>' +
-            '</div>' +
-            '<div style="flex:1">' +
-              '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px">Your price</div>' +
-              '<div style="position:relative">' +
-                '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none">$</span>' +
-                '<input type="number" min="0" step="0.01" data-row-idx="' + i + '" data-wholesale="' + wp + '" value="' + rrp.toFixed(2) + '" oninput="updateLocalMargin(this)" style="width:100%;padding:9px 10px 9px 22px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;outline:none;box-sizing:border-box">' +
-              '</div>' +
-            '</div>' +
-            '<div style="flex:1">' +
-              '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px">Margin</div>' +
-              '<div id="localMargin-' + i + '" style="font-size:14px;font-weight:600;color:#2C6E6A">$' + (rrp - wp).toFixed(2) + '</div>' +
-            '</div>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-      document.getElementById('localProductRows').innerHTML = rowsHtml;
+    if (isNewShopListing) {
+      markupField.style.display = 'block';
+      document.getElementById('localShopMarkupPercent').value = '25';
+      updateShopMarkupPreview();
     } else if (!isBooking && isProduct) {
       priceField.style.display = 'block';
       document.getElementById('localProductRetailPrice').value = '';
@@ -2719,18 +2695,32 @@
     document.getElementById('localProductModal').classList.add('open');
   }
 
-  function updateLocalMargin(input) {
-    const idx = input.getAttribute('data-row-idx');
-    const wp = parseFloat(input.getAttribute('data-wholesale')) || 0;
-    const retail = parseFloat(input.value) || 0;
-    const margin = retail - wp;
-    const el = document.getElementById('localMargin-' + idx);
-    if (el) {
-      el.textContent = '$' + margin.toFixed(2);
-      el.style.color = margin < 0 ? '#dc2626' : '#2C6E6A';
-    }
+  function updateShopMarkupPreview() {
+    const p = pendingLocalProduct;
+    if (!p || !Array.isArray(p.shop_products)) return;
+    const pct = parseFloat(document.getElementById('localShopMarkupPercent').value) || 0;
+    const mult = 1 + (pct / 100);
+    let html = '';
+    p.shop_products.forEach(sp => {
+      const hasVariants = Array.isArray(sp.variants) && sp.variants.length > 0;
+      html += '<div style="padding:8px 0;border-bottom:1px solid var(--border)">';
+      html += '<div style="font-weight:600;font-size:13px;margin-bottom:4px">' + (sp.name || 'Product') + '</div>';
+      if (hasVariants) {
+        sp.variants.forEach(v => {
+          const wp = parseFloat(v.wholesale_price) || 0;
+          const rp = wp * mult;
+          html += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;color:var(--muted)"><span>· ' + (v.label || 'Variant') + '</span><span><s>$' + wp.toFixed(2) + '</s> → <strong style="color:var(--brand)">$' + rp.toFixed(2) + '</strong></span></div>';
+        });
+      } else {
+        const wp = parseFloat(sp.wholesale_price) || 0;
+        const rp = wp * mult;
+        html += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;color:var(--muted)"><span>Flat price</span><span><s>$' + wp.toFixed(2) + '</s> → <strong style="color:var(--brand)">$' + rp.toFixed(2) + '</strong></span></div>';
+      }
+      html += '</div>';
+    });
+    document.getElementById('localShopPreview').innerHTML = html;
   }
-  window.updateLocalMargin = updateLocalMargin;
+  window.updateShopMarkupPreview = updateShopMarkupPreview;
 
   function closeLocalProductModal() {
     document.getElementById('localProductModal').classList.remove('open');
@@ -2741,32 +2731,40 @@
     if (!pendingLocalProduct) return;
     const p = pendingLocalProduct;
     const isBooking = p.type === 'booking';
-    const isNewProductListing = p.type === 'product';
-    const isLegacyProduct = !isNewProductListing && (p.category || 'product') === 'product';
+    const isNewShopListing = p.type === 'product' && Array.isArray(p.shop_products) && p.shop_products.length > 0;
+    const isLegacyProduct = !isNewShopListing && (p.category || 'product') === 'product';
 
     let retailPrice;
-    let finalVariants = null;
+    let finalShopProducts = null;
+    let markupPct = null;
 
     if (isBooking) {
       retailPrice = p.wholesale_price || 0;
-    } else if (isNewProductListing) {
-      const inputs = document.querySelectorAll('#localProductRows input[data-row-idx]');
-      if (!inputs.length) { showToast('⚠️ No products to add'); return; }
-      const rows = [];
-      for (const input of inputs) {
-        const idx = parseInt(input.getAttribute('data-row-idx'));
-        const retail = parseFloat(input.value);
-        if (isNaN(retail) || retail <= 0) { showToast('⚠️ Please set a price for every product'); return; }
-        const source = p.variants[idx] || {};
-        rows.push({
-          label: source.label || 'Product',
-          description: source.description || '',
-          wholesale_price: parseFloat(source.wholesale_price != null ? source.wholesale_price : source.price) || 0,
-          price: retail,
+    } else if (isNewShopListing) {
+      markupPct = parseFloat(document.getElementById('localShopMarkupPercent').value);
+      if (isNaN(markupPct) || markupPct < 0) { showToast('⚠️ Please enter a markup %'); return; }
+      const mult = 1 + (markupPct / 100);
+      const allRetail = [];
+      finalShopProducts = p.shop_products.map(sp => {
+        const newVariants = (Array.isArray(sp.variants) ? sp.variants : []).map(v => {
+          const wp = parseFloat(v.wholesale_price) || 0;
+          const rp = +(wp * mult).toFixed(2);
+          if (rp > 0) allRetail.push(rp);
+          return { label: v.label || '', wholesale_price: wp, price: rp };
         });
-      }
-      finalVariants = rows;
-      retailPrice = Math.min(...rows.map(r => r.price));
+        const flatWp = parseFloat(sp.wholesale_price) || 0;
+        const flatRp = +(flatWp * mult).toFixed(2);
+        if (newVariants.length === 0 && flatRp > 0) allRetail.push(flatRp);
+        return {
+          name: sp.name || '',
+          description: sp.description || '',
+          unit: sp.unit || null,
+          wholesale_price: flatWp,
+          price: flatRp,
+          variants: newVariants,
+        };
+      });
+      retailPrice = allRetail.length ? Math.min(...allRetail) : 0;
     } else if (isLegacyProduct) {
       retailPrice = parseFloat(document.getElementById('localProductRetailPrice').value);
       if (!retailPrice || retailPrice <= 0) { showToast('⚠️ Please enter a retail price'); return; }
@@ -2796,13 +2794,14 @@
       wholesale_price: p.wholesale_price || 0,
     };
 
-    // New product-listing extras
-    if (isNewProductListing) {
-      insertData.variants = finalVariants;
+    // New shop listing extras
+    if (isNewShopListing) {
+      insertData.shop_products = finalShopProducts;
       insertData.logo_url = p.logo_url || null;
       insertData.listing_address = p.listing_address || null;
       insertData.listing_lat = p.listing_lat || null;
       insertData.listing_lng = p.listing_lng || null;
+      insertData.partner_markup_percent = markupPct;
     }
 
     const { error } = await sb.from('products').insert(insertData);

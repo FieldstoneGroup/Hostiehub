@@ -440,15 +440,10 @@
           </div>
           <div id="productFields" style="display:none">
             <div class="field">
-              <label>Products</label>
-              <div class="field-hint" style="margin-bottom:10px">Add at least one product. Each product has a wholesale price (what the host pays you) and a suggested RRP (what guests will pay). Hosts can tweak the RRP in their own store.</div>
-              <div id="variantsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px"></div>
-              <button type="button" onclick="addVariantRow()" style="width:100%;padding:10px;background:var(--bg);color:var(--partner);border:1.5px dashed var(--partner);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">+ Add product</button>
-            </div>
-            <div class="field">
-              <label>Unit <span style="font-weight:300;font-size:12px">(optional)</span></label>
-              <input type="text" id="pUnitNew" placeholder="e.g. each, box, kg, hamper" oninput="updatePreview()">
-              <div class="field-hint">Shown next to the price in the guest store (e.g. "$60 / hamper").</div>
+              <label>Products in your shop</label>
+              <div class="field-hint" style="margin-bottom:10px">Think of your listing as a shop. Add one or more products that guests can buy. Each product can have variants (e.g. "Flowers" with "Native" / "Roses") or a single flat price (e.g. "Chocolate Box $25").</div>
+              <div id="shopProductsList" style="display:flex;flex-direction:column;gap:14px;margin-bottom:10px"></div>
+              <button type="button" onclick="addShopProduct()" style="width:100%;padding:11px;background:var(--partner);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer">+ Add product</button>
             </div>
           </div>
           <div id="physicalFields" style="display:none">
@@ -1119,66 +1114,101 @@
     // Update preview button label
     const btn = document.getElementById('previewBtn');
     if (btn) btn.textContent = isBooking ? 'Book now →' : 'Add →';
+    // Render shop products list if product mode
+    if (isProduct) renderShopProducts();
   }
 
-  // ── PARTNER PRODUCTS (label + description + wholesale + RRP) ──
-  let productVariants = []; // { label, description, wholesale_price, rrp }
+  // ── SHOP PRODUCTS (nested: shop → products → variants) ──
+  let shopProducts = []; // [{ name, description, wholesale_price, rrp, variants: [{label, wholesale_price, rrp}] }]
 
-  function renderVariantRows() {
-    const list = document.getElementById('variantsList');
+  function esc(s) { return String(s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+  function renderShopProducts() {
+    const list = document.getElementById('shopProductsList');
     if (!list) return;
-    if (productVariants.length === 0) {
-      list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:12px;text-align:center;background:var(--bg);border-radius:10px;border:1.5px dashed var(--border)">No products yet — tap "+ Add product" below.</div>';
+    if (shopProducts.length === 0) {
+      list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:16px;text-align:center;background:var(--bg);border-radius:10px;border:1.5px dashed var(--border)">No products yet — tap "+ Add product" to add your first one.</div>';
       return;
     }
-    list.innerHTML = productVariants.map((v, i) => {
-      const lbl = String(v.label || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      const desc = String(v.description || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-      const wp = v.wholesale_price != null ? v.wholesale_price : '';
-      const rrp = v.rrp != null ? v.rrp : '';
-      return '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px">' +
-        '<div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">' +
-          '<input type="text" placeholder="Product name (e.g. Cheese Hamper)" value="' + lbl + '" oninput="updateVariantField(' + i + ',\'label\',this.value)" maxlength="60" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box">' +
-          '<button type="button" onclick="removeVariantRow(' + i + ')" style="padding:9px 12px;background:white;color:var(--error);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:13px">✕</button>' +
-        '</div>' +
-        '<input type="text" placeholder="Short description (optional, max 120 chars)" value="' + desc + '" oninput="updateVariantField(' + i + ',\'description\',this.value)" maxlength="120" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:12px;outline:none;box-sizing:border-box;margin-bottom:8px">' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    list.innerHTML = shopProducts.map((p, pi) => {
+      const variantsHtml = (p.variants || []).map((v, vi) => {
+        return '<div style="display:flex;gap:8px;align-items:center;background:white;border:1.5px solid var(--border);border-radius:8px;padding:8px">' +
+          '<input type="text" placeholder="Variant name (e.g. Native)" value="' + esc(v.label) + '" oninput="updateVariantField(' + pi + ',' + vi + ',\'label\',this.value)" maxlength="60" style="flex:1;padding:8px 10px;border:1.5px solid var(--border);border-radius:6px;font-family:\'DM Sans\',sans-serif;font-size:12px;outline:none;box-sizing:border-box">' +
+          '<div style="position:relative;width:100px">' +
+            '<span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:11px;pointer-events:none">$</span>' +
+            '<input type="number" min="0" step="0.01" placeholder="wholesale" value="' + (v.wholesale_price != null ? v.wholesale_price : '') + '" oninput="updateVariantField(' + pi + ',' + vi + ',\'wholesale_price\',parseFloat(this.value)||0)" style="width:100%;padding:8px 8px 8px 18px;border:1.5px solid var(--border);border-radius:6px;font-family:\'DM Sans\',sans-serif;font-size:12px;outline:none;box-sizing:border-box">' +
+          '</div>' +
+          '<button type="button" onclick="removeVariant(' + pi + ',' + vi + ')" style="padding:7px 10px;background:white;color:var(--error);border:1.5px solid var(--border);border-radius:6px;cursor:pointer;font-size:11px">✕</button>' +
+        '</div>';
+      }).join('');
+
+      const hasVariants = (p.variants || []).length > 0;
+      const priceRow = hasVariants ? '' :
+        '<div style="display:grid;grid-template-columns:1fr 120px;gap:8px;margin-bottom:10px">' +
           '<div>' +
-            '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px">Wholesale</div>' +
+            '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px">Wholesale price</div>' +
             '<div style="position:relative">' +
               '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none">$</span>' +
-              '<input type="number" min="0" step="0.01" placeholder="0" value="' + wp + '" oninput="updateVariantField(' + i + ',\'wholesale_price\',parseFloat(this.value)||0);updatePreview()" style="width:100%;padding:9px 10px 9px 22px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box">' +
+              '<input type="number" min="0" step="0.01" placeholder="0" value="' + (p.wholesale_price != null ? p.wholesale_price : '') + '" oninput="updateShopProductField(' + pi + ',\'wholesale_price\',parseFloat(this.value)||0);updatePreview()" style="width:100%;padding:9px 10px 9px 22px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box">' +
             '</div>' +
           '</div>' +
           '<div>' +
-            '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px">Suggested RRP</div>' +
-            '<div style="position:relative">' +
-              '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none">$</span>' +
-              '<input type="number" min="0" step="0.01" placeholder="0" value="' + rrp + '" oninput="updateVariantField(' + i + ',\'rrp\',parseFloat(this.value)||0);updatePreview()" style="width:100%;padding:9px 10px 9px 22px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box">' +
-            '</div>' +
+            '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:3px">Unit</div>' +
+            '<input type="text" placeholder="each, box" value="' + esc(p.unit) + '" oninput="updateShopProductField(' + pi + ',\'unit\',this.value)" style="width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;box-sizing:border-box">' +
           '</div>' +
+        '</div>';
+
+      return '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:14px">' +
+        '<div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">' +
+          '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--partner);flex:1">Product ' + (pi + 1) + '</div>' +
+          '<button type="button" onclick="removeShopProduct(' + pi + ')" style="padding:6px 10px;background:white;color:var(--error);border:1.5px solid var(--border);border-radius:6px;cursor:pointer;font-size:11px">Remove product</button>' +
         '</div>' +
+        '<input type="text" placeholder="Product name (e.g. Flowers, Chocolate Box)" value="' + esc(p.name) + '" oninput="updateShopProductField(' + pi + ',\'name\',this.value);updatePreview()" maxlength="80" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px;font-weight:600;outline:none;box-sizing:border-box;margin-bottom:8px">' +
+        '<textarea placeholder="Description — shown to the guest when they tap this product (max 400 chars)" oninput="updateShopProductField(' + pi + ',\'description\',this.value)" maxlength="400" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:12px;outline:none;box-sizing:border-box;margin-bottom:10px;resize:vertical;min-height:60px">' + esc(p.description) + '</textarea>' +
+        priceRow +
+        (hasVariants ? '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px">Variants</div><div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">' + variantsHtml + '</div>' : '') +
+        '<button type="button" onclick="addVariantToProduct(' + pi + ')" style="width:100%;padding:8px;background:white;color:var(--partner);border:1.5px dashed var(--partner);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:12px;font-weight:600;cursor:pointer">' + (hasVariants ? '+ Add another variant' : '+ Add variants (e.g. Native / Roses / Mixed)') + '</button>' +
       '</div>';
     }).join('');
   }
 
-  function addVariantRow() {
-    productVariants.push({ label: '', description: '', wholesale_price: 0, rrp: 0 });
-    renderVariantRows();
+  function addShopProduct() {
+    shopProducts.push({ name: '', description: '', wholesale_price: 0, unit: '', variants: [] });
+    renderShopProducts();
     updatePreview();
   }
-  function updateVariantField(i, field, value) {
-    if (!productVariants[i]) return;
-    productVariants[i][field] = value;
-  }
-  function removeVariantRow(i) {
-    productVariants.splice(i, 1);
-    renderVariantRows();
+  function removeShopProduct(pi) {
+    shopProducts.splice(pi, 1);
+    renderShopProducts();
     updatePreview();
   }
-  window.addVariantRow = addVariantRow;
+  function updateShopProductField(pi, field, value) {
+    if (!shopProducts[pi]) return;
+    shopProducts[pi][field] = value;
+  }
+  function addVariantToProduct(pi) {
+    if (!shopProducts[pi]) return;
+    if (!shopProducts[pi].variants) shopProducts[pi].variants = [];
+    shopProducts[pi].variants.push({ label: '', wholesale_price: 0 });
+    renderShopProducts();
+    updatePreview();
+  }
+  function updateVariantField(pi, vi, field, value) {
+    if (!shopProducts[pi] || !shopProducts[pi].variants || !shopProducts[pi].variants[vi]) return;
+    shopProducts[pi].variants[vi][field] = value;
+  }
+  function removeVariant(pi, vi) {
+    if (!shopProducts[pi] || !shopProducts[pi].variants) return;
+    shopProducts[pi].variants.splice(vi, 1);
+    renderShopProducts();
+    updatePreview();
+  }
+  window.addShopProduct = addShopProduct;
+  window.removeShopProduct = removeShopProduct;
+  window.updateShopProductField = updateShopProductField;
+  window.addVariantToProduct = addVariantToProduct;
   window.updateVariantField = updateVariantField;
-  window.removeVariantRow = removeVariantRow;
+  window.removeVariant = removeVariant;
 
   // ── LOGO UPLOAD PREVIEW ──
   let pendingLogoFile = null;
@@ -1308,9 +1338,8 @@
     document.getElementById('bookingFields').style.display = 'none';
     document.getElementById('categoryFieldWrap').style.display = 'none';
     document.getElementById('pCategory').value = 'service';
-    productVariants = [];
-    renderVariantRows();
-    document.getElementById('pUnitNew') && (document.getElementById('pUnitNew').value = '');
+    shopProducts = [];
+    renderShopProducts();
     document.getElementById('pNotificationEmail') && (document.getElementById('pNotificationEmail').value = '');
     removeLogoImage();
     setSelectedDays(null);
@@ -1375,8 +1404,11 @@
     const bookingUrl = document.getElementById('pBookingUrl').value.trim();
     if (isBooking && !bookingUrl) { showToast('Please enter a booking URL'); return; }
     if (isProduct) {
-      const validVariants = productVariants.filter(v => (v.label || '').trim() && (parseFloat(v.wholesale_price) || 0) > 0 && (parseFloat(v.rrp) || 0) > 0);
-      if (validVariants.length === 0) { showToast('Please add at least one product with a wholesale price and RRP'); return; }
+      const validProducts = shopProducts.filter(p => (p.name || '').trim() && (
+        (parseFloat(p.wholesale_price) || 0) > 0 ||
+        (Array.isArray(p.variants) && p.variants.some(v => (v.label || '').trim() && (parseFloat(v.wholesale_price) || 0) > 0))
+      ));
+      if (validProducts.length === 0) { showToast('Please add at least one product with a wholesale price (or variants with prices)'); return; }
     }
 
     // Lead time
@@ -1395,20 +1427,38 @@
     const listingLat = selectedListingLocation?.lat || null;
     const listingLng = selectedListingLocation?.lng || null;
 
-    // Product fields
-    const cleanedVariants = isProduct ? productVariants
-      .filter(v => (v.label || '').trim())
-      .map(v => ({
-        label: v.label.trim(),
-        description: (v.description || '').trim().substring(0, 120),
-        wholesale_price: parseFloat(v.wholesale_price) || 0,
-        rrp: parseFloat(v.rrp) || 0,
-      })) : null;
-    const productWholesalePrice = cleanedVariants && cleanedVariants.length
-      ? Math.min(...cleanedVariants.map(v => v.wholesale_price).filter(n => n > 0))
-      : 0;
-    const productUnit = isProduct ? (document.getElementById('pUnitNew').value.trim() || null) : null;
-    const productVariantsPayload = cleanedVariants;
+    // Product fields — clean up nested shop products
+    let cleanedShopProducts = null;
+    let minWholesale = 0;
+    if (isProduct) {
+      cleanedShopProducts = shopProducts
+        .filter(p => (p.name || '').trim())
+        .map(p => {
+          const cleanVariants = (p.variants || [])
+            .filter(v => (v.label || '').trim())
+            .map(v => ({
+              label: v.label.trim(),
+              wholesale_price: parseFloat(v.wholesale_price) || 0,
+            }));
+          return {
+            name: p.name.trim(),
+            description: (p.description || '').trim().substring(0, 400),
+            unit: (p.unit || '').trim() || null,
+            wholesale_price: parseFloat(p.wholesale_price) || 0,
+            variants: cleanVariants,
+          };
+        });
+      // Compute min wholesale across all products + variants for sort/display purposes
+      const allPrices = [];
+      cleanedShopProducts.forEach(p => {
+        if (p.variants.length > 0) {
+          p.variants.forEach(v => { if (v.wholesale_price > 0) allPrices.push(v.wholesale_price); });
+        } else if (p.wholesale_price > 0) {
+          allPrices.push(p.wholesale_price);
+        }
+      });
+      minWholesale = allPrices.length ? Math.min(...allPrices) : 0;
+    }
     const notificationEmail = document.getElementById('pNotificationEmail').value.trim() || null;
 
     const payload = {
@@ -1418,9 +1468,10 @@
       notes: document.getElementById('pNotes').value.trim(),
       type: isBooking ? 'booking' : (isService ? 'service' : 'product'),
       category: document.getElementById('pCategory').value,
-      wholesale_price: productWholesalePrice,
-      unit: productUnit,
-      variants: productVariantsPayload,
+      wholesale_price: minWholesale,
+      shop_products: cleanedShopProducts,
+      variants: null,
+      unit: null,
       notification_email: notificationEmail,
       booking_url: isBooking ? bookingUrl : null,
       voucher_title: isBooking ? (document.getElementById('pVoucherTitle').value.trim() || null) : null,
@@ -1531,14 +1582,17 @@
 
     if (isProduct) {
       setSelectedDays(Array.isArray(p.available_days) ? p.available_days : null);
-      document.getElementById('pUnitNew').value = p.unit || '';
-      productVariants = Array.isArray(p.variants) ? p.variants.map(v => ({
-        label: v.label || '',
-        description: v.description || '',
-        wholesale_price: v.wholesale_price != null ? v.wholesale_price : (v.price || 0),
-        rrp: v.rrp != null ? v.rrp : 0,
+      shopProducts = Array.isArray(p.shop_products) ? p.shop_products.map(sp => ({
+        name: sp.name || '',
+        description: sp.description || '',
+        unit: sp.unit || '',
+        wholesale_price: sp.wholesale_price != null ? sp.wholesale_price : 0,
+        variants: Array.isArray(sp.variants) ? sp.variants.map(v => ({
+          label: v.label || '',
+          wholesale_price: v.wholesale_price != null ? v.wholesale_price : 0,
+        })) : [],
       })) : [];
-      renderVariantRows();
+      renderShopProducts();
     }
     // Notification email (applies to all types)
     document.getElementById('pNotificationEmail').value = p.notification_email || '';
@@ -2138,7 +2192,6 @@
     const isProduct = document.getElementById('ptProduct')?.checked;
     const isService = document.getElementById('ptService')?.checked;
     const isBooking = document.getElementById('ptBooking')?.checked;
-    const unit = (document.getElementById('pUnitNew')?.value || '').trim();
     const servicePrice = document.getElementById('pServicePrice')?.value || '';
     const servicePriceUnit = document.getElementById('pServicePriceUnit')?.value || '';
     const hasVoucherFile = document.getElementById('pVoucherFile')?.files?.length > 0 ||
@@ -2174,11 +2227,20 @@
     // Price row
     el('previewPrice').style.fontSize = '20px';
     if (isProduct) {
-      const validRrps = productVariants.map(v => parseFloat(v.rrp) || 0).filter(n => n > 0);
-      if (validRrps.length) {
-        const minRrp = Math.min(...validRrps);
+      // Collect all wholesale prices across shop products (variants + flat)
+      const allWholesales = [];
+      shopProducts.forEach(p => {
+        if (Array.isArray(p.variants) && p.variants.length > 0) {
+          p.variants.forEach(v => { const wp = parseFloat(v.wholesale_price) || 0; if (wp > 0) allWholesales.push(wp); });
+        } else {
+          const wp = parseFloat(p.wholesale_price) || 0; if (wp > 0) allWholesales.push(wp);
+        }
+      });
+      if (allWholesales.length) {
+        const minW = Math.min(...allWholesales);
         el('previewPriceRow').style.display = 'block';
-        el('previewPrice').innerHTML = (validRrps.length > 1 ? '<small style="font-size:13px;font-weight:400;color:#6b7280">From </small>' : '') + '$' + minRrp + (unit ? ' <small style="font-size:13px;font-weight:400;color:#6b7280">/ ' + unit + '</small>' : '');
+        el('previewPrice').innerHTML = (allWholesales.length > 1 ? '<small style="font-size:13px;font-weight:400;color:#6b7280">From </small>' : '') + '$' + minW + ' <small style="font-size:12px;font-weight:400;color:#6b7280">wholesale (host sets retail)</small>';
+        el('previewPrice').style.fontSize = '16px';
       } else {
         el('previewPriceRow').style.display = 'none';
       }

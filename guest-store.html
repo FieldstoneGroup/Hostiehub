@@ -428,6 +428,24 @@
   </div>
 </div>
 
+<!-- SHOP POPUP MODAL -->
+<div class="notes-modal-overlay" id="shopModalOverlay">
+  <div class="notes-modal" style="max-width:520px;max-height:85vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+    <div id="shopModalHeader" style="padding:20px 24px 14px;border-bottom:1px solid #f0ece8;text-align:center;position:relative">
+      <button onclick="closeShopModal()" style="position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:none;cursor:pointer;font-size:16px;line-height:1">✕</button>
+      <div id="shopModalLogoWrap" style="height:56px;display:flex;align-items:center;justify-content:center;margin-bottom:10px"><img id="shopModalLogo" src="" alt="" style="max-height:56px;max-width:180px;object-fit:contain;display:none"></div>
+      <h3 id="shopModalTitle" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin:0 0 4px">Shop</h3>
+      <div id="shopModalDesc" style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:8px"></div>
+      <div id="shopModalDist" style="display:none;font-size:11px;color:#1a5fa8;font-weight:600;background:#f0f7ff;border-radius:50px;padding:3px 10px;display:inline-block"></div>
+    </div>
+    <div id="shopProductsList" style="overflow-y:auto;padding:12px 20px;flex:1"></div>
+    <div style="padding:14px 20px;border-top:1px solid #f0ece8;display:flex;gap:10px;align-items:center;justify-content:space-between;background:#fafaf8">
+      <div style="font-size:12px;color:var(--muted)">Cart: <span id="shopCartCount">0</span> items</div>
+      <button class="btn btn-outline" style="padding:10px 18px" onclick="closeShopModal()">Done</button>
+    </div>
+  </div>
+</div>
+
 <!-- PARTNER REQUEST MODAL -->
 <div class="notes-modal-overlay" id="partnerRequestOverlay">
   <div class="notes-modal" style="max-width:420px">
@@ -1235,12 +1253,24 @@
               : p.service_price
                 ? '<span style="font-size:13px;font-weight:700;color:#2C6E6A">$' + p.service_price + '</span> <small style="font-size:11px;color:#6b7280">' + (p.service_price_unit || '') + '</small>'
                 : '<span style="font-size:12px;color:#92600a;font-weight:600">🤝 Request service</span>')
-            : (Array.isArray(p.variants) && p.variants.length > 0
-              ? '<small style="font-size:12px;color:var(--muted);font-weight:400">From </small>$' + Math.min(...p.variants.map(v => Number(v.price) || 0).filter(n => n > 0))
-              : '$' + p.price + ' <small>' + (p.partner_product_id ? '' : (p.unit ? '/ ' + p.unit : '')) + '</small>')}</div>
+            : (Array.isArray(p.shop_products) && p.shop_products.length > 0
+              ? (() => {
+                  const allPrices = [];
+                  p.shop_products.forEach(sp => {
+                    if (Array.isArray(sp.variants) && sp.variants.length > 0) {
+                      sp.variants.forEach(v => { const pr = Number(v.price) || 0; if (pr > 0) allPrices.push(pr); });
+                    } else {
+                      const pr = Number(sp.price) || 0; if (pr > 0) allPrices.push(pr);
+                    }
+                  });
+                  return allPrices.length ? '<small style="font-size:12px;color:var(--muted);font-weight:400">From </small>$' + Math.min(...allPrices) : '$' + p.price;
+                })()
+              : Array.isArray(p.variants) && p.variants.length > 0
+                ? '<small style="font-size:12px;color:var(--muted);font-weight:400">From </small>$' + Math.min(...p.variants.map(v => Number(v.price) || 0).filter(n => n > 0))
+                : '$' + p.price + ' <small>' + (p.partner_product_id ? '' : (p.unit ? '/ ' + p.unit : '')) + '</small>')}</div>
           ${isDemo
             ? `<button class="add-btn" onclick="handleDemoAdd()">Add +</button>`
-            : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">${p.partner_product_type === 'service' ? 'Add →' : 'Add'}</button>`
+            : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">${Array.isArray(p.shop_products) && p.shop_products.length > 0 ? 'View shop →' : (p.partner_product_type === 'service' ? 'Add →' : 'Add')}</button>`
           }
         </div>
       </div>`;
@@ -1443,6 +1473,12 @@
 
   function handleAddToCart(product, btn) {
     if (cart.find(i => i.id === product.id)) return;
+
+    // Shop listing (new model) — open shop popup showing products
+    if (Array.isArray(product.shop_products) && product.shop_products.length > 0) {
+      openShopModal(product, btn);
+      return;
+    }
 
     // Variant product — show variant picker
     if (Array.isArray(product.variants) && product.variants.length > 0) {
@@ -1685,6 +1721,171 @@
   window.openVariantModal = openVariantModal;
   window.closeVariantModal = closeVariantModal;
   window.confirmVariant = confirmVariant;
+
+  // ── SHOP MODAL (new: shop → products → variants) ──
+  let pendingShopProduct = null;
+  let pendingShopBtn = null;
+  let expandedProductIdx = null;
+
+  function openShopModal(shop, btn) {
+    pendingShopProduct = shop;
+    pendingShopBtn = btn;
+    expandedProductIdx = null;
+
+    // Header
+    const titleEl = document.getElementById('shopModalTitle');
+    const descEl = document.getElementById('shopModalDesc');
+    const logoEl = document.getElementById('shopModalLogo');
+    const distEl = document.getElementById('shopModalDist');
+    titleEl.textContent = shop.name || 'Shop';
+    descEl.textContent = shop.description || '';
+    if (shop.logo_url) {
+      logoEl.src = shop.logo_url;
+      logoEl.style.display = 'block';
+    } else {
+      logoEl.style.display = 'none';
+    }
+    if (shop.listing_lat && shop.listing_lng && hostGeoCache && hostGeoCache.lat) {
+      const km = haversineKmStore(hostGeoCache.lat, hostGeoCache.lng, shop.listing_lat, shop.listing_lng);
+      const kmDisplay = km < 1 ? '<1' : (km < 10 ? km.toFixed(1) : Math.round(km));
+      distEl.textContent = '📍 ' + kmDisplay + ' km · Visit in-store or order here';
+      distEl.style.display = 'inline-block';
+    } else if (shop.listing_address) {
+      distEl.textContent = '📍 Visit in-store or order here';
+      distEl.style.display = 'inline-block';
+    } else {
+      distEl.style.display = 'none';
+    }
+
+    renderShopProductsList();
+    document.getElementById('shopModalOverlay').classList.add('open');
+  }
+
+  function renderShopProductsList() {
+    const shop = pendingShopProduct;
+    if (!shop) return;
+    const list = document.getElementById('shopProductsList');
+    const products = Array.isArray(shop.shop_products) ? shop.shop_products : [];
+    list.innerHTML = products.map((sp, pi) => {
+      const expanded = expandedProductIdx === pi;
+      const hasVariants = Array.isArray(sp.variants) && sp.variants.length > 0;
+      const allPrices = hasVariants ? sp.variants.map(v => Number(v.price) || 0).filter(n => n > 0) : (Number(sp.price) > 0 ? [Number(sp.price)] : []);
+      const minPrice = allPrices.length ? Math.min(...allPrices) : 0;
+      const priceLabel = hasVariants && allPrices.length > 1 ? '<small style="color:var(--muted);font-weight:400">From </small>$' + minPrice : '$' + minPrice;
+
+      // Check if already in cart
+      const rowItemIds = hasVariants ? sp.variants.map((_, vi) => shop.id + ':' + pi + ':' + vi) : [shop.id + ':' + pi];
+      const anyInCart = rowItemIds.some(id => cart.find(c => c.id === id));
+
+      let expandedContent = '';
+      if (expanded) {
+        if (sp.description) {
+          expandedContent += '<div style="font-size:13px;color:var(--muted);line-height:1.5;padding:10px 0 12px;border-top:1px solid #f0ece8;margin-top:10px">' + sp.description + '</div>';
+        } else {
+          expandedContent += '<div style="padding:6px 0"></div>';
+        }
+        if (hasVariants) {
+          expandedContent += '<div style="display:flex;flex-direction:column;gap:8px">' + sp.variants.map((v, vi) => {
+            const variantId = shop.id + ':' + pi + ':' + vi;
+            const inCart = cart.find(c => c.id === variantId);
+            return '<button onclick="addShopProductVariant(' + pi + ',' + vi + ')" ' + (inCart ? 'disabled' : '') + ' style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:' + (inCart ? '#f0fdf4' : 'white') + ';border:1.5px solid ' + (inCart ? '#16a34a' : 'var(--border)') + ';border-radius:10px;cursor:' + (inCart ? 'default' : 'pointer') + ';font-family:inherit;text-align:left;width:100%">' +
+              '<div style="font-size:14px;font-weight:600;color:var(--text)">' + (v.label || 'Option ' + (vi + 1)) + '</div>' +
+              '<div style="display:flex;align-items:center;gap:8px">' +
+                '<span style="font-family:\'Playfair Display\',serif;font-size:17px;font-weight:700;color:var(--brand)">$' + (v.price || 0) + '</span>' +
+                (inCart ? '<span style="font-size:12px;color:#16a34a;font-weight:700">✓ In cart</span>' : '<span style="color:var(--brand);font-size:14px">→</span>') +
+              '</div>' +
+            '</button>';
+          }).join('') + '</div>';
+        } else {
+          const flatId = shop.id + ':' + pi;
+          const inCart = cart.find(c => c.id === flatId);
+          expandedContent += '<button onclick="addShopProductFlat(' + pi + ')" ' + (inCart ? 'disabled' : '') + ' style="width:100%;margin-top:4px;padding:12px;background:' + (inCart ? '#f0fdf4' : 'var(--brand)') + ';color:' + (inCart ? '#16a34a' : 'white') + ';border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:' + (inCart ? 'default' : 'pointer') + '">' + (inCart ? '✓ Added to cart' : 'Add to cart — $' + (sp.price || 0) + (sp.unit ? ' / ' + sp.unit : '')) + '</button>';
+        }
+      }
+
+      return '<div style="background:white;border:1.5px solid ' + (expanded ? 'var(--brand)' : 'var(--border)') + ';border-radius:12px;padding:14px;margin-bottom:10px;transition:border-color 0.2s">' +
+        '<div onclick="toggleShopProduct(' + pi + ')" style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer">' +
+          '<div style="flex:1">' +
+            '<div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:2px">' + (sp.name || 'Product ' + (pi + 1)) + '</div>' +
+            '<div style="font-size:12px;color:var(--muted)">' + (hasVariants ? sp.variants.length + ' option' + (sp.variants.length === 1 ? '' : 's') + ' · ' : '') + priceLabel + '</div>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:8px">' +
+            (anyInCart ? '<span style="font-size:11px;color:#16a34a;font-weight:700;background:#f0fdf4;border-radius:50px;padding:3px 8px">✓ In cart</span>' : '') +
+            '<div style="color:var(--muted);font-size:14px;transform:' + (expanded ? 'rotate(90deg)' : 'rotate(0deg)') + ';transition:transform 0.2s">▶</div>' +
+          '</div>' +
+        '</div>' +
+        expandedContent +
+      '</div>';
+    }).join('');
+
+    // Update cart count
+    const shopIds = products.flatMap((sp, pi) => Array.isArray(sp.variants) && sp.variants.length > 0 ? sp.variants.map((_, vi) => shop.id + ':' + pi + ':' + vi) : [shop.id + ':' + pi]);
+    const inCartCount = cart.filter(c => shopIds.includes(c.id)).length;
+    document.getElementById('shopCartCount').textContent = inCartCount;
+  }
+
+  function toggleShopProduct(pi) {
+    expandedProductIdx = (expandedProductIdx === pi) ? null : pi;
+    renderShopProductsList();
+  }
+
+  function addShopProductFlat(pi) {
+    const shop = pendingShopProduct;
+    if (!shop) return;
+    const sp = shop.shop_products[pi];
+    if (!sp) return;
+    const itemId = shop.id + ':' + pi;
+    if (cart.find(c => c.id === itemId)) return;
+    cart.push({
+      id: itemId,
+      name: shop.name + ' — ' + (sp.name || 'Product'),
+      price: Number(sp.price) || 0,
+      icon: '📦',
+      note: '',
+      partner_product_id: shop.partner_product_id || null,
+      partner_id: shop.partner_id || null,
+      isPartnerRequest: false,
+      partnerBusinessName: shop.partner_business_name || null,
+    });
+    updateCartUI();
+    renderShopProductsList();
+  }
+
+  function addShopProductVariant(pi, vi) {
+    const shop = pendingShopProduct;
+    if (!shop) return;
+    const sp = shop.shop_products[pi];
+    if (!sp || !sp.variants || !sp.variants[vi]) return;
+    const v = sp.variants[vi];
+    const itemId = shop.id + ':' + pi + ':' + vi;
+    if (cart.find(c => c.id === itemId)) return;
+    cart.push({
+      id: itemId,
+      name: shop.name + ' — ' + (sp.name || 'Product') + ' — ' + (v.label || 'Option'),
+      price: Number(v.price) || 0,
+      icon: '📦',
+      note: '',
+      partner_product_id: shop.partner_product_id || null,
+      partner_id: shop.partner_id || null,
+      isPartnerRequest: false,
+      partnerBusinessName: shop.partner_business_name || null,
+    });
+    updateCartUI();
+    renderShopProductsList();
+  }
+
+  function closeShopModal() {
+    document.getElementById('shopModalOverlay').classList.remove('open');
+    pendingShopProduct = null;
+    pendingShopBtn = null;
+    expandedProductIdx = null;
+  }
+
+  window.openShopModal = openShopModal;
+  window.closeShopModal = closeShopModal;
+  window.toggleShopProduct = toggleShopProduct;
+  window.addShopProductFlat = addShopProductFlat;
+  window.addShopProductVariant = addShopProductVariant;
 
   function confirmNotes() {
     if (!pendingCartItem) return;

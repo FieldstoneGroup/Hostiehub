@@ -1853,6 +1853,13 @@
   function editProduct(id) {
     const p = products.find(x => x.id === id);
     if (!p) return;
+
+    // Shop partner listing → open markup modal instead
+    if (p.partner_product_id && p.partner_product_type === 'product' && Array.isArray(p.shop_products) && p.shop_products.length > 0) {
+      openLocalProductModalForEdit(id);
+      return;
+    }
+
     editingProductId = id;
 
     const isPartner = !!p.partner_product_id;
@@ -2624,6 +2631,11 @@
   async function showPartnerListing(partnerProductId) {
     const p = localPartnerProducts.find(x => x.id === partnerProductId);
     if (!p) return;
+    // If it's a shop listing (new model with products), open the markup modal instead
+    if (p.type === 'product' && Array.isArray(p.shop_products) && p.shop_products.length > 0) {
+      openLocalProductModal(partnerProductId);
+      return;
+    }
     const isBooking = p.type === 'booking';
     await sb.from('products').insert({
       host_id: currentUser.id,

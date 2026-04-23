@@ -1331,21 +1331,18 @@
       await new Promise(r => setTimeout(r, 500));
     }
 
-    // If still no session, wait briefly for onAuthStateChange
+    // If still no session, wait for onAuthStateChange (token refresh can take a few sec)
     if (!session) {
       session = await new Promise(resolve => {
         const { data: { subscription } } = sb.auth.onAuthStateChange((event, s) => {
           if (s) { subscription.unsubscribe(); resolve(s); }
         });
-        setTimeout(() => resolve(null), 3000);
+        setTimeout(() => resolve(null), 8000);
       });
     }
 
     if (!session) { window.location.href = 'signup.html'; return; }
     currentUser = session.user;
-
-    // Set the session explicitly so all subsequent requests use the correct JWT
-    await sb.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
 
     const { data: host } = await sb.from('hosts').select('*').eq('id', currentUser.id).maybeSingle();
     if (!host && currentUser.email) {

@@ -1400,10 +1400,12 @@
     const bookingUrl = document.getElementById('pBookingUrl').value.trim();
     if (isBooking && !bookingUrl) { showToast('Please enter a booking URL'); return; }
     if (isProduct) {
+      console.log('[HH DEBUG] shopProducts at save time — length:', shopProducts.length, 'contents:', JSON.parse(JSON.stringify(shopProducts)));
       const validProducts = shopProducts.filter(p => (p.name || '').trim() && (
         (parseFloat(p.wholesale_price) || 0) > 0 ||
         (Array.isArray(p.variants) && p.variants.some(v => (v.label || '').trim() && (parseFloat(v.wholesale_price) || 0) > 0))
       ));
+      console.log('[HH DEBUG] validProducts after filter — length:', validProducts.length);
       if (validProducts.length === 0) { showToast('Please add at least one product with a wholesale price (or variants with prices)'); return; }
     }
 

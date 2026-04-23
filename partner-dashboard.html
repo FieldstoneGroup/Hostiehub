@@ -1116,8 +1116,10 @@
 
   function updateDescCount() {
     const isService = document.getElementById('ptService')?.checked;
-    const max = isService ? 400 : 200;
-    const warn = isService ? 360 : 180;
+    const isBooking = document.getElementById('ptBooking')?.checked;
+    const allow400 = isService || isBooking;
+    const max = allow400 ? 400 : 200;
+    const warn = allow400 ? 360 : 180;
     const textarea = document.getElementById('pDesc');
     const countEl = document.getElementById('pDescCount');
     const hintEl = document.getElementById('pDescHint');

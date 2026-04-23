@@ -382,7 +382,7 @@
           <div id="previewBody" style="padding:12px 16px;flex:1;display:flex;flex-direction:column;min-height:0">
             <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:6px;line-height:1.25" id="previewName">Your listing name</div>
             <div style="font-size:12px;color:#6b7280;line-height:1.5;flex:1" id="previewDesc"></div>
-            <div id="previewVoucherRow" style="display:none;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:6px 9px;font-size:11px;font-weight:600;color:#92600a;margin-top:8px"><span>🎟️</span><span>Free voucher emailed on booking</span></div>
+            <div id="previewVoucherRow" style="display:none;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:6px 9px;font-size:11px;font-weight:600;color:#92600a;margin-top:8px"><span>🎟️</span><span id="previewVoucherText">Free voucher emailed on booking</span></div>
             <div id="previewDistPill" style="display:none;align-items:center;gap:4px;background:#f0f7ff;color:#1a5fa8;font-size:11px;font-weight:600;padding:3px 8px;border-radius:50px;margin-top:6px;align-self:flex-start"><span>📍</span><span id="previewDistText">Visit in-store or order here</span></div>
           </div>
           <!-- Partner notes box (absolute, bottom:112px — matches .pc-notes-box) -->
@@ -526,7 +526,7 @@
             </div>
             <div class="field">
               <label>Attach a voucher <span style="font-weight:300;font-size:12px">(optional)</span></label>
-              <input type="text" id="pVoucherTitle" placeholder="e.g. 2 Free Beers or Wines on Arrival at Blanca" style="margin-bottom:10px">
+              <input type="text" id="pVoucherTitle" placeholder="e.g. 2 Free Beers or Wines on Arrival at Blanca" oninput="updatePreview()" style="margin-bottom:10px">
               <div class="field-hint" style="margin-top:-6px;margin-bottom:10px">This becomes the email subject: <em>Hostie Hub Voucher — [your title]</em></div>
               <div id="pVoucherPreviewWrap" style="display:none;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;align-items:center;gap:10px;">
                 <span style="font-size:20px">📄</span>
@@ -1616,7 +1616,7 @@
     document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-newproduct').classList.add('active');
-    document.getElementById('topbarTitle').textContent = 'Edit Product or Service';
+    document.getElementById('topbarTitle').textContent = 'Edit Listing';
 
     // Populate fields
     document.getElementById('pName').value = p.name || '';
@@ -2288,17 +2288,22 @@
       el('previewImageWrap').style.height = '152px';
     }
 
-    // Distance pill
+    // Distance pill — text differs for booking links
     if (selectedListingLocation && selectedListingLocation.name) {
       el('previewDistPill').style.display = 'inline-flex';
+      const distText = document.getElementById('previewDistText');
+      if (distText) distText.textContent = isBooking ? 'Available where you are staying' : 'Visit in-store or order here';
     } else {
       el('previewDistPill').style.display = 'none';
     }
 
-    // Voucher (booking only)
+    // Voucher (booking only) — use voucher_title if provided, else default copy
     if (isBooking && hasVoucherFile) {
       el('previewVoucherBadge').style.display = 'block';
       el('previewVoucherRow').style.display = 'flex';
+      const voucherTitle = (document.getElementById('pVoucherTitle')?.value || '').trim();
+      const voucherText = document.getElementById('previewVoucherText');
+      if (voucherText) voucherText.textContent = voucherTitle || 'Free voucher emailed on booking';
     } else {
       el('previewVoucherBadge').style.display = 'none';
       el('previewVoucherRow').style.display = 'none';

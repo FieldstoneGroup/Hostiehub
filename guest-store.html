@@ -744,13 +744,13 @@
           }
           return {
             ...p,
-            name: pp.name || p.name,
-            description: pp.description || p.description,
-            image_url: pp.image_url || p.image_url,
-            logo_url: pp.logo_url || p.logo_url,
-            listing_address: pp.listing_address || p.listing_address,
-            listing_lat: pp.listing_lat != null ? pp.listing_lat : p.listing_lat,
-            listing_lng: pp.listing_lng != null ? pp.listing_lng : p.listing_lng,
+            name: pp.name != null ? pp.name : p.name,
+            description: pp.description != null ? pp.description : p.description,
+            image_url: pp.image_url,
+            logo_url: pp.logo_url,
+            listing_address: pp.listing_address,
+            listing_lat: pp.listing_lat,
+            listing_lng: pp.listing_lng,
             shop_products: liveShopProducts,
             partner_voucher_pdf_url: pp.voucher_pdf_url,
             partner_voucher_title: pp.voucher_title,
@@ -1264,11 +1264,12 @@
           <div style="padding:12px 14px 8px">
             <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--text);line-height:1.25;margin-bottom:6px">${p.name}</div>
             <div style="font-size:12px;color:var(--muted);line-height:1.5">${p.description || ''}</div>
+            <div style="display:inline-flex;align-items:center;gap:4px;background:#f0f7ff;color:#1a5fa8;font-size:11px;font-weight:600;padding:3px 8px;border-radius:50px;margin-top:8px">📍 Available where you are staying</div>
           </div>
           <!-- Note pinned at fixed position -->
           ${p.partner_notes ? `<div class="pc-notes-box"><div class="pc-notes-box-inner">🎁 ${p.partner_notes}</div></div>` : ''}
           <!-- Voucher row pinned above button -->
-          ${hasVoucher ? `<div class="pc-voucher" style="position:absolute;bottom:68px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;color:#92600a"><span>🎟️</span><span>Free voucher emailed on booking</span></div></div>` : ''}
+          ${hasVoucher ? `<div class="pc-voucher" style="position:absolute;bottom:68px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;color:#92600a"><span>🎟️</span><span>${p.partner_voucher_title || 'Free voucher emailed on booking'}</span></div></div>` : ''}
           <!-- Book now button — absolute bottom -->
           <div class="pc-btn" style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:white;border-top:1px solid var(--border)">
             <button onclick="${bookingFn}" style="width:100%;border:none;border-radius:10px;padding:11px;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;color:#ffffff;background:linear-gradient(135deg,#2C6E6A,#1d4d4a);cursor:pointer;letter-spacing:0.3px">Book now →</button>

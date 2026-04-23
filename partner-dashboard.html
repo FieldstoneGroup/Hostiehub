@@ -429,8 +429,8 @@
           </div>
           <div class="field">
             <label>Description <span style="font-weight:300;font-size:12px" id="pDescCount">(0 / 200 characters)</span></label>
-            <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="200" oninput="document.getElementById('pDescCount').textContent = '(' + this.value.length + ' / 200 characters)'; document.getElementById('pDescCount').style.color = this.value.length > 180 ? '#e53e3e' : 'var(--muted)'; updatePreview()"></textarea>
-            <div class="field-hint">Shown in the guest store — keep it punchy. Maximum 200 characters.</div>
+            <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="400" oninput="updateDescCount();updatePreview()"></textarea>
+            <div class="field-hint" id="pDescHint">Shown in the guest store — keep it punchy. Maximum 200 characters.</div>
           </div>
           <div id="productFields" style="display:none">
             <div class="field">
@@ -1110,7 +1110,27 @@
     if (btn) btn.textContent = isBooking ? 'Book now →' : 'Add →';
     // Render shop products list if product mode
     if (isProduct) renderShopProducts();
+    // Update description character limit based on type
+    updateDescCount();
   }
+
+  function updateDescCount() {
+    const isService = document.getElementById('ptService')?.checked;
+    const max = isService ? 400 : 200;
+    const warn = isService ? 360 : 180;
+    const textarea = document.getElementById('pDesc');
+    const countEl = document.getElementById('pDescCount');
+    const hintEl = document.getElementById('pDescHint');
+    if (!textarea || !countEl) return;
+    // If current value exceeds new cap, trim
+    if (textarea.value.length > max) textarea.value = textarea.value.substring(0, max);
+    textarea.setAttribute('maxlength', max);
+    const l = textarea.value.length;
+    countEl.textContent = '(' + l + ' / ' + max + ' characters)';
+    countEl.style.color = l > warn ? '#e53e3e' : 'var(--muted)';
+    if (hintEl) hintEl.textContent = 'Shown in the guest store — keep it punchy. Maximum ' + max + ' characters.';
+  }
+  window.updateDescCount = updateDescCount;
 
   // ── SHOP PRODUCTS (nested: shop → products → variants) ──
   let shopProducts = []; // [{ name, description, wholesale_price, rrp, variants: [{label, wholesale_price, rrp}] }]
@@ -1600,8 +1620,7 @@
     document.getElementById('pName').value = p.name || '';
     document.getElementById('pCategory').value = p.category || 'product';
     document.getElementById('pDesc').value = p.description || '';
-    const descCount = document.getElementById('pDescCount');
-    if (descCount) { const l = (p.description || '').length; descCount.textContent = '(' + l + ' / 200 characters)'; descCount.style.color = l > 180 ? '#e53e3e' : 'var(--muted)'; }
+    updateDescCount();
     document.getElementById('pNotes') && (document.getElementById('pNotes').value = p.notes || '');
 
     const isBooking = p.type === 'booking';

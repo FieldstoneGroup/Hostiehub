@@ -1291,7 +1291,7 @@
             <div class="product-name">${p.name}</div>
             <div class="product-desc">${p.description || ''}</div>
           </div>
-          ${distPill ? `<div style="position:absolute;bottom:56px;left:0;right:0;padding:0 16px;text-align:center">${distPill}</div>` : ''}
+          ${distPill ? `<div style="position:absolute;bottom:56px;left:0;right:0;padding:0 16px;text-align:left">${distPill}</div>` : ''}
           <div class="pc-reg-footer" style="position:absolute;bottom:0;left:0;right:0;padding:10px 16px;background:white;border-top:1px solid #f0ece8;display:flex;align-items:center;justify-content:space-between">
             <div class="product-price">${p.partner_product_type === 'service'
               ? (p.service_price_unit === 'contact for pricing'

@@ -699,8 +699,9 @@
     });
     const bookingPartnerIds = allProducts.filter(p => p.partner_product_id).map(p => p.partner_product_id);
     if (bookingPartnerIds.length > 0) {
-      const { data: partnerProds } = await sb.from('partner_products').select('id, name, description, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng, logo_url, image_url, shop_products').in('id', bookingPartnerIds);
-      console.log('[Hostie] partner_products fetch:', partnerProds);
+      const { data: partnerProds, error: ppErr } = await sb.from('partner_products').select('id, name, description, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng, logo_url, image_url, shop_products').in('id', bookingPartnerIds);
+      if (ppErr) console.error('[Hostie] partner_products fetch error:', ppErr);
+      console.log('[Hostie] partner_products fetch result:', partnerProds);
       if (partnerProds) {
         const pMap = {};
         partnerProds.forEach(pp => { pMap[pp.id] = pp; });
@@ -1286,11 +1287,11 @@
               ${partnerBadge}
             </div>
           </div>
-          <div class="product-body" style="padding-bottom:12px">
+          <div class="product-body" style="padding-bottom:64px">
             <div class="product-name">${p.name}</div>
             <div class="product-desc">${p.description || ''}</div>
-            ${distPill}
           </div>
+          ${distPill ? `<div style="position:absolute;bottom:56px;left:0;right:0;padding:0 16px;text-align:center">${distPill}</div>` : ''}
           <div class="pc-reg-footer" style="position:absolute;bottom:0;left:0;right:0;padding:10px 16px;background:white;border-top:1px solid #f0ece8;display:flex;align-items:center;justify-content:space-between">
             <div class="product-price">${p.partner_product_type === 'service'
               ? (p.service_price_unit === 'contact for pricing'

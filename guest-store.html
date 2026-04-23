@@ -1147,7 +1147,8 @@
 
   function renderProducts(products) {
     // Fire geocode in background so partner distance pills appear on re-render
-    if (!hostGeoCache.lat) { geocodePropertyForDistance().then(() => { if (hostGeoCache.lat) renderProducts(products); }); }
+    console.log('[Hostie] renderProducts — hostGeoCache:', hostGeoCache);
+    if (!hostGeoCache.lat) { geocodePropertyForDistance().then(() => { if (hostGeoCache.lat) { console.log('[Hostie] retrying renderProducts after geocode'); renderProducts(products); } }); }
     // Host tab shows: host's own products + partner products of type 'product' (sellable)
     const hostProducts = products.filter(p => !p.partner_product_id || p.partner_product_type === 'product');
     const grid = document.getElementById('productsGrid');
@@ -1230,6 +1231,7 @@
       const isPartnerListing = !!p.partner_product_id;
       const hasLogo = isPartnerListing && p.logo_url;
       let distPill = '';
+      if (isPartnerListing) console.log('[Hostie] partner card', p.name, 'lat:', p.listing_lat, 'lng:', p.listing_lng, 'hostGeo:', hostGeoCache.lat);
       if (isPartnerListing && p.listing_lat && p.listing_lng && hostGeoCache && hostGeoCache.lat) {
         const km = haversineKmStore(hostGeoCache.lat, hostGeoCache.lng, p.listing_lat, p.listing_lng);
         const kmDisplay = km < 1 ? '<1' : (km < 10 ? km.toFixed(1) : Math.round(km));

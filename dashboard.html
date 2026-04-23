@@ -1100,11 +1100,11 @@
       <div id="localProductInfo" style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px"></div>
       <div id="localShopMarkupField" style="display:none">
         <div class="field">
-          <label>Your markup % for this shop</label>
-          <input type="number" id="localShopMarkupPercent" value="25" min="0" max="500" step="1" oninput="updateShopMarkupPreview()">
-          <div class="field-hint">Applied to every product and variant. You keep the markup.</div>
+          <label>Default markup % (optional)</label>
+          <input type="number" id="localShopMarkupPercent" value="25" min="0" max="500" step="1">
+          <div class="field-hint">Use this as a starting point, then fine-tune individual prices below. Tap "Apply markup % to all" to reset all prices.</div>
         </div>
-        <div id="localShopPreview" style="background:var(--bg);border-radius:10px;padding:12px;margin-top:10px;font-size:13px;max-height:280px;overflow-y:auto"></div>
+        <div id="localShopPreview" style="background:var(--bg);border-radius:10px;padding:12px;margin-top:10px;font-size:13px;max-height:320px;overflow-y:auto"></div>
       </div>
       <div id="localProductPriceField">
         <div class="field">
@@ -2696,6 +2696,16 @@
     if (isNewShopListing) {
       markupField.style.display = 'block';
       document.getElementById('localShopMarkupPercent').value = '25';
+      // Seed hostPriceOverrides from 25% default so preview shows editable rows
+      hostPriceOverrides = {};
+      const mult = 1.25;
+      p.shop_products.forEach((sp, pi) => {
+        if (Array.isArray(sp.variants) && sp.variants.length > 0) {
+          sp.variants.forEach((v, vi) => { hostPriceOverrides[pi + ':' + vi] = +((parseFloat(v.wholesale_price) || 0) * mult).toFixed(2); });
+        } else {
+          hostPriceOverrides[pi] = +((parseFloat(sp.wholesale_price) || 0) * mult).toFixed(2);
+        }
+      });
       updateShopMarkupPreview();
     } else if (!isBooking && isProduct) {
       priceField.style.display = 'block';
@@ -2708,6 +2718,9 @@
     document.getElementById('localProductModal').classList.add('open');
   }
 
+  // Host-side per-product price state (allows override of markup default)
+  let hostPriceOverrides = {}; // { "pi": price } or { "pi:vi": price }
+
   function openLocalProductModalForEdit(hostProductId) {
     const hostProduct = products.find(x => x.id === hostProductId);
     if (!hostProduct) return;
@@ -2719,12 +2732,24 @@
     editingLocalHostProductId = hostProductId;
     pendingLocalProduct = partner;
 
+    // Seed overrides from the host's existing shop_products (so current prices stay)
+    hostPriceOverrides = {};
+    if (Array.isArray(hostProduct.shop_products)) {
+      hostProduct.shop_products.forEach((sp, pi) => {
+        if (Array.isArray(sp.variants) && sp.variants.length > 0) {
+          sp.variants.forEach((v, vi) => { if (v.price != null) hostPriceOverrides[pi + ':' + vi] = +v.price; });
+        } else if (sp.price != null) {
+          hostPriceOverrides[pi] = +sp.price;
+        }
+      });
+    }
+
     const businessName = partner.partners ? partner.partners.business_name : 'Local Business';
     document.getElementById('localProductModalTitle').textContent = 'Edit listing — ' + partner.name;
     document.getElementById('localProductInfo').innerHTML =
       '<div style="font-size:14px;font-weight:600;margin-bottom:4px">' + partner.name + '</div>' +
       '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">By ' + businessName + ' · Shop with ' + partner.shop_products.length + ' product' + (partner.shop_products.length === 1 ? '' : 's') + '</div>' +
-      '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 Change your markup %. It applies to every product and variant.</div>';
+      '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 Set a default markup %, then fine-tune any individual product\'s retail price below.</div>';
 
     document.getElementById('localProductPriceField').style.display = 'none';
     document.getElementById('localShopMarkupField').style.display = 'block';
@@ -2735,26 +2760,63 @@
   }
   window.openLocalProductModalForEdit = openLocalProductModalForEdit;
 
-  function updateShopMarkupPreview() {
+  function applyMarkupToAll() {
     const p = pendingLocalProduct;
     if (!p || !Array.isArray(p.shop_products)) return;
     const pct = parseFloat(document.getElementById('localShopMarkupPercent').value) || 0;
     const mult = 1 + (pct / 100);
-    let html = '';
-    p.shop_products.forEach(sp => {
-      const hasVariants = Array.isArray(sp.variants) && sp.variants.length > 0;
-      html += '<div style="padding:8px 0;border-bottom:1px solid var(--border)">';
-      html += '<div style="font-weight:600;font-size:13px;margin-bottom:4px">' + (sp.name || 'Product') + '</div>';
-      if (hasVariants) {
-        sp.variants.forEach(v => {
+    hostPriceOverrides = {};
+    p.shop_products.forEach((sp, pi) => {
+      if (Array.isArray(sp.variants) && sp.variants.length > 0) {
+        sp.variants.forEach((v, vi) => {
           const wp = parseFloat(v.wholesale_price) || 0;
-          const rp = wp * mult;
-          html += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;color:var(--muted)"><span>· ' + (v.label || 'Variant') + '</span><span><s>$' + wp.toFixed(2) + '</s> → <strong style="color:var(--brand)">$' + rp.toFixed(2) + '</strong></span></div>';
+          hostPriceOverrides[pi + ':' + vi] = +(wp * mult).toFixed(2);
         });
       } else {
         const wp = parseFloat(sp.wholesale_price) || 0;
-        const rp = wp * mult;
-        html += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:2px 0;color:var(--muted)"><span>Flat price</span><span><s>$' + wp.toFixed(2) + '</s> → <strong style="color:var(--brand)">$' + rp.toFixed(2) + '</strong></span></div>';
+        hostPriceOverrides[pi] = +(wp * mult).toFixed(2);
+      }
+    });
+    updateShopMarkupPreview();
+  }
+  window.applyMarkupToAll = applyMarkupToAll;
+
+  function updateHostPriceOverride(key, value) {
+    const val = parseFloat(value);
+    if (isNaN(val) || val < 0) return;
+    hostPriceOverrides[key] = val;
+  }
+  window.updateHostPriceOverride = updateHostPriceOverride;
+
+  function updateShopMarkupPreview() {
+    const p = pendingLocalProduct;
+    if (!p || !Array.isArray(p.shop_products)) return;
+    let html = '<div style="display:flex;gap:8px;margin-bottom:12px"><button onclick="applyMarkupToAll()" style="flex:1;padding:8px 12px;background:var(--brand);color:white;border:none;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer">Apply markup % to all</button></div>';
+    html += '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px">Your retail prices</div>';
+    p.shop_products.forEach((sp, pi) => {
+      const hasVariants = Array.isArray(sp.variants) && sp.variants.length > 0;
+      html += '<div style="padding:10px 0;border-bottom:1px solid var(--border)">';
+      html += '<div style="font-weight:600;font-size:13px;margin-bottom:6px">' + (sp.name || 'Product') + '</div>';
+      if (hasVariants) {
+        sp.variants.forEach((v, vi) => {
+          const wp = parseFloat(v.wholesale_price) || 0;
+          const key = pi + ':' + vi;
+          const cur = hostPriceOverrides[key] != null ? hostPriceOverrides[key] : wp;
+          html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;gap:8px">' +
+            '<span style="flex:1;color:var(--muted)">· ' + (v.label || 'Variant') + ' <s style="color:#999">$' + wp.toFixed(2) + '</s></span>' +
+            '<div style="position:relative;width:100px"><span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px;pointer-events:none">$</span>' +
+            '<input type="number" min="0" step="0.01" value="' + cur.toFixed(2) + '" oninput="updateHostPriceOverride(\'' + key + '\',this.value)" style="width:100%;padding:6px 8px 6px 20px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;outline:none;box-sizing:border-box;color:var(--brand)"></div>' +
+            '</div>';
+        });
+      } else {
+        const wp = parseFloat(sp.wholesale_price) || 0;
+        const key = '' + pi;
+        const cur = hostPriceOverrides[key] != null ? hostPriceOverrides[key] : wp;
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:4px 0;gap:8px">' +
+          '<span style="flex:1;color:var(--muted)">Flat price <s style="color:#999">$' + wp.toFixed(2) + '</s></span>' +
+          '<div style="position:relative;width:100px"><span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px;pointer-events:none">$</span>' +
+          '<input type="number" min="0" step="0.01" value="' + cur.toFixed(2) + '" oninput="updateHostPriceOverride(\'' + key + '\',this.value)" style="width:100%;padding:6px 8px 6px 20px;border:1.5px solid var(--border);border-radius:6px;font-family:inherit;font-size:12px;font-weight:600;outline:none;box-sizing:border-box;color:var(--brand)"></div>' +
+          '</div>';
       }
       html += '</div>';
     });
@@ -2766,6 +2828,7 @@
     document.getElementById('localProductModal').classList.remove('open');
     pendingLocalProduct = null;
     editingLocalHostProductId = null;
+    hostPriceOverrides = {};
   }
 
   async function confirmAddLocalProduct() {
@@ -2783,18 +2846,34 @@
       retailPrice = p.wholesale_price || 0;
     } else if (isNewShopListing) {
       markupPct = parseFloat(document.getElementById('localShopMarkupPercent').value);
-      if (isNaN(markupPct) || markupPct < 0) { showToast('⚠️ Please enter a markup %'); return; }
+      if (isNaN(markupPct) || markupPct < 0) markupPct = 0;
       const mult = 1 + (markupPct / 100);
       const allRetail = [];
-      finalShopProducts = p.shop_products.map(sp => {
-        const newVariants = (Array.isArray(sp.variants) ? sp.variants : []).map(v => {
+      // For add (not edit), seed hostPriceOverrides from markup if empty
+      if (!editingLocalHostProductId && Object.keys(hostPriceOverrides).length === 0) {
+        p.shop_products.forEach((sp, pi) => {
+          if (Array.isArray(sp.variants) && sp.variants.length > 0) {
+            sp.variants.forEach((v, vi) => {
+              hostPriceOverrides[pi + ':' + vi] = +((parseFloat(v.wholesale_price) || 0) * mult).toFixed(2);
+            });
+          } else {
+            hostPriceOverrides[pi] = +((parseFloat(sp.wholesale_price) || 0) * mult).toFixed(2);
+          }
+        });
+      }
+      finalShopProducts = p.shop_products.map((sp, pi) => {
+        const newVariants = (Array.isArray(sp.variants) ? sp.variants : []).map((v, vi) => {
           const wp = parseFloat(v.wholesale_price) || 0;
-          const rp = +(wp * mult).toFixed(2);
+          const key = pi + ':' + vi;
+          const rp = hostPriceOverrides[key] != null ? hostPriceOverrides[key] : +(wp * mult).toFixed(2);
           if (rp > 0) allRetail.push(rp);
           return { label: v.label || '', wholesale_price: wp, price: rp };
         });
         const flatWp = parseFloat(sp.wholesale_price) || 0;
-        const flatRp = +(flatWp * mult).toFixed(2);
+        const flatKey = '' + pi;
+        const flatRp = newVariants.length === 0
+          ? (hostPriceOverrides[flatKey] != null ? hostPriceOverrides[flatKey] : +(flatWp * mult).toFixed(2))
+          : +(flatWp * mult).toFixed(2);
         if (newVariants.length === 0 && flatRp > 0) allRetail.push(flatRp);
         return {
           name: sp.name || '',

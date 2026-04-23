@@ -428,9 +428,9 @@
             <div class="field-hint">This tells hosts whether they can set their own price or not.</div>
           </div>
           <div class="field">
-            <label>Description <span style="font-weight:300;font-size:12px" id="pDescCount">(0 / 250 characters)</span></label>
-            <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="250" oninput="document.getElementById('pDescCount').textContent = '(' + this.value.length + ' / 250 characters)'; document.getElementById('pDescCount').style.color = this.value.length > 225 ? '#e53e3e' : 'var(--muted)'; updatePreview()"></textarea>
-            <div class="field-hint">Shown in the guest store — keep it punchy. Maximum 250 characters.</div>
+            <label>Description <span style="font-weight:300;font-size:12px" id="pDescCount">(0 / 200 characters)</span></label>
+            <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="200" oninput="document.getElementById('pDescCount').textContent = '(' + this.value.length + ' / 200 characters)'; document.getElementById('pDescCount').style.color = this.value.length > 180 ? '#e53e3e' : 'var(--muted)'; updatePreview()"></textarea>
+            <div class="field-hint">Shown in the guest store — keep it punchy. Maximum 200 characters.</div>
           </div>
           <div id="productFields" style="display:none">
             <div class="field">
@@ -1576,7 +1576,7 @@
     document.getElementById('pCategory').value = p.category || 'product';
     document.getElementById('pDesc').value = p.description || '';
     const descCount = document.getElementById('pDescCount');
-    if (descCount) { const l = (p.description || '').length; descCount.textContent = '(' + l + ' / 250 characters)'; descCount.style.color = l > 225 ? '#e53e3e' : 'var(--muted)'; }
+    if (descCount) { const l = (p.description || '').length; descCount.textContent = '(' + l + ' / 200 characters)'; descCount.style.color = l > 180 ? '#e53e3e' : 'var(--muted)'; }
     document.getElementById('pNotes') && (document.getElementById('pNotes').value = p.notes || '');
 
     const isBooking = p.type === 'booking';

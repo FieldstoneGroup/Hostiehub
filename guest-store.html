@@ -699,17 +699,48 @@
     });
     const bookingPartnerIds = allProducts.filter(p => p.partner_product_id).map(p => p.partner_product_id);
     if (bookingPartnerIds.length > 0) {
-      const { data: partnerProds } = await sb.from('partner_products').select('id, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng').in('id', bookingPartnerIds);
-      console.log('[Hostie] partner_products voucher fetch:', partnerProds);
+      const { data: partnerProds } = await sb.from('partner_products').select('id, name, description, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng, logo_url, image_url, shop_products').in('id', bookingPartnerIds);
+      console.log('[Hostie] partner_products fetch:', partnerProds);
       if (partnerProds) {
-        const voucherMap = {};
-        partnerProds.forEach(pp => { voucherMap[pp.id] = { url: pp.voucher_pdf_url, title: pp.voucher_title, service_price: pp.service_price, service_price_unit: pp.service_price_unit, lead_time_value: pp.lead_time_value, lead_time_unit: pp.lead_time_unit, listing_address: pp.listing_address, listing_lat: pp.listing_lat, listing_lng: pp.listing_lng }; });
+        const pMap = {};
+        partnerProds.forEach(pp => { pMap[pp.id] = pp; });
         allProducts = allProducts.map(p => {
-          if (p.partner_product_id && voucherMap[p.partner_product_id]) {
-            const m = voucherMap[p.partner_product_id];
-            return { ...p, partner_voucher_pdf_url: m.url, partner_voucher_title: m.title, service_price: m.service_price, service_price_unit: m.service_price_unit, lead_time_value: m.lead_time_value, lead_time_unit: m.lead_time_unit, listing_address: m.listing_address, listing_lat: m.listing_lat, listing_lng: m.listing_lng };
+          if (!p.partner_product_id || !pMap[p.partner_product_id]) return p;
+          const pp = pMap[p.partner_product_id];
+          // Re-apply host's markup to latest partner shop_products so partner's edits propagate
+          let liveShopProducts = p.shop_products;
+          if (Array.isArray(pp.shop_products) && p.partner_markup_percent != null) {
+            const mult = 1 + (Number(p.partner_markup_percent) / 100);
+            liveShopProducts = pp.shop_products.map(sp => ({
+              name: sp.name,
+              description: sp.description,
+              unit: sp.unit || null,
+              wholesale_price: sp.wholesale_price || 0,
+              price: +((sp.wholesale_price || 0) * mult).toFixed(2),
+              variants: (sp.variants || []).map(v => ({
+                label: v.label,
+                wholesale_price: v.wholesale_price || 0,
+                price: +((v.wholesale_price || 0) * mult).toFixed(2),
+              })),
+            }));
           }
-          return p;
+          return {
+            ...p,
+            name: pp.name || p.name,
+            description: pp.description || p.description,
+            image_url: pp.image_url || p.image_url,
+            logo_url: pp.logo_url || p.logo_url,
+            listing_address: pp.listing_address || p.listing_address,
+            listing_lat: pp.listing_lat != null ? pp.listing_lat : p.listing_lat,
+            listing_lng: pp.listing_lng != null ? pp.listing_lng : p.listing_lng,
+            shop_products: liveShopProducts,
+            partner_voucher_pdf_url: pp.voucher_pdf_url,
+            partner_voucher_title: pp.voucher_title,
+            service_price: pp.service_price,
+            service_price_unit: pp.service_price_unit,
+            lead_time_value: pp.lead_time_value,
+            lead_time_unit: pp.lead_time_unit,
+          };
         });
       }
     }

@@ -1231,8 +1231,55 @@
       } else if (isPartnerListing && p.listing_address) {
         distPill = `<div style="display:inline-flex;align-items:center;gap:4px;background:#f0f7ff;color:#1a5fa8;font-size:11px;font-weight:600;padding:3px 8px;border-radius:50px;margin-top:6px">📍 Visit in-store or order here</div>`;
       }
-      const partnerBadge = isPartnerListing ? `<div style="position:absolute;top:10px;right:10px;background:#1a5fa8;color:white;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:4px 10px;border-radius:50px;z-index:2;box-shadow:0 2px 6px rgba(26,95,168,0.3)">Local Partner</div>` : '';
+      const partnerBadge = isPartnerListing ? `<div style="position:absolute;bottom:10px;right:10px;background:#1a5fa8;color:white;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:4px 10px;border-radius:50px;z-index:2;box-shadow:0 2px 6px rgba(26,95,168,0.3)">Local Partner</div>` : '';
       const logoStrip = hasLogo ? `<div style="background:white;border-bottom:1px solid #f0ece8;padding:8px 14px;display:flex;align-items:center;justify-content:center;height:48px"><img src="${p.logo_url}" alt="" style="max-height:32px;max-width:120px;object-fit:contain" onerror="this.style.display='none'"></div>` : '';
+
+      // For partner listings: floating image with all corners rounded + badge bottom-right inside image
+      if (isPartnerListing) {
+        return `
+        <div class="product-card" style="animation-delay:${i * 0.06}s;position:relative">
+          ${logoStrip}
+          <div style="padding:12px 12px 0;position:relative">
+            <div style="border-radius:14px;overflow:hidden;height:160px;background:white;display:flex;align-items:center;justify-content:center;position:relative;border:1px solid #f0ece8">
+              ${renderProductImageHtml(p)}
+              ${partnerBadge}
+            </div>
+          </div>
+          <div class="product-body" style="padding-bottom:${p.partner_notes ? '56px' : '12px'}">
+            <div class="product-name">${p.name}</div>
+            <div class="product-desc">${p.description || ''}</div>
+            ${distPill}
+          </div>
+          ${p.partner_notes ? `<div class="pc-notes-box"><div class="pc-notes-box-inner">🎁 ${p.partner_notes}</div></div>` : ''}
+          <div class="pc-reg-footer" style="position:absolute;bottom:0;left:0;right:0;padding:10px 16px;background:white;border-top:1px solid #f0ece8;display:flex;align-items:center;justify-content:space-between">
+            <div class="product-price">${p.partner_product_type === 'service'
+              ? (p.service_price_unit === 'contact for pricing'
+                ? '<span style="font-size:12px;color:#92600a;font-weight:600">💬 Contact for pricing</span>'
+                : p.service_price
+                  ? '<span style="font-size:13px;font-weight:700;color:#2C6E6A">$' + p.service_price + '</span> <small style="font-size:11px;color:#6b7280">' + (p.service_price_unit || '') + '</small>'
+                  : '<span style="font-size:12px;color:#92600a;font-weight:600">🤝 Request service</span>')
+              : (Array.isArray(p.shop_products) && p.shop_products.length > 0
+                ? (() => {
+                    const allPrices = [];
+                    p.shop_products.forEach(sp => {
+                      if (Array.isArray(sp.variants) && sp.variants.length > 0) {
+                        sp.variants.forEach(v => { const pr = Number(v.price) || 0; if (pr > 0) allPrices.push(pr); });
+                      } else {
+                        const pr = Number(sp.price) || 0; if (pr > 0) allPrices.push(pr);
+                      }
+                    });
+                    return allPrices.length ? '<small style="font-size:12px;color:var(--muted);font-weight:400">From </small>$' + Math.min(...allPrices) : '$' + p.price;
+                  })()
+                : Array.isArray(p.variants) && p.variants.length > 0
+                  ? '<small style="font-size:12px;color:var(--muted);font-weight:400">From </small>$' + Math.min(...p.variants.map(v => Number(v.price) || 0).filter(n => n > 0))
+                  : '$' + p.price)}</div>
+            ${isDemo
+              ? `<button class="add-btn" onclick="handleDemoAdd()">Add +</button>`
+              : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">${Array.isArray(p.shop_products) && p.shop_products.length > 0 ? 'View shop →' : (p.partner_product_type === 'service' ? 'Add →' : 'Add')}</button>`
+            }
+          </div>
+        </div>`;
+      }
 
       return `
       <div class="product-card" style="animation-delay:${i * 0.06}s;position:relative">

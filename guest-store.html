@@ -708,22 +708,39 @@
         allProducts = allProducts.map(p => {
           if (!p.partner_product_id || !pMap[p.partner_product_id]) return p;
           const pp = pMap[p.partner_product_id];
-          // Re-apply host's markup to latest partner shop_products so partner's edits propagate
+          // Merge host's saved prices (incl manual overrides) with partner's latest structure.
+          // For each partner product/variant: use host's saved price if present, else compute from markup %.
           let liveShopProducts = p.shop_products;
-          if (Array.isArray(pp.shop_products) && p.partner_markup_percent != null) {
-            const mult = 1 + (Number(p.partner_markup_percent) / 100);
-            liveShopProducts = pp.shop_products.map(sp => ({
-              name: sp.name,
-              description: sp.description,
-              unit: sp.unit || null,
-              wholesale_price: sp.wholesale_price || 0,
-              price: +((sp.wholesale_price || 0) * mult).toFixed(2),
-              variants: (sp.variants || []).map(v => ({
-                label: v.label,
-                wholesale_price: v.wholesale_price || 0,
-                price: +((v.wholesale_price || 0) * mult).toFixed(2),
-              })),
-            }));
+          if (Array.isArray(pp.shop_products)) {
+            const hostByName = {}; // map partner product name → host's saved entry
+            if (Array.isArray(p.shop_products)) {
+              p.shop_products.forEach(hsp => { hostByName[hsp.name] = hsp; });
+            }
+            const markupPct = p.partner_markup_percent != null ? Number(p.partner_markup_percent) : 25;
+            const mult = 1 + (markupPct / 100);
+            liveShopProducts = pp.shop_products.map(sp => {
+              const hostMatch = hostByName[sp.name];
+              const hostVariantByLabel = {};
+              if (hostMatch && Array.isArray(hostMatch.variants)) {
+                hostMatch.variants.forEach(v => { hostVariantByLabel[v.label] = v; });
+              }
+              return {
+                name: sp.name,
+                description: sp.description,
+                unit: sp.unit || null,
+                wholesale_price: sp.wholesale_price || 0,
+                // Use host's saved price if match, else markup fallback
+                price: hostMatch && hostMatch.price != null ? hostMatch.price : +((sp.wholesale_price || 0) * mult).toFixed(2),
+                variants: (sp.variants || []).map(v => {
+                  const hostV = hostVariantByLabel[v.label];
+                  return {
+                    label: v.label,
+                    wholesale_price: v.wholesale_price || 0,
+                    price: hostV && hostV.price != null ? hostV.price : +((v.wholesale_price || 0) * mult).toFixed(2),
+                  };
+                }),
+              };
+            });
           }
           return {
             ...p,

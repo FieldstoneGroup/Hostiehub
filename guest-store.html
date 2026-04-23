@@ -1283,12 +1283,16 @@
 
       return `
       <div class="product-card" style="animation-delay:${i * 0.06}s;position:relative">
-        ${partnerBadge}
-        ${logoStrip}
-        <div class="product-img"${hasLogo ? ' style="height:140px"' : ''}>${renderProductImageHtml(p)}</div>
+        <div style="background:white;border-bottom:1px solid #f0ece8;padding:12px 16px;display:flex;align-items:center;justify-content:center;min-height:48px">
+          <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--text);text-align:center;line-height:1.2">${p.name}</div>
+        </div>
+        <div style="padding:12px 12px 0">
+          <div style="border-radius:14px;overflow:hidden;height:160px;background:white;display:flex;align-items:center;justify-content:center;position:relative;border:1px solid #f0ece8">
+            ${renderProductImageHtml(p)}
+          </div>
+        </div>
         <div class="product-body" style="padding-bottom:${p.partner_notes ? '56px' : '12px'}">
-          ${p.partner_product_id ? '' : `<div class="product-category">${categoryLabels[p.category] || ''}</div>`}
-          <div class="product-name">${p.name}</div>
+          <div class="product-category">${categoryLabels[p.category] || ''}</div>
           <div class="product-desc">${p.description || ''}</div>
           ${distPill}
         </div>
@@ -1300,24 +1304,12 @@
               : p.service_price
                 ? '<span style="font-size:13px;font-weight:700;color:#2C6E6A">$' + p.service_price + '</span> <small style="font-size:11px;color:#6b7280">' + (p.service_price_unit || '') + '</small>'
                 : '<span style="font-size:12px;color:#92600a;font-weight:600">🤝 Request service</span>')
-            : (Array.isArray(p.shop_products) && p.shop_products.length > 0
-              ? (() => {
-                  const allPrices = [];
-                  p.shop_products.forEach(sp => {
-                    if (Array.isArray(sp.variants) && sp.variants.length > 0) {
-                      sp.variants.forEach(v => { const pr = Number(v.price) || 0; if (pr > 0) allPrices.push(pr); });
-                    } else {
-                      const pr = Number(sp.price) || 0; if (pr > 0) allPrices.push(pr);
-                    }
-                  });
-                  return allPrices.length ? '<small style="font-size:12px;color:var(--muted);font-weight:400">From </small>$' + Math.min(...allPrices) : '$' + p.price;
-                })()
-              : Array.isArray(p.variants) && p.variants.length > 0
-                ? '<small style="font-size:12px;color:var(--muted);font-weight:400">From </small>$' + Math.min(...p.variants.map(v => Number(v.price) || 0).filter(n => n > 0))
-                : '$' + p.price + ' <small>' + (p.partner_product_id ? '' : (p.unit ? '/ ' + p.unit : '')) + '</small>')}</div>
+            : (Array.isArray(p.variants) && p.variants.length > 0
+              ? '<small style="font-size:12px;color:var(--muted);font-weight:400">From </small>$' + Math.min(...p.variants.map(v => Number(v.price) || 0).filter(n => n > 0))
+              : '$' + p.price + ' <small>' + (p.unit ? '/ ' + p.unit : '') + '</small>')}</div>
           ${isDemo
             ? `<button class="add-btn" onclick="handleDemoAdd()">Add +</button>`
-            : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">${Array.isArray(p.shop_products) && p.shop_products.length > 0 ? 'View shop →' : (p.partner_product_type === 'service' ? 'Add →' : 'Add')}</button>`
+            : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">Add</button>`
           }
         </div>
       </div>`;

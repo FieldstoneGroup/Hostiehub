@@ -2149,7 +2149,7 @@
     if (selected.length === 0) { showToast('⚠️ Please select at least one product'); return; }
     const inserts = selected.map(i => ({ ...sortedPresets[i], host_id: currentUser.id, available_all_properties: true, active: true }));
     const { error } = await sb.from('products').insert(inserts);
-    if (error) { showToast('⚠️ Error adding presets'); console.error(error); return; }
+    if (error) { console.error('[HH] Preset insert error:', error, 'payload:', inserts); showToast('⚠️ Error: ' + (error.message || 'Unknown')); return; }
     showToast(`✅ ${selected.length} product${selected.length > 1 ? 's' : ''} added!`);
     closePresetModal();
     loadProducts();

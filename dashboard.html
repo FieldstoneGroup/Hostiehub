@@ -2508,6 +2508,7 @@
   // ── LOCAL PARTNER PRODUCTS ──
   let localPartnerProducts = [];
   let pendingLocalProduct = null;
+  let editingLocalHostProductId = null;
   let addedPartnerProductIds = new Set();
 
   async function loadLocalProducts() {
@@ -2707,6 +2708,33 @@
     document.getElementById('localProductModal').classList.add('open');
   }
 
+  function openLocalProductModalForEdit(hostProductId) {
+    const hostProduct = products.find(x => x.id === hostProductId);
+    if (!hostProduct) return;
+    const partner = localPartnerProducts.find(x => x.id === hostProduct.partner_product_id);
+    if (!partner) {
+      showToast('⚠️ Partner listing no longer available');
+      return;
+    }
+    editingLocalHostProductId = hostProductId;
+    pendingLocalProduct = partner;
+
+    const businessName = partner.partners ? partner.partners.business_name : 'Local Business';
+    document.getElementById('localProductModalTitle').textContent = 'Edit listing — ' + partner.name;
+    document.getElementById('localProductInfo').innerHTML =
+      '<div style="font-size:14px;font-weight:600;margin-bottom:4px">' + partner.name + '</div>' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">By ' + businessName + ' · Shop with ' + partner.shop_products.length + ' product' + (partner.shop_products.length === 1 ? '' : 's') + '</div>' +
+      '<div style="background:var(--accent-light);border-radius:8px;padding:10px 12px;font-size:13px;color:#92600a">💰 Change your markup %. It applies to every product and variant.</div>';
+
+    document.getElementById('localProductPriceField').style.display = 'none';
+    document.getElementById('localShopMarkupField').style.display = 'block';
+    const existingPct = hostProduct.partner_markup_percent != null ? hostProduct.partner_markup_percent : 25;
+    document.getElementById('localShopMarkupPercent').value = existingPct;
+    updateShopMarkupPreview();
+    document.getElementById('localProductModal').classList.add('open');
+  }
+  window.openLocalProductModalForEdit = openLocalProductModalForEdit;
+
   function updateShopMarkupPreview() {
     const p = pendingLocalProduct;
     if (!p || !Array.isArray(p.shop_products)) return;
@@ -2737,6 +2765,7 @@
   function closeLocalProductModal() {
     document.getElementById('localProductModal').classList.remove('open');
     pendingLocalProduct = null;
+    editingLocalHostProductId = null;
   }
 
   async function confirmAddLocalProduct() {
@@ -2816,13 +2845,16 @@
       insertData.partner_markup_percent = markupPct;
     }
 
-    const { error } = await sb.from('products').insert(insertData);
+    const { error } = editingLocalHostProductId
+      ? await sb.from('products').update(insertData).eq('id', editingLocalHostProductId)
+      : await sb.from('products').insert(insertData);
 
     if (error) { showToast('⚠️ Error: ' + error.message); return; }
 
+    const wasEditing = !!editingLocalHostProductId;
     addedPartnerProductIds.add(p.id);
     closeLocalProductModal();
-    showToast('✅ ' + p.name + ' added to your store!');
+    showToast(wasEditing ? '✅ Markup updated' : '✅ ' + p.name + ' added to your store!');
     loadProducts();
     renderLocalProducts();
   }

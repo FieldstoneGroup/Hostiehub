@@ -432,11 +432,6 @@
             <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="400" oninput="document.getElementById('pDescCount').textContent = '(' + this.value.length + ' / 400 characters)'; document.getElementById('pDescCount').style.color = this.value.length > 360 ? '#e53e3e' : 'var(--muted)'; updatePreview()"></textarea>
             <div class="field-hint">Shown in the guest store — keep it punchy. Maximum 400 characters.</div>
           </div>
-          <div class="field">
-            <label>Notes for guests <span style="font-weight:300;font-size:12px">(optional)</span></label>
-            <input type="text" id="pNotes" placeholder="e.g. Please arrive 10 mins before your lesson" oninput="updatePreview()">
-            <div class="field-hint">Appears as a tip on the product listing in the host's store.</div>
-          </div>
           <div id="productFields" style="display:none">
             <div class="field">
               <label>Products in your shop</label>
@@ -1321,7 +1316,7 @@
     document.getElementById('pName').value = '';
     document.getElementById('pCategory').value = 'product';
     document.getElementById('pDesc').value = '';
-    document.getElementById('pNotes').value = '';
+    document.getElementById('pNotes') && (document.getElementById('pNotes').value = '');
     document.getElementById('pWholesalePrice').value = '';
     document.getElementById('pBookingUrl').value = '';
     document.getElementById('pVoucherTitle').value = '';
@@ -1466,7 +1461,7 @@
       partner_id: partnerData.id,
       name,
       description: document.getElementById('pDesc').value.trim(),
-      notes: document.getElementById('pNotes').value.trim(),
+      notes: '',
       type: isBooking ? 'booking' : (isService ? 'service' : 'product'),
       category: document.getElementById('pCategory').value,
       wholesale_price: minWholesale,
@@ -1576,7 +1571,7 @@
     document.getElementById('pDesc').value = p.description || '';
     const descCount = document.getElementById('pDescCount');
     if (descCount) { const l = (p.description || '').length; descCount.textContent = '(' + l + ' / 400 characters)'; descCount.style.color = l > 360 ? '#e53e3e' : 'var(--muted)'; }
-    document.getElementById('pNotes').value = p.notes || '';
+    document.getElementById('pNotes') && (document.getElementById('pNotes').value = p.notes || '');
 
     const isBooking = p.type === 'booking';
     const isService = p.type === 'service';

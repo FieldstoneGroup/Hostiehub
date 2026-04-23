@@ -1227,9 +1227,9 @@
       if (isPartnerListing && p.listing_lat && p.listing_lng && hostGeoCache && hostGeoCache.lat) {
         const km = haversineKmStore(hostGeoCache.lat, hostGeoCache.lng, p.listing_lat, p.listing_lng);
         const kmDisplay = km < 1 ? '<1' : (km < 10 ? km.toFixed(1) : Math.round(km));
-        distPill = `<div style="display:inline-flex;align-items:center;gap:4px;background:#f0f7ff;color:#1a5fa8;font-size:11px;font-weight:600;padding:3px 8px;border-radius:50px;margin-top:6px">📍 Store is ${kmDisplay} km away from you</div>`;
+        distPill = `<div style="display:inline-flex;align-items:center;gap:4px;background:#f0f7ff;color:#1a5fa8;font-size:11px;font-weight:600;padding:3px 8px;border-radius:50px;margin-top:6px">🛍️ Shop (${kmDisplay}km away) or order online</div>`;
       } else if (isPartnerListing && p.listing_address) {
-        distPill = `<div style="display:inline-flex;align-items:center;gap:4px;background:#f0f7ff;color:#1a5fa8;font-size:11px;font-weight:600;padding:3px 8px;border-radius:50px;margin-top:6px">📍 Visit in-store or order here</div>`;
+        distPill = `<div style="display:inline-flex;align-items:center;gap:4px;background:#f0f7ff;color:#1a5fa8;font-size:11px;font-weight:600;padding:3px 8px;border-radius:50px;margin-top:6px">🛍️ Shop or order online</div>`;
       }
       const partnerBadge = isPartnerListing ? `<div style="position:absolute;bottom:10px;right:10px;background:#1a5fa8;color:white;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:4px 10px;border-radius:50px;z-index:2;box-shadow:0 2px 6px rgba(26,95,168,0.3)">Local Partner</div>` : '';
       const logoStrip = hasLogo
@@ -1247,12 +1247,11 @@
               ${partnerBadge}
             </div>
           </div>
-          <div class="product-body" style="padding-bottom:${p.partner_notes ? '56px' : '12px'}">
+          <div class="product-body" style="padding-bottom:12px">
             <div class="product-name">${p.name}</div>
             <div class="product-desc">${p.description || ''}</div>
             ${distPill}
           </div>
-          ${p.partner_notes ? `<div class="pc-notes-box"><div class="pc-notes-box-inner">🎁 ${p.partner_notes}</div></div>` : ''}
           <div class="pc-reg-footer" style="position:absolute;bottom:0;left:0;right:0;padding:10px 16px;background:white;border-top:1px solid #f0ece8;display:flex;align-items:center;justify-content:space-between">
             <div class="product-price">${p.partner_product_type === 'service'
               ? (p.service_price_unit === 'contact for pricing'
@@ -1789,10 +1788,10 @@
     if (shop.listing_lat && shop.listing_lng && hostGeoCache && hostGeoCache.lat) {
       const km = haversineKmStore(hostGeoCache.lat, hostGeoCache.lng, shop.listing_lat, shop.listing_lng);
       const kmDisplay = km < 1 ? '<1' : (km < 10 ? km.toFixed(1) : Math.round(km));
-      distEl.textContent = '📍 Store is ' + kmDisplay + ' km away from you';
+      distEl.textContent = '🛍️ Shop (' + kmDisplay + 'km away) or order online';
       distEl.style.display = 'inline-block';
     } else if (shop.listing_address) {
-      distEl.textContent = '📍 Visit in-store or order here';
+      distEl.textContent = '🛍️ Shop or order online';
       distEl.style.display = 'inline-block';
     } else {
       distEl.style.display = 'none';

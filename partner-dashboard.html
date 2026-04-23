@@ -1491,13 +1491,18 @@
 
     if (editingProductId) {
       // UPDATE
+      console.log('[HH DEBUG] saveProduct UPDATE payload:', JSON.parse(JSON.stringify(payload)));
+      console.log('[HH DEBUG] shopProducts state:', JSON.parse(JSON.stringify(shopProducts)));
       const { error } = await sb.from('partner_products').update(payload).eq('id', editingProductId);
-      if (error) { showToast('Error: ' + error.message); return; }
+      if (error) { console.error('[HH DEBUG] UPDATE error:', error); showToast('Error: ' + error.message); return; }
     } else {
       // INSERT
+      console.log('[HH DEBUG] saveProduct INSERT payload:', JSON.parse(JSON.stringify(payload)));
+      console.log('[HH DEBUG] shopProducts state:', JSON.parse(JSON.stringify(shopProducts)));
       const { data: inserted, error } = await sb.from('partner_products').insert(payload).select().single();
-      if (error) { showToast('Error: ' + error.message); return; }
+      if (error) { console.error('[HH DEBUG] INSERT error:', error); showToast('Error: ' + error.message); return; }
       productId = inserted.id;
+      console.log('[HH DEBUG] INSERT returned:', inserted);
     }
 
     // Upload logo if a new one was picked

@@ -1084,6 +1084,7 @@
         '</div>' +
         '<div style="display:flex;gap:8px;flex-shrink:0">' +
           '<button class="btn btn-outline btn-sm" onclick="editProduct(\'' + p.id + '\')">Edit</button>' +
+          '<button class="btn btn-outline btn-sm" onclick="duplicateProduct(\'' + p.id + '\')">Duplicate</button>' +
           '<button class="btn btn-outline btn-sm" onclick="toggleProduct(\'' + p.id + '\',' + !p.active + ')">' + (p.active ? 'Deactivate' : 'Activate') + '</button>' +
           '<button class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + p.id + '\')">Delete</button>' +
         '</div></div>';
@@ -1558,6 +1559,31 @@
     renderProducts();
     showToast('✅ Product deleted');
   }
+
+  async function duplicateProduct(id) {
+    const source = partnerProducts.find(x => x.id === id);
+    if (!source) { showToast('Listing not found'); return; }
+    // Build the new payload — copy everything except id/created_at/address/coords
+    const { id: _id, created_at: _created_at, listing_address: _addr, listing_lat: _lat, listing_lng: _lng, ...rest } = source;
+    const payload = {
+      ...rest,
+      name: (source.name || 'Listing') + ' (copy)',
+      listing_address: null,
+      listing_lat: null,
+      listing_lng: null,
+      active: false, // duplicate starts inactive so partner must review before publishing
+    };
+    // Partners-only field we don't want to carry accidentally
+    delete payload.partners;
+    const { data: inserted, error } = await sb.from('partner_products').insert(payload).select().single();
+    if (error) { console.error('Duplicate error:', error); showToast('Error: ' + error.message); return; }
+    partnerProducts.unshift(inserted);
+    renderProducts();
+    showToast('✅ Duplicated — set new address and publish to activate');
+    // Open the duplicate for editing immediately
+    editProduct(inserted.id);
+  }
+  window.duplicateProduct = duplicateProduct;
 
   function editProduct(id) {
     const p = partnerProducts.find(x => x.id === id);

@@ -1506,9 +1506,16 @@
     }
 
     // Upload logo if a new one was picked
+    console.log('[HH DEBUG] Logo state — pendingLogoFile:', !!pendingLogoFile, 'existingLogoUrl:', existingLogoUrl, 'productId:', productId);
     if (pendingLogoFile && partnerData.id) {
+      console.log('[HH DEBUG] Uploading logo...', pendingLogoFile.name, pendingLogoFile.size);
       const logoUrl = await uploadLogoToStorage(pendingLogoFile, partnerData.id);
-      if (logoUrl) await sb.from('partner_products').update({ logo_url: logoUrl }).eq('id', productId);
+      console.log('[HH DEBUG] uploadLogoToStorage returned:', logoUrl);
+      if (logoUrl) {
+        const { error: logoErr } = await sb.from('partner_products').update({ logo_url: logoUrl }).eq('id', productId);
+        if (logoErr) console.error('[HH DEBUG] logo_url UPDATE error:', logoErr);
+        else console.log('[HH DEBUG] logo_url UPDATE ok for product:', productId);
+      }
     } else if (!existingLogoUrl && editingProductId) {
       // User removed the existing logo
       await sb.from('partner_products').update({ logo_url: null }).eq('id', productId);

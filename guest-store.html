@@ -98,7 +98,7 @@
 
   .product-card { background: var(--card); border-radius: var(--radius); border: 1.5px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; animation: fadeUp 0.5s ease both; height: 500px; overflow: hidden; position: relative; }
   .product-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
-  .pc-notes-box { position:absolute; bottom:112px; left:0; right:0; padding:0 14px; }
+  .pc-notes-box { position:absolute; bottom:52px; left:0; right:0; padding:0 14px; }
   .pc-notes-box-inner { background:#f0fdf4; border-left:3px solid #16a34a; border-radius:0 6px 6px 0; padding:0 10px; font-size:11px; font-weight:600; color:#15803d; line-height:1.4; height:3.8em; overflow:hidden; display:flex; align-items:center; }
   .product-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -846,9 +846,10 @@
 
   async function geocodePropertyForDistance() {
     if (hostGeoCache.lat) return; // already cached
-    const prop = properties.find(p => p.id === selectedPropertyId);
-    const addr = prop?.address || prop?.postcode;
-    if (!addr) return;
+    const prop = properties.find(p => p.id === selectedPropertyId) || properties[0];
+    const addr = prop?.address || prop?.postcode || hostData?.postcode;
+    console.log('[Hostie] geocode starting — addr:', addr, 'prop:', prop?.nickname);
+    if (!addr) { console.log('[Hostie] geocode skipped — no address'); return; }
     try {
       const res = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(addr + ', Australia') + '&format=json&limit=1', {
         headers: { 'Accept-Language': 'en', 'User-Agent': 'HostieHub/1.0' }
@@ -857,8 +858,11 @@
       if (data?.[0]) {
         hostGeoCache.lat = parseFloat(data[0].lat);
         hostGeoCache.lng = parseFloat(data[0].lon);
+        console.log('[Hostie] geocode ok:', hostGeoCache.lat, hostGeoCache.lng);
+      } else {
+        console.log('[Hostie] geocode no result for:', addr);
       }
-    } catch(e) {}
+    } catch(e) { console.error('[Hostie] geocode error:', e); }
   }
 
   async function renderLocalTab() {

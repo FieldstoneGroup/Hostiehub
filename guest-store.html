@@ -1142,6 +1142,8 @@
   window.carouselGoTo = carouselGoTo;
 
   function renderProducts(products) {
+    // Fire geocode in background so partner distance pills appear on re-render
+    if (!hostGeoCache.lat) { geocodePropertyForDistance().then(() => { if (hostGeoCache.lat) renderProducts(products); }); }
     // Host tab shows: host's own products + partner products of type 'product' (sellable)
     const hostProducts = products.filter(p => !p.partner_product_id || p.partner_product_type === 'product');
     const grid = document.getElementById('productsGrid');

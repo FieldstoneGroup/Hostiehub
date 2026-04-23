@@ -1227,7 +1227,7 @@
       if (isPartnerListing && p.listing_lat && p.listing_lng && hostGeoCache && hostGeoCache.lat) {
         const km = haversineKmStore(hostGeoCache.lat, hostGeoCache.lng, p.listing_lat, p.listing_lng);
         const kmDisplay = km < 1 ? '<1' : (km < 10 ? km.toFixed(1) : Math.round(km));
-        distPill = `<div style="display:inline-flex;align-items:center;gap:4px;background:#f0f7ff;color:#1a5fa8;font-size:11px;font-weight:600;padding:3px 8px;border-radius:50px;margin-top:6px">📍 ${kmDisplay} km · Visit in-store or order here</div>`;
+        distPill = `<div style="display:inline-flex;align-items:center;gap:4px;background:#f0f7ff;color:#1a5fa8;font-size:11px;font-weight:600;padding:3px 8px;border-radius:50px;margin-top:6px">📍 Store is ${kmDisplay} km away from you</div>`;
       } else if (isPartnerListing && p.listing_address) {
         distPill = `<div style="display:inline-flex;align-items:center;gap:4px;background:#f0f7ff;color:#1a5fa8;font-size:11px;font-weight:600;padding:3px 8px;border-radius:50px;margin-top:6px">📍 Visit in-store or order here</div>`;
       }
@@ -1748,7 +1748,7 @@
     if (shop.listing_lat && shop.listing_lng && hostGeoCache && hostGeoCache.lat) {
       const km = haversineKmStore(hostGeoCache.lat, hostGeoCache.lng, shop.listing_lat, shop.listing_lng);
       const kmDisplay = km < 1 ? '<1' : (km < 10 ? km.toFixed(1) : Math.round(km));
-      distEl.textContent = '📍 ' + kmDisplay + ' km · Visit in-store or order here';
+      distEl.textContent = '📍 Store is ' + kmDisplay + ' km away from you';
       distEl.style.display = 'inline-block';
     } else if (shop.listing_address) {
       distEl.textContent = '📍 Visit in-store or order here';

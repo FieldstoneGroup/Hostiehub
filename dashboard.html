@@ -2544,13 +2544,15 @@
       const partner = p.partners;
       if (!partner) return false;
 
-      // New radius-based matching
-      if (partner.service_lat && partner.service_lng && partner.service_radius_km && hostLat && hostLng) {
-        const dist = haversineKm(hostLat, hostLng, partner.service_lat, partner.service_lng);
-        return dist <= partner.service_radius_km;
+      // Distance-based matching: prefer listing-specific coords, else partner service coords
+      const listingLat = p.listing_lat != null ? p.listing_lat : partner.service_lat;
+      const listingLng = p.listing_lng != null ? p.listing_lng : partner.service_lng;
+      if (listingLat && listingLng && hostLat && hostLng) {
+        const dist = haversineKm(hostLat, hostLng, listingLat, listingLng);
+        return dist <= 35; // Hostie Hub hard cap — only show listings within 35km of host
       }
 
-      // Fallback: legacy postcode matching
+      // Fallback: legacy postcode matching (no coords available)
       const codes = Array.isArray(partner.postcodes) ? partner.postcodes : JSON.parse(partner.postcodes || '[]');
       return codes.includes(postcode);
     });

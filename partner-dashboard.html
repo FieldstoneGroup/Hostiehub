@@ -794,7 +794,8 @@
   const { createClient } = supabase;
   const sb = createClient(
     'https://hjwkycknjiyvrxbcejet.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8'
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8',
+    { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage, storageKey: 'sb-hostiehub-auth' } }
   );
 
   let currentUser = null, partnerData = null, partnerProducts = [], vouchers = [], allEvents = [];
@@ -1547,11 +1548,15 @@
   async function deleteProduct(id) {
     if (!confirm('Delete this product? It will also be removed from any host stores. This cannot be undone.')) return;
     // Remove from all host stores first
-    await sb.from('products').delete().eq('partner_product_id', id);
+    const { error: hostErr } = await sb.from('products').delete().eq('partner_product_id', id);
+    if (hostErr) { console.error('Delete host products error:', hostErr); showToast('Error: ' + hostErr.message); return; }
     // Then delete the partner product itself
-    await sb.from('partner_products').delete().eq('id', id);
-    showToast('Product deleted from your listings and all host stores');
-    loadProducts();
+    const { error: partnerErr } = await sb.from('partner_products').delete().eq('id', id);
+    if (partnerErr) { console.error('Delete partner_products error:', partnerErr); showToast('Error: ' + partnerErr.message); return; }
+    // Remove from local array + re-render immediately (no full reload needed)
+    partnerProducts = partnerProducts.filter(p => p.id !== id);
+    renderProducts();
+    showToast('✅ Product deleted');
   }
 
   function editProduct(id) {

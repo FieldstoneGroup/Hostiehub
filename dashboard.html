@@ -356,7 +356,7 @@
     <button class="nav-item" onclick="showPage('stripe', this)"><div class="nav-icon">💳</div><span>Stripe Connect</span></button>
     <div class="nav-section-label">Account</div>
     <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account & Billing</span></button>
-    <button class="nav-item" onclick="showPage('users', this)"><div class="nav-icon">👥</div><span>Users & Calendar</span></button>
+    <button class="nav-item" onclick="showPage('users', this)"><div class="nav-icon">👥</div><span>My Team</span></button>
     <button class="nav-item" id="linkedStoresNavBtn" onclick="showPage('linkedstores', this)" style="display:none"><div class="nav-icon">🔗</div><span>Linked Stores</span><span id="linkedStoresBadge" style="margin-left:auto;background:#5DCAA5;color:#0A1628;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px"></span></button>
   </nav>
   <div class="sidebar-bottom">
@@ -762,16 +762,6 @@
           </div>
           <div class="card-desc">Invite a cleaner, co-host or property manager to log into your store. Set their access level and (optionally) which products they get paid for. Linked users see your store from their own Hostie Hub login.</div>
           <div id="linkedUsersList" style="display:flex;flex-direction:column;gap:8px;margin-top:16px"></div>
-        </div>
-
-        <!-- Notification Users -->
-        <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-            <div class="card-title" style="margin-bottom:0">Order notifications</div>
-            <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">+ Add user</button>
-          </div>
-          <div class="card-desc">Add people to be notified when a new order comes in — cleaners, co-hosts or property managers. Choose which properties each person is notified for.</div>
-          <div id="notifUsersList" style="display:flex;flex-direction:column;gap:8px;margin-top:16px"></div>
         </div>
 
         <!-- Calendar Sync -->
@@ -1319,7 +1309,7 @@
 
   const emojis = ['🌸','🧺','🍾','🕐','🏄','🚗','🎁','🌿','☕','🍫','🧁','🎂','🌊','🏠','🧴','🛁','🎵','🐾','🎉','🍕','🥗','🍷','🎈','🍫','🛎️','🧹'];
   const swatchColours = ['#2C6E6A','#1d4d4a','#E8A838','#e74c3c','#8e44ad','#2980b9','#27ae60','#e67e22','#1a1a1a'];
-  const pageTitles = { overview:'Overview', orders:'Orders', analytics:'Analytics', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', localproducts:'Local Products', stripe:'Stripe Connect', account:'Account & Billing', users:'Users & Calendar', linkedstores:'Linked Stores' };
+  const pageTitles = { overview:'Overview', orders:'Orders', analytics:'Analytics', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', localproducts:'Local Products', stripe:'Stripe Connect', account:'Account & Billing', users:'My Team', linkedstores:'Linked Stores' };
 
   const PRESET_PRODUCTS = [
     // STAY SERVICES

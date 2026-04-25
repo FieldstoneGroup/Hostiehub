@@ -3514,7 +3514,7 @@
           headers: { 'Content-Type': 'application/json', 'X-Service': 'send-linked-user-invite' },
           body: JSON.stringify({
             invited_email: email,
-            owner_name: hostData?.store_name || hostData?.full_name || hostData?.username || 'a Hostie Hub host',
+            owner_name: currentHost?.store_name || currentHost?.full_name || currentHost?.username || 'a Hostie Hub host',
             role,
             existing_user: !!existingHost,
           }),

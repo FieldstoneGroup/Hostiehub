@@ -3509,9 +3509,9 @@
       }
       // Send invite email via Resend (Cloudflare Worker endpoint)
       try {
-        await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev/send-linked-user-invite', {
+        await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev/', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Service': 'send-linked-user-invite' },
           body: JSON.stringify({
             invited_email: email,
             owner_name: hostData?.store_name || hostData?.full_name || hostData?.username || 'a Hostie Hub host',

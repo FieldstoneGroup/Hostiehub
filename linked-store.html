@@ -99,6 +99,22 @@
   .btn-primary:hover { background: var(--brand-dark); }
   .btn-outline { background: white; border: 1.5px solid var(--border); color: var(--text); }
 
+  /* Order details (expandable) */
+  .order-row { cursor: pointer; transition: border-color 0.15s; }
+  .order-row:hover { border-color: var(--brand); }
+  .order-detail { display: none; padding: 14px 16px; background: white; border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 10px 10px; margin-top: -8px; margin-bottom: 8px; }
+  .order-detail.open { display: block; }
+  .order-row.expanded { border-radius: 10px 10px 0 0; }
+  .order-item-tag { display: inline-block; background: var(--brand-light); color: var(--brand); font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 50px; }
+  .order-notes { background: #fff7e6; border-left: 3px solid #f59e0b; padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 12px; color: #92600a; line-height: 1.5; }
+  .order-status { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 50px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .status-pending { background: #fff7e6; color: #92600a; }
+  .status-paid { background: #e0f2fe; color: #0369a1; }
+  .status-fulfilled { background: #d1fae5; color: #065f46; }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-success { background: var(--brand); color: white; }
+  .btn-success:hover { background: var(--brand-dark); }
+
   /* Toast */
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text); color: white; padding: 12px 22px; border-radius: 50px; font-size: 13px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 200; }
   .toast.show { opacity: 1; }
@@ -291,17 +307,89 @@
     document.getElementById('statTotalOrders').textContent = orders.length;
     document.getElementById('statRecentOrders').textContent = recent;
     document.getElementById('statRevenue').textContent = '$' + revenue.toFixed(2);
-    list.innerHTML = orders.slice(0, 25).map(o => {
-      const d = new Date(o.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
-      return '<div class="order-row">' +
-        '<div class="order-info">' +
-          '<div class="order-name">' + (o.guest_name || 'Guest') + ' · ' + (o.property_name || '—') + '</div>' +
-          '<div class="order-meta">' + d + ' · check-in ' + (o.checkin_date || '—') + '</div>' +
+
+    const isAdmin = myLink.role === 'admin';
+    list.innerHTML = orders.map((o, idx) => {
+      const items = Array.isArray(o.items) ? o.items : (o.items ? JSON.parse(o.items) : []);
+      const notes = o.product_notes ? (typeof o.product_notes === 'string' ? JSON.parse(o.product_notes) : o.product_notes) : {};
+      const noteEntries = Object.entries(notes).filter(([,v]) => v);
+      const status = o.status || 'pending';
+      const statusClass = status === 'fulfilled' ? 'status-fulfilled' : status === 'paid' ? 'status-paid' : 'status-pending';
+      const itemSummary = items.map(i => i.name).join(', ');
+      const dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+
+      return '<div style="margin-bottom:6px">' +
+        '<div class="order-row" id="order-row-' + idx + '" onclick="toggleOrderDetail(' + idx + ')" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:white;border:1.5px solid var(--border);border-radius:10px">' +
+          '<div style="flex:1;min-width:0">' +
+            '<div style="font-size:14px;font-weight:600;margin-bottom:2px">' + (o.guest_name || 'Guest') + (o.property_name ? ' · ' + o.property_name : '') + '</div>' +
+            '<div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + dateStr + (itemSummary ? ' · ' + itemSummary : '') + '</div>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0">' +
+            '<div class="order-price">$' + (Number(o.total) || 0).toFixed(2) + '</div>' +
+            '<div class="order-status ' + statusClass + '">● ' + status + '</div>' +
+            '<span style="font-size:11px;color:var(--muted)">▾</span>' +
+          '</div>' +
         '</div>' +
-        '<div class="order-price">$' + (Number(o.total) || 0).toFixed(2) + '</div>' +
+        '<div class="order-detail" id="order-detail-' + idx + '">' +
+          '<div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.7">' +
+            '📅 ' + (o.checkin_date || '—') + ' → ' + (o.checkout_date || '—') +
+            (o.property_name ? '<br>🏠 ' + o.property_name : '') +
+            (o.guest_email ? '<br>✉️ ' + o.guest_email : '') +
+            (o.guest_phone ? '<br>📱 ' + o.guest_phone : '') +
+          '</div>' +
+          (items.length ? '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' + items.map(i => '<span class="order-item-tag">' + i.name + ' $' + i.price + '</span>').join('') + '</div>' : '') +
+          (o.notes ? '<div class="order-notes">💬 "' + o.notes + '"</div>' : '') +
+          (noteEntries.length ? '<div class="order-notes" style="margin-top:6px">📝 ' + noteEntries.map(([k,v]) => '<strong>' + k + ':</strong> ' + v).join(' · ') + '</div>' : '') +
+          (isAdmin ? (
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">' +
+              (status !== 'fulfilled'
+                ? '<button class="btn btn-success btn-sm" onclick="event.stopPropagation();fulfillOrder(\'' + o.id + '\')">✓ Mark as fulfilled</button>'
+                : '<span style="font-size:13px;color:var(--brand);font-weight:500">✓ Fulfilled</span>') +
+              (o.guest_email ? '<button class="btn btn-sm" style="background:var(--brand-light);color:var(--brand);border:1.5px solid var(--brand)" onclick="event.stopPropagation();resendGuestConfirmation(\'' + o.id + '\')">📧 Resend Confirmation</button>' : '') +
+            '</div>'
+          ) : '') +
+        '</div>' +
       '</div>';
     }).join('');
   }
+
+  function toggleOrderDetail(idx) {
+    const detail = document.getElementById('order-detail-' + idx);
+    const row = document.getElementById('order-row-' + idx);
+    if (!detail) return;
+    const isOpen = detail.classList.toggle('open');
+    if (row) row.classList.toggle('expanded', isOpen);
+  }
+  window.toggleOrderDetail = toggleOrderDetail;
+
+  async function fulfillOrder(orderId) {
+    const { error } = await sb.from('orders').update({ status: 'fulfilled' }).eq('id', orderId);
+    if (error) { showToast('⚠️ ' + error.message); return; }
+    showToast('✅ Marked as fulfilled');
+    loadOrders();
+  }
+  window.fulfillOrder = fulfillOrder;
+
+  async function resendGuestConfirmation(orderId) {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+    showToast('📧 Resending confirmation...');
+    try {
+      const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev/resend-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_id: order.id,
+          guest_email: order.guest_email,
+          guest_name: order.guest_name,
+          host_id: hostId,
+        }),
+      });
+      if (res.ok) showToast('✅ Confirmation email resent');
+      else showToast('⚠️ Failed to resend');
+    } catch(e) { showToast('⚠️ Failed to resend'); }
+  }
+  window.resendGuestConfirmation = resendGuestConfirmation;
 
   async function loadProducts() {
     const { data, error } = await sb.from('products').select('*').eq('host_id', hostId).order('created_at', { ascending: false });

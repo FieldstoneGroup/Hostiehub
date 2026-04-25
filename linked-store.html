@@ -258,10 +258,10 @@
     myLink = link;
 
     // Load owner display info
-    const { data: host } = await sb.from('hosts').select('business_name, store_name, username').eq('id', hostId).maybeSingle();
-    const storeName = (host && (host.business_name || host.store_name || host.username)) || 'Hostie Hub Store';
-    document.getElementById('storeName').textContent = storeName + "'s Store";
-    document.getElementById('storeNameInline').textContent = storeName + "'s store";
+    const { data: host } = await sb.from('hosts').select('store_name, full_name, username').eq('id', hostId).maybeSingle();
+    const storeName = (host && (host.store_name || host.full_name || host.username)) || 'Hostie Hub Store';
+    document.getElementById('storeName').textContent = storeName;
+    document.getElementById('storeNameInline').textContent = storeName;
 
     // Show role badge
     const roleEl = document.getElementById('bannerRole');

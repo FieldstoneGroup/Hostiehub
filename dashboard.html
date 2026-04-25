@@ -3313,7 +3313,7 @@
     if (error) { console.error('[HH] loadMyLinkedStores error:', error); return; }
     if (!data || !data.length) { myLinkedStores = []; renderMyLinkedStores(); return; }
     const ownerIds = data.map(l => l.owner_host_id);
-    const { data: ownersData } = await sb.from('hosts').select('id, business_name, username, store_name').in('id', ownerIds);
+    const { data: ownersData } = await sb.from('hosts').select('id, store_name, full_name, username').in('id', ownerIds);
     const ownerMap = {};
     (ownersData || []).forEach(h => { ownerMap[h.id] = h; });
     myLinkedStores = data.map(l => ({ ...l, owner: ownerMap[l.owner_host_id] || {} }));
@@ -3337,7 +3337,7 @@
     }
     list.innerHTML = myLinkedStores.map(l => {
       const o = l.owner || {};
-      const name = o.business_name || o.store_name || o.username || 'Hostie Hub Store';
+      const name = o.store_name || o.full_name || o.username || 'Hostie Hub Store';
       const roleBadge = l.role === 'admin'
         ? '<span style="background:#fef3c7;color:#92600a;font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;text-transform:uppercase;letter-spacing:0.5px">Admin</span>'
         : '<span style="background:#e5e7eb;color:#374151;font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;text-transform:uppercase;letter-spacing:0.5px">View only</span>';
@@ -3512,7 +3512,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             invited_email: email,
-            owner_name: hostData?.business_name || hostData?.username || 'a Hostie Hub host',
+            owner_name: hostData?.store_name || hostData?.full_name || hostData?.username || 'a Hostie Hub host',
             role,
             existing_user: !!existingHost,
           }),

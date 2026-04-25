@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Linked Store · Hostie Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #2C6E6A;
+    --brand-light: #e8f3f1;
+    --brand-dark: #1f4f4d;
+    --accent: #E8A838;
+    --accent-light: #fff7e6;
+    --bg: #faf9f6;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  h1, h2, h3 { font-family: 'Playfair Display', serif; font-weight: 700; }
+
+  /* Banner */
+  .banner { background: linear-gradient(135deg, #0A1628 0%, #1D9E75 130%); color: white; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .banner-info { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .banner-eye { width: 36px; height: 36px; border-radius: 50%; background: rgba(93,202,165,0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .banner-text { font-size: 14px; line-height: 1.4; }
+  .banner-text strong { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; display: block; }
+  .banner-role { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; padding: 3px 10px; border-radius: 50px; margin-left: 6px; }
+  .role-admin { background: #fef3c7; color: #92600a; }
+  .role-viewer { background: rgba(255,255,255,0.15); color: white; }
+  .banner-back { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.25); padding: 8px 18px; border-radius: 50px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+  .banner-back:hover { background: rgba(255,255,255,0.25); }
+
+  /* Layout */
+  .container { max-width: 1100px; margin: 0 auto; padding: 28px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 24px; background: white; border-radius: 50px; padding: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); width: fit-content; }
+  .tab-btn { background: none; border: none; padding: 10px 22px; border-radius: 50px; font-family: inherit; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+  .tab-btn.active { background: var(--brand); color: white; }
+
+  /* Cards */
+  .card { background: white; border-radius: var(--radius); padding: 22px 26px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); margin-bottom: 16px; }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .card-desc { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.55; }
+
+  /* Stat row */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: white; border-radius: 10px; padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .stat-num { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--brand); }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-top: 2px; }
+
+  /* Order list */
+  .order-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; background: var(--bg); border-radius: 10px; border: 1.5px solid var(--border); margin-bottom: 8px; }
+  .order-row:last-child { margin-bottom: 0; }
+  .order-info { flex: 1; min-width: 0; }
+  .order-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .order-meta { font-size: 12px; color: var(--muted); }
+  .order-price { font-size: 14px; font-weight: 700; color: var(--brand); white-space: nowrap; }
+
+  /* Product list */
+  .product-row { display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: var(--bg); border-radius: 10px; border: 1.5px solid var(--border); margin-bottom: 8px; }
+  .product-img { width: 56px; height: 56px; border-radius: 8px; background: white; display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; overflow: hidden; }
+  .product-img img { width: 100%; height: 100%; object-fit: cover; }
+  .product-info { flex: 1; min-width: 0; }
+  .product-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .product-meta { font-size: 12px; color: var(--muted); }
+  .product-price { font-size: 14px; font-weight: 700; color: var(--brand); white-space: nowrap; }
+  .product-edit { background: none; border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--muted); }
+  .product-edit:hover { border-color: var(--brand); color: var(--brand); }
+
+  /* Empty */
+  .empty { padding: 32px 20px; text-align: center; color: var(--muted); font-size: 13px; background: var(--bg); border-radius: 10px; }
+
+  /* Loading */
+  .loading-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; flex-direction: column; gap: 12px; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Modal (admin edit) */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: white; border-radius: 16px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; }
+  .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--muted); }
+  .modal-body { padding: 22px 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .field input, .field textarea { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: 14px; outline: none; transition: border-color 0.2s; }
+  .field input:focus, .field textarea:focus { border-color: var(--brand); }
+  .field textarea { min-height: 80px; resize: vertical; }
+  .btn { padding: 10px 20px; border-radius: 50px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: var(--brand); color: white; }
+  .btn-primary:hover { background: var(--brand-dark); }
+  .btn-outline { background: white; border: 1.5px solid var(--border); color: var(--text); }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text); color: white; padding: 12px 22px; border-radius: 50px; font-size: 13px; font-weight: 500; box-shadow: 0 8px 24px rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 200; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="loadingScreen" class="loading-screen">
+  <div class="spinner"></div>
+  <div style="font-size:14px;color:var(--muted)">Loading store...</div>
+</div>
+
+<div id="content" style="display:none">
+  <!-- Banner -->
+  <div class="banner">
+    <div class="banner-info">
+      <div class="banner-eye">👁</div>
+      <div class="banner-text">
+        <strong id="storeName">Loading...</strong>
+        <div>You're viewing <span id="storeNameInline">this store</span><span id="bannerRole" class="banner-role role-viewer">View only</span></div>
+      </div>
+    </div>
+    <a href="dashboard.html" class="banner-back">← Back to my store</a>
+  </div>
+
+  <div class="container">
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="orders" onclick="switchTab('orders')">📦 Orders</button>
+      <button class="tab-btn" data-tab="products" onclick="switchTab('products')">🛍️ Products</button>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div id="tab-orders">
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-num" id="statTotalOrders">0</div>
+          <div class="stat-label">Total orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statRecentOrders">0</div>
+          <div class="stat-label">Last 30 days</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statRevenue">$0</div>
+          <div class="stat-label">Total revenue</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Recent orders</div>
+        <div class="card-desc">All confirmed orders for properties you have access to.</div>
+        <div id="ordersList"></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS TAB -->
+    <div id="tab-products" style="display:none">
+      <div class="card">
+        <div class="card-title">Store products</div>
+        <div class="card-desc" id="productsDesc">All products in this store.</div>
+        <div id="productsList"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDIT PRODUCT MODAL (admins only) -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit product</div>
+      <button class="modal-close" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Name</label><input type="text" id="editName"></div>
+      <div class="field"><label>Description</label><textarea id="editDesc" maxlength="400"></textarea></div>
+      <div class="field"><label>Price ($)</label><input type="number" id="editPrice" step="0.01" min="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProductEdit()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const { createClient } = supabase;
+  const sb = createClient(
+    'https://hjwkycknjiyvrxbcejet.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8'
+  );
+
+  let currentUser = null;
+  let hostId = null; // owner host id we're viewing
+  let myLink = null; // host_links row for me + this host
+  let orders = [];
+  let products = [];
+  let editingProductId = null;
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  async function init() {
+    // Parse host_id from URL
+    const params = new URLSearchParams(window.location.search);
+    hostId = params.get('host_id');
+    if (!hostId) {
+      alert('No store selected.');
+      window.location.href = 'dashboard.html';
+      return;
+    }
+
+    // Auth
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'signup.html'; return; }
+    currentUser = session.user;
+
+    // Verify I have an accepted link to this host
+    const { data: link, error } = await sb
+      .from('host_links')
+      .select('*')
+      .eq('owner_host_id', hostId)
+      .eq('linked_host_id', currentUser.id)
+      .eq('accepted', true)
+      .maybeSingle();
+    if (error || !link) {
+      alert('You do not have access to this store.');
+      window.location.href = 'dashboard.html';
+      return;
+    }
+    myLink = link;
+
+    // Load owner display info
+    const { data: host } = await sb.from('hosts').select('business_name, store_name, username').eq('id', hostId).maybeSingle();
+    const storeName = (host && (host.business_name || host.store_name || host.username)) || 'Hostie Hub Store';
+    document.getElementById('storeName').textContent = storeName + "'s Store";
+    document.getElementById('storeNameInline').textContent = storeName + "'s store";
+
+    // Show role badge
+    const roleEl = document.getElementById('bannerRole');
+    if (myLink.role === 'admin') {
+      roleEl.textContent = 'Admin';
+      roleEl.className = 'banner-role role-admin';
+    } else {
+      roleEl.textContent = 'View only';
+      roleEl.className = 'banner-role role-viewer';
+    }
+
+    // Load data
+    await Promise.all([loadOrders(), loadProducts()]);
+
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+  }
+
+  async function loadOrders() {
+    // If property_ids set, filter to those; else all properties
+    const propIds = Array.isArray(myLink.property_ids) ? myLink.property_ids : [];
+    let query = sb.from('orders').select('*').eq('host_id', hostId).order('created_at', { ascending: false }).limit(50);
+    if (propIds.length > 0) query = query.in('property_id', propIds);
+    const { data, error } = await query;
+    if (error) { console.error('orders error:', error); return; }
+    orders = data || [];
+    renderOrders();
+  }
+
+  function renderOrders() {
+    const list = document.getElementById('ordersList');
+    if (!orders.length) {
+      list.innerHTML = '<div class="empty">No orders yet.</div>';
+      document.getElementById('statTotalOrders').textContent = '0';
+      document.getElementById('statRecentOrders').textContent = '0';
+      document.getElementById('statRevenue').textContent = '$0';
+      return;
+    }
+    const now = Date.now();
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    const recent = orders.filter(o => (now - new Date(o.created_at).getTime()) < thirtyDays).length;
+    const revenue = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+    document.getElementById('statTotalOrders').textContent = orders.length;
+    document.getElementById('statRecentOrders').textContent = recent;
+    document.getElementById('statRevenue').textContent = '$' + revenue.toFixed(2);
+    list.innerHTML = orders.slice(0, 25).map(o => {
+      const d = new Date(o.created_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+      return '<div class="order-row">' +
+        '<div class="order-info">' +
+          '<div class="order-name">' + (o.guest_name || 'Guest') + ' · ' + (o.property_name || '—') + '</div>' +
+          '<div class="order-meta">' + d + ' · check-in ' + (o.checkin_date || '—') + '</div>' +
+        '</div>' +
+        '<div class="order-price">$' + (Number(o.total) || 0).toFixed(2) + '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  async function loadProducts() {
+    const { data, error } = await sb.from('products').select('*').eq('host_id', hostId).order('created_at', { ascending: false });
+    if (error) { console.error('products error:', error); return; }
+    products = data || [];
+    renderProducts();
+  }
+
+  function renderProducts() {
+    const list = document.getElementById('productsList');
+    const desc = document.getElementById('productsDesc');
+    desc.textContent = myLink.role === 'admin'
+      ? 'You have admin access — click Edit to update name, description or price.'
+      : 'You have view-only access. Contact the store owner to make changes.';
+    if (!products.length) {
+      list.innerHTML = '<div class="empty">No products in this store yet.</div>';
+      return;
+    }
+    list.innerHTML = products.map(p => {
+      const img = p.image_url
+        ? '<img src="' + p.image_url + '" alt="" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + (p.emoji || '🛍️') + '\'">'
+        : (p.emoji || '🛍️');
+      const editBtn = myLink.role === 'admin'
+        ? '<button class="product-edit" onclick="openEditModal(\'' + p.id + '\')">Edit</button>'
+        : '';
+      return '<div class="product-row">' +
+        '<div class="product-img">' + img + '</div>' +
+        '<div class="product-info">' +
+          '<div class="product-name">' + p.name + '</div>' +
+          '<div class="product-meta">' + (p.description || '').slice(0, 80) + (p.description && p.description.length > 80 ? '…' : '') + '</div>' +
+        '</div>' +
+        '<div class="product-price">$' + (Number(p.price) || 0).toFixed(2) + '</div>' +
+        editBtn +
+      '</div>';
+    }).join('');
+  }
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
+    document.getElementById('tab-orders').style.display = name === 'orders' ? 'block' : 'none';
+    document.getElementById('tab-products').style.display = name === 'products' ? 'block' : 'none';
+  }
+  window.switchTab = switchTab;
+
+  function openEditModal(id) {
+    if (myLink.role !== 'admin') return;
+    const p = products.find(x => x.id === id);
+    if (!p) return;
+    editingProductId = id;
+    document.getElementById('editName').value = p.name || '';
+    document.getElementById('editDesc').value = p.description || '';
+    document.getElementById('editPrice').value = p.price || '';
+    document.getElementById('editModal').classList.add('open');
+  }
+  window.openEditModal = openEditModal;
+
+  function closeEditModal() {
+    document.getElementById('editModal').classList.remove('open');
+    editingProductId = null;
+  }
+  window.closeEditModal = closeEditModal;
+
+  async function saveProductEdit() {
+    if (!editingProductId) return;
+    const updates = {
+      name: document.getElementById('editName').value.trim(),
+      description: document.getElementById('editDesc').value.trim(),
+      price: parseFloat(document.getElementById('editPrice').value) || 0,
+    };
+    if (!updates.name) { showToast('⚠️ Name required'); return; }
+    const { error } = await sb.from('products').update(updates).eq('id', editingProductId);
+    if (error) { showToast('⚠️ ' + error.message); console.error(error); return; }
+    showToast('✅ Saved');
+    closeEditModal();
+    loadProducts();
+  }
+  window.saveProductEdit = saveProductEdit;
+
+  init();
+</script>
+
+</body>
+</html>

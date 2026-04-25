@@ -355,6 +355,7 @@
     <div class="nav-section-label">Account</div>
     <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account & Billing</span></button>
     <button class="nav-item" onclick="showPage('users', this)"><div class="nav-icon">👥</div><span>Users & Calendar</span></button>
+    <button class="nav-item" id="linkedStoresNavBtn" onclick="showPage('linkedstores', this)" style="display:none"><div class="nav-icon">🔗</div><span>Linked Stores</span><span id="linkedStoresBadge" style="margin-left:auto;background:#5DCAA5;color:#0A1628;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px"></span></button>
   </nav>
   <div class="sidebar-bottom">
     <a class="store-link-btn" id="viewStoreBtn" href="#" target="_blank"><span>🔗</span><span>View my store</span></a>
@@ -751,6 +752,16 @@
     <div class="page" id="page-users">
       <div style="display:flex;flex-direction:column;gap:16px;width:100%">
 
+        <!-- Linked Users (cleaners, co-hosts who can log in) -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+            <div class="card-title" style="margin-bottom:0">Linked users</div>
+            <button class="btn btn-primary btn-sm" onclick="openLinkedUserModal()">+ Invite user</button>
+          </div>
+          <div class="card-desc">Invite a cleaner, co-host or property manager to log into your store. Set their access level and (optionally) which products they get paid for. Linked users see your store from their own Hostie Hub login.</div>
+          <div id="linkedUsersList" style="display:flex;flex-direction:column;gap:8px;margin-top:16px"></div>
+        </div>
+
         <!-- Notification Users -->
         <div class="card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
@@ -796,6 +807,17 @@
       </div>
     </div>
 
+    <!-- Linked Stores page (visible when user has been invited to other stores) -->
+    <div class="page" id="page-linkedstores">
+      <div style="display:flex;flex-direction:column;gap:16px;width:100%">
+        <div class="card">
+          <div class="card-title">Stores you have access to</div>
+          <div class="card-desc">These are Hostie Hub stores that have invited you. Click a store to view its products and orders.</div>
+          <div id="linkedStoresList" style="display:flex;flex-direction:column;gap:8px;margin-top:16px"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -823,6 +845,61 @@
   </div>
 </div>
 
+<!-- LINKED USER MODAL -->
+<div class="modal-overlay" id="linkedUserModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title" id="linkedUserModalTitle">Invite a user</div>
+      <button class="modal-close" onclick="closeLinkedUserModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Email address</label><input type="email" id="linkedUserEmail" placeholder="e.g. cleaner@email.com"></div>
+      <div class="field">
+        <label>Access level</label>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          <label style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;cursor:pointer">
+            <input type="radio" name="linkedUserRole" value="viewer" checked style="margin-top:2px;width:18px;height:18px;accent-color:var(--brand);flex-shrink:0">
+            <div>
+              <div style="font-size:14px;font-weight:600">View only</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">Can see properties, products and orders. Cannot edit anything.</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;cursor:pointer">
+            <input type="radio" name="linkedUserRole" value="admin" style="margin-top:2px;width:18px;height:18px;accent-color:var(--brand);flex-shrink:0">
+            <div>
+              <div style="font-size:14px;font-weight:600">Admin</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">Can edit listings (name, image, price, description). Cannot invite other users, change Stripe Connect, or change billing.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+      <div class="field" id="linkedUserPropsField">
+        <label>Which properties can they access?</label>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:200px;overflow-y:auto;padding:4px">
+          <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--brand-light);border:1.5px solid var(--brand);border-radius:8px;cursor:pointer">
+            <input type="checkbox" id="linkedUserAllProperties" checked onchange="toggleLinkedAllProps(this.checked)" style="width:16px;height:16px;accent-color:var(--brand);flex-shrink:0">
+            <div style="font-size:13px;font-weight:600;color:var(--brand)">All properties (including new ones)</div>
+          </label>
+          <div id="linkedUserPropsList" style="display:flex;flex-direction:column;gap:6px;opacity:0.4;pointer-events:none"></div>
+        </div>
+      </div>
+      <div class="field" id="linkedUserProductsField">
+        <label>Which products do they get paid for? <span style="font-weight:300;font-size:12px">(optional — coming soon)</span></label>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;padding:10px 12px;background:#fff7e6;border-radius:8px">💡 Toggle products to allocate payouts to this user. Stripe payout splitting will be enabled once they complete Stripe Connect onboarding.</div>
+        <div id="linkedUserProductsList" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;max-height:200px;overflow-y:auto;padding:4px"></div>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn btn-danger btn-sm" id="deleteLinkedUserBtn" style="display:none" onclick="deleteLinkedUser()">Remove user</button>
+      <div style="display:flex;gap:10px;margin-left:auto">
+        <button class="btn btn-outline" onclick="closeLinkedUserModal()">Cancel</button>
+        <button class="btn btn-primary" id="saveLinkedUserBtn" onclick="saveLinkedUser()">Send invite</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD USER MODAL -->
 <div class="modal-overlay" id="addUserModal">
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
@@ -1240,7 +1317,7 @@
 
   const emojis = ['🌸','🧺','🍾','🕐','🏄','🚗','🎁','🌿','☕','🍫','🧁','🎂','🌊','🏠','🧴','🛁','🎵','🐾','🎉','🍕','🥗','🍷','🎈','🍫','🛎️','🧹'];
   const swatchColours = ['#2C6E6A','#1d4d4a','#E8A838','#e74c3c','#8e44ad','#2980b9','#27ae60','#e67e22','#1a1a1a'];
-  const pageTitles = { overview:'Overview', orders:'Orders', analytics:'Analytics', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', localproducts:'Local Products', stripe:'Stripe Connect', account:'Account & Billing', users:'Users & Calendar' };
+  const pageTitles = { overview:'Overview', orders:'Orders', analytics:'Analytics', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', localproducts:'Local Products', stripe:'Stripe Connect', account:'Account & Billing', users:'Users & Calendar', linkedstores:'Linked Stores' };
 
   const PRESET_PRODUCTS = [
     // STAY SERVICES
@@ -1357,6 +1434,8 @@
     loadLocalProducts();
     loadHostAnalytics();
     loadNotifEmails();
+    loadLinkedUsers();
+    loadMyLinkedStores();
     buildEmojiGrid();
     buildSwatches();
 
@@ -3203,6 +3282,262 @@
       '</div>';
     }).join('');
   }
+
+  // ============= LINKED STORES (where I'm the linked user) =============
+  let myLinkedStores = []; // host_links rows where I'm linked_host_id
+
+  async function loadMyLinkedStores() {
+    if (!currentUser) return;
+    // Auto-accept any pending invites matching my email
+    if (currentUser.email) {
+      const { data: pending } = await sb
+        .from('host_links')
+        .select('id')
+        .ilike('invited_email', currentUser.email)
+        .is('linked_host_id', null);
+      if (pending && pending.length) {
+        for (const p of pending) {
+          await sb.from('host_links').update({
+            linked_host_id: currentUser.id,
+            accepted: true,
+            accepted_at: new Date().toISOString(),
+          }).eq('id', p.id);
+        }
+      }
+    }
+    const { data, error } = await sb
+      .from('host_links')
+      .select('id, owner_host_id, role, accepted, created_at')
+      .eq('linked_host_id', currentUser.id)
+      .eq('accepted', true);
+    if (error) { console.error('[HH] loadMyLinkedStores error:', error); return; }
+    if (!data || !data.length) { myLinkedStores = []; renderMyLinkedStores(); return; }
+    const ownerIds = data.map(l => l.owner_host_id);
+    const { data: ownersData } = await sb.from('hosts').select('id, business_name, username, store_name').in('id', ownerIds);
+    const ownerMap = {};
+    (ownersData || []).forEach(h => { ownerMap[h.id] = h; });
+    myLinkedStores = data.map(l => ({ ...l, owner: ownerMap[l.owner_host_id] || {} }));
+    renderMyLinkedStores();
+
+    // Show sidebar tab + badge
+    if (myLinkedStores.length > 0) {
+      const navBtn = document.getElementById('linkedStoresNavBtn');
+      if (navBtn) navBtn.style.display = '';
+      const badge = document.getElementById('linkedStoresBadge');
+      if (badge) badge.textContent = myLinkedStores.length;
+    }
+  }
+
+  function renderMyLinkedStores() {
+    const list = document.getElementById('linkedStoresList');
+    if (!list) return;
+    if (!myLinkedStores.length) {
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg);border-radius:10px">No linked stores yet. When a host invites you, they will appear here.</div>';
+      return;
+    }
+    list.innerHTML = myLinkedStores.map(l => {
+      const o = l.owner || {};
+      const name = o.business_name || o.store_name || o.username || 'Hostie Hub Store';
+      const roleBadge = l.role === 'admin'
+        ? '<span style="background:#fef3c7;color:#92600a;font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;text-transform:uppercase;letter-spacing:0.5px">Admin</span>'
+        : '<span style="background:#e5e7eb;color:#374151;font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;text-transform:uppercase;letter-spacing:0.5px">View only</span>';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);transition:all 0.2s">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px"><div style="font-size:15px;font-weight:600">' + name + '</div>' + roleBadge + '</div>' +
+          '<div style="font-size:12px;color:var(--muted)">Linked since ' + new Date(l.created_at).toLocaleDateString() + '</div>' +
+        '</div>' +
+        '<a href="linked-store.html?host_id=' + l.owner_host_id + '" class="btn btn-primary btn-sm" style="text-decoration:none">Open store →</a>' +
+      '</div>';
+    }).join('');
+  }
+
+  // ============= LINKED USERS (cleaners, co-hosts, admins) =============
+  let linkedUsers = []; // host_links rows where I'm owner
+  let editingLinkedUserId = null;
+  let linkedUserPropertyIds = [];
+  let linkedUserProductIds = [];
+  let linkedUserAllProps = true;
+
+  async function loadLinkedUsers() {
+    const { data, error } = await sb.from('host_links').select('*').eq('owner_host_id', currentUser.id).order('created_at', { ascending: false });
+    if (error) { console.error('[HH] loadLinkedUsers error:', error); return; }
+    linkedUsers = data || [];
+    renderLinkedUsers();
+  }
+
+  function renderLinkedUsers() {
+    const list = document.getElementById('linkedUsersList');
+    if (!list) return;
+    if (!linkedUsers.length) {
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;background:var(--bg);border-radius:10px">No linked users yet. Click <strong>+ Invite user</strong> to get started.</div>';
+      return;
+    }
+    list.innerHTML = linkedUsers.map(u => {
+      const propCount = Array.isArray(u.property_ids) ? u.property_ids.length : 0;
+      const propLabel = propCount === 0 ? 'all properties' : (propCount + ' propert' + (propCount === 1 ? 'y' : 'ies'));
+      const statusBadge = u.accepted
+        ? '<span style="background:#d1fae5;color:#065f46;font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;text-transform:uppercase;letter-spacing:0.5px">Accepted</span>'
+        : '<span style="background:#fff7e6;color:#92600a;font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;text-transform:uppercase;letter-spacing:0.5px">Pending</span>';
+      const roleBadge = u.role === 'admin'
+        ? '<span style="background:#fef3c7;color:#92600a;font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;text-transform:uppercase;letter-spacing:0.5px">Admin</span>'
+        : '<span style="background:#e5e7eb;color:#374151;font-size:10px;font-weight:700;padding:3px 8px;border-radius:50px;text-transform:uppercase;letter-spacing:0.5px">View only</span>';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px"><div style="font-size:14px;font-weight:600">' + u.invited_email + '</div>' + roleBadge + statusBadge + '</div>' +
+          '<div style="font-size:12px;color:var(--muted)">Access to ' + propLabel + '</div>' +
+        '</div>' +
+        '<button onclick="editLinkedUser(\'' + u.id + '\')" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--muted);white-space:nowrap;flex-shrink:0">Edit</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  function buildLinkedUserProps(selectedIds, allChecked) {
+    const list = document.getElementById('linkedUserPropsList');
+    if (!list) return;
+    list.style.opacity = allChecked ? '0.4' : '1';
+    list.style.pointerEvents = allChecked ? 'none' : 'auto';
+    list.innerHTML = (properties || []).map(p => {
+      const checked = allChecked || selectedIds.includes(p.id);
+      return '<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fff;border:1.5px solid var(--border);border-radius:8px;cursor:pointer">' +
+        '<input type="checkbox" data-prop-id="' + p.id + '" ' + (checked ? 'checked' : '') + ' style="width:16px;height:16px;accent-color:var(--brand);flex-shrink:0">' +
+        '<div style="font-size:13px;font-weight:500">' + p.name + '</div>' +
+      '</label>';
+    }).join('');
+  }
+
+  function buildLinkedUserProducts(selectedIds) {
+    const list = document.getElementById('linkedUserProductsList');
+    if (!list) return;
+    if (!products || !products.length) {
+      list.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px">No products in your store yet.</div>';
+      return;
+    }
+    list.innerHTML = products.map(p => {
+      const checked = selectedIds.includes(p.id);
+      return '<label style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fff;border:1.5px solid var(--border);border-radius:8px;cursor:pointer">' +
+        '<input type="checkbox" data-product-id="' + p.id + '" ' + (checked ? 'checked' : '') + ' style="width:16px;height:16px;accent-color:var(--brand);flex-shrink:0">' +
+        '<div style="font-size:13px;font-weight:500;flex:1">' + p.name + '</div>' +
+        '<div style="font-size:11px;color:var(--muted)">$' + p.price + '</div>' +
+      '</label>';
+    }).join('');
+  }
+
+  function toggleLinkedAllProps(checked) {
+    linkedUserAllProps = checked;
+    const sel = checked ? [] : Array.from(document.querySelectorAll('#linkedUserPropsList input:checked')).map(i => i.dataset.propId);
+    buildLinkedUserProps(sel, checked);
+  }
+  window.toggleLinkedAllProps = toggleLinkedAllProps;
+
+  function openLinkedUserModal() {
+    editingLinkedUserId = null;
+    document.getElementById('linkedUserModalTitle').textContent = 'Invite a user';
+    document.getElementById('linkedUserEmail').value = '';
+    document.querySelector('input[name="linkedUserRole"][value="viewer"]').checked = true;
+    document.getElementById('linkedUserAllProperties').checked = true;
+    document.getElementById('saveLinkedUserBtn').textContent = 'Send invite';
+    document.getElementById('deleteLinkedUserBtn').style.display = 'none';
+    linkedUserAllProps = true;
+    buildLinkedUserProps([], true);
+    buildLinkedUserProducts([]);
+    document.getElementById('linkedUserModal').classList.add('open');
+  }
+  window.openLinkedUserModal = openLinkedUserModal;
+
+  function closeLinkedUserModal() {
+    document.getElementById('linkedUserModal').classList.remove('open');
+    editingLinkedUserId = null;
+  }
+  window.closeLinkedUserModal = closeLinkedUserModal;
+
+  function editLinkedUser(id) {
+    const u = linkedUsers.find(x => x.id === id);
+    if (!u) return;
+    editingLinkedUserId = id;
+    document.getElementById('linkedUserModalTitle').textContent = 'Edit user';
+    document.getElementById('linkedUserEmail').value = u.invited_email;
+    document.getElementById('linkedUserEmail').disabled = true;
+    document.querySelector('input[name="linkedUserRole"][value="' + (u.role || 'viewer') + '"]').checked = true;
+    const propIds = Array.isArray(u.property_ids) ? u.property_ids : [];
+    const isAll = propIds.length === 0;
+    document.getElementById('linkedUserAllProperties').checked = isAll;
+    linkedUserAllProps = isAll;
+    buildLinkedUserProps(propIds, isAll);
+    buildLinkedUserProducts(Array.isArray(u.product_ids) ? u.product_ids : []);
+    document.getElementById('saveLinkedUserBtn').textContent = 'Save changes';
+    document.getElementById('deleteLinkedUserBtn').style.display = u.accepted ? 'inline-block' : 'inline-block';
+    document.getElementById('linkedUserModal').classList.add('open');
+  }
+  window.editLinkedUser = editLinkedUser;
+
+  async function saveLinkedUser() {
+    const email = (document.getElementById('linkedUserEmail').value || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) { showToast('⚠️ Enter a valid email'); return; }
+    if (email === currentUser.email.toLowerCase()) { showToast('⚠️ Cannot invite yourself'); return; }
+    const role = document.querySelector('input[name="linkedUserRole"]:checked').value;
+    const allProps = document.getElementById('linkedUserAllProperties').checked;
+    const propIds = allProps ? [] : Array.from(document.querySelectorAll('#linkedUserPropsList input:checked')).map(i => i.dataset.propId);
+    const productIds = Array.from(document.querySelectorAll('#linkedUserProductsList input:checked')).map(i => i.dataset.productId);
+
+    const payload = {
+      owner_host_id: currentUser.id,
+      invited_email: email,
+      role,
+      property_ids: propIds,
+      product_ids: productIds,
+    };
+
+    if (editingLinkedUserId) {
+      const { error } = await sb.from('host_links').update({ role, property_ids: propIds, product_ids: productIds }).eq('id', editingLinkedUserId);
+      if (error) { showToast('⚠️ Error: ' + error.message); console.error(error); return; }
+      showToast('✅ User updated');
+    } else {
+      // Check for an existing accepted user with this email — auto-attach linked_host_id
+      const { data: existingHost } = await sb.from('hosts').select('id').ilike('email', email).maybeSingle();
+      if (existingHost) {
+        payload.linked_host_id = existingHost.id;
+        payload.accepted = true;
+        payload.accepted_at = new Date().toISOString();
+      }
+      const { data: inserted, error } = await sb.from('host_links').insert(payload).select().single();
+      if (error) {
+        if (error.code === '23505') { showToast('⚠️ This user is already invited'); }
+        else { showToast('⚠️ Error: ' + error.message); console.error(error); }
+        return;
+      }
+      // Send invite email via Resend (Cloudflare Worker endpoint)
+      try {
+        await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev/send-linked-user-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            invited_email: email,
+            owner_name: hostData?.business_name || hostData?.username || 'a Hostie Hub host',
+            role,
+            existing_user: !!existingHost,
+          }),
+        });
+      } catch(e) { console.warn('[HH] Invite email send failed (non-blocking):', e); }
+      showToast(existingHost ? '✅ User linked — they can log in now' : '✅ Invite sent');
+    }
+
+    document.getElementById('linkedUserEmail').disabled = false;
+    closeLinkedUserModal();
+    loadLinkedUsers();
+  }
+  window.saveLinkedUser = saveLinkedUser;
+
+  async function deleteLinkedUser() {
+    if (!editingLinkedUserId) return;
+    if (!confirm('Remove this user\'s access? They will no longer see your store.')) return;
+    const { error } = await sb.from('host_links').delete().eq('id', editingLinkedUserId);
+    if (error) { showToast('⚠️ Error: ' + error.message); return; }
+    showToast('✅ User removed');
+    document.getElementById('linkedUserEmail').disabled = false;
+    closeLinkedUserModal();
+    loadLinkedUsers();
+  }
+  window.deleteLinkedUser = deleteLinkedUser;
 
   function openAddUserModal() {
     editingNotifUserId = null;

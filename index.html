@@ -4,503 +4,342 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hostie Hub – Your own guest extras store</title>
-<meta property="og:type" content="website">
-<meta property="og:title" content="Hostie Hub – Your own guest extras store">
-<meta property="og:description" content="Sell add-ons, experiences & services directly to your guests. Free to start, no tech skills needed, Stripe payments built in.">
-<meta property="og:image" content="https://hostiehub.com.au/og-image-home.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Hostie Hub – Your own guest extras store">
-<meta name="twitter:description" content="Sell add-ons, experiences & services directly to your guests. Free to start, no tech skills needed, Stripe payments built in.">
-<meta name="twitter:image" content="https://hostiehub.com.au/og-image-home.png">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Hostie Hub – Your guests' upsell store + local guidebook</title>
+<meta name="description" content="The free platform for short-term rental hosts. Sell extras to your guests, recommend local businesses, and turn every booking into a better experience.">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { --brand:#2C6E6A; --brand-dark:#1d4d4a; --brand-light:#e6f2f1; --brand-mid:#4a9490; --accent:#E8A838; --accent-light:#fdf3e0; --text:#1a1a1a; --muted:#6b7280; --bg:#faf9f7; --card:#ffffff; --border:#e8e4df; --radius:16px; }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  html { scroll-behavior:smooth; }
-  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); overflow-x:hidden; }
-  nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:0 32px; background:rgba(250,249,247,0.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
-  .nav-inner { max-width:1100px; margin:0 auto; height:68px; display:flex; align-items:center; justify-content:space-between; }
-  .nav-logo { font-family:'Playfair Display',serif; font-size:22px; font-weight:700; color:var(--brand); text-decoration:none; display:flex; align-items:center; gap:8px; }
-  .nav-logo-dot { width:8px; height:8px; background:var(--accent); border-radius:50%; display:inline-block; }
-  .nav-links { display:flex; align-items:center; gap:32px; list-style:none; }
-  .nav-links a { font-size:14px; font-weight:500; color:var(--muted); text-decoration:none; transition:color 0.2s; }
-  .nav-links a:hover { color:var(--brand); }
-  .nav-cta { background:var(--brand); color:white !important; padding:10px 22px; border-radius:50px; font-weight:600 !important; }
-  .nav-cta:hover { background:var(--brand-dark) !important; }
-  .nav-mobile-login { display:none; align-items:center; padding:8px 16px; border-radius:50px; border:1.5px solid var(--brand); color:var(--brand); font-size:13px; font-weight:600; text-decoration:none; }
-  .hero { min-height:100vh; display:flex; align-items:center; position:relative; overflow:hidden; padding:100px 32px 80px; background:linear-gradient(160deg,#f0f7f6 0%,var(--bg) 50%,#fdf3e0 100%); }
-  .hero-bg-circle { position:absolute; border-radius:50%; pointer-events:none; }
-  .hero-bg-circle-1 { width:600px; height:600px; background:radial-gradient(circle,rgba(44,110,106,0.08) 0%,transparent 70%); top:-100px; right:-100px; }
-  .hero-bg-circle-2 { width:400px; height:400px; background:radial-gradient(circle,rgba(232,168,56,0.08) 0%,transparent 70%); bottom:0; left:-80px; }
-  .hero-inner { max-width:1100px; margin:0 auto; width:100%; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
-  .hero-eyebrow { display:inline-flex; align-items:center; gap:8px; background:var(--brand-light); color:var(--brand); font-size:12px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; padding:6px 14px; border-radius:50px; margin-bottom:24px; animation:fadeUp 0.6s ease both; }
-  .hero h1 { font-family:'Playfair Display',serif; font-size:clamp(38px,5vw,58px); font-weight:700; line-height:1.15; letter-spacing:-1px; margin-bottom:24px; animation:fadeUp 0.6s 0.1s ease both; }
-  .hero h1 em { font-style:italic; color:var(--brand); }
-  .hero-desc { font-size:18px; color:var(--muted); line-height:1.7; font-weight:300; margin-bottom:36px; max-width:480px; animation:fadeUp 0.6s 0.2s ease both; }
-  .hero-actions { display:flex; gap:14px; align-items:center; flex-wrap:wrap; animation:fadeUp 0.6s 0.3s ease both; }
-  .btn-primary { background:var(--brand); color:white; padding:16px 32px; border-radius:50px; font-family:'DM Sans',sans-serif; font-size:16px; font-weight:600; text-decoration:none; border:none; cursor:pointer; transition:background 0.2s,transform 0.15s; display:inline-flex; align-items:center; gap:8px; }
-  .btn-primary:hover { background:var(--brand-dark); transform:translateY(-1px); }
-  .btn-secondary { color:var(--brand); font-size:15px; font-weight:500; text-decoration:none; display:inline-flex; align-items:center; gap:6px; transition:gap 0.2s; }
-  .btn-secondary:hover { gap:10px; }
-  .hero-stats { display:flex; gap:32px; margin-top:48px; padding-top:36px; border-top:1.5px solid var(--border); animation:fadeUp 0.6s 0.4s ease both; }
-  .stat-num { font-family:'Playfair Display',serif; font-size:28px; font-weight:700; color:var(--brand); }
-  .stat-label { font-size:13px; color:var(--muted); margin-top:2px; }
-  .hero-mockup { position:relative; animation:fadeUp 0.7s 0.2s ease both; }
-  .mockup-card { background:white; border-radius:20px; box-shadow:0 24px 60px rgba(44,110,106,0.15),0 4px 16px rgba(0,0,0,0.06); overflow:hidden; border:1.5px solid var(--border); }
-  .mockup-header { background:var(--brand); padding:16px 20px; display:flex; align-items:center; justify-content:space-between; }
-  .mockup-host { display:flex; align-items:center; gap:10px; }
-  .mockup-avatar { width:34px; height:34px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; color:white; font-size:15px; font-weight:600; }
-  .mockup-name { color:white; font-size:14px; font-weight:600; }
-  .mockup-sub { color:rgba(255,255,255,0.65); font-size:11px; }
-  .mockup-cart { background:rgba(255,255,255,0.2); color:white; border-radius:50px; padding:5px 12px; font-size:12px; font-weight:500; }
-  .mockup-body { padding:20px; }
-  .mockup-hero-strip { background:linear-gradient(135deg,var(--brand),var(--brand-dark)); border-radius:12px; padding:20px; color:white; margin-bottom:16px; text-align:center; }
-  .mockup-hero-strip h3 { font-family:'Playfair Display',serif; font-size:16px; font-weight:600; margin-bottom:4px; }
-  .mockup-hero-strip p { font-size:12px; opacity:0.75; }
-  .mockup-products { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .mockup-product { background:var(--bg); border-radius:10px; padding:12px; border:1.5px solid var(--border); }
-  .mockup-product-icon { font-size:22px; margin-bottom:6px; }
-  .mockup-product-name { font-size:12px; font-weight:600; margin-bottom:2px; color:var(--text); }
-  .mockup-product-price { font-size:11px; color:var(--muted); margin-bottom:8px; }
-  .mockup-add { background:var(--brand); color:white; border-radius:6px; padding:4px 10px; font-size:11px; font-weight:500; display:inline-block; }
-  .mockup-url { position:absolute; top:-14px; left:50%; transform:translateX(-50%); background:white; border:1.5px solid var(--border); border-radius:50px; padding:6px 16px; font-size:12px; font-weight:500; color:var(--brand); white-space:nowrap; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
-  .mockup-float { position:absolute; background:white; border-radius:12px; padding:10px 14px; box-shadow:0 8px 24px rgba(0,0,0,0.12); border:1.5px solid var(--border); font-size:13px; font-weight:500; display:flex; align-items:center; gap:8px; }
-  .mockup-float-1 { bottom:-20px; left:-24px; }
-  .mockup-float-2 { top:60px; right:-28px; }
-  .float-dot { width:8px; height:8px; border-radius:50%; }
-  section { padding:100px 32px; }
-  .section-inner { max-width:1100px; margin:0 auto; }
-  .section-eyebrow { font-size:12px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:var(--brand); margin-bottom:14px; }
-  .section-title { font-family:'Playfair Display',serif; font-size:clamp(30px,4vw,44px); font-weight:700; line-height:1.2; letter-spacing:-0.5px; margin-bottom:16px; }
-  .section-desc { font-size:17px; color:var(--muted); line-height:1.7; font-weight:300; max-width:560px; }
-  .how-section { background:white; }
-  .how-header { text-align:center; margin-bottom:72px; }
-  .how-header .section-desc { margin:0 auto; }
-  .steps { display:grid; grid-template-columns:repeat(4,1fr); gap:0; position:relative; }
-  .steps::before { content:''; position:absolute; top:36px; left:12.5%; right:12.5%; height:2px; background:linear-gradient(90deg,var(--brand-light),var(--brand),var(--brand-light)); z-index:0; }
-  .step { text-align:center; padding:0 20px; position:relative; z-index:1; }
-  .step-num { width:72px; height:72px; background:var(--brand); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:24px; font-weight:700; margin:0 auto 24px; border:4px solid white; box-shadow:0 0 0 2px var(--brand); position:relative; }
-  .step-icon { position:absolute; bottom:-6px; right:-6px; background:var(--accent); border-radius:50%; width:26px; height:26px; font-size:13px; display:flex; align-items:center; justify-content:center; }
-  .step h3 { font-family:'Playfair Display',serif; font-size:18px; font-weight:600; margin-bottom:10px; }
-  .step p { font-size:14px; color:var(--muted); line-height:1.6; }
-  .pricing-section { background:var(--bg); }
-  .pricing-header { text-align:center; margin-bottom:56px; }
-  .pricing-header .section-desc { margin:0 auto; }
-  .pricing-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; align-items:start; }
-  .pricing-card { background:white; border:1.5px solid var(--border); border-radius:24px; padding:36px 28px; position:relative; overflow:hidden; display:flex; flex-direction:column; transition:transform 0.2s,box-shadow 0.2s; }
-  .pricing-card:hover { transform:translateY(-4px); box-shadow:0 20px 48px rgba(0,0,0,0.08); }
-  .pricing-card.featured { border:2px solid var(--brand); box-shadow:0 20px 60px rgba(44,110,106,0.15); transform:translateY(-8px); }
-  .pricing-card.featured:hover { transform:translateY(-12px); }
-  .pricing-card::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--border); }
-  .pricing-card.featured::before { background:linear-gradient(90deg,var(--brand),var(--accent)); }
-  .pricing-badge { display:inline-block; font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; padding:5px 14px; border-radius:50px; margin-bottom:16px; background:var(--brand-light); color:var(--brand); }
-  .pricing-card.featured .pricing-badge { background:var(--accent-light); color:#92600a; }
-  .pricing-amount { font-family:'Playfair Display',serif; font-size:56px; font-weight:700; color:var(--brand); line-height:1; margin-bottom:4px; }
-  .pricing-amount sup { font-size:26px; vertical-align:top; margin-top:10px; }
-  .pricing-period { font-size:14px; color:var(--muted); margin-bottom:8px; }
-  .pricing-properties { font-size:13px; font-weight:600; color:var(--brand); background:var(--brand-light); display:inline-block; padding:4px 12px; border-radius:50px; margin-bottom:24px; }
-  .pricing-note { font-size:12px; color:var(--muted); margin-top:12px; text-align:center; line-height:1.5; }
-  .demo-section { background:linear-gradient(160deg,var(--brand-dark) 0%,var(--brand) 100%); color:white; }
-  .demo-inner { display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; max-width:1100px; margin:0 auto; }
-  .demo-section .section-eyebrow { color:rgba(255,255,255,0.6); }
-  .demo-section .section-title { color:white; }
-  .demo-section .section-desc { color:rgba(255,255,255,0.75); }
-  .demo-stores { display:flex; flex-direction:column; gap:14px; }
-  .demo-store { background:rgba(255,255,255,0.1); border:1.5px solid rgba(255,255,255,0.2); border-radius:14px; padding:18px 20px; display:flex; align-items:center; gap:16px; cursor:pointer; transition:background 0.2s,transform 0.2s; text-decoration:none; }
-  .demo-store:hover { background:rgba(255,255,255,0.18); transform:translateX(4px); }
-  .demo-store-icon { width:44px; height:44px; background:var(--accent); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
-  .demo-store-info { flex:1; }
-  .demo-store-name { color:white; font-size:15px; font-weight:600; margin-bottom:2px; }
-  .demo-store-url { color:rgba(255,255,255,0.55); font-size:12px; }
-  .demo-store-arrow { color:rgba(255,255,255,0.4); font-size:18px; }
-  .demo-cta { margin-top:24px; font-size:14px; color:rgba(255,255,255,0.6); text-align:center; }
-  .testimonials-section { background:white; }
-  .testimonials-header { text-align:center; margin-bottom:56px; }
-  .testimonials-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
-  .testimonial-card { background:var(--bg); border:1.5px solid var(--border); border-radius:20px; padding:28px; position:relative; }
-  .testimonial-card::before { content:'"'; position:absolute; top:16px; right:24px; font-family:'Playfair Display',serif; font-size:64px; color:var(--brand-light); line-height:1; }
-  .testimonial-stars { color:var(--accent); font-size:14px; letter-spacing:2px; margin-bottom:14px; }
-  .testimonial-text { font-size:15px; line-height:1.7; color:var(--text); margin-bottom:20px; font-style:italic; }
-  .testimonial-author { display:flex; align-items:center; gap:12px; }
-  .testimonial-avatar { width:40px; height:40px; border-radius:50%; background:var(--brand); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; color:white; font-size:16px; font-weight:600; flex-shrink:0; }
-  .testimonial-name { font-size:14px; font-weight:600; }
-  .testimonial-location { font-size:12px; color:var(--muted); margin-top:2px; }
-  .faq-section { background:var(--bg); }
-  .faq-inner { max-width:720px; margin:0 auto; text-align:center; }
-  .faq-header { margin-bottom:48px; }
-  .faq-list { text-align:left; display:flex; flex-direction:column; gap:12px; }
-  .faq-item { background:white; border:1.5px solid var(--border); border-radius:14px; overflow:hidden; transition:border-color 0.2s; }
-  .faq-item.open { border-color:var(--brand); }
-  .faq-question { padding:20px 24px; font-size:16px; font-weight:500; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:16px; user-select:none; }
-  .faq-chevron { color:var(--brand); font-size:18px; transition:transform 0.3s; flex-shrink:0; }
-  .faq-item.open .faq-chevron { transform:rotate(180deg); }
-  .faq-answer { max-height:0; overflow:hidden; transition:max-height 0.35s ease,padding 0.3s; font-size:15px; color:var(--muted); line-height:1.7; padding:0 24px; }
-  .faq-item.open .faq-answer { max-height:300px; padding:0 24px 20px; }
-  footer { background:var(--brand-dark); color:white; padding:60px 32px 40px; }
-  .footer-inner { max-width:1100px; margin:0 auto; }
-  .footer-top { display:grid; grid-template-columns:2fr 1fr 1fr; gap:60px; padding-bottom:48px; border-bottom:1px solid rgba(255,255,255,0.12); margin-bottom:32px; }
-  .footer-brand-name { font-family:'Playfair Display',serif; font-size:24px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-  .footer-brand-desc { font-size:14px; color:rgba(255,255,255,0.6); line-height:1.7; max-width:300px; margin-bottom:20px; }
-  .footer-contact { font-size:13px; color:rgba(255,255,255,0.5); line-height:1.9; }
-  .footer-col-title { font-size:12px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:20px; }
-  .footer-links { list-style:none; display:flex; flex-direction:column; gap:12px; }
-  .footer-links a { color:rgba(255,255,255,0.7); text-decoration:none; font-size:14px; transition:color 0.2s; }
-  .footer-links a:hover { color:white; }
-  .footer-bottom { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:rgba(255,255,255,0.35); flex-wrap:wrap; gap:12px; }
-  .footer-bottom a { color:rgba(255,255,255,0.5); text-decoration:none; }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-  .reveal { opacity:1; transform:translateY(0); transition:opacity 0.6s ease,transform 0.6s ease; }
-  .reveal.hidden-before-reveal { opacity:0; transform:translateY(28px); }
-  .reveal.visible { opacity:1; transform:translateY(0); }
-  @media (max-width:768px) {
-    section { padding:72px 20px; }
-    nav { padding:0 20px; }
-    .nav-links { display:none; }
-    .nav-mobile-login { display:inline-flex; }
-    .hero-inner { grid-template-columns:1fr; gap:48px; }
-    .hero-mockup { display:none; }
-    .hero { padding:100px 20px 60px; min-height:auto; }
-    .steps { grid-template-columns:1fr 1fr; gap:40px; }
-    .steps::before { display:none; }
-    .demo-inner { grid-template-columns:1fr; gap:40px; }
-    .testimonials-grid { grid-template-columns:1fr; }
-    .footer-top { grid-template-columns:1fr; gap:36px; }
-    .pricing-card { padding:28px 20px; }
-    .pricing-grid { grid-template-columns:1fr !important; }
-    .pricing-card.featured { transform:translateY(0); }
-    #pricing .reveal { grid-template-columns:1fr !important; }
-    #partners > div { grid-template-columns:1fr !important; gap:40px !important; }
-    #partners > div > div:last-child { grid-template-columns:1fr 1fr !important; }
+  :root {
+    --brand: #2C6E6A; --brand-dark: #1d4d4a; --brand-light: #e6f2f1;
+    --accent: #E8A838; --accent-light: #fdf3e0;
+    --text: #1a1a1a; --muted: #6b7280; --bg: #faf9f7;
+    --card: #ffffff; --border: #e8e4df; --radius: 20px;
   }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* Nav */
+  .nav { position: sticky; top: 0; z-index: 100; background: rgba(250,249,247,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(232,228,223,0.6); }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; }
+  .logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--brand); display: flex; align-items: center; gap: 8px; }
+  .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+  .nav-links { display: flex; align-items: center; gap: 28px; font-size: 14px; }
+  .nav-links a { color: var(--muted); transition: color 0.2s; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta { background: var(--brand); color: white !important; padding: 9px 20px; border-radius: 50px; font-weight: 600; }
+  .nav-cta:hover { background: var(--brand-dark); }
+  @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
+
+  /* Hero */
+  .hero { padding: 80px 0 100px; text-align: center; }
+  .hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--brand); background: var(--brand-light); padding: 8px 16px; border-radius: 50px; margin-bottom: 28px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(40px, 6.5vw, 68px); font-weight: 700; line-height: 1.05; letter-spacing: -1.5px; margin-bottom: 24px; max-width: 880px; margin-left: auto; margin-right: auto; }
+  .hero h1 em { color: var(--brand); font-style: italic; }
+  .hero p { font-size: clamp(16px, 2vw, 19px); color: var(--muted); max-width: 620px; margin: 0 auto 40px; line-height: 1.6; }
+  .hero-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 16px 32px; border-radius: 50px; font-weight: 700; font-size: 15px; transition: transform 0.15s, box-shadow 0.2s; cursor: pointer; border: none; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-brand { background: var(--brand); color: white; box-shadow: 0 8px 24px rgba(44,110,106,0.25); }
+  .btn-brand:hover { background: var(--brand-dark); box-shadow: 0 12px 32px rgba(44,110,106,0.30); }
+  .btn-outline { background: white; color: var(--brand); border: 1.5px solid var(--brand); }
+  .btn-accent { background: var(--accent); color: white; box-shadow: 0 8px 24px rgba(232,168,56,0.25); }
+  .btn-accent:hover { background: #d4952e; }
+  .hero-microcopy { margin-top: 18px; font-size: 13px; color: var(--muted); }
+
+  /* Two-column "what is it" */
+  .section { padding: 80px 0; }
+  .section-eyebrow { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--brand); margin-bottom: 14px; }
+  .section h2 { text-align: center; font-family: 'Playfair Display', serif; font-size: clamp(28px, 4.5vw, 42px); font-weight: 700; letter-spacing: -0.5px; margin-bottom: 16px; line-height: 1.15; }
+  .section h2 em { color: var(--brand); font-style: italic; }
+  .section-lead { text-align: center; font-size: 17px; color: var(--muted); max-width: 600px; margin: 0 auto 56px; line-height: 1.6; }
+
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 760px) { .duo { grid-template-columns: 1fr; } }
+  .duo-card { background: white; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 36px 32px; }
+  .duo-card.accent-border { border-top: 4px solid var(--brand); }
+  .duo-card.accent-gold { border-top: 4px solid var(--accent); }
+  .duo-emoji { font-size: 38px; margin-bottom: 16px; }
+  .duo-card h3 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; margin-bottom: 10px; }
+  .duo-card p { font-size: 15px; color: var(--muted); line-height: 1.7; }
+
+  /* Hosts section */
+  .hosts-section { background: var(--brand); color: white; }
+  .hosts-section .section-eyebrow { color: var(--accent); }
+  .hosts-section h2 { color: white; }
+  .hosts-section h2 em { color: var(--accent); }
+  .hosts-section .section-lead { color: rgba(255,255,255,0.75); }
+  .price-banner { background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.15); border-radius: var(--radius); padding: 28px 32px; max-width: 580px; margin: 0 auto 48px; text-align: center; }
+  .price-banner .free-tag { display: inline-block; background: var(--accent); color: white; padding: 6px 14px; border-radius: 50px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 16px; }
+  .price-banner .free-amount { font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 700; color: white; line-height: 1; letter-spacing: -2px; margin-bottom: 8px; }
+  .price-banner .free-suffix { font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 18px; }
+  .price-banner .free-detail { font-size: 14px; color: rgba(255,255,255,0.85); line-height: 1.6; }
+  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 48px; }
+  @media (max-width: 760px) { .feature-grid { grid-template-columns: 1fr; } }
+  .feature { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10); border-radius: 14px; padding: 22px 22px; }
+  .feature-icon { font-size: 24px; margin-bottom: 10px; }
+  .feature h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: white; }
+  .feature p { font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.6; }
+
+  /* How it works */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 980px; margin: 0 auto; }
+  @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
+  .step { background: white; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 32px 28px; text-align: center; }
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--brand); color: white; border-radius: 50%; font-weight: 700; font-size: 16px; margin-bottom: 16px; }
+  .step h4 { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; margin-bottom: 8px; }
+  .step p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  /* Partners section */
+  .partners-section { background: linear-gradient(180deg, var(--accent-light) 0%, var(--bg) 100%); }
+  .partner-card { background: white; border: 1.5px solid var(--accent); border-radius: var(--radius); padding: 44px; max-width: 720px; margin: 0 auto; text-align: center; box-shadow: 0 24px 60px rgba(232,168,56,0.10); }
+  .partner-flag { display: inline-block; background: var(--accent); color: white; font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 6px 16px; border-radius: 50px; margin-bottom: 16px; }
+  .partner-card h3 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; margin-bottom: 12px; }
+  .partner-card .partner-lead { font-size: 15px; color: var(--muted); margin-bottom: 28px; line-height: 1.6; }
+  .partner-price { display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-bottom: 32px; }
+  .partner-price .amount { font-family: 'Playfair Display', serif; font-size: 56px; font-weight: 700; color: var(--accent); letter-spacing: -1.5px; }
+  .partner-price .suffix { font-size: 14px; color: var(--muted); }
+  .partner-features { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; max-width: 560px; margin: 0 auto 32px; text-align: left; }
+  @media (max-width: 600px) { .partner-features { grid-template-columns: 1fr; } }
+  .partner-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: #374151; line-height: 1.5; list-style: none; }
+  .partner-features li::before { content: '✓'; color: var(--accent); font-weight: 700; font-size: 16px; flex-shrink: 0; line-height: 1.4; }
+
+  /* Why free */
+  .why-section { padding: 80px 0; }
+  .why-card { background: white; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 48px; max-width: 760px; margin: 0 auto; text-align: center; }
+  .why-card h3 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; margin-bottom: 14px; }
+  .why-card p { font-size: 15px; color: var(--muted); line-height: 1.7; max-width: 580px; margin: 0 auto 24px; }
+  .why-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .why-tag { font-size: 12px; background: var(--brand-light); color: var(--brand); padding: 7px 14px; border-radius: 50px; font-weight: 600; }
+
+  /* Final CTA */
+  .final-cta { background: var(--brand); color: white; padding: 80px 0; text-align: center; }
+  .final-cta h2 { font-family: 'Playfair Display', serif; font-size: clamp(30px, 5vw, 44px); font-weight: 700; line-height: 1.1; letter-spacing: -0.5px; color: white; margin-bottom: 18px; }
+  .final-cta p { font-size: 17px; color: rgba(255,255,255,0.8); max-width: 560px; margin: 0 auto 36px; }
+  .final-cta .hero-cta .btn-outline { background: transparent; color: white; border-color: rgba(255,255,255,0.4); }
+  .final-cta .hero-cta .btn-outline:hover { border-color: white; }
+  .final-cta .btn-brand { background: white; color: var(--brand); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+  .final-cta .btn-brand:hover { background: var(--accent-light); }
+
+  /* Footer */
+  .footer { background: #0f1c1c; color: rgba(255,255,255,0.7); padding: 48px 0 32px; font-size: 14px; }
+  .footer-inner { display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; align-items: center; }
+  .footer-logo { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: white; display: flex; align-items: center; gap: 8px; }
+  .footer-links { display: flex; gap: 24px; font-size: 13px; }
+  .footer-links a { color: rgba(255,255,255,0.65); transition: color 0.2s; }
+  .footer-links a:hover { color: white; }
+  .footer-bottom { text-align: center; padding-top: 28px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 28px; font-size: 12px; color: rgba(255,255,255,0.4); }
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="nav-inner">
-    <a href="#" class="nav-logo">Hostie Hub <span class="nav-logo-dot"></span></a>
-    <ul class="nav-links">
-      <li><a href="#how">How it works</a></li>
-      <li><a href="#pricing">Pricing</a></li>
-      <li><a href="#demo">See a store</a></li>
-      <li><a href="#faq">FAQ</a></li>
-      <li><a href="#partners">For businesses</a></li>
-      <li><a href="signup.html" class="nav-cta">Get started →</a></li>
-      <li><a href="signup.html" style="font-size:14px;font-weight:500;color:var(--brand);text-decoration:none;border:1.5px solid var(--brand);padding:6px 14px;border-radius:50px;transition:all 0.2s" onmouseover="this.style.background='var(--brand)';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='var(--brand)'">Host login</a></li>
-      <li><a href="partner-dashboard.html" style="font-size:14px;font-weight:500;color:#1d6fa4;text-decoration:none;border:1.5px solid #1d6fa4;padding:6px 14px;border-radius:50px;transition:all 0.2s" onmouseover="this.style.background='#1d6fa4';this.style.color='white'" onmouseout="this.style.background='transparent';this.style.color='#1d6fa4'">Partner login</a></li>
-    </ul>
-    <a href="signup.html" class="nav-mobile-login">Host login</a>
-    <a href="partner-dashboard.html" class="nav-mobile-login" style="color:#1d6fa4;border-color:#1d6fa4">Partner login</a>
+<!-- NAV -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="/" class="logo"><span class="logo-dot"></span> Hostie Hub</a>
+    <div class="nav-links">
+      <a href="#hosts">For Hosts</a>
+      <a href="#partners">For Businesses</a>
+      <a href="login.html">Log in</a>
+      <a href="signup.html" class="nav-cta">Get started</a>
+    </div>
   </div>
 </nav>
 
+<!-- HERO -->
 <section class="hero">
-  <div class="hero-bg-circle hero-bg-circle-1"></div>
-  <div class="hero-bg-circle hero-bg-circle-2"></div>
-  <div class="hero-inner">
-    <div class="hero-content">
-      <div class="hero-eyebrow">🇦🇺 Built by hosts, for hosts</div>
-      <h1>Your guests deserve<br>a local guide.<br><em>You deserve revenue.</em></h1>
-      <p class="hero-desc">Give your guests a beautiful store of local experiences, restaurants and extras — all curated for their stay. Free to start. Earn more when you're ready.</p>
-      <div class="hero-actions">
-        <a href="signup.html" class="btn-primary">Start for free →</a>
-        <a href="#demo" class="btn-secondary">See an example store ↓</a>
-      </div>
-      <div class="hero-stats">
-        <div><div class="stat-num">Free</div><div class="stat-label">To get started</div></div>
-        <div><div class="stat-num">100%</div><div class="stat-label">Revenue goes to you</div></div>
-        <div><div class="stat-num">5 min</div><div class="stat-label">To set up your store</div></div>
-      </div>
+  <div class="container">
+    <div class="hero-eyebrow">🎉 Free for hosts. Forever.</div>
+    <h1>Your personal <em>online store</em><br>and <em>guidebook</em>. For free.</h1>
+    <p>Sell extras to your guests — early check-ins, welcome hampers, photography sessions. Recommend the best local restaurants, experiences and shops. All from one beautiful storefront.</p>
+    <div class="hero-cta">
+      <a href="signup.html" class="btn btn-brand">Start free as a host →</a>
+      <a href="#partners" class="btn btn-outline">For local businesses</a>
     </div>
-    <div class="hero-mockup">
-      <div style="position:relative;padding-top:20px">
-        <div class="mockup-url">sarah.hostiehub.com</div>
-        <div class="mockup-card">
-          <div class="mockup-header">
-            <div class="mockup-host">
-              <div class="mockup-avatar">S</div>
-              <div><div class="mockup-name">Sarah's Beach House</div><div class="mockup-sub">Extras & Add-ons</div></div>
-            </div>
-            <div class="mockup-cart">🛒 Cart (2)</div>
-          </div>
-          <div class="mockup-body">
-            <div class="mockup-hero-strip"><h3>Make your stay special ✨</h3><p>Add extras before you arrive</p></div>
-            <div class="mockup-products">
-              <div class="mockup-product"><div class="mockup-product-icon">🌸</div><div class="mockup-product-name">Welcome Flowers</div><div class="mockup-product-price">$45 / stay</div><div class="mockup-add">✓ Added</div></div>
-              <div class="mockup-product"><div class="mockup-product-icon">🧺</div><div class="mockup-product-name">Breakfast Basket</div><div class="mockup-product-price">$55 / morning</div><div class="mockup-add">Add</div></div>
-              <div class="mockup-product"><div class="mockup-product-icon">🏄</div><div class="mockup-product-name">Surf Lesson</div><div class="mockup-product-price">$120 / person</div><div class="mockup-add">Add</div></div>
-              <div class="mockup-product"><div class="mockup-product-icon">🚗</div><div class="mockup-product-name">Airport Pickup</div><div class="mockup-product-price">$75 / trip</div><div class="mockup-add">✓ Added</div></div>
-            </div>
-          </div>
-        </div>
-        <div class="mockup-float mockup-float-1"><div class="float-dot" style="background:#22c55e"></div><span style="font-size:13px">$130 just came in 💰</span></div>
-        <div class="mockup-float mockup-float-2"><span>🔒</span><span style="font-size:12px;color:var(--muted)">Paid via Stripe</span></div>
+    <div class="hero-microcopy">No credit card. No subscription. No catches.</div>
+  </div>
+</section>
+
+<!-- WHAT IS IT -->
+<section class="section">
+  <div class="container">
+    <div class="section-eyebrow">What it is</div>
+    <h2>Two tools, <em>one store</em>.</h2>
+    <p class="section-lead">Hostie Hub gives every property a custom storefront link. Your guests scan the QR or open the link, and find everything they need to upgrade their stay.</p>
+    <div class="duo">
+      <div class="duo-card accent-border">
+        <div class="duo-emoji">🛍️</div>
+        <h3>Your online store</h3>
+        <p>Offer paid extras directly to your guests — early check-ins, late check-outs, welcome hampers, mid-stay cleans, sunset photo sessions, surf lessons, anything you want. Stripe payments go straight to your bank account.</p>
+      </div>
+      <div class="duo-card accent-gold">
+        <div class="duo-emoji">🗺️</div>
+        <h3>Your guidebook for guests</h3>
+        <p>Local restaurants, cafes, experiences and shops appear automatically based on your property's postcode. Your guests discover the best of the area before they even arrive — and you don't lift a finger.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section class="how-section" id="how">
-  <div class="section-inner">
-    <div class="how-header reveal">
-      <div class="section-eyebrow">Simple as that</div>
-      <h2 class="section-title">Up and running in minutes</h2>
-      <p class="section-desc">No tech skills needed. We handle everything — you just add your products and share your link.</p>
+<!-- HOSTS SECTION -->
+<section class="section hosts-section" id="hosts">
+  <div class="container">
+    <div class="section-eyebrow">For Hosts</div>
+    <h2>Free <em>forever</em>. Seriously.</h2>
+    <p class="section-lead">Unlimited properties. Unlimited products. Unlimited orders. No hidden fees, no commission, no catches.</p>
+
+    <div class="price-banner">
+      <div class="free-tag">Free for hosts</div>
+      <div class="free-amount">$0</div>
+      <div class="free-suffix">forever — no credit card required</div>
+      <div class="free-detail">Hostie Hub is funded by local businesses paying for placement on host stores. Hosts and cleaners pay nothing — ever.</div>
     </div>
+
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="feature-icon">🏠</div>
+        <h4>Unlimited properties</h4>
+        <p>One STR or fifty. Every property gets its own custom guest store.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💸</div>
+        <h4>Stripe straight to you</h4>
+        <p>Connect your Stripe account once. Payments land directly in your bank.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🗓️</div>
+        <h4>Calendar sync</h4>
+        <p>Subscribe your Google or Apple calendar to see every order automatically.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">👥</div>
+        <h4>Invite your team</h4>
+        <p>Add cleaners, co-hosts and property managers. They get their own login at no cost.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🎨</div>
+        <h4>Custom branding</h4>
+        <p>Upload your logo, set your colours, write your own welcome message.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📧</div>
+        <h4>Auto guest emails</h4>
+        <p>Branded order confirmations sent automatically to every guest.</p>
+      </div>
+    </div>
+
+    <div style="text-align:center">
+      <a href="signup.html" class="btn btn-accent">Create your free store →</a>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section">
+  <div class="container">
+    <div class="section-eyebrow">How it works</div>
+    <h2>Live in <em>five minutes</em>.</h2>
+    <p class="section-lead">No tech skills required. No long onboarding. Just sign up and start sharing your store with guests.</p>
     <div class="steps">
-      <div class="step reveal"><div class="step-num">1<div class="step-icon">✍️</div></div><h3>Sign up free</h3><p>Create your Hostie Hub account for free. No credit card required, no lock-in.</p></div>
-      <div class="step reveal" style="transition-delay:0.1s"><div class="step-num">2<div class="step-icon">🎨</div></div><h3>Build your store</h3><p>Add your logo, colours and products. We give you a template to get started fast.</p></div>
-      <div class="step reveal" style="transition-delay:0.2s"><div class="step-num">3<div class="step-icon">💳</div></div><h3>Connect Stripe</h3><p>Link your existing Stripe account (or open one free). Payments go directly to you.</p></div>
-      <div class="step reveal" style="transition-delay:0.3s"><div class="step-num">4<div class="step-icon">🔗</div></div><h3>Share your link</h3><p>Drop your store link in your welcome message. Guests browse and buy before arrival.</p></div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <h4>Sign up free</h4>
+        <p>Create your account and pick your store name. Takes 30 seconds.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h4>Add properties &amp; products</h4>
+        <p>Pick from preset products or create your own. Set your prices. Set your service area.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h4>Share your link with guests</h4>
+        <p>Drop your store link into your Airbnb welcome message. Done.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="pricing-section" id="pricing">
-  <div class="section-inner">
-    <div class="pricing-header reveal">
-      <div class="section-eyebrow">Pricing</div>
-      <h2 class="section-title">Start free. Grow when you're ready.</h2>
-      <p class="section-desc">Every host gets a free store with local partner listings. Upgrade when you want to add your own products and earn directly from guests.</p>
-    </div>
-    <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:12px">
+<!-- PARTNERS SECTION -->
+<section class="section partners-section" id="partners">
+  <div class="container">
+    <div class="section-eyebrow">For Local Businesses</div>
+    <h2>Reach guests <em>before they arrive</em>.</h2>
+    <p class="section-lead">Get featured on local hosts' guest stores. Restaurants, cafes, experiences, photographers, florists, surf schools — anyone serving travellers.</p>
 
-      <!-- FREE -->
-      <div style="background:white;border:1.5px solid var(--border);border-radius:20px;padding:28px;display:flex;flex-direction:column;position:relative;overflow:hidden">
-        <div style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--border)"></div>
-        <div style="display:inline-block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:50px;background:#f0f0f0;color:#666;margin-bottom:14px;width:fit-content">🆓 Free</div>
-        <div style="font-family:'Playfair Display',serif;font-size:44px;font-weight:700;color:#555;line-height:1;margin-bottom:4px">$0</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">forever · no card needed</div>
-        <div style="font-size:12px;font-weight:600;color:#666;background:#f0f0f0;display:inline-block;padding:3px 10px;border-radius:50px;margin-bottom:20px;width:fit-content">Local guide only</div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:9px;flex:1;margin-bottom:20px">
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Your own store link</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Auto-populated local business listings</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Guest-facing local guide</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)"><div style="width:18px;height:18px;background:#fee2e2;color:#e53e3e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✗</div>Add own products</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)"><div style="width:18px;height:18px;background:#fee2e2;color:#e53e3e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✗</div>Custom branding & Stripe payments</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)"><div style="width:18px;height:18px;background:#fee2e2;color:#e53e3e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✗</div>Control which partner listings show</li>
-        </ul>
-        <a href="signup.html" style="background:#555;color:white;padding:13px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;text-align:center;display:block">Get started free →</a>
+    <div class="partner-card">
+      <div class="partner-flag">🎁 First 3 months free</div>
+      <h3>Become a Hostie Hub partner</h3>
+      <p class="partner-lead">List your business. Add vouchers and special offers. Reach guests staying nearby — before they even arrive at the property.</p>
+
+      <div class="partner-price">
+        <span class="amount">$49</span>
+        <span class="suffix">per listing per month, after 3 months free</span>
       </div>
 
-      <!-- HOST -->
-      <div style="background:white;border:1.5px solid var(--border);border-radius:20px;padding:28px;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 48px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-        <div style="position:absolute;top:0;left:0;right:0;height:4px;background:var(--border)"></div>
-        <div style="display:inline-block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:50px;background:var(--brand-light);color:var(--brand);margin-bottom:14px;width:fit-content">🏠 Host</div>
-        <div style="font-family:'Playfair Display',serif;font-size:44px;font-weight:700;color:var(--brand);line-height:1;margin-bottom:4px"><sup style="font-size:22px;vertical-align:top;margin-top:10px">$</sup>99</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">per year · cancel anytime</div>
-        <div style="font-size:12px;font-weight:600;color:var(--brand);background:var(--brand-light);display:inline-block;padding:3px 10px;border-radius:50px;margin-bottom:20px;width:fit-content">1 property</div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:9px;flex:1;margin-bottom:20px">
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Everything in Free</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Add unlimited own products</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Custom branding & colours</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Stripe payments — 100% to you</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Order dashboard</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Show or hide partner listings</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand-light);color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Analytics & revenue reports</li>
-        </ul>
-        <a href="https://buy.stripe.com/00w00j3HM4Tt2PiacA8ww01" style="background:var(--brand);color:white;padding:13px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;text-align:center;display:block">Get started →</a>
-      </div>
+      <ul class="partner-features">
+        <li>Featured on local host stores</li>
+        <li>Postcode-based service area</li>
+        <li>Attach vouchers and discounts</li>
+        <li>Direct guest enquiries to you</li>
+        <li>Pause or cancel anytime</li>
+        <li>Analytics on views &amp; redemptions</li>
+      </ul>
 
-      <!-- PRO -->
-      <div style="background:white;border:2px solid var(--brand);border-radius:20px;padding:28px;display:flex;flex-direction:column;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(44,110,106,0.12)" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-        <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--brand),var(--accent))"></div>
-        <div style="display:inline-block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:50px;background:var(--accent-light);color:#92600a;margin-bottom:14px;width:fit-content">⭐ Most Popular — Pro</div>
-        <div style="font-family:'Playfair Display',serif;font-size:44px;font-weight:700;color:var(--brand);line-height:1;margin-bottom:4px"><sup style="font-size:22px;vertical-align:top;margin-top:10px">$</sup>199</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">per year · cancel anytime</div>
-        <div style="font-size:12px;font-weight:600;color:var(--brand);background:var(--brand-light);display:inline-block;padding:3px 10px;border-radius:50px;margin-bottom:20px;width:fit-content">2–10 properties</div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:9px;flex:1;margin-bottom:20px">
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Everything in Host</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Up to 10 properties</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Full analytics & revenue reports</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Revenue by property breakdown</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Bulk product management</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Priority email support</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px"><div style="width:18px;height:18px;background:var(--brand);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Early access to new features</li>
-        </ul>
-        <a href="https://buy.stripe.com/aFacN55PU0Dd61u0C08ww02" style="background:var(--brand);color:white;padding:13px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;text-align:center;display:block">Get started →</a>
-        <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.5">Best for property managers with 2–10 properties.</p>
-      </div>
-
-      <!-- ENTERPRISE -->
-      <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:20px;padding:28px;display:flex;flex-direction:column;position:relative;overflow:hidden">
-        <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#E8A838,#d4952e)"></div>
-        <div style="display:inline-block;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 12px;border-radius:50px;background:rgba(232,168,56,0.2);color:#E8A838;margin-bottom:14px;width:fit-content">🏢 Enterprise</div>
-        <div style="font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:white;line-height:1;margin-bottom:4px">Let's talk</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px">custom · tailored to you</div>
-        <div style="font-size:12px;font-weight:600;color:#E8A838;background:rgba(232,168,56,0.15);display:inline-block;padding:3px 10px;border-radius:50px;margin-bottom:20px;width:fit-content">Unlimited properties</div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:9px;flex:1;margin-bottom:20px">
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Everything in Pro</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Unlimited properties</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>White label option</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Dedicated onboarding call</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Custom integrations on request</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Direct phone support</li>
-          <li style="display:flex;align-items:center;gap:10px;font-size:13px;color:rgba(255,255,255,0.85)"><div style="width:18px;height:18px;background:rgba(232,168,56,0.3);color:#E8A838;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">✓</div>Tailored pricing for your portfolio</li>
-        </ul>
-        <a href="mailto:hello@hostiehub.com.au" style="background:#E8A838;color:white;padding:13px;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;text-align:center;display:block">Get in touch →</a>
-      </div>
-
-    </div>
-    <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:8px">🔒 All prices include GST · Cancel anytime · No commissions on guest sales</p>
-  </div>
-</section>
-
-<section class="demo-section" id="demo">
-  <div class="demo-inner">
-    <div class="reveal">
-      <div class="section-eyebrow">See it in action</div>
-      <h2 class="section-title" style="color:white">Real stores, real hosts</h2>
-      <p class="section-desc">Here's what a Hostie Hub store looks like for guests. Every store is branded to the host and takes minutes to set up.</p>
-      <div style="margin-top:36px"><a href="demo-store.html" class="btn-primary" style="background:white;color:var(--brand)">View demo store →</a></div>
-    </div>
-    <div class="reveal" style="transition-delay:0.15s">
-      <div class="demo-stores">
-        <a href="guest-store.html?store=sarah" class="demo-store"><div class="demo-store-icon">🏖️</div><div class="demo-store-info"><div class="demo-store-name">Sarah's Beach House</div><div class="demo-store-url">sarah.hostiehub.com</div></div><div class="demo-store-arrow">→</div></a>
-        <a href="guest-store.html?store=bluemountains" class="demo-store"><div class="demo-store-icon">🏔️</div><div class="demo-store-info"><div class="demo-store-name">Blue Mountains Retreat</div><div class="demo-store-url">bluemountains.hostiehub.com</div></div><div class="demo-store-arrow">→</div></a>
-        <a href="guest-store.html?store=huntervalley" class="demo-store"><div class="demo-store-icon">🌿</div><div class="demo-store-info"><div class="demo-store-name">Hunter Valley Farmhouse</div><div class="demo-store-url">huntervalley.hostiehub.com</div></div><div class="demo-store-arrow">→</div></a>
-      </div>
-      <p class="demo-cta">These are example stores — yours could be next.</p>
+      <a href="partner-signup.html" class="btn btn-accent">Become a partner →</a>
     </div>
   </div>
 </section>
 
-<section class="testimonials-section" id="testimonials">
-  <div class="section-inner">
-    <div class="testimonials-header reveal">
-      <div class="section-eyebrow">From hosts like you</div>
-      <h2 class="section-title">Hosts love it. Guests love it.</h2>
-    </div>
-    <div class="testimonials-grid">
-      <div class="testimonial-card reveal"><div class="testimonial-stars">★★★★★</div><p class="testimonial-text">I added my store link to my Airbnb welcome message on a Monday. By Friday I'd made $340 in extras without any extra effort. This is an absolute no-brainer.</p><div class="testimonial-author"><div class="testimonial-avatar">J</div><div><div class="testimonial-name">Jessica M.</div><div class="testimonial-location">Gold Coast, QLD</div></div></div></div>
-      <div class="testimonial-card reveal" style="transition-delay:0.1s"><div class="testimonial-stars">★★★★★</div><p class="testimonial-text">I manage 6 properties and set up a store for each one in an afternoon. Guests really appreciate being able to organise extras before they arrive. It's a win-win.</p><div class="testimonial-author"><div class="testimonial-avatar">M</div><div><div class="testimonial-name">Marcus T.</div><div class="testimonial-location">Byron Bay, NSW</div></div></div></div>
-      <div class="testimonial-card reveal" style="transition-delay:0.2s"><div class="testimonial-stars">★★★★★</div><p class="testimonial-text">The fact that payments go straight to my account is huge. No waiting, no middleman taking a cut. Luke and Stacey have built something really special here.</p><div class="testimonial-author"><div class="testimonial-avatar">R</div><div><div class="testimonial-name">Rachel K.</div><div class="testimonial-location">Noosa, QLD</div></div></div></div>
-    </div>
-  </div>
-</section>
-
-<section class="faq-section" id="faq">
-  <div class="faq-inner">
-    <div class="faq-header reveal">
-      <div class="section-eyebrow">FAQ</div>
-      <h2 class="section-title">Questions? We've got answers.</h2>
-    </div>
-    <div class="faq-list reveal">
-      <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)">How does the free trial work?<span class="faq-chevron">⌄</span></div><div class="faq-answer">You get 30 days completely free — no credit card required. Your store is fully live and guests can place real orders during your trial. When your trial ends, simply choose a plan to keep your store active.</div></div>
-      <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)">Does Hostie Hub take a cut of my sales?<span class="faq-chevron">⌄</span></div><div class="faq-answer">No commission, ever. Your flat yearly subscription ($99 or $199) is all you pay us. Every dollar your guests spend goes directly into your Stripe account — we never touch it. The only fees are Stripe's standard payment processing fees (typically around 1.7% + 30¢ per transaction).</div></div>
-      <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)">Do I need a Stripe account to use Hostie Hub?<span class="faq-chevron">⌄</span></div><div class="faq-answer">Yes — Stripe is how your guests pay you directly. If you don't have one it only takes a few minutes to set up, and we walk you through it inside your dashboard.</div></div>
-      <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)">What's my store address?<span class="faq-chevron">⌄</span></div><div class="faq-answer">When you sign up you choose a username (e.g. "sarah") and your store lives at hostiehub.com.au/store/sarah. Just drop that link into your Airbnb listing or welcome message.</div></div>
-      <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)">Do guests need to create an account to order?<span class="faq-chevron">⌄</span></div><div class="faq-answer">No — guests just visit your store link and order directly. No login, no account, no friction. They enter their name, email, check-in dates and pay. That's it.</div></div>
-      <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)">What kinds of products and services can I sell?<span class="faq-chevron">⌄</span></div><div class="faq-answer">Anything your guests might want — early check-in, late checkout, welcome gifts, breakfast baskets, experiences, airport transfers, pet fees, extra cleaning, flowers, champagne, tours. We give you 57 suggested products to start with across all categories.</div></div>
-      <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)">How will I know what my guests ordered?<span class="faq-chevron">⌄</span></div><div class="faq-answer">Every order shows up in your host dashboard with the guest's name, check-in and check-out dates, property, what they ordered, and any notes they left you. You'll also receive an email notification for every new order.</div></div>
-      <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)">How do I process a refund for a guest?<span class="faq-chevron">⌄</span></div><div class="faq-answer">Because payments go directly to your Stripe account, refunds are processed by you through your Stripe dashboard. Log in to Stripe, find the payment and issue a full or partial refund from there.</div></div>
-      <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)">Can I use Hostie Hub across multiple properties?<span class="faq-chevron">⌄</span></div><div class="faq-answer">Yes — your store works across all your properties. The Host plan covers 1 property and the Pro plan covers up to 10. Need more? Contact us about Enterprise.</div></div>
-      <div class="faq-item"><div class="faq-question" onclick="toggleFaq(this)">Can I cancel my subscription?<span class="faq-chevron">⌄</span></div><div class="faq-answer">Yes, anytime. We don't believe in lock-ins. If you cancel, your store stays active until the end of your current billing year. And if you come back, your store and products will still be there.</div></div>
-    </div>
-  </div>
-</section>
-
-<section style="background:linear-gradient(160deg,#1a1a2e 0%,#0f3460 100%);padding:80px 32px;" id="partners">
-  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;">
-    <div>
-      <div style="font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:16px">For Local Businesses</div>
-      <h2 style="font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,44px);font-weight:700;color:white;line-height:1.2;letter-spacing:-0.5px;margin-bottom:20px">Reach guests <em style="font-style:italic;color:#E8A838">before</em><br>they even arrive.</h2>
-      <p style="font-size:16px;color:rgba(255,255,255,0.7);line-height:1.7;font-weight:300;margin-bottom:32px;max-width:460px">Join Hostie Hub as a partner business. Add your vouchers and offers — hosts in your area will share them with their guests automatically.</p>
-      <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:32px">
-        <div style="display:flex;align-items:center;gap:14px;color:rgba(255,255,255,0.85);font-size:15px"><div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">📍</div><span>Target guests by postcode — only reach the right area</span></div>
-        <div style="display:flex;align-items:center;gap:14px;color:rgba(255,255,255,0.85);font-size:15px"><div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🎟️</div><span>Guests purchase and download your vouchers at checkout</span></div>
-        <div style="display:flex;align-items:center;gap:14px;color:rgba(255,255,255,0.85);font-size:15px"><div style="width:36px;height:36px;background:rgba(255,255,255,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">⚡</div><span>Free to list — reach local guests at no cost</span></div>
+<!-- WHY FREE -->
+<section class="section why-section">
+  <div class="container">
+    <div class="why-card">
+      <h3>Why is it free for hosts?</h3>
+      <p>Because hosts already have enough costs. Our model is simple — local businesses pay to be discovered by your guests. The bigger and stronger the network of hosts, the better the platform becomes for everyone. Partners reach more guests, hosts get more partner offerings to feature, and guests get a better stay.</p>
+      <div class="why-tags">
+        <span class="why-tag">No subscription</span>
+        <span class="why-tag">No commission</span>
+        <span class="why-tag">No setup fee</span>
+        <span class="why-tag">No credit card</span>
       </div>
-      <a href="partner-signup.html" style="background:#E8A838;color:white;padding:16px 32px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:8px;" onmouseover="this.style.background='#d4952e'" onmouseout="this.style.background='#E8A838'">Join as a partner →</a>
-      <div style="margin-top:14px;font-size:13px;color:rgba(255,255,255,0.4)">Already a partner? <a href="partner-dashboard.html" style="color:rgba(255,255,255,0.7);text-decoration:none;font-weight:500">Log in here →</a></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:20px;text-align:center"><div style="font-size:32px;margin-bottom:10px">🍽️</div><div style="font-size:14px;font-weight:600;color:white;margin-bottom:4px">Restaurants</div><div style="font-size:12px;color:rgba(255,255,255,0.5)">Offer dining vouchers to arriving guests</div></div>
-      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:20px;text-align:center"><div style="font-size:32px;margin-bottom:10px">🧖</div><div style="font-size:14px;font-weight:600;color:white;margin-bottom:4px">Spas & Wellness</div><div style="font-size:12px;color:rgba(255,255,255,0.5)">Discounted treatments for local guests</div></div>
-      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:20px;text-align:center"><div style="font-size:32px;margin-bottom:10px">🏄</div><div style="font-size:14px;font-weight:600;color:white;margin-bottom:4px">Experiences</div><div style="font-size:12px;color:rgba(255,255,255,0.5)">Tours, lessons, activities & more</div></div>
-      <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:20px;text-align:center"><div style="font-size:32px;margin-bottom:10px">🛍️</div><div style="font-size:14px;font-weight:600;color:white;margin-bottom:4px">Retail & More</div><div style="font-size:12px;color:rgba(255,255,255,0.5)">Any local business with an offer</div></div>
     </div>
   </div>
 </section>
 
-<div style="background:linear-gradient(135deg,#2C6E6A,#1d4d4a);padding:20px 32px;">
-  <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
-    <div style="display:flex;align-items:center;gap:12px">
-      <span style="font-size:22px">🛠️</span>
-      <div><div style="font-size:15px;font-weight:600;color:white;margin-bottom:2px">Built with hosts, for hosts — and we're still building.</div><div style="font-size:13px;color:rgba(255,255,255,0.7)">Got an idea? A frustration? Something you wish existed? We genuinely want to know.</div></div>
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <div class="container">
+    <h2>Help us build something genuinely <em style="color:var(--accent);font-style:italic">good for travellers</em>.</h2>
+    <p>Join the early hosts shaping how short-term rentals work in Australia. We're building this together — host by host, partner by partner.</p>
+    <div class="hero-cta">
+      <a href="signup.html" class="btn btn-brand">Start free as a host</a>
+      <a href="partner-signup.html" class="btn btn-outline">List your business</a>
     </div>
-    <a href="contact.html?category=Product+Idea" style="background:#E8A838;color:white;padding:10px 24px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">Share your idea →</a>
-  </div>
-</div>
-
-<section style="background:#faf9f7;padding:80px 32px;">
-  <div style="max-width:780px;margin:0 auto;text-align:center;">
-    <div style="font-size:48px;margin-bottom:20px">👋</div>
-    <h2 style="font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,36px);font-weight:700;color:#1a1a1a;margin-bottom:20px;letter-spacing:-0.5px">You help build this platform.</h2>
-    <p style="font-size:17px;color:#6b7280;line-height:1.8;margin-bottom:24px;font-weight:300">We're Luke and Stacey — short-term rental hosts from Newcastle, NSW. We built Hostie Hub because we needed it ourselves and couldn't find anything like it.</p>
-    <p style="font-size:17px;color:#6b7280;line-height:1.8;margin-bottom:24px;font-weight:300">We're still building. Every feature on this platform has come from real conversations with real hosts. If something's missing, broken, or could be better — <strong style="color:#2C6E6A">we want to hear it.</strong> Your ideas directly shape what we build next.</p>
-    <p style="font-size:17px;color:#6b7280;line-height:1.8;margin-bottom:36px;font-weight:300">This isn't a faceless SaaS company. It's two hosts who care deeply about making this work for you.</p>
-    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
-      <a href="contact.html" style="background:#2C6E6A;color:white;padding:14px 32px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:8px;">💬 Share an idea or feedback</a>
-      <a href="mailto:hello@hostiehub.com.au" style="background:white;color:#2C6E6A;padding:14px 32px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;text-decoration:none;border:2px solid #2C6E6A;display:inline-flex;align-items:center;gap:8px;">✉️ Email us directly</a>
-    </div>
-    <p style="font-size:13px;color:#9ca3af;margin-top:20px"><a href="mailto:hello@hostiehub.com.au" style="color:#9ca3af">hello@hostiehub.com.au</a> · We read and reply to every message personally.</p>
   </div>
 </section>
 
-<footer>
-  <div class="footer-inner">
-    <div class="footer-top">
-      <div>
-        <div class="footer-brand-name">Hostie Hub <span class="nav-logo-dot"></span></div>
-        <p class="footer-brand-desc">Australia's first online extras store platform built by hosts, for hosts. We're Luke and Stacey — and we built this because we needed it ourselves.</p>
-        <div class="footer-contact">
-          <div>📧 <a href="mailto:hello@hostiehub.com.au" style="color:rgba(255,255,255,0.6);text-decoration:none">hello@hostiehub.com.au</a></div>
-          <div>📍 Newcastle, NSW, Australia</div>
-        </div>
-      </div>
-      <div>
-        <div class="footer-col-title">Product</div>
-        <ul class="footer-links">
-          <li><a href="#how">How it works</a></li>
-          <li><a href="#pricing">Pricing</a></li>
-          <li><a href="#demo">See a store</a></li>
-          <li><a href="signup.html">Sign up</a></li>
-          <li><a href="dashboard.html">Host login</a></li>
-          <li><a href="partner-signup.html">Partner program</a></li>
-          <li><a href="partner-dashboard.html">Partner login</a></li>
-        </ul>
-      </div>
-      <div>
-        <div class="footer-col-title">Support</div>
-        <ul class="footer-links">
-          <li><a href="#faq">FAQ</a></li>
-          <li><a href="contact.html">Contact us</a></li>
-          <li><a href="privacy.html">Privacy Policy</a></li>
-          <li><a href="terms.html">Terms of Service</a></li>
-        </ul>
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-logo"><span class="logo-dot" style="background:var(--accent)"></span> Hostie Hub</div>
+      <div class="footer-links">
+        <a href="plans.html">Pricing</a>
+        <a href="login.html">Log in</a>
+        <a href="signup.html">Sign up</a>
+        <a href="partner-signup.html">Partners</a>
+        <a href="mailto:hello@hostiehub.com.au">Contact</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2025 Hostie Hub · Fieldstone Group Pty Ltd · ABN 75 656 604 376</span>
-      <span><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></span>
+      © 2026 Hostie Hub · Made with ❤️ in Newcastle, Australia
     </div>
   </div>
 </footer>
 
-<script>
-  function toggleFaq(el) {
-    el.parentElement.classList.toggle('open');
-  }
-  const reveals = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); e.target.classList.remove('hidden-before-reveal'); } });
-  }, { threshold: 0.1 });
-  reveals.forEach(r => { r.classList.add('hidden-before-reveal'); observer.observe(r); });
-</script>
-<script src="support-widget.js"></script>
 </body>
 </html>

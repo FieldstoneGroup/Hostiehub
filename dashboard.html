@@ -355,7 +355,7 @@
     <button class="nav-item" onclick="showPage('localproducts', this)" style="background:rgba(232,168,56,0.18);border:1px solid rgba(232,168,56,0.3);font-weight:700;color:#E8A838"><div class="nav-icon">🤝</div><span>Local Products</span></button>
     <button class="nav-item" onclick="showPage('stripe', this)"><div class="nav-icon">💳</div><span>Stripe Connect</span></button>
     <div class="nav-section-label">Account</div>
-    <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account & Billing</span></button>
+    <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account</span></button>
     <button class="nav-item" onclick="showPage('users', this)"><div class="nav-icon">👥</div><span>My Team</span></button>
     <button class="nav-item" id="linkedStoresNavBtn" onclick="showPage('linkedstores', this)" style="display:none"><div class="nav-icon">🔗</div><span>Linked Stores</span><span id="linkedStoresBadge" style="margin-left:auto;background:#5DCAA5;color:#0A1628;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px"></span></button>
   </nav>
@@ -376,28 +376,8 @@
   </div>
 
   <!-- TRIAL BANNER -->
-  <div id="trialBanner" style="display:none;background:linear-gradient(135deg,#E8A838,#d4952e);color:white;padding:12px 32px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-    <div style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500">
-      <span>⏳</span>
-      <span id="trialBannerText">Your free trial is active</span>
-    </div>
-    <a href="plans.html" style="background:white;color:#92600a;padding:8px 20px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;">Activate plan →</a>
-  </div>
+  <!-- Trial banner + expired overlay removed: Hostie Hub is free for hosts -->
 
-  <!-- TRIAL EXPIRED OVERLAY -->
-  <div id="trialExpiredOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;padding:20px;">
-    <div style="background:white;border-radius:24px;padding:48px;max-width:520px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,0.3);">
-      <div style="font-size:56px;margin-bottom:16px">⏰</div>
-      <h2 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;margin-bottom:12px">Your free trial has ended</h2>
-      <p style="font-size:15px;color:var(--muted);line-height:1.6;margin-bottom:32px">Your store is currently inactive. Choose a plan to reactivate it — your products, properties and settings are all saved and ready to go.</p>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <a href="plans.html" style="background:var(--brand);color:white;padding:16px;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;display:block;transition:background 0.2s;">🏠 Host Plan — $99/yr (1 property)</a>
-        <a href="plans.html" style="background:var(--brand-dark);color:white;padding:16px;border-radius:12px;font-size:16px;font-weight:600;text-decoration:none;display:block;">⭐ Pro Plan — $199/yr (2–10 properties)</a>
-        <a href="mailto:hello@hostiehub.com.au">hello@hostiehub.com.au</a>
-      </div>
-      <p style="font-size:12px;color:var(--muted);margin-top:20px">Questions? Email us at <a href="mailto:hello@hostiehub.com.au">hello@hostiehub.com.au</a></p>
-    </div>
-  </div>
 
   <div class="content">
 
@@ -498,13 +478,6 @@
 
     <!-- PRODUCTS -->
     <div class="page" id="page-products">
-      <div id="productsPaywallBanner" style="display:none;background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:12px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-        <div>
-          <div style="font-size:14px;font-weight:700;color:white;margin-bottom:4px">🔒 Adding products requires a paid plan</div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.5">Your store already shows local partner listings for free. Upgrade to add your own products, set custom pricing and accept Stripe payments.</div>
-        </div>
-        <a href="plans.html" style="background:#E8A838;color:white;padding:10px 20px;border-radius:50px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;flex-shrink:0">View plans →</a>
-      </div>
       <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:12px">
         <button class="btn btn-outline btn-sm" id="browsePresetsBtn" onclick="openPresetModal()">✨ Browse presets</button>
         <button class="btn btn-primary" id="addProductBtn" onclick="openProductModal()">+ Add product</button>
@@ -655,8 +628,8 @@
     <!-- ACCOUNT -->
     <div class="page" id="page-account">
       <div style="margin-bottom:24px">
-        <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Account & Billing</h2>
-        <p style="font-size:13px;color:var(--muted);margin-top:2px">Your account details and subscription</p>
+        <h2 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Account</h2>
+        <p style="font-size:13px;color:var(--muted);margin-top:2px">Your account details</p>
       </div>
       <div class="two-col-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div>
@@ -715,36 +688,13 @@
         </div>
         <div>
           <div class="card" style="margin-bottom:16px">
-            <div class="card-title">Subscription</div>
-            <div class="card-desc">Your current Hostie Hub plan.</div>
-
-            <!-- Current plan status -->
-            <div id="trialStatusCard" style="background:var(--accent-light);border:1.5px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:16px;display:none">
-              <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#92600a;margin-bottom:6px">🟡 Free Trial Active</div>
-              <div style="font-size:22px;font-weight:700;color:#92600a;font-family:'Playfair Display',serif;margin-bottom:4px" id="trialDaysLeft">30 days remaining</div>
-              <div style="font-size:12px;color:#a16207;line-height:1.5">No credit card required. When your trial ends your store will pause until you activate a plan.</div>
+            <div class="card-title">Plan</div>
+            <div class="card-desc">Hostie Hub is free for hosts.</div>
+            <div style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:12px;padding:18px 20px;margin-top:12px">
+              <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:6px">✅ Free Forever</div>
+              <div style="font-size:22px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif;margin-bottom:4px">Free Plan</div>
+              <div style="font-size:13px;color:var(--brand-dark);line-height:1.6">Unlimited properties, unlimited products, unlimited orders. No credit card. No subscription. Hostie Hub is funded by local partners — not by hosts.</div>
             </div>
-            <div id="freePlanCard" style="background:#f4f6f5;border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;display:none">
-              <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">🆓 Free Plan</div>
-              <div style="font-size:18px;font-weight:700;color:var(--text);font-family:'Playfair Display',serif;margin-bottom:4px" id="planName">Free</div>
-              <div style="font-size:12px;color:var(--muted)" id="planProperties">Partner listings shown automatically — add your own products by upgrading</div>
-            </div>
-            <div id="paidStatusCard" style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:12px;padding:16px;margin-bottom:16px;display:none">
-              <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:6px">✅ Active Plan</div>
-              <div style="font-size:22px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif;margin-bottom:4px" id="planName2">Host Plan · $99/yr</div>
-              <div style="font-size:12px;color:var(--brand-dark)" id="planProperties2">1 property</div>
-            </div>
-            <div id="subscriptionBtns" style="display:flex;gap:10px;flex-wrap:wrap">
-              <div id="trialLabel" style="display:none;width:100%;font-size:12px;color:#92600a;background:var(--accent-light);border-radius:8px;padding:8px 12px;margin-bottom:4px">⏳ You're currently on a free trial — choose a plan to keep your store live after it ends.</div>
-              <a href="plans.html" class="btn btn-primary btn-sm">🏠 Host Plan · $99/yr</a>
-              <a href="plans.html" class="btn btn-outline btn-sm">⭐ Pro Plan · $199/yr</a>
-              <a href="mailto:hello@hostiehub.com.au" class="btn btn-outline btn-sm">🏢 Enterprise · Contact us</a>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-title">Danger zone</div>
-            <div class="card-desc">These actions are permanent.</div>
-            <button class="btn btn-danger btn-sm">Cancel subscription</button>
           </div>
         </div>
       </div>
@@ -1141,22 +1091,8 @@
   </div>
 </div>
 
-<!-- UPGRADE MODAL -->
-<div class="modal-overlay" id="upgradeModal">
-  <div class="modal" style="max-width:480px;text-align:center">
-    <div style="font-size:48px;margin-bottom:16px">🏠</div>
-    <div class="modal-title" style="font-size:22px;margin-bottom:12px" id="upgradeModalTitle">Property limit reached</div>
-    <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px" id="upgradeModalText">You've reached the maximum number of properties on your current plan.</p>
-    <div style="background:var(--bg);border-radius:12px;padding:16px;margin-bottom:24px">
-      <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Would you like someone to contact you about upgrading?</div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <a href="plans.html" class="btn btn-primary" style="justify-content:center;padding:12px">View plans & upgrade →</a>
-        <button class="btn btn-outline" onclick="requestUpgradeContact()" id="upgradeContactBtn">✉️ Yes, contact me about upgrading</button>
-      </div>
-    </div>
-    <button class="modal-close-text" onclick="document.getElementById('upgradeModal').classList.remove('open')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer">Maybe later</button>
-  </div>
-</div>
+<!-- Property limit modal removed: unlimited properties for all hosts -->
+
 
 <!-- LOCAL PRODUCT MODAL -->
 <div class="modal-overlay" id="localProductModal">
@@ -1309,7 +1245,7 @@
 
   const emojis = ['🌸','🧺','🍾','🕐','🏄','🚗','🎁','🌿','☕','🍫','🧁','🎂','🌊','🏠','🧴','🛁','🎵','🐾','🎉','🍕','🥗','🍷','🎈','🍫','🛎️','🧹'];
   const swatchColours = ['#2C6E6A','#1d4d4a','#E8A838','#e74c3c','#8e44ad','#2980b9','#27ae60','#e67e22','#1a1a1a'];
-  const pageTitles = { overview:'Overview', orders:'Orders', analytics:'Analytics', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', localproducts:'Local Products', stripe:'Stripe Connect', account:'Account & Billing', users:'My Team', linkedstores:'Linked Stores' };
+  const pageTitles = { overview:'Overview', orders:'Orders', analytics:'Analytics', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', localproducts:'Local Products', stripe:'Stripe Connect', account:'Account', users:'My Team', linkedstores:'Linked Stores' };
 
   const PRESET_PRODUCTS = [
     // STAY SERVICES
@@ -1493,90 +1429,12 @@
     if (currentHost.store_name || currentHost.store_tagline || currentHost.brand_colour) {
       tickCheck('checkStore');
     }
-    // Show plan details
-    const plan = currentHost.plan || 'free';
-    const planNames = { free: 'Free', host: 'Host Plan · $99/yr', pro: 'Pro Plan · $199/yr', enterprise: 'Enterprise Plan · Custom' };
-    const planProps = { free: 'Partner listings only', host: '1 property', pro: 'Up to 10 properties', enterprise: 'Unlimited properties' };
-    if (document.getElementById('planName')) document.getElementById('planName').textContent = planNames[plan] || planNames.free;
-    if (document.getElementById('planProperties')) document.getElementById('planProperties').textContent = planProps[plan] || planProps.free;
-
-    // Show/hide paywall banner on products page
-    const paid = isPaidOrTrial();
-    const paywallBanner = document.getElementById('productsPaywallBanner');
-    if (paywallBanner) paywallBanner.style.display = paid ? 'none' : 'flex';
-    const addProductBtn = document.getElementById('addProductBtn');
-    const browsePresetsBtn = document.getElementById('browsePresetsBtn');
-    if (addProductBtn) { addProductBtn.style.opacity = paid ? '1' : '0.4'; addProductBtn.title = paid ? '' : 'Requires paid plan'; }
-    if (browsePresetsBtn) { browsePresetsBtn.style.opacity = paid ? '1' : '0.4'; browsePresetsBtn.title = paid ? '' : 'Requires paid plan'; }
-
-    // ── TRIAL CHECK ──
-    checkTrial();
+    // Hostie Hub is free for hosts — no paywall on products.
   }
 
   function checkTrial() {
-    const trialEndsAt = currentHost.trial_ends_at ? new Date(currentHost.trial_ends_at) : null;
-    const isPaid = currentHost.plan && ['host', 'pro', 'enterprise'].includes(currentHost.plan);
-    const isFree = !currentHost.plan || currentHost.plan === 'free';
-    const now = new Date();
-    const daysLeft = trialEndsAt ? Math.ceil((trialEndsAt - now) / (1000 * 60 * 60 * 24)) : 0;
-    const trialExpired = trialEndsAt && now > trialEndsAt;
-
-    const trialCard = document.getElementById('trialStatusCard');
-    const freeCard = document.getElementById('freePlanCard');
-    const paidCard = document.getElementById('paidStatusCard');
-    const subBtns = document.getElementById('subscriptionBtns');
-
-    if (isPaid) {
-      if (trialCard) trialCard.style.display = 'none';
-      if (freeCard) freeCard.style.display = 'none';
-      if (paidCard) paidCard.style.display = 'block';
-      if (subBtns) subBtns.style.display = 'none';
-      const planNames = { host: 'Host Plan · $99/yr', pro: 'Pro Plan · $199/yr', enterprise: 'Enterprise Plan · Custom' };
-      const planProps = { host: '1 property', pro: 'Up to 10 properties', enterprise: 'Unlimited properties' };
-      if (document.getElementById('planName2')) document.getElementById('planName2').textContent = planNames[currentHost.plan] || planNames.host;
-      if (document.getElementById('planProperties2')) document.getElementById('planProperties2').textContent = planProps[currentHost.plan] || planProps.host;
-      document.getElementById('trialBanner').style.display = 'none';
-      document.getElementById('trialExpiredOverlay').style.display = 'none';
-      return;
-    }
-
-    if (isFree && !trialEndsAt) {
-      // Pure free plan — no trial
-      if (trialCard) trialCard.style.display = 'none';
-      if (freeCard) freeCard.style.display = 'block';
-      if (paidCard) paidCard.style.display = 'none';
-      if (subBtns) subBtns.style.display = 'flex';
-      document.getElementById('trialBanner').style.display = 'none';
-      document.getElementById('trialExpiredOverlay').style.display = 'none';
-      return;
-    }
-
-    // On trial
-    if (trialCard) trialCard.style.display = 'block';
-    if (freeCard) freeCard.style.display = 'none';
-    if (paidCard) paidCard.style.display = 'none';
-    if (subBtns) subBtns.style.display = 'flex';
-    document.getElementById('trialLabel').style.display = 'block';
-    if (daysLeft > 0) {
-      document.getElementById('trialDaysLeft').textContent = daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + ' remaining';
-    } else {
-      document.getElementById('trialDaysLeft').textContent = 'Trial ended';
-    }
-
-    if (!trialExpired && daysLeft > 0) {
-      const banner = document.getElementById('trialBanner');
-      banner.style.display = 'flex';
-      const text = daysLeft === 1
-        ? '⚠️ Your free trial ends tomorrow — activate your plan to keep your store live'
-        : daysLeft <= 7
-        ? '⚠️ Your free trial ends in ' + daysLeft + ' days — activate your plan to keep your store live'
-        : 'Your free trial is active — ' + daysLeft + ' days remaining';
-      document.getElementById('trialBannerText').textContent = text;
-      if (daysLeft <= 3) document.getElementById('trialBanner').style.background = 'linear-gradient(135deg,#e53e3e,#c53030)';
-    } else if (trialExpired) {
-      document.getElementById('trialExpiredOverlay').style.display = 'flex';
-      sb.from('hosts').update({ is_active: false }).eq('id', currentUser.id);
-    }
+    // Hostie Hub is now free for hosts. No trial enforcement.
+    return;
   }
 
   function showPage(name, btn) {
@@ -1644,19 +1502,7 @@
     const nickname = document.getElementById('propNickname').value.trim();
     if (!nickname) { showToast('⚠️ Property nickname is required'); return; }
 
-    // Check property limits based on plan
-    if (!editingPropertyId) {
-      const plan = currentHost.plan || 'host';
-      const limit = plan === 'pro' ? 10 : plan === 'enterprise' ? Infinity : 1;
-      if (properties.length >= limit) {
-        closePropertyModal();
-        const planName = plan === 'pro' ? 'Pro' : 'Host';
-        document.getElementById('upgradeModalTitle').textContent = `Property limit reached`;
-        document.getElementById('upgradeModalText').textContent = `You've reached the ${limit} property limit on your ${planName} plan. Upgrade your subscription to add more properties.`;
-        document.getElementById('upgradeModal').classList.add('open');
-        return;
-      }
-    }
+    // Hostie Hub is free for hosts — unlimited properties.
 
     const data = { host_id: currentUser.id, nickname, address: document.getElementById('propAddress').value.trim(), postcode: document.getElementById('propPostcode').value.trim() };
     if (editingPropertyId) {
@@ -1868,25 +1714,18 @@
   }
 
   function isPaidPlan() {
-    return currentHost && currentHost.plan && ['host', 'pro', 'enterprise'].includes(currentHost.plan);
+    // Hostie Hub is free for hosts — everyone has full access.
+    return true;
   }
   function isPaidOrTrial() {
-    const trialEndsAt = currentHost?.trial_ends_at ? new Date(currentHost.trial_ends_at) : null;
-    const trialActive = trialEndsAt && new Date() < trialEndsAt;
-    return isPaidPlan() || trialActive;
+    return true;
   }
   function showUpgradePaywall(msg) {
-    document.getElementById('upgradeModalTitle').textContent = '🔒 Paid plan required';
-    document.getElementById('upgradeModalText').textContent = (msg || 'This feature requires a paid plan.') + ' Upgrade to unlock adding your own products, custom branding and Stripe payments.';
-    document.getElementById('upgradeModal').classList.add('open');
+    // No-op — Hostie Hub is free for hosts.
   }
   window.showUpgradePaywall = showUpgradePaywall;
 
   function openProductModal() {
-    if (!isPaidOrTrial()) {
-      showUpgradePaywall('Adding your own products requires a paid plan.');
-      return;
-    }
     editingProductId = null;
     document.getElementById('productModalTitle').textContent = 'Add product';
     document.getElementById('pName').value = '';
@@ -2659,7 +2498,7 @@
       return;
     }
 
-    list.innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--brand-light);border-radius:8px;border-left:3px solid var(--brand)">🤝 <strong>Local partner listings</strong> are automatically shown in your guest store. ' + (paid ? 'You can hide individual listings using the toggle.' : 'Upgrade to a paid plan to control which listings appear.') + '</div>' +
+    list.innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:16px;padding:10px 14px;background:var(--brand-light);border-radius:8px;border-left:3px solid var(--brand)">🤝 <strong>Local partner listings</strong> are automatically shown in your guest store. You can hide individual listings using the toggle.</div>' +
     localPartnerProducts.map(p => {
       const isAdded = addedPartnerProductIds.has(p.id);
       const isBooking = p.type === 'booking';

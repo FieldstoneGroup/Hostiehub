@@ -4,132 +4,149 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Choose Your Plan – Hostie Hub</title>
+<title>Pricing – Hostie Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --brand: #2C6E6A; --brand-dark: #1d4d4a; --brand-light: #e6f2f1;
     --accent: #E8A838; --accent-light: #fdf3e0;
     --text: #1a1a1a; --muted: #6b7280; --bg: #faf9f7;
-    --card: #ffffff; --border: #e8e4df; --radius: 16px;
+    --card: #ffffff; --border: #e8e4df; --radius: 20px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 40px 20px; }
 
-  .header { text-align: center; margin-bottom: 48px; }
-  .logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--brand); margin-bottom: 32px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
+  .container { max-width: 1080px; margin: 0 auto; }
+
+  .logo { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--brand); margin-bottom: 48px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; }
   .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
-  .header h1 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 40px); font-weight: 700; margin-bottom: 12px; letter-spacing: -0.5px; }
-  .header p { font-size: 16px; color: var(--muted); line-height: 1.6; max-width: 480px; margin: 0 auto; }
 
-  .plans { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; max-width: 1000px; width: 100%; margin-bottom: 32px; }
+  .hero { text-align: center; margin-bottom: 56px; }
+  .hero-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--brand); margin-bottom: 16px; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(36px, 5.5vw, 56px); font-weight: 700; line-height: 1.1; letter-spacing: -1px; margin-bottom: 20px; }
+  .hero h1 span { color: var(--brand); font-style: italic; }
+  .hero p { font-size: 17px; color: var(--muted); line-height: 1.6; max-width: 580px; margin: 0 auto; }
 
-  .plan-card { background: white; border: 1.5px solid var(--border); border-radius: 24px; padding: 36px 28px; position: relative; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s; }
-  .plan-card:hover { transform: translateY(-4px); box-shadow: 0 20px 48px rgba(0,0,0,0.08); }
-  .plan-card.featured { border: 2px solid var(--brand); box-shadow: 0 20px 60px rgba(44,110,106,0.15); transform: translateY(-8px); }
-  .plan-card.featured:hover { transform: translateY(-12px); }
-  .plan-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--border); }
-  .plan-card.featured::before { background: linear-gradient(90deg, var(--brand), var(--accent)); }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 56px; }
+  @media (max-width: 760px) { .cards { grid-template-columns: 1fr; } }
 
-  .plan-badge { display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 5px 14px; border-radius: 50px; margin-bottom: 16px; background: var(--brand-light); color: var(--brand); }
-  .plan-card.featured .plan-badge { background: var(--accent-light); color: #92600a; }
+  .card { background: white; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 36px 32px; }
+  .card.host { border: 2px solid var(--brand); box-shadow: 0 20px 60px rgba(44,110,106,0.10); }
 
-  .plan-price { font-family: 'Playfair Display', serif; font-size: 56px; font-weight: 700; color: var(--brand); line-height: 1; margin-bottom: 4px; }
-  .plan-price sup { font-size: 26px; vertical-align: top; margin-top: 10px; }
-  .plan-price.enterprise { font-size: 32px; padding-top: 12px; }
-  .plan-period { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
-  .plan-properties { font-size: 13px; font-weight: 600; color: var(--brand); background: var(--brand-light); display: inline-block; padding: 4px 12px; border-radius: 50px; margin-bottom: 24px; }
+  .card-eyebrow { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 5px 12px; border-radius: 50px; margin-bottom: 16px; }
+  .eb-host { background: var(--brand-light); color: var(--brand); }
+  .eb-partner { background: var(--accent-light); color: #92600a; }
 
-  .plan-features { list-style: none; margin-bottom: 28px; display: flex; flex-direction: column; gap: 11px; flex: 1; }
-  .plan-features li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--text); line-height: 1.4; }
-  .check { width: 20px; height: 20px; background: var(--brand-light); color: var(--brand); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
-  .plan-card.featured .check { background: var(--brand); color: white; }
+  .card h2 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .card-sub { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
 
-  .plan-btn { display: block; text-align: center; padding: 15px; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; text-decoration: none; transition: all 0.2s; background: var(--brand); color: white; border: none; cursor: pointer; width: 100%; }
-  .plan-btn:hover { background: var(--brand-dark); transform: translateY(-1px); }
-  .plan-btn.enterprise { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
-  .plan-btn.enterprise:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
+  .price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 24px; }
+  .price-amount { font-family: 'Playfair Display', serif; font-size: 44px; font-weight: 700; color: var(--text); letter-spacing: -1px; }
+  .price-amount.brand { color: var(--brand); }
+  .price-suffix { font-size: 14px; color: var(--muted); }
 
-  .back-link { font-size: 14px; color: var(--muted); text-align: center; }
-  .back-link a { color: var(--brand); text-decoration: none; font-weight: 500; }
-  .back-link a:hover { text-decoration: underline; }
+  .features { list-style: none; margin-bottom: 28px; }
+  .features li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: #374151; line-height: 1.6; padding: 6px 0; }
+  .features li::before { content: '✓'; color: var(--brand); font-weight: 700; flex-shrink: 0; font-size: 16px; line-height: 1.4; }
+  .features.partner li::before { color: var(--accent); }
 
-  .guarantee { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); margin-top: 24px; }
-  .guarantee span { font-size: 18px; }
+  .btn { display: block; width: 100%; padding: 14px 20px; border-radius: 50px; font-size: 15px; font-weight: 700; text-align: center; text-decoration: none; transition: opacity 0.2s; }
+  .btn:hover { opacity: 0.9; }
+  .btn-brand { background: var(--brand); color: white; }
+  .btn-accent { background: var(--accent); color: white; }
+  .btn-outline { background: white; color: var(--brand); border: 1.5px solid var(--brand); }
 
-  @media (max-width: 768px) {
-    .plans { grid-template-columns: 1fr; }
-    .plan-card.featured { transform: translateY(0); }
-    .plan-card.featured:hover { transform: translateY(-4px); }
-  }
+  .why { background: white; border-radius: var(--radius); padding: 36px; text-align: center; border: 1px solid var(--border); }
+  .why h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+  .why p { font-size: 14px; color: var(--muted); line-height: 1.7; max-width: 580px; margin: 0 auto 20px; }
+  .why-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .why-tag { font-size: 12px; background: var(--brand-light); color: var(--brand); padding: 6px 14px; border-radius: 50px; font-weight: 600; }
+
+  .footer { text-align: center; padding: 40px 0 20px; font-size: 13px; color: var(--muted); }
+  .footer a { color: var(--brand); text-decoration: none; font-weight: 600; }
 </style>
 </head>
 <body>
 
-  <div class="header">
-    <a href="index.html" class="logo">Hostie Hub <span class="logo-dot"></span></a>
-    <h1>Choose your plan</h1>
-    <p>No commissions, no per-sale fees. Every dollar your guests spend goes directly to you.</p>
+<div class="container">
+
+  <a href="index.html" class="logo">
+    <span class="logo-dot"></span>
+    Hostie Hub
+  </a>
+
+  <div class="hero">
+    <div class="hero-eyebrow">Pricing</div>
+    <h1>Free for hosts. <span>Forever.</span></h1>
+    <p>Hostie Hub is a platform that connects short-term rental hosts with their guests, and local businesses with both. Hosts and cleaners pay nothing — ever. Local businesses pay for placement.</p>
   </div>
 
-  <div class="plans">
+  <div class="cards">
 
-    <!-- HOST -->
-    <div class="plan-card">
-      <div class="plan-badge">🏠 Host</div>
-      <div class="plan-price"><sup>$</sup>99</div>
-      <div class="plan-period">per year · cancel anytime</div>
-      <div class="plan-properties">1–3 properties</div>
-      <ul class="plan-features">
-        <li><div class="check">✓</div> Your store at <strong>yourname.hostiehub.com</strong></li>
-        <li><div class="check">✓</div> Unlimited products & services</li>
-        <li><div class="check">✓</div> Custom branding & colours</li>
-        <li><div class="check">✓</div> Direct Stripe payments — 100% to you</li>
-        <li><div class="check">✓</div> Guest notes & property selector</li>
-        <li><div class="check">✓</div> Order dashboard</li>
-        <li><div class="check">✓</div> Local partner vouchers</li>
-        <li><div class="check">✓</div> Email support</li>
+    <div class="card host">
+      <div class="card-eyebrow eb-host">For Hosts</div>
+      <h2>Free</h2>
+      <div class="card-sub">Unlimited everything. No credit card. No catch.</div>
+
+      <div class="price">
+        <span class="price-amount brand">$0</span>
+        <span class="price-suffix">forever</span>
+      </div>
+
+      <ul class="features">
+        <li>Unlimited properties</li>
+        <li>Unlimited products and services</li>
+        <li>Unlimited orders</li>
+        <li>Stripe payments straight to your account</li>
+        <li>Local partner offerings shown free</li>
+        <li>Calendar sync, guest order emails, dashboard analytics</li>
+        <li>Invite cleaners and team members at no cost</li>
       </ul>
-      <a href="https://buy.stripe.com/00w00j3HM4Tt2PiacA8ww01" class="plan-btn">Get started →</a>
+
+      <a href="signup.html" class="btn btn-brand">Get started — free</a>
     </div>
 
-    <!-- PRO -->
-    <div class="plan-card featured">
-      <div class="plan-badge">⭐ Most Popular — Pro</div>
-      <div class="plan-price"><sup>$</sup>199</div>
-      <div class="plan-period">per year · cancel anytime</div>
-      <div class="plan-properties">4–10 properties</div>
-      <ul class="plan-features">
-        <li><div class="check">✓</div> Everything in Host</li>
-        <li><div class="check">✓</div> Up to 10 properties</li>
-        <li><div class="check">✓</div> Upsell analytics — see what sells</li>
-        <li><div class="check">✓</div> Bulk product management</li>
-        <li><div class="check">✓</div> Revenue by property reporting</li>
-        <li><div class="check">✓</div> Priority email support</li>
-        <li><div class="check">✓</div> Early access to new features</li>
-      </ul>
-      <a href="https://buy.stripe.com/aFacN55PU0Dd61u0C08ww02" class="plan-btn">Get started →</a>
-    </div>
+    <div class="card">
+      <div class="card-eyebrow eb-partner">For Local Businesses</div>
+      <h2>Partner</h2>
+      <div class="card-sub">Reach guests staying at local properties.</div>
 
-    <!-- ENTERPRISE -->
-    <div class="plan-card">
-      <div class="plan-badge">🏢 Enterprise</div>
-      <div class="plan-price enterprise">Let's talk</div>
-      <div class="plan-period">custom pricing · tailored to you</div>
-      <div class="plan-properties">11+ properties</div>
-      <ul class="plan-features">
-        <li><div class="check">✓</div> Everything in Pro</li>
-        <li><div class="check">✓</div> Unlimited properties</li>
-        <li><div class="check">✓</div> White label option</li>
-        <li><div class="check">✓</div> Dedicated onboarding call</li>
-        <li><div class="check">✓</div> Custom integrations on request</li>
-        <li><div class="check">✓</div> Direct phone support</li>
-        <li><div class="check">✓</div> Tailored pricing for your portfolio</li>
+      <div class="price">
+        <span class="price-amount">$49</span>
+        <span class="price-suffix">/listing/month</span>
+      </div>
+
+      <ul class="features partner">
+        <li><strong>3 months free</strong> when you sign up</li>
+        <li>Get featured on local hosts' guest stores</li>
+        <li>Attach vouchers and special offers</li>
+        <li>Service-area targeting (postcode-based)</li>
+        <li>Direct guest contact for bookings</li>
+        <li>Pause or deactivate anytime</li>
+        <li>Analytics on views, clicks, redemptions</li>
       </ul>
-      <a href="/cdn-cgi/l/email-protection#08606d6464674860677b7c616d607d6a266b6765377b7d6a626d6b7c354d667c6d7a787a617b6d284d66797d617a71" class="plan-btn enterprise">Get in touch →</a>
+
+      <a href="partner-signup.html" class="btn btn-accent">Become a partner</a>
     </div>
 
   </div>
 
-  <div class="guarantee"><span>🔒</span> Secure payment via Stripe · Cancel anytime · No hidden fees · All prices include GST</div>
-  <div class="back-link" style="margin-top:16px"><a hr
+  <div class="why">
+    <h3>Why is it free for hosts?</h3>
+    <p>Because hosts already have enough costs. We make our money from local businesses paying to be discovered by your guests. The bigger and stronger the network of hosts, the better it is for everyone — partners reach more guests, hosts get more partner offerings to feature, and guests get a better stay.</p>
+    <div class="why-tags">
+      <span class="why-tag">No subscription</span>
+      <span class="why-tag">No commission</span>
+      <span class="why-tag">No setup fee</span>
+      <span class="why-tag">No catches</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    Questions? <a href="mailto:hello@hostiehub.com.au">hello@hostiehub.com.au</a>
+  </div>
+
+</div>
+
+</body>
+</html>

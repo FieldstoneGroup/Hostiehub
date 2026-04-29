@@ -797,6 +797,23 @@
   </div>
 </div>
 
+<!-- PENDING INVITES MODAL — auto-opens on login when user has open invitations -->
+<div class="modal-overlay" id="pendingInvitesModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title">📬 You have pending invitations</div>
+      <button class="modal-close" onclick="closePendingInvitesModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.5">A host has invited you to be a linked user on their store. Review the details below and choose to accept or decline.</p>
+      <div id="pendingInvitesList" style="display:flex;flex-direction:column;gap:14px"></div>
+    </div>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn btn-outline" onclick="closePendingInvitesModal()">Decide later</button>
+    </div>
+  </div>
+</div>
+
 <!-- LINKED USER MODAL -->
 <div class="modal-overlay" id="linkedUserModal">
   <div class="modal" style="max-width:560px">
@@ -1223,10 +1240,21 @@
   const swatchColours = ['#2C6E6A','#1d4d4a','#E8A838','#e74c3c','#8e44ad','#2980b9','#27ae60','#e67e22','#1a1a1a'];
   const pageTitles = { overview:'Overview', orders:'Orders', analytics:'Analytics', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', localproducts:'Local Products', stripe:'Stripe Connect', account:'Account', users:'My Team', linkedstores:'Linked Stores' };
 
+  // Preset images live in the public Supabase Storage bucket "preset-images".
+  // Filename is auto-generated from the preset name (lowercase, hyphenated).
+  // If an image hasn't been uploaded yet, the preset falls back to its emoji.
+  const PRESET_IMAGE_BASE = 'https://hjwkycknjiyvrxbcejet.supabase.co/storage/v1/object/public/preset-images/';
+  function presetImageUrl(name) {
+    const slug = String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    if (!slug) return null;
+    return PRESET_IMAGE_BASE + slug + '.jpg';
+  }
+
   const PRESET_PRODUCTS = [
     // STAY SERVICES
     { name: 'Early Check-in', description: 'Arrive early and skip the wait. Subject to availability — we\'ll confirm within 24 hours of your request.', price: 40, unit: 'per stay', category: 'service', emoji: '🕐', notes_prompt: 'What time would you like to check in? Please also provide your reservation name.' },
     { name: 'Late Check-out', description: 'Stay a little longer and enjoy a relaxed morning. Subject to availability — we\'ll confirm within 24 hours.', price: 35, unit: 'per stay', category: 'service', emoji: '🛎️', notes_prompt: 'What time would you like to check out? Please also provide your reservation name.' },
+    { name: 'Early Check-in + Late Check-out', description: 'The best of both worlds. Arrive early and stay late — enjoy a full day at the property. Subject to availability — we\'ll confirm within 24 hours.', price: 65, unit: 'per stay', category: 'service', emoji: '⏰', notes_prompt: 'What time would you like to check in, and what time would you like to check out? Please also provide your reservation name.' },
     { name: 'Mid-Stay Clean', description: 'A full clean of the property during your stay — fresh linen, towels and all surfaces cleaned.', price: 80, unit: 'per clean', category: 'product', emoji: '🧹', notes_prompt: 'What date would you like the clean? (Please provide a date during your stay) What time works best?' },
     { name: 'Extra Towels & Linen Pack', description: 'Fresh towels and linen delivered to the property — perfect for longer stays or extra guests.', price: 20, unit: 'per pack', category: 'product', emoji: '🛏️', notes_prompt: 'How many sets do you need? Any specific requirements?' },
     { name: 'Daily Servicing', description: 'Hotel-style daily cleaning including linen change, towel refresh and full property clean.', price: 60, unit: 'per day', category: 'product', emoji: '✨', notes_prompt: 'What time would you prefer the daily service? (e.g. 10am–12pm)' },
@@ -1998,16 +2026,21 @@
   function openPresetModal() {
     const list = document.getElementById('presetList');
     sortedPresets = [...PRESET_PRODUCTS].sort((a, b) => a.name.localeCompare(b.name));
-    list.innerHTML = sortedPresets.map((p, i) => `
+    list.innerHTML = sortedPresets.map((p, i) => {
+      const imgUrl = presetImageUrl(p.name);
+      // Image layered on top of emoji background — onerror hides the img, revealing emoji underneath.
+      const thumb = `<div style="position:relative;width:48px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:24px">${p.emoji}${imgUrl ? `<img src="${imgUrl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">` : ''}</div>`;
+      return `
       <label style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--brand)'" onmouseout="this.style.borderColor='var(--border)'">
         <input type="checkbox" class="preset-check" value="${i}" style="width:18px;height:18px;accent-color:var(--brand);flex-shrink:0">
-        <div style="font-size:24px;flex-shrink:0">${p.emoji}</div>
+        ${thumb}
         <div style="flex:1">
           <div style="font-size:14px;font-weight:600;margin-bottom:2px">${p.name}</div>
           <div style="font-size:12px;color:var(--muted)">$${p.price} / ${p.unit} · ${p.category}</div>
         </div>
       </label>
-    `).join('');
+    `;
+    }).join('');
     // Reset search + hide sub-modal on open
     const searchInput = document.getElementById('presetSearch');
     if (searchInput) searchInput.value = '';
@@ -2032,7 +2065,18 @@
   async function addSelectedPresets() {
     const selected = [...document.querySelectorAll('.preset-check:checked')].map(cb => parseInt(cb.value));
     if (selected.length === 0) { showToast('⚠️ Please select at least one product'); return; }
-    const inserts = selected.map(i => ({ ...sortedPresets[i], host_id: currentUser.id, available_all_properties: true, active: true }));
+    const inserts = selected.map(i => {
+      const p = sortedPresets[i];
+      const imgUrl = presetImageUrl(p.name);
+      return {
+        ...p,
+        host_id: currentUser.id,
+        available_all_properties: true,
+        active: true,
+        image_url: imgUrl,
+        image_urls: imgUrl ? [imgUrl] : null,
+      };
+    });
     const { error } = await sb.from('products').insert(inserts);
     if (error) { console.error('[HH] Preset insert error:', error, 'payload:', inserts); showToast('⚠️ Error: ' + (error.message || 'Unknown')); return; }
     showToast(`✅ ${selected.length} product${selected.length > 1 ? 's' : ''} added!`);
@@ -3059,23 +3103,104 @@
   // ============= LINKED STORES (where I'm the linked user) =============
   let myLinkedStores = []; // host_links rows where I'm linked_host_id
 
+  // ============= PENDING INVITES (modal pop-up on login) =============
+  let pendingInvitesData = [];
+
+  function showPendingInvitesModal(invites) {
+    pendingInvitesData = invites || [];
+    if (!pendingInvitesData.length) return;
+    const list = document.getElementById('pendingInvitesList');
+    if (!list) return;
+    list.innerHTML = pendingInvitesData.map(inv => {
+      const o = inv.owner || {};
+      const ownerName = o.store_name || o.full_name || o.username || 'A host';
+      const propCount = Array.isArray(inv.property_ids) ? inv.property_ids.length : 0;
+      const propLabel = propCount === 0 ? 'all properties' : (propCount + ' propert' + (propCount === 1 ? 'y' : 'ies'));
+      const payoutCount = Array.isArray(inv.payout_property_ids) ? inv.payout_property_ids.length : 0;
+      const roleLabel = inv.role === 'admin' ? 'Admin' : 'View only';
+      return '<div style="background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:18px">' +
+        '<div style="font-size:15px;font-weight:700;margin-bottom:6px">' + ownerName + '</div>' +
+        '<div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">' +
+          'Has invited you to join their team as <strong>' + roleLabel + '</strong> with access to <strong>' + propLabel + '</strong>.' +
+          (payoutCount > 0 ? ' You have been assigned as the <strong>payee</strong> for ' + payoutCount + ' propert' + (payoutCount === 1 ? 'y' : 'ies') + '.' : '') +
+        '</div>' +
+        '<div style="display:flex;gap:8px">' +
+          '<button onclick="acceptInvite(\'' + inv.id + '\')" style="flex:1;background:var(--brand);color:white;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">✓ Accept</button>' +
+          '<button onclick="declineInvite(\'' + inv.id + '\')" style="flex:1;background:white;color:var(--muted);border:1.5px solid var(--border);padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">✕ Decline</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('pendingInvitesModal').classList.add('open');
+  }
+  window.showPendingInvitesModal = showPendingInvitesModal;
+
+  function closePendingInvitesModal() {
+    document.getElementById('pendingInvitesModal').classList.remove('open');
+  }
+  window.closePendingInvitesModal = closePendingInvitesModal;
+
+  async function acceptInvite(linkId) {
+    const inv = pendingInvitesData.find(x => x.id === linkId);
+    if (!inv) return;
+    const { error } = await sb.from('host_links').update({
+      linked_host_id: currentUser.id,
+      accepted: true,
+      accepted_at: new Date().toISOString(),
+    }).eq('id', linkId);
+    if (error) { showToast('⚠️ Error: ' + error.message); console.error(error); return; }
+    showToast('✅ Invitation accepted');
+
+    // Notify the host via the Worker (best-effort, non-blocking)
+    try {
+      const o = inv.owner || {};
+      await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Service': 'send-invite-accepted' },
+        body: JSON.stringify({
+          owner_host_id: inv.owner_host_id,
+          owner_name: o.store_name || o.full_name || o.username || 'Host',
+          accepter_email: currentUser.email,
+          role: inv.role,
+        }),
+      });
+    } catch(e) { console.warn('[HH] invite-accepted notify failed:', e); }
+
+    // Remove from local state, re-render. Close modal if no more invites.
+    pendingInvitesData = pendingInvitesData.filter(x => x.id !== linkId);
+    if (pendingInvitesData.length === 0) closePendingInvitesModal();
+    else showPendingInvitesModal(pendingInvitesData);
+    loadMyLinkedStores();
+  }
+  window.acceptInvite = acceptInvite;
+
+  async function declineInvite(linkId) {
+    if (!confirm('Decline this invitation? The host will be able to invite you again if needed.')) return;
+    const { error } = await sb.from('host_links').delete().eq('id', linkId);
+    if (error) { showToast('⚠️ Error: ' + error.message); console.error(error); return; }
+    showToast('Invitation declined');
+    pendingInvitesData = pendingInvitesData.filter(x => x.id !== linkId);
+    if (pendingInvitesData.length === 0) closePendingInvitesModal();
+    else showPendingInvitesModal(pendingInvitesData);
+  }
+  window.declineInvite = declineInvite;
+
   async function loadMyLinkedStores() {
     if (!currentUser) return;
-    // Auto-accept any pending invites matching my email
+    // Look for pending invites and show the open-invitations modal if any exist.
     if (currentUser.email) {
       const { data: pending } = await sb
         .from('host_links')
-        .select('id')
+        .select('id, owner_host_id, role, property_ids, payout_property_ids, invited_email, created_at')
         .ilike('invited_email', currentUser.email)
         .is('linked_host_id', null);
       if (pending && pending.length) {
-        for (const p of pending) {
-          await sb.from('host_links').update({
-            linked_host_id: currentUser.id,
-            accepted: true,
-            accepted_at: new Date().toISOString(),
-          }).eq('id', p.id);
-        }
+        // Hydrate owner info
+        const ownerIds = [...new Set(pending.map(p => p.owner_host_id))];
+        const { data: ownersData } = await sb.from('hosts').select('id, store_name, full_name, username').in('id', ownerIds);
+        const ownerMap = {};
+        (ownersData || []).forEach(h => { ownerMap[h.id] = h; });
+        const enriched = pending.map(p => ({ ...p, owner: ownerMap[p.owner_host_id] || {} }));
+        showPendingInvitesModal(enriched);
       }
     }
     const { data, error } = await sb

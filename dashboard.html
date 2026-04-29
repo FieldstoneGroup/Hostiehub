@@ -1242,12 +1242,13 @@
 
   // Preset images live in the public Supabase Storage bucket "preset-images".
   // Filename is auto-generated from the preset name (lowercase, hyphenated).
+  // Files in the bucket have a double .jpg.jpg extension (legacy of how they were uploaded).
   // If an image hasn't been uploaded yet, the preset falls back to its emoji.
   const PRESET_IMAGE_BASE = 'https://hjwkycknjiyvrxbcejet.supabase.co/storage/v1/object/public/preset-images/';
   function presetImageUrl(name) {
     const slug = String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     if (!slug) return null;
-    return PRESET_IMAGE_BASE + slug + '.jpg';
+    return PRESET_IMAGE_BASE + slug + '.jpg.jpg';
   }
 
   const PRESET_PRODUCTS = [

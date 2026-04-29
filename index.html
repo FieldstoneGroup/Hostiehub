@@ -31,7 +31,12 @@
   .nav-links a:hover { color: var(--text); }
   .nav-cta { background: var(--brand); color: white !important; padding: 9px 20px; border-radius: 50px; font-weight: 600; }
   .nav-cta:hover { background: var(--brand-dark); }
-  @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
+  @media (max-width: 720px) {
+    .nav-links { gap: 14px; }
+    .nav-section-link { display: none; }
+    .nav-links a { font-size: 13px; }
+    .nav-cta { padding: 8px 16px; }
+  }
 
   /* Hero */
   .hero { padding: 80px 0 100px; text-align: center; }
@@ -139,8 +144,8 @@
   <div class="container nav-inner">
     <a href="/" class="logo"><span class="logo-dot"></span> Hostie Hub</a>
     <div class="nav-links">
-      <a href="#hosts">For Hosts</a>
-      <a href="#partners">For Businesses</a>
+      <a href="#hosts" class="nav-section-link">For Hosts</a>
+      <a href="#partners" class="nav-section-link">For Businesses</a>
       <a href="signup.html">Log in</a>
       <a href="signup.html" class="nav-cta">Get started</a>
     </div>

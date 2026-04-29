@@ -32,10 +32,13 @@
   .nav-cta { background: var(--brand); color: white !important; padding: 9px 20px; border-radius: 50px; font-weight: 600; }
   .nav-cta:hover { background: var(--brand-dark); }
   @media (max-width: 720px) {
+    .container { padding: 0 18px; }
+    .nav-inner { padding: 14px 0; }
     .nav-links { gap: 14px; }
     .nav-section-link { display: none; }
     .nav-links a { font-size: 13px; }
     .nav-cta { padding: 8px 16px; }
+    .logo { font-size: 19px; }
   }
 
   /* Hero */
@@ -131,10 +134,16 @@
   .footer { background: #0f1c1c; color: rgba(255,255,255,0.7); padding: 48px 0 32px; font-size: 14px; }
   .footer-inner { display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; align-items: center; }
   .footer-logo { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: white; display: flex; align-items: center; gap: 8px; }
-  .footer-links { display: flex; gap: 24px; font-size: 13px; }
+  .footer-links { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 13px; }
   .footer-links a { color: rgba(255,255,255,0.65); transition: color 0.2s; }
   .footer-links a:hover { color: white; }
   .footer-bottom { text-align: center; padding-top: 28px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 28px; font-size: 12px; color: rgba(255,255,255,0.4); }
+  @media (max-width: 720px) {
+    .footer { padding: 36px 0 24px; }
+    .footer-inner { flex-direction: column; gap: 18px; align-items: center; text-align: center; }
+    .footer-links { justify-content: center; gap: 10px 18px; }
+    .footer-bottom { font-size: 11px; padding-top: 22px; margin-top: 22px; line-height: 1.6; }
+  }
 </style>
 </head>
 <body>
@@ -333,7 +342,6 @@
       <div class="footer-links">
         <a href="plans.html">Pricing</a>
         <a href="signup.html">Log in</a>
-        <a href="signup.html">Sign up</a>
         <a href="partner-signup.html">Partners</a>
         <a href="mailto:hello@hostiehub.com.au">Contact</a>
         <a href="privacy.html">Privacy</a>

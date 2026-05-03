@@ -565,7 +565,7 @@
               <input type="file" id="pLogoFile" accept="image/*" style="display:none" onchange="previewLogoImage(this)">
             </label>
           </div>
-          <div class="field">
+          <div class="field" id="offerBannerField" style="display:none">
             <label>Offer description <span style="font-weight:300;font-size:12px">(optional)</span></label>
             <div class="field-hint" style="margin-bottom:10px">🎯 Add an enticing offer banner across your photo. Pick a colour and write your own text.</div>
             <!-- Colour swatches -->
@@ -1114,6 +1114,9 @@
     document.getElementById('productFields').style.display = isProduct ? 'block' : 'none';
     document.getElementById('serviceFields').style.display = isService ? 'block' : 'none';
     document.getElementById('bookingFields').style.display = isBooking ? 'block' : 'none';
+    // Offer banner — only available on booking listings (products have host-controlled pricing)
+    const offerWrap = document.getElementById('offerBannerField');
+    if (offerWrap) offerWrap.style.display = isBooking ? 'block' : 'none';
     // Legacy physicalFields hidden — replaced by productFields
     const pf = document.getElementById('physicalFields');
     if (pf) pf.style.display = 'none';
@@ -1439,6 +1442,9 @@
   window.selectOfferColour = selectOfferColour;
 
   function getOfferText() {
+    // Offer banner only applies to booking listings
+    const isBooking = document.getElementById('ptBooking')?.checked;
+    if (!isBooking) return null;
     return (document.getElementById('pOfferText')?.value || '').trim().slice(0, 32).toUpperCase() || null;
   }
   function getOfferColour() {

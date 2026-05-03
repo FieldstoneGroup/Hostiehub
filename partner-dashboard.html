@@ -566,6 +566,19 @@
             </label>
           </div>
           <div class="field">
+            <label>Offer description <span style="font-weight:300;font-size:12px">(optional)</span></label>
+            <div class="field-hint" style="margin-bottom:10px">🎯 Add an enticing offer banner across your photo. Pick a colour and write your own text.</div>
+            <!-- Colour swatches -->
+            <div style="display:flex;gap:10px;margin-bottom:12px">
+              <button type="button" data-offer-colour="#2C6E6A" onclick="selectOfferColour('#2C6E6A')" class="offer-swatch" style="flex:1;padding:14px 8px;border:2px solid transparent;border-radius:10px;background:#2C6E6A;color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.5px">Green</button>
+              <button type="button" data-offer-colour="#E8A838" onclick="selectOfferColour('#E8A838')" class="offer-swatch" style="flex:1;padding:14px 8px;border:2px solid transparent;border-radius:10px;background:#E8A838;color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.5px">Gold</button>
+              <button type="button" data-offer-colour="#dc2626" onclick="selectOfferColour('#dc2626')" class="offer-swatch" style="flex:1;padding:14px 8px;border:2px solid transparent;border-radius:10px;background:#dc2626;color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.5px">Red</button>
+            </div>
+            <!-- Text -->
+            <input type="text" id="pOfferText" placeholder="e.g. 10% off, Free dessert, Guest exclusive" maxlength="32" oninput="this.value=this.value.toUpperCase();updatePreview()" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;text-transform:uppercase">
+            <div class="field-hint" style="margin-top:6px">Max 32 characters. Auto-capitalised. Leave blank for no banner.</div>
+          </div>
+          <div class="field">
             <label>Order notification email</label>
             <input type="email" id="pNotificationEmail" placeholder="e.g. orders@yourbusiness.com.au">
             <div class="field-hint">This email receives a notification whenever a guest orders this product. Includes what was ordered, check-in date, and the host's contact details.</div>
@@ -1075,8 +1088,11 @@
       const catLabels = { product: '📦 Product', service: '🛎️ Service', reservation: '🍽️ Reservation', experience: '🏄 Experience' };
       const catLabel = catLabels[p.category] || typeLabel;
       const priceLabel = p.type === 'booking' ? 'Free — booking link' : (p.type === 'service' ? (p.service_price ? '$' + p.service_price + ' ' + (p.service_price_unit || '') : 'Contact for pricing') : 'Multiple products');
+      const offerStrip = p.offer_text
+        ? '<div style="position:absolute;left:0;right:0;bottom:0;background:' + (p.offer_color || '#2C6E6A') + ';color:white;padding:3px 4px;font-size:8px;font-weight:800;letter-spacing:0.5px;text-align:center;text-transform:uppercase;line-height:1.2">' + p.offer_text + '</div>'
+        : '';
       return '<div class="item-row">' +
-        '<div class="item-thumb">' + (p.image_url ? '<img src="' + p.image_url + '">' : (p.type === 'booking' ? '🔗' : '📦')) + '</div>' +
+        '<div class="item-thumb" style="position:relative;overflow:hidden">' + (p.image_url ? '<img src="' + p.image_url + '">' : (p.type === 'booking' ? '🔗' : '📦')) + offerStrip + '</div>' +
         '<div class="item-info"><div class="item-name">' + p.name +
           ' <span class="' + (p.active ? 'badge-active' : 'badge-inactive') + '">' + (p.active ? 'Active' : 'Inactive') + '</span>' +
           ' <span class="badge-type">' + catLabel + '</span></div>' +
@@ -1349,6 +1365,9 @@
     document.getElementById('pServicePrice').style.display = 'block';
     document.getElementById('priceDollarSign').style.display = 'block';
     document.getElementById('ptService').checked = true;
+    // Reset offer banner fields
+    if (document.getElementById('pOfferText')) document.getElementById('pOfferText').value = '';
+    selectOfferColour('#2C6E6A');
     const legacyPhys2 = document.getElementById('physicalFields');
     if (legacyPhys2) legacyPhys2.style.display = 'none';
     document.getElementById('productFields').style.display = 'none';
@@ -1403,6 +1422,30 @@
     console.log('[HH] Voucher uploaded OK:', data.publicUrl);
     return data.publicUrl;
   }
+
+  // ── OFFER BADGE HELPERS ──
+  let selectedOfferColour = '#2C6E6A'; // default green/teal
+
+  function selectOfferColour(colour) {
+    selectedOfferColour = colour;
+    document.querySelectorAll('.offer-swatch').forEach(btn => {
+      const isActive = btn.getAttribute('data-offer-colour') === colour;
+      btn.style.border = isActive ? '2px solid #1a1a1a' : '2px solid transparent';
+      btn.style.transform = isActive ? 'scale(1.04)' : 'scale(1)';
+      btn.style.boxShadow = isActive ? '0 4px 14px rgba(0,0,0,0.18)' : 'none';
+    });
+    updatePreview();
+  }
+  window.selectOfferColour = selectOfferColour;
+
+  function getOfferText() {
+    return (document.getElementById('pOfferText')?.value || '').trim().slice(0, 32).toUpperCase() || null;
+  }
+  function getOfferColour() {
+    return getOfferText() ? selectedOfferColour : null;
+  }
+  window.getOfferText = getOfferText;
+  window.getOfferColour = getOfferColour;
 
   async function saveProduct() {
     // Auto-add any postcode typed but not yet clicked + Add
@@ -1503,6 +1546,8 @@
       listing_address: listingAddress,
       listing_lat: listingLat,
       listing_lng: listingLng,
+      offer_text: getOfferText(),
+      offer_color: getOfferColour(),
       active: true,
     };
 
@@ -1675,6 +1720,12 @@
     }
     if (isBooking) document.getElementById('pBookingUrl').value = p.booking_url || '';
     if (isBooking) document.getElementById('pVoucherTitle').value = p.voucher_title || '';
+
+    // Offer banner — populate text + colour swatch
+    if (document.getElementById('pOfferText')) {
+      document.getElementById('pOfferText').value = p.offer_text || '';
+    }
+    selectOfferColour(p.offer_color || '#2C6E6A');
 
     // Image
     if (p.image_url) {
@@ -2344,10 +2395,17 @@
     }
 
     // Product image (matches guest card: object-fit:cover, full card width)
+    // Banner overlays the bottom strip when an offer is set.
+    const offerText = getOfferText();
+    const offerColour = getOfferColour();
+    const badgeHtml = offerText
+      ? `<div style="position:absolute;left:0;right:0;bottom:0;background:${offerColour};color:white;padding:7px 12px;font-size:11px;font-weight:800;letter-spacing:1px;text-align:center;text-transform:uppercase;text-shadow:0 1px 1px rgba(0,0,0,0.15);box-shadow:0 -2px 8px rgba(0,0,0,0.1)">${offerText}</div>`
+      : '';
+    el('previewImageWrap').style.position = 'relative';
     if (hasImage) {
-      el('previewImageWrap').innerHTML = '<img src="' + imagePreview + '" style="width:100%;height:100%;object-fit:cover">';
+      el('previewImageWrap').innerHTML = '<img src="' + imagePreview + '" style="width:100%;height:100%;object-fit:cover">' + badgeHtml;
     } else {
-      el('previewImageWrap').innerHTML = '<span style="color:#d1d5db">🏪</span>';
+      el('previewImageWrap').innerHTML = '<span style="color:#d1d5db">🏪</span>' + badgeHtml;
     }
   }
   window.updatePreview = updatePreview;

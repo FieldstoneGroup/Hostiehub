@@ -2529,6 +2529,10 @@
         ? '<img src="' + p.image_url + '" style="width:100%;height:100%;object-fit:contain;padding:4px;border-radius:10px;background:white;">'
         : (isBooking ? '🔗' : '📦');
 
+      const offerStrip = p.offer_text
+        ? '<div style="position:absolute;left:0;right:0;bottom:0;background:' + (p.offer_color || '#2C6E6A') + ';color:white;padding:3px;font-size:8px;font-weight:800;letter-spacing:0.5px;text-align:center;text-transform:uppercase;line-height:1.2">' + p.offer_text + '</div>'
+        : '';
+
       const actionBtn = paid
         ? (isAdded
           ? '<button class="btn btn-outline btn-sm" style="color:#e53e3e;border-color:#e53e3e" onclick="hidePartnerListing(\'' + p.id + '\')">Hide from store</button>'
@@ -2536,7 +2540,7 @@
         : '<span style="font-size:12px;color:var(--muted);background:var(--bg);padding:4px 10px;border-radius:50px;border:1px solid var(--border)">🔒 Mandatory</span>';
 
       return '<div class="product-row" style="' + (!isAdded ? 'opacity:0.6' : '') + '">' +
-        '<div class="product-emoji" style="' + (p.image_url ? 'padding:0;overflow:hidden' : '') + '">' + thumb + '</div>' +
+        '<div class="product-emoji" style="position:relative;overflow:hidden;' + (p.image_url ? 'padding:0' : '') + '">' + thumb + offerStrip + '</div>' +
         '<div class="product-info">' +
           '<div class="product-name">' + p.name + (isAdded ? ' <span style="font-size:11px;color:var(--brand);font-weight:600">· Showing</span>' : ' <span style="font-size:11px;color:var(--muted)">· Hidden</span>') + '</div>' +
           '<div class="product-meta">' + businessName + ' · ' + catLabel + (isBooking ? ' · Free to guest' : '') + '</div>' +

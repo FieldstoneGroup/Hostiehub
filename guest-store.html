@@ -699,7 +699,7 @@
     });
     const bookingPartnerIds = allProducts.filter(p => p.partner_product_id).map(p => p.partner_product_id);
     if (bookingPartnerIds.length > 0) {
-      const { data: partnerProds, error: ppErr } = await sb.from('partner_products').select('id, name, description, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng, logo_url, image_url, shop_products').in('id', bookingPartnerIds);
+      const { data: partnerProds, error: ppErr } = await sb.from('partner_products').select('id, name, description, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng, logo_url, image_url, shop_products, offer_text, offer_color').in('id', bookingPartnerIds);
       if (ppErr) console.error('[Hostie] partner_products fetch error:', ppErr);
       console.log('[Hostie] partner_products fetch result:', partnerProds);
       if (partnerProds) {
@@ -748,6 +748,8 @@
             description: pp.description != null ? pp.description : p.description,
             image_url: pp.image_url,
             logo_url: pp.logo_url,
+            offer_text: pp.offer_text,
+            offer_color: pp.offer_color,
             listing_address: pp.listing_address,
             listing_lat: pp.listing_lat,
             listing_lng: pp.listing_lng,
@@ -966,13 +968,17 @@
         distanceTag = '<span style="font-size:11px;color:var(--muted);background:var(--bg);padding:2px 8px;border-radius:50px;white-space:nowrap">📍 Available in your area</span>';
       }
 
+      const offerBanner = p.offer_text
+        ? `<div style="position:absolute;left:0;right:0;bottom:0;background:${p.offer_color || '#2C6E6A'};color:white;padding:7px 10px;font-size:11px;font-weight:800;letter-spacing:1px;text-align:center;text-transform:uppercase;text-shadow:0 1px 1px rgba(0,0,0,0.15);box-shadow:0 -2px 8px rgba(0,0,0,0.1);z-index:2">${p.offer_text}</div>`
+        : '';
+
       return `
       <div class="partner-card" style="animation-delay:${i * 0.06}s">
         <div class="partner-card-header">
           <span class="partner-card-badge">🤝 Local Partner</span>
           ${hasVoucher ? '<span class="partner-card-tag">🎟️ Free voucher</span>' : '<span class="partner-card-tag">' + typeTag + '</span>'}
         </div>
-        <div class="product-img">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '✨')}</div>
+        <div class="product-img" style="position:relative;overflow:hidden">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '✨')}${offerBanner}</div>
         <div class="product-body">
           ${p.partner_product_id ? '' : `<div class="product-category">${p.category || ''}</div>`}
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">

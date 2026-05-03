@@ -487,34 +487,41 @@
               <div class="field-hint" style="margin-top:6px">e.g. "2 weeks" means guests can't select a date within 2 weeks of today.</div>
             </div>
             <div class="field">
-              <label>Days available</label>
+              <label>Availability</label>
               <div class="field-hint" style="margin-bottom:10px">Which days of the week can you offer this service?</div>
-              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="dayMon" value="mon" onchange="updateAllDaysCheck()"> Mon
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="dayTue" value="tue" onchange="updateAllDaysCheck()"> Tue
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="dayWed" value="wed" onchange="updateAllDaysCheck()"> Wed
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="dayThu" value="thu" onchange="updateAllDaysCheck()"> Thu
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="dayFri" value="fri" onchange="updateAllDaysCheck()"> Fri
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="daySat" value="sat" onchange="updateAllDaysCheck()"> Sat
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;cursor:pointer;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px">
-                  <input type="checkbox" id="daySun" value="sun" onchange="updateAllDaysCheck()"> Sun
-                </label>
+              <div class="day-dropdown" id="dayDropdown" style="position:relative">
+                <button type="button" id="dayDropdownTrigger" onclick="toggleDayDropdown(event)" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;background:white;font-family:'DM Sans',sans-serif;font-size:14px;text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;outline:none">
+                  <span id="dayDropdownLabel">All days (7 days a week)</span>
+                  <span id="dayDropdownCaret" style="font-size:11px;color:var(--muted);transition:transform 0.2s">▾</span>
+                </button>
+                <div id="dayDropdownMenu" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);background:white;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,0.10);z-index:20;padding:6px;max-height:320px;overflow-y:auto">
+                  <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;color:var(--partner);border-bottom:1px solid var(--border);margin-bottom:4px" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+                    <input type="checkbox" id="dayAll" onchange="toggleAllDays(this);updateDayDropdownLabel()" style="width:16px;height:16px;accent-color:var(--partner)">
+                    <span>All days (7 days a week)</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+                    <input type="checkbox" id="dayMon" value="mon" onchange="updateAllDaysCheck();updateDayDropdownLabel()" style="width:16px;height:16px;accent-color:var(--partner)"> Monday
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+                    <input type="checkbox" id="dayTue" value="tue" onchange="updateAllDaysCheck();updateDayDropdownLabel()" style="width:16px;height:16px;accent-color:var(--partner)"> Tuesday
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+                    <input type="checkbox" id="dayWed" value="wed" onchange="updateAllDaysCheck();updateDayDropdownLabel()" style="width:16px;height:16px;accent-color:var(--partner)"> Wednesday
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+                    <input type="checkbox" id="dayThu" value="thu" onchange="updateAllDaysCheck();updateDayDropdownLabel()" style="width:16px;height:16px;accent-color:var(--partner)"> Thursday
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+                    <input type="checkbox" id="dayFri" value="fri" onchange="updateAllDaysCheck();updateDayDropdownLabel()" style="width:16px;height:16px;accent-color:var(--partner)"> Friday
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+                    <input type="checkbox" id="daySat" value="sat" onchange="updateAllDaysCheck();updateDayDropdownLabel()" style="width:16px;height:16px;accent-color:var(--partner)"> Saturday
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+                    <input type="checkbox" id="daySun" value="sun" onchange="updateAllDaysCheck();updateDayDropdownLabel()" style="width:16px;height:16px;accent-color:var(--partner)"> Sunday
+                  </label>
+                </div>
               </div>
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--partner)">
-                <input type="checkbox" id="dayAll" onchange="toggleAllDays(this)"> All days (7 days a week)
-              </label>
               <div class="field-hint" style="margin-top:6px">Guests will see which days this service is available when they browse your listing.</div>
             </div>
           </div>
@@ -1321,7 +1328,45 @@
       days.forEach(d => { document.getElementById('day' + d).checked = availableDays.includes(d.toLowerCase()); });
       document.getElementById('dayAll').checked = availableDays.length === 7;
     }
+    updateDayDropdownLabel();
   }
+
+  // ── DAY-AVAILABILITY DROPDOWN ──
+  function toggleDayDropdown(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('dayDropdownMenu');
+    const caret = document.getElementById('dayDropdownCaret');
+    const isOpen = menu.style.display === 'block';
+    menu.style.display = isOpen ? 'none' : 'block';
+    if (caret) caret.style.transform = isOpen ? 'rotate(0)' : 'rotate(180deg)';
+  }
+  window.toggleDayDropdown = toggleDayDropdown;
+
+  function updateDayDropdownLabel() {
+    const labelEl = document.getElementById('dayDropdownLabel');
+    if (!labelEl) return;
+    const dayMap = { mon:'Mon', tue:'Tue', wed:'Wed', thu:'Thu', fri:'Fri', sat:'Sat', sun:'Sun' };
+    const order = ['mon','tue','wed','thu','fri','sat','sun'];
+    const selected = order.filter(d => document.getElementById('day' + d.charAt(0).toUpperCase() + d.slice(1)).checked);
+    if (selected.length === 0) labelEl.textContent = 'No days selected';
+    else if (selected.length === 7) labelEl.textContent = 'All days (7 days a week)';
+    else if (selected.length <= 4) labelEl.textContent = selected.map(d => dayMap[d]).join(', ');
+    else labelEl.textContent = selected.length + ' days selected';
+  }
+  window.updateDayDropdownLabel = updateDayDropdownLabel;
+
+  // Close dropdown on outside click
+  document.addEventListener('click', (e) => {
+    const dd = document.getElementById('dayDropdown');
+    if (dd && !dd.contains(e.target)) {
+      const menu = document.getElementById('dayDropdownMenu');
+      const caret = document.getElementById('dayDropdownCaret');
+      if (menu && menu.style.display === 'block') {
+        menu.style.display = 'none';
+        if (caret) caret.style.transform = 'rotate(0)';
+      }
+    }
+  });
 
   function previewProductImage(input) {
     const file = input.files[0];

@@ -542,6 +542,29 @@
     </div>
   </div>
 </div>
+
+<!-- Promo code modal -->
+<div class="notes-modal-overlay" id="promoCodeOverlay">
+  <div class="notes-modal" style="max-width:420px">
+    <div style="font-size:40px;text-align:center;margin-bottom:12px">🏷️</div>
+    <h3 style="text-align:center;margin-bottom:6px" id="promoCodeProduct">Special offer</h3>
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:4px">at <span id="promoCodeBusiness" style="font-weight:600;color:var(--text)"></span></p>
+    <p id="promoCodeDescription" style="text-align:center;margin-top:14px;margin-bottom:18px;font-size:15px;color:var(--text)">Use this code to redeem your offer</p>
+
+    <!-- The code -->
+    <div style="position:relative;background:#fff7e6;border:2px dashed #E8A838;border-radius:14px;padding:22px;text-align:center;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#92600a;margin-bottom:6px">Your code</div>
+      <div id="promoCodeValue" style="font-family:'Courier New',monospace;font-size:28px;font-weight:700;letter-spacing:3px;color:#1a1a1a;margin-bottom:10px;word-break:break-all">CODE</div>
+      <button onclick="copyPromoCode()" style="background:#E8A838;color:white;border:none;padding:9px 22px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">📋 Tap to copy</button>
+      <div id="promoCodeCopied" style="display:none;margin-top:10px;font-size:12px;color:#2C6E6A;font-weight:600">✓ Copied to clipboard</div>
+    </div>
+
+    <div class="notes-modal-actions" style="justify-content:stretch;flex-direction:column;gap:8px">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="continueToPromoBooking()">Continue to booking page →</button>
+      <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="closePromoModal()">Close</button>
+    </div>
+  </div>
+</div>
 <div class="checkout-modal" id="checkoutModal">
   <div style="padding:28px 28px 0">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -699,7 +722,7 @@
     });
     const bookingPartnerIds = allProducts.filter(p => p.partner_product_id).map(p => p.partner_product_id);
     if (bookingPartnerIds.length > 0) {
-      const { data: partnerProds, error: ppErr } = await sb.from('partner_products').select('id, name, description, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng, logo_url, image_url, shop_products, offer_text, offer_color').in('id', bookingPartnerIds);
+      const { data: partnerProds, error: ppErr } = await sb.from('partner_products').select('id, name, description, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng, logo_url, image_url, shop_products, offer_text, offer_color, promo_code, promo_code_description').in('id', bookingPartnerIds);
       if (ppErr) console.error('[Hostie] partner_products fetch error:', ppErr);
       console.log('[Hostie] partner_products fetch result:', partnerProds);
       if (partnerProds) {
@@ -755,6 +778,8 @@
             listing_lng: pp.listing_lng,
             shop_products: liveShopProducts,
             partner_voucher_pdf_url: pp.voucher_pdf_url,
+            partner_promo_code: pp.promo_code,
+            partner_promo_code_description: pp.promo_code_description,
             partner_voucher_title: pp.voucher_title,
             service_price: pp.service_price,
             service_price_unit: pp.service_price_unit,
@@ -946,7 +971,7 @@
       }
 
       const typeTag = isBookingLink ? '🔗 Book direct' : '🤝 Request';
-      const bookingFn = isDemo ? `handleDemoAdd()` : `handleBookingLink('${p.partner_booking_url}','${p.partner_product_id || ''}','${p.partner_id || ''}','${p.partner_voucher_pdf_url || ''}','${(p.name || '').replace(/'/g, "\\'")}','${(p.partner_voucher_title || '').replace(/'/g, "\\'")}')`;
+      const bookingFn = isDemo ? `handleDemoAdd()` : `handleBookingLink('${p.partner_booking_url}','${p.partner_product_id || ''}','${p.partner_id || ''}','${p.partner_voucher_pdf_url || ''}','${(p.name || '').replace(/'/g, "\\'")}','${(p.partner_voucher_title || '').replace(/'/g, "\\'")}','${p.partner_promo_code || ''}','${(p.partner_promo_code_description || '').replace(/'/g, "\\'")}')`;
       const requestFn = isDemo ? `handleDemoAdd()` : `handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)`;
 
       const priceHtml = p.service_price_unit === 'contact for pricing'
@@ -1248,7 +1273,7 @@
         const hasVoucher = !!p.partner_voucher_pdf_url;
         const bookingFn = isDemo
           ? `handleDemoAdd()`
-          : `handleBookingLink('${p.partner_booking_url}','${p.partner_product_id || ''}','${p.partner_id || ''}','${p.partner_voucher_pdf_url || ''}','${(p.name || '').replace(/'/g, "\\'")}','${(p.partner_voucher_title || '').replace(/'/g, "\\'")}')`;
+          : `handleBookingLink('${p.partner_booking_url}','${p.partner_product_id || ''}','${p.partner_id || ''}','${p.partner_voucher_pdf_url || ''}','${(p.name || '').replace(/'/g, "\\'")}','${(p.partner_voucher_title || '').replace(/'/g, "\\'")}','${p.partner_promo_code || ''}','${(p.partner_promo_code_description || '').replace(/'/g, "\\'")}')`;
         return `
         <div class="product-card" style="animation-delay:${i * 0.06}s;padding:0;border:${hasVoucher ? '2px solid #E8A838;box-shadow:0 0 0 3px rgba(232,168,56,0.15)' : '1.5px solid var(--border)'};position:relative;overflow:hidden">
           <!-- Gold banner -->
@@ -1389,8 +1414,58 @@
   let pendingBookingProductName = null;
   let pendingBookingBusinessName = null;
 
-  function handleBookingLink(url, partnerProductId, partnerId, voucherPdfUrl, productName, voucherTitle) {
+  // ── PROMO CODE MODAL ──
+  function copyPromoCode() {
+    const code = document.getElementById('promoCodeValue').textContent;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(() => {
+        document.getElementById('promoCodeCopied').style.display = 'block';
+        setTimeout(() => { document.getElementById('promoCodeCopied').style.display = 'none'; }, 2500);
+      });
+    } else {
+      const range = document.createRange();
+      range.selectNode(document.getElementById('promoCodeValue'));
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+    }
+  }
+  window.copyPromoCode = copyPromoCode;
+
+  function continueToPromoBooking() {
+    const url = pendingBookingUrl;
+    document.getElementById('promoCodeOverlay').classList.remove('open');
+    if (url) window.open(url, '_blank');
+    pendingBookingUrl = null;
+    pendingPartnerId = null;
+    pendingPartnerProductId = null;
+  }
+  window.continueToPromoBooking = continueToPromoBooking;
+
+  function closePromoModal() {
+    document.getElementById('promoCodeOverlay').classList.remove('open');
+    pendingBookingUrl = null;
+    pendingPartnerId = null;
+    pendingPartnerProductId = null;
+  }
+  window.closePromoModal = closePromoModal;
+
+  function handleBookingLink(url, partnerProductId, partnerId, voucherPdfUrl, productName, voucherTitle, promoCode, promoDescription) {
     if (partnerProductId && partnerId) logPartnerEvent(partnerProductId, partnerId, 'click');
+    if (promoCode) {
+      // Promo code — show popup with code, no form
+      pendingBookingUrl = url;
+      pendingPartnerId = partnerId || null;
+      pendingPartnerProductId = partnerProductId || null;
+      const product = allProducts.find(p => p.partner_product_id === partnerProductId);
+      const businessName = product?.partner_business_name || 'Local Partner';
+      document.getElementById('promoCodeBusiness').textContent = businessName;
+      document.getElementById('promoCodeProduct').textContent = productName || 'Special offer';
+      document.getElementById('promoCodeDescription').textContent = promoDescription || 'Use this code to redeem your offer';
+      document.getElementById('promoCodeValue').textContent = promoCode;
+      document.getElementById('promoCodeCopied').style.display = 'none';
+      document.getElementById('promoCodeOverlay').classList.add('open');
+      return;
+    }
     if (voucherPdfUrl) {
       // Has voucher — use existing voucher modal
       pendingBookingUrl = url;

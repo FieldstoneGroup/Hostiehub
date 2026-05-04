@@ -532,19 +532,39 @@
               <div class="field-hint">Guests click "Book now" and go straight to this link in a new tab.</div>
             </div>
             <div class="field">
-              <label>Attach a voucher <span style="font-weight:300;font-size:12px">(optional)</span></label>
-              <input type="text" id="pVoucherTitle" placeholder="e.g. 2 Free Beers or Wines on Arrival at Blanca" oninput="updatePreview()" style="margin-bottom:10px">
-              <div class="field-hint" style="margin-top:-6px;margin-bottom:10px">This becomes the email subject: <em>Hostie Hub Voucher — [your title]</em></div>
-              <div id="pVoucherPreviewWrap" style="display:none;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;align-items:center;gap:10px;">
-                <span style="font-size:20px">📄</span>
-                <span id="pVoucherFileName" style="font-size:14px;font-weight:500;flex:1;color:var(--text)"></span>
-                <button onclick="removeVoucherPdf()" style="background:none;border:none;color:var(--error);cursor:pointer;font-size:13px;">Remove</button>
+              <label>Offer description <span style="font-weight:300;font-size:12px">(optional)</span></label>
+              <div class="field-hint" style="margin-bottom:12px">Add an incentive for guests who click through. Choose <strong>Voucher</strong> (auto-emailed to them) or <strong>Promo Code</strong> (popup with the code to use).</div>
+
+              <!-- Offer type toggle -->
+              <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+                <button type="button" id="offerTypeNone" onclick="setOfferType('none')" class="offer-type-btn" style="flex:1;min-width:90px;padding:11px 8px;border:1.5px solid var(--border);border-radius:10px;background:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted)">No offer</button>
+                <button type="button" id="offerTypeVoucher" onclick="setOfferType('voucher')" class="offer-type-btn" style="flex:1;min-width:90px;padding:11px 8px;border:1.5px solid var(--border);border-radius:10px;background:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted)">🎟️ Voucher</button>
+                <button type="button" id="offerTypePromo" onclick="setOfferType('promo')" class="offer-type-btn" style="flex:1;min-width:90px;padding:11px 8px;border:1.5px solid var(--border);border-radius:10px;background:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted)">🏷️ Promo Code</button>
               </div>
-              <label id="pVoucherUploadLabel" class="image-upload-label">
-                🎟️ Click to upload voucher (PDF or image)
-                <input type="file" id="pVoucherFile" accept=".pdf,image/*" style="display:none" onchange="previewVoucherPdf(this)">
-              </label>
-              <div class="field-hint">Upload a PDF or image (PNG, JPG). When guests click "Book now", your voucher will be emailed to them.</div>
+
+              <!-- Voucher fields -->
+              <div id="voucherFields" style="display:none">
+                <input type="text" id="pVoucherTitle" placeholder="e.g. 2 Free Beers or Wines on Arrival at Blanca" oninput="updatePreview()" style="margin-bottom:8px">
+                <div class="field-hint" style="margin-top:0;margin-bottom:10px">This becomes the email subject: <em>Hostie Hub Voucher — [your title]</em></div>
+                <div id="pVoucherPreviewWrap" style="display:none;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;align-items:center;gap:10px;">
+                  <span style="font-size:20px">📄</span>
+                  <span id="pVoucherFileName" style="font-size:14px;font-weight:500;flex:1;color:var(--text)"></span>
+                  <button onclick="removeVoucherPdf()" style="background:none;border:none;color:var(--error);cursor:pointer;font-size:13px;">Remove</button>
+                </div>
+                <label id="pVoucherUploadLabel" class="image-upload-label">
+                  🎟️ Click to upload voucher (PDF or image)
+                  <input type="file" id="pVoucherFile" accept=".pdf,image/*" style="display:none" onchange="previewVoucherPdf(this)">
+                </label>
+                <div class="field-hint">Upload a PDF or image (PNG, JPG). When guests click "Book now", your voucher will be emailed to them automatically.</div>
+              </div>
+
+              <!-- Promo code fields -->
+              <div id="promoCodeFields" style="display:none">
+                <input type="text" id="pPromoCode" placeholder="e.g. STAY15" maxlength="20" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');updatePreview()" style="margin-bottom:8px;text-transform:uppercase;letter-spacing:2px;font-weight:700;font-size:15px">
+                <div class="field-hint" style="margin-top:0;margin-bottom:10px">Letters and numbers only. Max 20 characters. Auto-capitalised.</div>
+                <input type="text" id="pPromoCodeDescription" placeholder="e.g. 15% off your meal" maxlength="80" oninput="updatePreview()">
+                <div class="field-hint" style="margin-top:6px">Short description shown above the code in the popup. Max 80 characters.</div>
+              </div>
             </div>
           </div>
           <div class="field">
@@ -1406,6 +1426,9 @@
     document.getElementById('pWholesalePrice').value = '';
     document.getElementById('pBookingUrl').value = '';
     document.getElementById('pVoucherTitle').value = '';
+    if (document.getElementById('pPromoCode')) document.getElementById('pPromoCode').value = '';
+    if (document.getElementById('pPromoCodeDescription')) document.getElementById('pPromoCodeDescription').value = '';
+    setOfferType('none');
     document.getElementById('pLeadTimeValue').value = '';
     document.getElementById('pLeadTimeUnit').value = 'none';
     document.getElementById('pServicePrice').value = '';
@@ -1485,6 +1508,27 @@
     updatePreview();
   }
   window.selectOfferColour = selectOfferColour;
+
+  // ── OFFER TYPE TOGGLE (None / Voucher / Promo Code) ──
+  let currentOfferType = 'none';
+  function setOfferType(type) {
+    currentOfferType = type;
+    const buttons = { none: 'offerTypeNone', voucher: 'offerTypeVoucher', promo: 'offerTypePromo' };
+    Object.entries(buttons).forEach(([key, id]) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      const active = key === type;
+      btn.style.background = active ? 'var(--partner)' : 'white';
+      btn.style.color = active ? 'white' : 'var(--muted)';
+      btn.style.borderColor = active ? 'var(--partner)' : 'var(--border)';
+    });
+    const voucherField = document.getElementById('voucherFields');
+    const promoField = document.getElementById('promoCodeFields');
+    if (voucherField) voucherField.style.display = type === 'voucher' ? 'block' : 'none';
+    if (promoField) promoField.style.display = type === 'promo' ? 'block' : 'none';
+    updatePreview();
+  }
+  window.setOfferType = setOfferType;
 
   function getOfferText() {
     // Offer banner only applies to booking listings
@@ -1588,7 +1632,7 @@
       unit: null,
       notification_email: notificationEmail,
       booking_url: isBooking ? bookingUrl : null,
-      voucher_title: isBooking ? (document.getElementById('pVoucherTitle').value.trim() || null) : null,
+      voucher_title: (isBooking && currentOfferType === 'voucher') ? (document.getElementById('pVoucherTitle').value.trim() || null) : null,
       lead_time_value: leadTimeValue,
       lead_time_unit: leadTimeUnit,
       service_price: servicePrice,
@@ -1599,6 +1643,8 @@
       listing_lng: listingLng,
       offer_text: getOfferText(),
       offer_color: getOfferColour(),
+      promo_code: (isBooking && currentOfferType === 'promo') ? ((document.getElementById('pPromoCode')?.value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20) || null) : null,
+      promo_code_description: (isBooking && currentOfferType === 'promo') ? ((document.getElementById('pPromoCodeDescription')?.value || '').trim().slice(0, 80) || null) : null,
       active: true,
     };
 
@@ -1771,6 +1817,23 @@
     }
     if (isBooking) document.getElementById('pBookingUrl').value = p.booking_url || '';
     if (isBooking) document.getElementById('pVoucherTitle').value = p.voucher_title || '';
+
+    // Promo code fields
+    if (document.getElementById('pPromoCode')) {
+      document.getElementById('pPromoCode').value = p.promo_code || '';
+    }
+    if (document.getElementById('pPromoCodeDescription')) {
+      document.getElementById('pPromoCodeDescription').value = p.promo_code_description || '';
+    }
+
+    // Set offer type based on what's saved
+    if (isBooking) {
+      if (p.promo_code) setOfferType('promo');
+      else if (p.voucher_title || p.voucher_pdf_url) setOfferType('voucher');
+      else setOfferType('none');
+    } else {
+      setOfferType('none');
+    }
 
     // Offer banner — populate text + colour swatch
     if (document.getElementById('pOfferText')) {

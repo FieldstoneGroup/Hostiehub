@@ -1632,7 +1632,7 @@
       unit: null,
       notification_email: notificationEmail,
       booking_url: isBooking ? bookingUrl : null,
-      voucher_title: (isBooking && currentOfferType === 'voucher') ? (document.getElementById('pVoucherTitle').value.trim() || null) : null,
+      voucher_title: isBooking ? (document.getElementById('pVoucherTitle').value.trim() || null) : null,
       lead_time_value: leadTimeValue,
       lead_time_unit: leadTimeUnit,
       service_price: servicePrice,
@@ -1643,8 +1643,8 @@
       listing_lng: listingLng,
       offer_text: getOfferText(),
       offer_color: getOfferColour(),
-      promo_code: (isBooking && currentOfferType === 'promo') ? ((document.getElementById('pPromoCode')?.value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20) || null) : null,
-      promo_code_description: (isBooking && currentOfferType === 'promo') ? ((document.getElementById('pPromoCodeDescription')?.value || '').trim().slice(0, 80) || null) : null,
+      promo_code: isBooking ? ((document.getElementById('pPromoCode')?.value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20) || null) : null,
+      promo_code_description: isBooking ? ((document.getElementById('pPromoCodeDescription')?.value || '').trim().slice(0, 80) || null) : null,
       active: true,
     };
 
@@ -1700,14 +1700,14 @@
 
     editingProductId = null;
     showToast(editingProductId === null ? 'Product saved!' : 'Product updated!');
-    loadProducts();
+    await loadProducts();
     showPage('products', document.querySelector('[onclick*=products]'));
   }
 
   async function toggleProduct(id, active) {
     await sb.from('partner_products').update({ active }).eq('id', id);
     showToast(active ? 'Product activated' : 'Product deactivated');
-    loadProducts();
+    await loadProducts();
   }
 
   async function deleteProduct(id) {
@@ -1749,9 +1749,20 @@
   }
   window.duplicateProduct = duplicateProduct;
 
-  function editProduct(id) {
-    const p = partnerProducts.find(x => x.id === id);
+  async function editProduct(id) {
+    // Fetch fresh from DB — cache may be stale right after a save
+    const { data: freshRow, error: freshErr } = await sb.from('partner_products').select('*').eq('id', id).single();
+    if (freshErr || !freshRow) {
+      // Fallback to cache if DB fetch fails
+      const cached = partnerProducts.find(x => x.id === id);
+      if (!cached) return;
+      console.warn('[HH DEBUG] editProduct fell back to cache:', freshErr);
+    }
+    const p = freshRow || partnerProducts.find(x => x.id === id);
     if (!p) return;
+    // Also update cache so listings tile reflects the new state
+    const cacheIdx = partnerProducts.findIndex(x => x.id === id);
+    if (cacheIdx >= 0) partnerProducts[cacheIdx] = p;
     editingProductId = id;
 
     // Navigate to form

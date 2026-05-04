@@ -213,6 +213,38 @@
     .item-row { flex-wrap: wrap; }
     .item-row > div:last-child { width: 100%; display: flex; justify-content: flex-end; gap: 6px; margin-top: 4px; }
     .trial-banner { padding: 12px 16px; }
+
+    /* New listing form — hide preview by default, show on demand */
+    #newProductGrid { grid-template-columns: 1fr !important; }
+    #livePreviewPanel { display: none; }
+    #mobilePreviewBtn { display: inline-flex !important; }
+    #livePreviewPanel.preview-open {
+      display: block;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0,0,0,0.5);
+      padding: 20px;
+      overflow-y: auto;
+      top: 0 !important;
+    }
+    #livePreviewPanel.preview-open > div:first-child {
+      max-width: 380px;
+      margin: 0 auto 12px;
+      color: white;
+    }
+    #livePreviewPanel.preview-open > div:first-child > div:first-child {
+      color: rgba(255,255,255,0.9) !important;
+    }
+    #livePreviewPanel.preview-open #closePreviewBtn {
+      display: inline-block !important;
+      color: white !important;
+      font-size: 28px !important;
+    }
+    #livePreviewPanel.preview-open #listingPreview {
+      max-width: 380px;
+      margin: 0 auto;
+    }
   }
 </style>
 </head>
@@ -363,10 +395,13 @@
 
     <!-- ADD PRODUCT -->
     <div class="page" id="page-newproduct">
-      <div style="display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start">
+      <div style="display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start" id="newProductGrid">
       <!-- LIVE PREVIEW — left side (EXACTLY mirrors guest store .product-card) -->
-      <div style="position:sticky;top:24px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Live preview</div>
+      <div style="position:sticky;top:24px" id="livePreviewPanel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Live preview</div>
+          <button type="button" id="closePreviewBtn" onclick="closeMobilePreview()" style="display:none;background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:0;line-height:1">×</button>
+        </div>
         <div id="listingPreview" style="background:white;border-radius:20px;border:1.5px solid #e5e7eb;overflow:hidden;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(0,0,0,0.08);position:relative;height:500px;display:flex;flex-direction:column">
           <!-- Local Partner chip (top-right, dark blue) — exact guest card style -->
           <div id="previewPartnerChip" style="position:absolute;top:10px;right:10px;background:#1a5fa8;color:white;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:4px 10px;border-radius:50px;z-index:2;box-shadow:0 2px 6px rgba(26,95,168,0.3)">Local Partner</div>
@@ -623,6 +658,7 @@
             </div>
             <div class="field-hint">If you have a unit number, enter it separately — e.g. Unit 2, then 11 Honeysuckle Dr. Postcode only → guests see "Available in your area". Full address → guests see exact distance.</div>
           </div>
+          <button type="button" id="mobilePreviewBtn" class="btn btn-outline" style="display:none;width:100%;justify-content:center;padding:14px;font-size:14px;border-radius:12px;margin-bottom:8px" onclick="openMobilePreview()">👁️ Preview listing</button>
           <button class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;border-radius:12px" onclick="saveProduct()">Publish listing →</button>
         </div>
       </div>
@@ -2561,6 +2597,40 @@
   window.previewVoucherPdf = previewVoucherPdf;
   window.removeVoucherPdf = removeVoucherPdf;
   window.saveProduct = saveProduct;
+
+  // ── MOBILE LIVE PREVIEW TOGGLE ──
+  function openMobilePreview() {
+    const panel = document.getElementById('livePreviewPanel');
+    if (panel) {
+      panel.classList.add('preview-open');
+      // Refresh preview content with current form values before showing
+      try { updatePreview(); } catch (e) {}
+      document.body.style.overflow = 'hidden';
+    }
+  }
+  function closeMobilePreview() {
+    const panel = document.getElementById('livePreviewPanel');
+    if (panel) {
+      panel.classList.remove('preview-open');
+      document.body.style.overflow = '';
+    }
+  }
+  window.openMobilePreview = openMobilePreview;
+  window.closeMobilePreview = closeMobilePreview;
+
+  // Close on backdrop click or Escape
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('livePreviewPanel');
+    if (panel && panel.classList.contains('preview-open') && e.target === panel) {
+      closeMobilePreview();
+    }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const panel = document.getElementById('livePreviewPanel');
+      if (panel && panel.classList.contains('preview-open')) closeMobilePreview();
+    }
+  });
   window.toggleProduct = toggleProduct;
   window.deleteProduct = deleteProduct;
   window.toggleVoucherType = toggleVoucherType;

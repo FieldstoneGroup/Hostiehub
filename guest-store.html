@@ -962,6 +962,7 @@
       const isBookingLink = p.partner_product_type === 'booking' && p.partner_booking_url;
       const isServiceReq = p.partner_product_type === 'service' || (!p.partner_product_type && p.partner_product_id);
       const hasVoucher = !!p.partner_voucher_pdf_url;
+      const hasPromo = !!p.partner_promo_code;
       const hasNotes = !!p.partner_notes;
       const isDemo = hostData && hostData.is_demo;
 
@@ -1001,7 +1002,7 @@
       <div class="partner-card" style="animation-delay:${i * 0.06}s">
         <div class="partner-card-header">
           <span class="partner-card-badge">🤝 Local Partner</span>
-          ${hasVoucher ? '<span class="partner-card-tag">🎟️ Free voucher</span>' : '<span class="partner-card-tag">' + typeTag + '</span>'}
+          ${hasPromo ? '<span class="partner-card-tag">🏷️ Promo code</span>' : (hasVoucher ? '<span class="partner-card-tag">🎟️ Free voucher</span>' : '<span class="partner-card-tag">' + typeTag + '</span>')}
         </div>
         <div class="product-img" style="position:relative;overflow:hidden">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '✨')}${offerBanner}</div>
         <div class="product-body">
@@ -1013,7 +1014,7 @@
           <div class="product-desc">${p.description || ''}</div>
         </div>
         ${hasNotes ? `<div class="pc-notes-box"><div class="pc-notes-box-inner">🎁 ${p.partner_notes}</div></div>` : ''}
-        ${hasVoucher ? `<div class="pc-voucher" style="position:absolute;bottom:68px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#eff6ff;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;color:#1a5fa8"><span>🎟️</span><span>Free voucher emailed on booking</span></div></div>` : ''}
+        ${hasPromo ? `<div class="pc-voucher" style="position:absolute;bottom:68px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;color:#92600a"><span>🏷️</span><span>${p.partner_promo_code_description || 'Special promo code on click'}</span></div></div>` : (hasVoucher ? `<div class="pc-voucher" style="position:absolute;bottom:68px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#eff6ff;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;color:#1a5fa8"><span>🎟️</span><span>Free voucher emailed on booking</span></div></div>` : '')}
         <div class="partner-card-footer" style="padding:10px 14px;background:white;border-top:1px solid #c8ddf5;display:flex;align-items:center;justify-content:space-between;margin-top:auto">
           <div>${priceHtml}</div>
           ${isBookingLink
@@ -1271,18 +1272,19 @@
       // Booking link product — opens URL directly
       if (isBookingLink) {
         const hasVoucher = !!p.partner_voucher_pdf_url;
+        const hasPromo = !!p.partner_promo_code;
         const bookingFn = isDemo
           ? `handleDemoAdd()`
           : `handleBookingLink('${p.partner_booking_url}','${p.partner_product_id || ''}','${p.partner_id || ''}','${p.partner_voucher_pdf_url || ''}','${(p.name || '').replace(/'/g, "\\'")}','${(p.partner_voucher_title || '').replace(/'/g, "\\'")}','${p.partner_promo_code || ''}','${(p.partner_promo_code_description || '').replace(/'/g, "\\'")}')`;
         return `
-        <div class="product-card" style="animation-delay:${i * 0.06}s;padding:0;border:${hasVoucher ? '2px solid #E8A838;box-shadow:0 0 0 3px rgba(232,168,56,0.15)' : '1.5px solid var(--border)'};position:relative;overflow:hidden">
+        <div class="product-card" style="animation-delay:${i * 0.06}s;padding:0;border:${hasPromo ? '2px solid #E8A838;box-shadow:0 0 0 3px rgba(232,168,56,0.15)' : (hasVoucher ? '2px solid #E8A838;box-shadow:0 0 0 3px rgba(232,168,56,0.15)' : '1.5px solid var(--border)')};position:relative;overflow:hidden">
           <!-- Gold banner -->
           <div style="background:linear-gradient(135deg,#E8A838,#d4952e);padding:6px 12px;display:flex;align-items:center;justify-content:space-between">
             <div style="display:flex;align-items:center;gap:5px">
               <span style="font-size:11px">🤝</span>
               <span style="font-size:10px;font-weight:700;color:white;letter-spacing:0.8px;text-transform:uppercase">Local Partner</span>
             </div>
-            ${hasVoucher ? '<span style="font-size:10px;font-weight:700;color:#92600a;background:white;padding:2px 8px;border-radius:50px">🎟️ Free voucher</span>' : ''}
+            ${hasPromo ? '<span style="font-size:10px;font-weight:700;color:#92600a;background:white;padding:2px 8px;border-radius:50px">🏷️ Promo code</span>' : (hasVoucher ? '<span style="font-size:10px;font-weight:700;color:#92600a;background:white;padding:2px 8px;border-radius:50px">🎟️ Free voucher</span>' : '')}
           </div>
           <!-- Image -->
           <div style="width:100%;height:120px;background:white;display:flex;align-items:center;justify-content:center;border-bottom:1px solid #f0ece8">
@@ -1299,8 +1301,8 @@
           </div>
           <!-- Note pinned at fixed position -->
           ${p.partner_notes ? `<div class="pc-notes-box"><div class="pc-notes-box-inner">🎁 ${p.partner_notes}</div></div>` : ''}
-          <!-- Voucher row pinned above button -->
-          ${hasVoucher ? `<div class="pc-voucher" style="position:absolute;bottom:68px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;color:#92600a"><span>🎟️</span><span>${p.partner_voucher_title || 'Free voucher emailed on booking'}</span></div></div>` : ''}
+          <!-- Offer row pinned above button -->
+          ${hasPromo ? `<div class="pc-voucher" style="position:absolute;bottom:68px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;color:#92600a"><span>🏷️</span><span>${p.partner_promo_code_description || 'Special promo code on click'}</span></div></div>` : (hasVoucher ? `<div class="pc-voucher" style="position:absolute;bottom:68px;left:0;right:0;padding:0 14px"><div style="display:flex;align-items:center;gap:6px;background:#fff7e6;border-radius:6px;padding:7px 10px;font-size:11px;font-weight:600;color:#92600a"><span>🎟️</span><span>${p.partner_voucher_title || 'Free voucher emailed on booking'}</span></div></div>` : '')}
           <!-- Book now button — absolute bottom -->
           <div class="pc-btn" style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px;background:white;border-top:1px solid var(--border)">
             <button onclick="${bookingFn}" style="width:100%;border:none;border-radius:10px;padding:11px;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;color:#ffffff;background:linear-gradient(135deg,#2C6E6A,#1d4d4a);cursor:pointer;letter-spacing:0.3px">Book now →</button>

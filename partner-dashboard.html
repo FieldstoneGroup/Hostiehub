@@ -2462,16 +2462,37 @@
       el('previewDistPill').style.display = 'none';
     }
 
-    // Voucher (booking only) — use voucher_title if provided, else default copy
-    if (isBooking && hasVoucherFile) {
-      el('previewVoucherBadge').style.display = 'block';
-      el('previewVoucherRow').style.display = 'flex';
+    // Voucher OR Promo code badge/ribbon (booking only)
+    const badge = el('previewVoucherBadge');
+    const row = el('previewVoucherRow');
+    const rowText = document.getElementById('previewVoucherText');
+    const showVoucher = isBooking && currentOfferType === 'voucher' && hasVoucherFile;
+    const showPromo = isBooking && currentOfferType === 'promo' && (document.getElementById('pPromoCode')?.value || '').trim();
+    if (showVoucher) {
+      badge.style.display = 'block';
+      badge.textContent = '🎟️ Free voucher';
+      badge.style.color = '#92600a';
+      row.style.display = 'flex';
+      row.style.background = '#fff7e6';
+      row.style.color = '#92600a';
       const voucherTitle = (document.getElementById('pVoucherTitle')?.value || '').trim();
-      const voucherText = document.getElementById('previewVoucherText');
-      if (voucherText) voucherText.textContent = voucherTitle || 'Free voucher emailed on booking';
+      if (rowText) rowText.textContent = voucherTitle || 'Free voucher emailed on booking';
+      const rowIcon = row.querySelector('span:first-child');
+      if (rowIcon) rowIcon.textContent = '🎟️';
+    } else if (showPromo) {
+      badge.style.display = 'block';
+      badge.textContent = '🏷️ Promo code';
+      badge.style.color = '#92600a';
+      row.style.display = 'flex';
+      row.style.background = '#fff7e6';
+      row.style.color = '#92600a';
+      const promoDesc = (document.getElementById('pPromoCodeDescription')?.value || '').trim();
+      if (rowText) rowText.textContent = promoDesc || 'Special promo code on click';
+      const rowIcon = row.querySelector('span:first-child');
+      if (rowIcon) rowIcon.textContent = '🏷️';
     } else {
-      el('previewVoucherBadge').style.display = 'none';
-      el('previewVoucherRow').style.display = 'none';
+      badge.style.display = 'none';
+      row.style.display = 'none';
     }
 
     // Price + button

@@ -617,10 +617,14 @@
           </div>
           <div class="field">
             <label>Business logo <span style="font-weight:300;font-size:12px">(optional)</span></label>
-            <div style="background:#fff7e6;border-left:3px solid #E8A838;padding:10px 14px;margin-bottom:10px;border-radius:8px;font-size:13px;line-height:1.5">
-              <strong>📐 Recommended size:</strong> square, 400 × 400 pixels (or any square image)<br>
-              <strong>📁 Format:</strong> PNG (transparent background works best) or JPG<br>
+            <div style="background:#fff7e6;border-left:3px solid #E8A838;padding:12px 14px;margin-bottom:10px;border-radius:8px;font-size:13px;line-height:1.55">
+              <strong>📐 Recommended size:</strong> rectangular, around <strong>600 × 200 pixels</strong> (3:1 ratio)<br>
+              <strong>✂️ Crop tightly:</strong> no whitespace or padding around your logo — fill the canvas to the edges<br>
+              <strong>📁 Format:</strong> PNG with a transparent background (or white background JPG)<br>
               <strong>⚖️ Max file size:</strong> 2 MB
+            </div>
+            <div style="background:#eff6ff;border:1.5px solid #c8ddf5;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12.5px;color:#1a5fa8;line-height:1.55">
+              💡 <strong>Why this matters:</strong> the display area on guest cards is rectangular (a wide horizontal strip). A tightly-cropped wordmark logo will look much bigger and clearer than a square image with padding around it.
             </div>
             <div id="pLogoPreviewWrap" style="display:none" class="image-preview-wrap">
               <img id="pLogoPreview" src="">
@@ -630,7 +634,7 @@
               🏷️ Click to upload your logo
               <input type="file" id="pLogoFile" accept="image/*" style="display:none" onchange="previewLogoImage(this)">
             </label>
-            <div class="field-hint" style="margin-top:6px">Tip: a square logo with even padding around it will display best on guest cards.</div>
+            <div class="field-hint" style="margin-top:6px">No logo? You can also use a clean wordmark of your business name.</div>
           </div>
           <div class="field" id="offerBannerField" style="display:none">
             <label>Offer description <span style="font-weight:300;font-size:12px">(optional)</span></label>

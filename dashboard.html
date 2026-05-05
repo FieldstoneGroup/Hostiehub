@@ -2318,10 +2318,13 @@
     btn.textContent = 'Processing...';
     btn.disabled = true;
     try {
+      if (!currentHost?.stripe_account_id) {
+        throw new Error('Your Stripe account is not connected. Reconnect in My Store → Stripe settings.');
+      }
       const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Service': 'process-refund' },
-        body: JSON.stringify({ sessionId: refundSessionId, amount: Math.round(amount * 100) })
+        body: JSON.stringify({ sessionId: refundSessionId, amount: Math.round(amount * 100), stripe_account_id: currentHost.stripe_account_id })
       });
       const result = await res.json();
       if (result.ok) {
@@ -2338,13 +2341,17 @@
           loadOrders();
         }, 2000);
       } else {
-        throw new Error(result.error || 'Refund failed');
+        // Pull a real string out of whatever shape the error is
+        const errStr = typeof result.error === 'string'
+          ? result.error
+          : (result.error?.message || result.error?.error || JSON.stringify(result.error || result) || 'Refund failed');
+        throw new Error(errStr);
       }
     } catch(e) {
       msg.style.display = 'block';
       msg.style.background = '#fee2e2';
       msg.style.color = '#dc2626';
-      msg.textContent = 'Error: ' + e.message;
+      msg.textContent = 'Error: ' + (e.message || String(e));
       btn.textContent = 'Confirm refund';
       btn.disabled = false;
     }

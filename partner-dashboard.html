@@ -408,7 +408,7 @@
           <!-- Voucher badge (booking links only, top-left) -->
           <div id="previewVoucherBadge" style="display:none;position:absolute;top:10px;left:10px;font-size:10px;font-weight:700;color:#92600a;background:white;padding:4px 10px;border-radius:50px;z-index:2">🎟️ Free voucher</div>
           <!-- Logo strip (white bg, 48px) — shown only when logo uploaded -->
-          <div id="previewLogoStrip" style="display:none;background:white;border-bottom:1px solid #f0ece8;padding:8px 14px;align-items:center;justify-content:center;height:48px;flex-shrink:0"><img id="previewLogoImg" src="" alt="" style="max-height:32px;max-width:120px;object-fit:contain"></div>
+          <div id="previewLogoStrip" style="display:none;background:white;border-bottom:1px solid #f0ece8;padding:6px 12px;align-items:center;justify-content:center;height:64px;flex-shrink:0"><img id="previewLogoImg" src="" alt="" style="max-height:52px;max-width:160px;object-fit:contain"></div>
           <!-- Product image (matches .product-img — 152px default, 140px with logo) -->
           <div id="previewImageWrap" style="height:152px;background:white;display:flex;align-items:center;justify-content:center;font-size:52px;overflow:hidden;border-bottom:1px solid #f0ece8;flex-shrink:0">
             <span style="color:#d1d5db">🏪</span>
@@ -2494,7 +2494,7 @@
     if (logoSrc && logoVisible) {
       el('previewLogoStrip').style.display = 'flex';
       document.getElementById('previewLogoImg').src = logoSrc;
-      el('previewImageWrap').style.height = '140px';
+      el('previewImageWrap').style.height = '128px';
     } else {
       el('previewLogoStrip').style.display = 'none';
       el('previewImageWrap').style.height = '152px';

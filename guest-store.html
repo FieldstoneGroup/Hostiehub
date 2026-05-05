@@ -1005,7 +1005,7 @@
           ${hasPromo ? '<span class="partner-card-tag">🏷️ Promo code</span>' : (hasVoucher ? '<span class="partner-card-tag">🎟️ Free voucher</span>' : '<span class="partner-card-tag">' + typeTag + '</span>')}
         </div>
         ${p.logo_url ? `<div style="background:white;border-bottom:1px solid #c8ddf5;padding:6px 14px;display:flex;align-items:center;justify-content:center;height:76px;box-sizing:border-box;flex-shrink:0"><img src="${p.logo_url}" alt="${p.partner_business_name || ''}" style="max-height:64px;max-width:220px;object-fit:contain" onerror="this.style.display='none'"></div>` : ''}
-        <div class="product-img" style="position:relative;overflow:hidden">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}">` : (p.emoji || '✨')}${offerBanner}</div>
+        <div class="product-img" style="position:relative;overflow:hidden;border-radius:0">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" style="border-radius:0">` : (p.emoji || '✨')}${offerBanner}</div>
         <div class="product-body">
           ${p.partner_product_id ? '' : `<div class="product-category">${p.category || ''}</div>`}
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">

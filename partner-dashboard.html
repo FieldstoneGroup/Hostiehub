@@ -463,9 +463,9 @@
             <div class="field-hint">This tells hosts whether they can set their own price or not.</div>
           </div>
           <div class="field">
-            <label>Description <span style="font-weight:300;font-size:12px" id="pDescCount">(0 / 200 characters)</span></label>
-            <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="400" oninput="updateDescCount();updatePreview()"></textarea>
-            <div class="field-hint" id="pDescHint">Shown in the guest store — keep it punchy. Maximum 200 characters.</div>
+            <label>Description <span style="font-weight:300;font-size:12px" id="pDescCount">(0 / 300 characters)</span></label>
+            <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="300" oninput="updateDescCount();updatePreview()"></textarea>
+            <div class="field-hint" id="pDescHint">Shown in the guest store — keep it punchy. Maximum 300 characters.</div>
           </div>
           <div id="productFields" style="display:none">
             <div class="field">
@@ -1206,11 +1206,8 @@
   }
 
   function updateDescCount() {
-    const isService = document.getElementById('ptService')?.checked;
-    const isBooking = document.getElementById('ptBooking')?.checked;
-    const allow400 = isService || isBooking;
-    const max = allow400 ? 400 : 200;
-    const warn = allow400 ? 360 : 180;
+    const max = 300;
+    const warn = 270;
     const textarea = document.getElementById('pDesc');
     const countEl = document.getElementById('pDescCount');
     const hintEl = document.getElementById('pDescHint');

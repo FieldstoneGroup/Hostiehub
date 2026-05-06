@@ -1374,14 +1374,48 @@
     // Handle Stripe Connect return
     const params = new URLSearchParams(window.location.search);
     if (params.get('stripe') === 'success') {
-      await sb.from('hosts').update({ stripe_connected: true }).eq('id', currentUser.id);
-      currentHost.stripe_connected = true;
-      document.getElementById('stripeNotConnected').style.display = 'none';
-      document.getElementById('stripeConnected').style.display = 'block';
-      document.getElementById('stripeBadge').style.display = 'none';
-      document.getElementById('stripeConnectedBadge').style.display = 'flex';
-      tickCheck('checkStripe');
-      showToast('✅ Stripe connected successfully!');
+      // Stripe redirects to return_url on ANY return from onboarding — not just on full
+      // completion. Verify with Stripe API that the account is actually ready before
+      // marking stripe_connected = true. Otherwise we end up with hosts whose dashboard
+      // says "connected" but who can't actually take payments (Restricted accounts).
+      const accountId = currentHost.stripe_account_id;
+      let actuallyReady = false;
+      let statusBody = null;
+      if (accountId) {
+        try {
+          const verifyRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-account-status' },
+            body: JSON.stringify({ account_id: accountId })
+          });
+          statusBody = await verifyRes.json();
+          actuallyReady = !!(statusBody && statusBody.details_submitted && statusBody.charges_enabled && statusBody.payouts_enabled);
+          console.log('[HH] Stripe verification:', statusBody);
+        } catch (e) {
+          console.error('[HH] Stripe verification failed:', e);
+        }
+      }
+
+      if (actuallyReady) {
+        await sb.from('hosts').update({ stripe_connected: true }).eq('id', currentUser.id);
+        currentHost.stripe_connected = true;
+        document.getElementById('stripeNotConnected').style.display = 'none';
+        document.getElementById('stripeConnected').style.display = 'block';
+        document.getElementById('stripeBadge').style.display = 'none';
+        document.getElementById('stripeConnectedBadge').style.display = 'flex';
+        tickCheck('checkStripe');
+        showToast('✅ Stripe connected successfully!');
+      } else {
+        // Onboarding not complete — keep stripe_connected = false. Inform the host.
+        await sb.from('hosts').update({ stripe_connected: false }).eq('id', currentUser.id);
+        currentHost.stripe_connected = false;
+        const missing = [];
+        if (statusBody && !statusBody.details_submitted) missing.push('account details');
+        if (statusBody && !statusBody.charges_enabled) missing.push('payment capability');
+        if (statusBody && !statusBody.payouts_enabled) missing.push('bank account / payout setup');
+        const detail = missing.length ? ' Missing: ' + missing.join(', ') + '.' : '';
+        showToast('⚠️ Stripe setup incomplete.' + detail + ' Please click "Connect Stripe" to finish.');
+      }
       window.history.replaceState({}, '', 'dashboard.html');
     } else if (params.get('stripe') === 'refresh') {
       showToast('⚠️ Stripe setup incomplete. Please try again.');
@@ -2919,25 +2953,34 @@
   async function connectStripe() {
     showToast('⏳ Setting up Stripe Connect...');
     try {
-      // Create a Stripe Connect Express account for this host
-      const createRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-create-account' },
-        body: JSON.stringify({ email: currentHost.email })
-      });
-      const account = await createRes.json();
-      console.log('Stripe account response:', JSON.stringify(account));
-      if (!account.id) { showToast('⚠️ Stripe error: ' + (account.error?.message || JSON.stringify(account))); return; }
+      let accountId = currentHost.stripe_account_id;
 
-      // Save account ID to database
-      await sb.from('hosts').update({ stripe_account_id: account.id }).eq('id', currentUser.id);
+      // Reuse existing Stripe Express account if present. Previously this function
+      // always created a new account, orphaning any existing one and losing the
+      // connection between the host and Stripe. If a host needs to finish onboarding,
+      // we want to send them back to the SAME account, not create a fresh one.
+      if (!accountId) {
+        const createRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-create-account' },
+          body: JSON.stringify({ email: currentHost.email })
+        });
+        const account = await createRes.json();
+        console.log('Stripe account response:', JSON.stringify(account));
+        if (!account.id) { showToast('⚠️ Stripe error: ' + (account.error?.message || JSON.stringify(account))); return; }
+        accountId = account.id;
+        await sb.from('hosts').update({ stripe_account_id: accountId }).eq('id', currentUser.id);
+        currentHost.stripe_account_id = accountId;
+      } else {
+        console.log('[HH] Reusing existing Stripe account:', accountId);
+      }
 
-      // Get onboarding URL
+      // Get a fresh onboarding URL for the existing or new account
       const linkRes = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Service': 'stripe-connect-url' },
         body: JSON.stringify({
-          account_id: account.id,
+          account_id: accountId,
           return_url: 'https://hostiehub.com.au/dashboard.html?stripe=success',
           refresh_url: 'https://hostiehub.com.au/dashboard.html?stripe=refresh',
         })

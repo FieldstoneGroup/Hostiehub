@@ -2252,8 +2252,21 @@
     const productNotes = {};
     cart.forEach(i => { if (i.note) productNotes[i.name] = i.note; });
 
-    // Go to Stripe if host has it connected
-    if (hostData.stripe_account_id && hostData.stripe_connected && cart.length > 0) {
+    // Payment routing logic:
+    //   • total > 0 + Stripe ready  → go to Stripe checkout (success path saves the order via webhook)
+    //   • total > 0 + Stripe missing → BLOCK. Cannot accept money without Stripe.
+    //   • total > 0 + Stripe failed  → BLOCK. Show error, do NOT silently save as paid.
+    //   • total = 0 (free order)     → save directly with status=paid, send notifications.
+    const hasStripe = !!(hostData.stripe_account_id && hostData.stripe_connected);
+    const isPaidCart = cart.length > 0 && total > 0;
+
+    if (isPaidCart && !hasStripe) {
+      console.error('[Hostie] Paid cart but host has no Stripe configured. Aborting order.');
+      alert('⚠️ This store can\'t accept payment right now. Please contact the host directly to complete your order.');
+      return;
+    }
+
+    if (isPaidCart && hasStripe) {
       const orderData = {host_id:hostData.id,guest_name:guestName,guest_email:guestEmail,guest_phone:guestPhone,checkin_date:checkin,checkout_date:checkout,property_id:propId||'',property_name:propName,notes,total,items:JSON.stringify(cart.map(i=>({id:i.id,name:i.name,price:i.price}))),product_notes:JSON.stringify(productNotes),partner_requests:'[]'};
       const sessionKey = 'po_' + Date.now();
       sessionStorage.setItem(sessionKey, JSON.stringify(orderData));
@@ -2289,10 +2302,14 @@
       const session = await checkoutRes.json();
       console.log('[Hostie] Stripe session:', session.url ? 'got URL' : 'error', session.error?.message || '');
       if (session.url) { window.location.href = session.url; return; }
+
+      // Stripe call failed — DO NOT fall through to "save as paid". Block the order.
       console.error('[Hostie] Stripe checkout failed:', session);
+      alert('⚠️ Payment could not be processed at this time. Your card was not charged. Please contact the host or try again later.');
+      return;
     }
 
-    // No Stripe — save order directly
+    // Free order (total = 0) — safe to save directly with status=paid.
     await sb.from('orders').insert({
       host_id: hostData.id,
       guest_name: guestName,

@@ -475,9 +475,12 @@
       <div id="ldPromoInfo" style="display:none;background:#fff7e6;border-radius:10px;padding:10px 14px;font-size:13px;color:#92600a;font-weight:600;margin-bottom:14px"></div>
     </div>
     <!-- Footer with action -->
-    <div style="padding:14px 22px;border-top:1px solid #f0ece8;background:white;display:flex;gap:10px;align-items:center;justify-content:space-between">
+    <div style="padding:14px 22px;border-top:1px solid #f0ece8;background:white;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap">
       <div id="ldFooterLeft" style="font-size:12px;color:var(--muted)"></div>
-      <button id="ldActionBtn" class="btn-blue" style="width:auto;padding:10px 22px;font-size:14px">Book now →</button>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <a id="ldMenuLink" href="#" target="_blank" rel="noopener" style="display:none;font-size:13px;color:#1a5fa8;font-weight:700;text-decoration:none;background:#eff6ff;padding:9px 14px;border-radius:50px;align-items:center;gap:4px">📄 Menu</a>
+        <button id="ldActionBtn" class="btn-blue" style="width:auto;padding:10px 22px;font-size:14px">Book now →</button>
+      </div>
     </div>
   </div>
 </div>
@@ -758,7 +761,7 @@
     });
     const bookingPartnerIds = allProducts.filter(p => p.partner_product_id).map(p => p.partner_product_id);
     if (bookingPartnerIds.length > 0) {
-      const { data: partnerProds, error: ppErr } = await sb.from('partner_products').select('id, name, description, long_description, gallery_images, highlights, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng, logo_url, image_url, shop_products, offer_text, offer_color, promo_code, promo_code_description').in('id', bookingPartnerIds);
+      const { data: partnerProds, error: ppErr } = await sb.from('partner_products').select('id, name, description, long_description, gallery_images, highlights, voucher_pdf_url, voucher_title, menu_pdf_url, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng, logo_url, image_url, shop_products, offer_text, offer_color, promo_code, promo_code_description').in('id', bookingPartnerIds);
       if (ppErr) console.error('[Hostie] partner_products fetch error:', ppErr);
       console.log('[Hostie] partner_products fetch result:', partnerProds);
       if (partnerProds) {
@@ -817,6 +820,7 @@
             listing_lng: pp.listing_lng,
             shop_products: liveShopProducts,
             partner_voucher_pdf_url: pp.voucher_pdf_url,
+            partner_menu_pdf_url: pp.menu_pdf_url,
             partner_promo_code: pp.promo_code,
             partner_promo_code_description: pp.promo_code_description,
             partner_voucher_title: pp.voucher_title,
@@ -1014,12 +1018,15 @@
       const bookingFn = isDemo ? `handleDemoAdd()` : `handleBookingLink('${p.partner_booking_url}','${p.partner_product_id || ''}','${p.partner_id || ''}','${p.partner_voucher_pdf_url || ''}','${(p.name || '').replace(/'/g, "\\'")}','${(p.partner_voucher_title || '').replace(/'/g, "\\'")}','${p.partner_promo_code || ''}','${(p.partner_promo_code_description || '').replace(/'/g, "\\'")}')`;
       const requestFn = isDemo ? `handleDemoAdd()` : `handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)`;
 
+      const hasMenu = !!p.partner_menu_pdf_url;
       const priceHtml = p.service_price_unit === 'contact for pricing'
         ? '<span style="font-size:12px;color:#1a5fa8;font-weight:600">💬 Contact for pricing</span>'
         : p.service_price
           ? '<span style="font-size:15px;font-weight:700;color:#1a5fa8">$' + p.service_price + '</span> <small style="font-size:11px;color:var(--muted)">' + (p.service_price_unit || '') + '</small>'
-          : isBookingLink ? '<span style="font-size:12px;color:var(--muted)">🔗 Book direct</span>'
-          : '<span style="font-size:12px;color:#1a5fa8;font-weight:600">🤝 Request service</span>';
+          : hasMenu
+            ? '<a href="' + p.partner_menu_pdf_url + '" target="_blank" rel="noopener" onclick="event.stopPropagation();logPartnerEvent(\'' + (p.partner_product_id || '') + '\',\'' + (p.partner_id || '') + '\',\'menu_view\')" style="font-size:13px;color:#1a5fa8;font-weight:700;text-decoration:none;background:#eff6ff;padding:5px 10px;border-radius:50px;display:inline-flex;align-items:center;gap:4px">📄 Menu</a>'
+            : isBookingLink ? '<span style="font-size:12px;color:var(--muted)">🔗 Book direct</span>'
+            : '<span style="font-size:12px;color:#1a5fa8;font-weight:600">🤝 Request service</span>';
 
       // Distance calculation — use listing-specific location
       let distanceTag = '';
@@ -2881,6 +2888,19 @@
       promoEl.style.display = 'block';
     } else {
       promoEl.style.display = 'none';
+    }
+
+    // Menu link in footer (shown alongside the action button when partner uploaded a menu PDF)
+    const menuLink = document.getElementById('ldMenuLink');
+    if (p.partner_menu_pdf_url) {
+      menuLink.href = p.partner_menu_pdf_url;
+      menuLink.style.display = 'inline-flex';
+      menuLink.onclick = () => {
+        if (p.partner_product_id && p.partner_id) logPartnerEvent(p.partner_product_id, p.partner_id, 'menu_view');
+      };
+    } else {
+      menuLink.style.display = 'none';
+      menuLink.onclick = null;
     }
 
     // Gallery — combine main image (if any) with gallery_images, dedupe

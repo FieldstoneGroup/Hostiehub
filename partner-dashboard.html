@@ -624,6 +624,21 @@
                 <div class="field-hint" style="margin-top:6px">Short description shown above the code in the popup. Max 80 characters.</div>
               </div>
             </div>
+
+            <!-- ── MENU PDF (optional) — replaces the "Book direct" link in the guest card with a "Menu" link when uploaded ── -->
+            <div class="field">
+              <label>Add menu <span style="font-weight:300;font-size:12px;color:var(--muted)">(optional)</span></label>
+              <div class="field-hint" style="margin-bottom:8px">Upload a PDF of your menu. When guests view your listing, they'll see a "📄 Menu" link in place of "Book direct" — tapping it opens the PDF.</div>
+              <div id="pMenuPreviewWrap" style="display:none;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:8px;align-items:center;gap:10px;">
+                <span style="font-size:20px">📄</span>
+                <span id="pMenuFileName" style="font-size:14px;font-weight:500;flex:1;color:var(--text)"></span>
+                <button type="button" onclick="removeMenuPdf()" style="background:none;border:none;color:var(--error);cursor:pointer;font-size:13px;">Remove</button>
+              </div>
+              <label id="pMenuUploadLabel" class="image-upload-label">
+                📄 Click to upload menu (PDF)
+                <input type="file" id="pMenuFile" accept=".pdf" style="display:none" onchange="previewMenuPdf(this)">
+              </label>
+            </div>
           </div>
           <div class="field">
             <label>Product photo <span style="font-weight:300;font-size:12px">(recommended)</span></label>
@@ -1645,6 +1660,7 @@
     setSelectedDays(null);
     removeProductImage();
     removeVoucherPdf();
+    removeMenuPdf();
     productPostcodes = [];
     renderProductPostcodes();
     selectedListingLocation = null;
@@ -1692,6 +1708,50 @@
     }
     const { data } = sb.storage.from('product-images').getPublicUrl(path);
     console.log('[HH] Voucher uploaded OK:', data.publicUrl);
+    return data.publicUrl;
+  }
+
+  // ── MENU PDF (separate from voucher) ──
+  // Mirrors the logo/image pattern: tracks a pending file (newly picked) AND the existing URL
+  // (loaded from DB on edit). The save payload sends one or the other (or null on remove),
+  // and a new file is uploaded post-save with a timestamped path to avoid cache issues.
+  let pendingMenuFile = null;
+  let existingMenuUrl = null;
+
+  function previewMenuPdf(input) {
+    const file = input.files[0];
+    if (!file) return;
+    pendingMenuFile = file;
+    document.getElementById('pMenuFileName').textContent = file.name;
+    document.getElementById('pMenuPreviewWrap').style.display = 'flex';
+    document.getElementById('pMenuUploadLabel').style.display = 'none';
+  }
+  window.previewMenuPdf = previewMenuPdf;
+
+  function removeMenuPdf() {
+    pendingMenuFile = null;
+    existingMenuUrl = null;
+    const el = document.getElementById('pMenuFile');
+    if (el) el.value = '';
+    const wrap = document.getElementById('pMenuPreviewWrap');
+    if (wrap) wrap.style.display = 'none';
+    const label = document.getElementById('pMenuUploadLabel');
+    if (label) label.style.display = 'flex';
+  }
+  window.removeMenuPdf = removeMenuPdf;
+
+  async function uploadMenuPdf(file, productId) {
+    const ext = (file.name.split('.').pop() || 'pdf').toLowerCase();
+    const path = 'partner-menus/' + partnerData.id + '/' + productId + '-' + Date.now() + '.' + ext;
+    console.log('[HH] Uploading menu to:', path, 'file size:', file.size);
+    const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true, contentType: 'application/pdf' });
+    if (error) {
+      console.error('[HH] Menu upload error:', error);
+      showToast('⚠️ Menu upload failed: ' + error.message);
+      return null;
+    }
+    const { data } = sb.storage.from('product-images').getPublicUrl(path);
+    console.log('[HH] Menu uploaded OK:', data.publicUrl);
     return data.publicUrl;
   }
 
@@ -1863,6 +1923,8 @@
       logo_url: pendingLogoFile ? null : (existingLogoUrl || null),
       // Image: same pattern as logo — null on remove, existing URL on no-change, new upload handled below
       image_url: pendingImageFile ? null : (existingImageUrl || null),
+      // Menu PDF: same pattern. Only present on booking-type listings, but harmless to include for others.
+      menu_pdf_url: pendingMenuFile ? null : (existingMenuUrl || null),
       active: true,
     };
 
@@ -1925,6 +1987,13 @@
         const voucherUrl = await uploadVoucherPdf(voucherFile, productId);
         if (voucherUrl) await sb.from('partner_products').update({ voucher_pdf_url: voucherUrl }).eq('id', productId);
       }
+      // Menu PDF — uploaded after save with timestamped path. Only relevant on booking listings
+      // (it shows in place of the "Book direct" link in the guest card footer).
+      if (pendingMenuFile) {
+        showToast('Uploading menu...');
+        const menuUrl = await uploadMenuPdf(pendingMenuFile, productId);
+        if (menuUrl) await sb.from('partner_products').update({ menu_pdf_url: menuUrl }).eq('id', productId);
+      }
     }
 
     // Reset all pending file state so it doesn't leak into the next edit/new-product flow
@@ -1933,9 +2002,12 @@
     existingLogoUrl = null;
     pendingImageFile = null;
     existingImageUrl = null;
+    pendingMenuFile = null;
+    existingMenuUrl = null;
     document.getElementById('pImageFile').value = '';
     document.getElementById('pLogoFile').value = '';
     if (document.getElementById('pVoucherFile')) document.getElementById('pVoucherFile').value = '';
+    if (document.getElementById('pMenuFile')) document.getElementById('pMenuFile').value = '';
     editingProductId = null;
     showToast(wasEdit ? 'Product updated!' : 'Product saved!');
     await loadProducts();
@@ -2128,6 +2200,19 @@
     } else {
       document.getElementById('pVoucherPreviewWrap').style.display = 'none';
       document.getElementById('pVoucherUploadLabel').style.display = 'flex';
+    }
+
+    // Menu PDF — same pattern as voucher; tracks existingMenuUrl so saves don't wipe it
+    pendingMenuFile = null;
+    existingMenuUrl = (isBooking && p.menu_pdf_url) ? p.menu_pdf_url : null;
+    if (existingMenuUrl) {
+      const fname = existingMenuUrl.split('/').pop().split('?')[0] || 'Menu uploaded';
+      document.getElementById('pMenuFileName').textContent = '✓ ' + decodeURIComponent(fname);
+      document.getElementById('pMenuPreviewWrap').style.display = 'flex';
+      document.getElementById('pMenuUploadLabel').style.display = 'none';
+    } else {
+      document.getElementById('pMenuPreviewWrap').style.display = 'none';
+      document.getElementById('pMenuUploadLabel').style.display = 'flex';
     }
 
     // Listing location

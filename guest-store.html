@@ -446,7 +446,43 @@
   </div>
 </div>
 
-<!-- PARTNER REQUEST MODAL -->
+<!-- LISTING DETAIL MODAL — opens when guest taps a partner card for full details -->
+<div class="notes-modal-overlay" id="listingDetailOverlay">
+  <div class="notes-modal" style="max-width:560px;max-height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+    <!-- Hero/gallery -->
+    <div id="ldHeroWrap" style="position:relative;background:#f4f6f5">
+      <div id="ldGallery" style="position:relative;width:100%;aspect-ratio:16/10;overflow:hidden;background:#f4f6f5"></div>
+      <button onclick="closeListingDetail()" aria-label="Close" style="position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.6);color:white;border:none;cursor:pointer;font-size:16px;line-height:1;z-index:5">✕</button>
+      <button id="ldPrev" aria-label="Previous photo" style="display:none;position:absolute;top:50%;left:10px;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.5);color:white;border:none;cursor:pointer;font-size:18px;line-height:1;z-index:4" onclick="ldGalleryPrev()">‹</button>
+      <button id="ldNext" aria-label="Next photo" style="display:none;position:absolute;top:50%;right:10px;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.5);color:white;border:none;cursor:pointer;font-size:18px;line-height:1;z-index:4" onclick="ldGalleryNext()">›</button>
+      <div id="ldDots" style="position:absolute;bottom:10px;left:0;right:0;display:flex;gap:6px;justify-content:center;z-index:3"></div>
+    </div>
+    <!-- Body -->
+    <div style="overflow-y:auto;padding:18px 22px 8px;flex:1;-webkit-overflow-scrolling:touch">
+      <div id="ldLogoWrap" style="display:none;margin-bottom:10px;text-align:center"><img id="ldLogo" src="" alt="" style="max-height:40px;max-width:160px;object-fit:contain"></div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">
+        <h3 id="ldTitle" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin:0;line-height:1.25"></h3>
+        <span id="ldDistance" style="display:none;flex-shrink:0;font-size:11px;color:#1a5fa8;font-weight:600;background:#f0f7ff;border-radius:50px;padding:4px 10px;white-space:nowrap"></span>
+      </div>
+      <div id="ldShortDesc" style="font-size:14px;color:#1a1a1a;line-height:1.55;margin-bottom:14px"></div>
+      <div id="ldLongDesc" style="font-size:14px;color:#374151;line-height:1.65;white-space:pre-wrap;margin-bottom:14px"></div>
+      <div id="ldHighlightsWrap" style="display:none;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Highlights</div>
+        <ul id="ldHighlights" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px"></ul>
+      </div>
+      <div id="ldOfferBanner" style="display:none;background:#2C6E6A;color:white;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;text-align:center;margin-bottom:14px"></div>
+      <div id="ldVoucherInfo" style="display:none;background:#eff6ff;border-radius:10px;padding:10px 14px;font-size:13px;color:#1a5fa8;font-weight:600;margin-bottom:14px">🎟️ Free voucher emailed when you click "Book now"</div>
+      <div id="ldPromoInfo" style="display:none;background:#fff7e6;border-radius:10px;padding:10px 14px;font-size:13px;color:#92600a;font-weight:600;margin-bottom:14px"></div>
+    </div>
+    <!-- Footer with action -->
+    <div style="padding:14px 22px;border-top:1px solid #f0ece8;background:white;display:flex;gap:10px;align-items:center;justify-content:space-between">
+      <div id="ldFooterLeft" style="font-size:12px;color:var(--muted)"></div>
+      <button id="ldActionBtn" class="btn-blue" style="width:auto;padding:10px 22px;font-size:14px">Book now →</button>
+    </div>
+  </div>
+</div>
+
+
 <div class="notes-modal-overlay" id="partnerRequestOverlay">
   <div class="notes-modal" style="max-width:420px">
     <div style="font-size:40px;text-align:center;margin-bottom:8px">🤝</div>
@@ -722,7 +758,7 @@
     });
     const bookingPartnerIds = allProducts.filter(p => p.partner_product_id).map(p => p.partner_product_id);
     if (bookingPartnerIds.length > 0) {
-      const { data: partnerProds, error: ppErr } = await sb.from('partner_products').select('id, name, description, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng, logo_url, image_url, shop_products, offer_text, offer_color, promo_code, promo_code_description').in('id', bookingPartnerIds);
+      const { data: partnerProds, error: ppErr } = await sb.from('partner_products').select('id, name, description, long_description, gallery_images, highlights, voucher_pdf_url, voucher_title, service_price, service_price_unit, lead_time_value, lead_time_unit, listing_address, listing_lat, listing_lng, logo_url, image_url, shop_products, offer_text, offer_color, promo_code, promo_code_description').in('id', bookingPartnerIds);
       if (ppErr) console.error('[Hostie] partner_products fetch error:', ppErr);
       console.log('[Hostie] partner_products fetch result:', partnerProds);
       if (partnerProds) {
@@ -769,6 +805,9 @@
             ...p,
             name: pp.name != null ? pp.name : p.name,
             description: pp.description != null ? pp.description : p.description,
+            long_description: pp.long_description || null,
+            gallery_images: Array.isArray(pp.gallery_images) ? pp.gallery_images : [],
+            highlights: Array.isArray(pp.highlights) ? pp.highlights : [],
             image_url: pp.image_url,
             logo_url: pp.logo_url,
             offer_text: pp.offer_text,
@@ -998,14 +1037,20 @@
         ? `<div style="position:absolute;left:0;right:0;bottom:0;background:${p.offer_color || '#2C6E6A'};color:white;padding:7px 10px;font-size:11px;font-weight:800;letter-spacing:1px;text-align:center;text-transform:uppercase;text-shadow:0 1px 1px rgba(0,0,0,0.15);box-shadow:0 -2px 8px rgba(0,0,0,0.1);z-index:2">${p.offer_text}</div>`
         : '';
 
+      // "Tap for details" — only shown when partner has provided extended content,
+      // so we don't promise a richer view that doesn't exist.
+      const hasExtended = !!(p.long_description || (Array.isArray(p.gallery_images) && p.gallery_images.length) || (Array.isArray(p.highlights) && p.highlights.length));
+      const cardClickAttr = hasExtended ? `style="animation-delay:${i * 0.06}s;cursor:pointer" data-pid="${p.id}" onclick="onPartnerCardTap(event, '${p.id}')"` : `style="animation-delay:${i * 0.06}s"`;
+      const moreHint = hasExtended ? `<div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.55);color:white;padding:4px 9px;border-radius:50px;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;z-index:3;backdrop-filter:blur(4px)">Tap for details</div>` : '';
+
       return `
-      <div class="partner-card" style="animation-delay:${i * 0.06}s">
+      <div class="partner-card" ${cardClickAttr}>
         <div class="partner-card-header">
           <span class="partner-card-badge">🤝 Local Partner</span>
           ${hasPromo ? '<span class="partner-card-tag">🏷️ Promo code</span>' : (hasVoucher ? '<span class="partner-card-tag">🎟️ Free voucher</span>' : '<span class="partner-card-tag">' + typeTag + '</span>')}
         </div>
         ${p.logo_url ? `<div style="background:white;border-bottom:1px solid #c8ddf5;padding:6px 14px;display:flex;align-items:center;justify-content:center;height:76px;box-sizing:border-box;flex-shrink:0"><img src="${p.logo_url}" alt="${p.partner_business_name || ''}" style="max-height:64px;max-width:220px;object-fit:contain" onerror="this.style.display='none'"></div>` : ''}
-        <div class="product-img" style="position:relative;overflow:hidden;border-radius:0">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" style="border-radius:0">` : (p.emoji || '✨')}${offerBanner}</div>
+        <div class="product-img" style="position:relative;overflow:hidden;border-radius:0">${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" style="border-radius:0">` : (p.emoji || '✨')}${moreHint}${offerBanner}</div>
         <div class="product-body">
           ${p.partner_product_id ? '' : `<div class="product-category">${p.category || ''}</div>`}
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
@@ -2748,6 +2793,207 @@
       } catch(e) { console.error('[Hostie] Failed to parse pending order:', e); }
     }
   }
+
+  // ════════════════════════════════════════════════════════════════════
+  //  LISTING DETAIL MODAL — opens when guest taps a partner card.
+  //  Renders gallery carousel, long description, highlights, and the same
+  //  call-to-action button (Book now / Add → / promo code) the card would have.
+  // ════════════════════════════════════════════════════════════════════
+
+  let ldGalleryUrls = [];
+  let ldGalleryIdx = 0;
+  let ldCurrentProductId = null;
+
+  function onPartnerCardTap(event, productId) {
+    // Don't open modal if the click was on the card's own button (Book now / Add)
+    const t = event.target;
+    if (t && (t.tagName === 'BUTTON' || t.closest('button'))) return;
+    openListingDetail(productId);
+  }
+  window.onPartnerCardTap = onPartnerCardTap;
+
+  function openListingDetail(productId) {
+    const p = (allProducts || []).find(x => x.id === productId);
+    if (!p) return;
+    ldCurrentProductId = productId;
+
+    // Title + distance
+    document.getElementById('ldTitle').textContent = p.name || '';
+    const distEl = document.getElementById('ldDistance');
+    if (p._distanceLabel) {
+      distEl.textContent = '📍 ' + p._distanceLabel;
+      distEl.style.display = 'inline-block';
+    } else {
+      distEl.style.display = 'none';
+    }
+
+    // Logo
+    const logoWrap = document.getElementById('ldLogoWrap');
+    const logoImg = document.getElementById('ldLogo');
+    if (p.logo_url) {
+      logoImg.src = p.logo_url;
+      logoWrap.style.display = 'block';
+    } else {
+      logoWrap.style.display = 'none';
+    }
+
+    // Short description
+    document.getElementById('ldShortDesc').textContent = p.description || '';
+
+    // Long description (preserve line breaks via white-space: pre-wrap on the element)
+    const ldEl = document.getElementById('ldLongDesc');
+    if (p.long_description) {
+      ldEl.textContent = p.long_description;
+      ldEl.style.display = 'block';
+    } else {
+      ldEl.style.display = 'none';
+    }
+
+    // Highlights
+    const hlWrap = document.getElementById('ldHighlightsWrap');
+    const hlList = document.getElementById('ldHighlights');
+    const highlights = Array.isArray(p.highlights) ? p.highlights.filter(Boolean) : [];
+    if (highlights.length) {
+      hlList.innerHTML = highlights.map(h =>
+        `<li style="display:flex;gap:10px;align-items:flex-start;font-size:14px;color:#1a1a1a;line-height:1.5"><span style="color:#1D9E75;font-weight:700;flex-shrink:0">✓</span><span>${escapeHtml(h)}</span></li>`
+      ).join('');
+      hlWrap.style.display = 'block';
+    } else {
+      hlWrap.style.display = 'none';
+    }
+
+    // Offer banner
+    const offerEl = document.getElementById('ldOfferBanner');
+    if (p.offer_text) {
+      offerEl.textContent = p.offer_text;
+      offerEl.style.background = p.offer_color || '#2C6E6A';
+      offerEl.style.display = 'block';
+    } else {
+      offerEl.style.display = 'none';
+    }
+
+    // Voucher / promo
+    const voucherEl = document.getElementById('ldVoucherInfo');
+    const promoEl = document.getElementById('ldPromoInfo');
+    voucherEl.style.display = p.partner_voucher_pdf_url ? 'block' : 'none';
+    if (p.partner_promo_code) {
+      promoEl.innerHTML = '🏷️ <strong>Promo code:</strong> ' + (p.partner_promo_code_description || 'Special promo code on click');
+      promoEl.style.display = 'block';
+    } else {
+      promoEl.style.display = 'none';
+    }
+
+    // Gallery — combine main image (if any) with gallery_images, dedupe
+    const gallery = [];
+    if (p.image_url) gallery.push(p.image_url);
+    if (Array.isArray(p.gallery_images)) {
+      p.gallery_images.forEach(u => { if (u && !gallery.includes(u)) gallery.push(u); });
+    }
+    ldGalleryUrls = gallery;
+    ldGalleryIdx = 0;
+    renderLdGallery();
+
+    // Action button — mirror whatever the card's button does, so behaviour is identical.
+    const actionBtn = document.getElementById('ldActionBtn');
+    const isBookingLink = p.partner_product_id && (p.type === 'booking' || p.partner_voucher_pdf_url || p.partner_promo_code);
+    if (isBookingLink) {
+      actionBtn.textContent = 'Book now →';
+      actionBtn.onclick = () => {
+        closeListingDetail();
+        if (typeof handleBookingLink === 'function') {
+          handleBookingLink(
+            p.partner_booking_url || '',
+            p.partner_product_id || '',
+            p.partner_id || '',
+            p.partner_voucher_pdf_url || '',
+            p.name || '',
+            p.partner_voucher_title || '',
+            p.partner_promo_code || '',
+            p.partner_promo_code_description || ''
+          );
+        }
+      };
+    } else {
+      actionBtn.textContent = 'Add →';
+      actionBtn.onclick = () => {
+        // Trigger the same code path the card's "Add" button uses, by clicking it.
+        // This ensures cart-add visual feedback (the "✓ Added" state) updates correctly.
+        closeListingDetail();
+        const cardBtn = document.getElementById('btn-' + p.id);
+        if (cardBtn) cardBtn.click();
+      };
+    }
+
+    // Show
+    document.getElementById('listingDetailOverlay').classList.add('open');
+  }
+  window.openListingDetail = openListingDetail;
+
+  function closeListingDetail() {
+    document.getElementById('listingDetailOverlay').classList.remove('open');
+    ldCurrentProductId = null;
+  }
+  window.closeListingDetail = closeListingDetail;
+
+  function renderLdGallery() {
+    const wrap = document.getElementById('ldGallery');
+    const dots = document.getElementById('ldDots');
+    const prev = document.getElementById('ldPrev');
+    const next = document.getElementById('ldNext');
+    if (!wrap) return;
+
+    if (!ldGalleryUrls.length) {
+      wrap.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;color:#cbd5e1">✨</div>';
+      dots.innerHTML = '';
+      prev.style.display = 'none';
+      next.style.display = 'none';
+      return;
+    }
+
+    const url = ldGalleryUrls[ldGalleryIdx];
+    wrap.innerHTML = `<img src="${url}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`;
+
+    if (ldGalleryUrls.length > 1) {
+      prev.style.display = 'flex';
+      next.style.display = 'flex';
+      dots.innerHTML = ldGalleryUrls.map((_, i) =>
+        `<span style="width:7px;height:7px;border-radius:50%;background:${i === ldGalleryIdx ? 'white' : 'rgba(255,255,255,0.5)'};box-shadow:0 1px 3px rgba(0,0,0,0.4)"></span>`
+      ).join('');
+    } else {
+      prev.style.display = 'none';
+      next.style.display = 'none';
+      dots.innerHTML = '';
+    }
+  }
+
+  function ldGalleryPrev() {
+    if (!ldGalleryUrls.length) return;
+    ldGalleryIdx = (ldGalleryIdx - 1 + ldGalleryUrls.length) % ldGalleryUrls.length;
+    renderLdGallery();
+  }
+  window.ldGalleryPrev = ldGalleryPrev;
+
+  function ldGalleryNext() {
+    if (!ldGalleryUrls.length) return;
+    ldGalleryIdx = (ldGalleryIdx + 1) % ldGalleryUrls.length;
+    renderLdGallery();
+  }
+  window.ldGalleryNext = ldGalleryNext;
+
+  // Close on overlay click (but not when clicking the inner modal)
+  document.addEventListener('DOMContentLoaded', () => {
+    const overlay = document.getElementById('listingDetailOverlay');
+    if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) closeListingDetail(); });
+    // ESC to close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay && overlay.classList.contains('open')) closeListingDetail();
+    });
+  });
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
 </script>
 <script src="support-widget.js"></script>
 </body>

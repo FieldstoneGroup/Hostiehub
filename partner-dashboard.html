@@ -467,6 +467,29 @@
             <textarea id="pDesc" placeholder="What does this include? Any details guests should know?" maxlength="300" oninput="updateDescCount();updatePreview()"></textarea>
             <div class="field-hint" id="pDescHint">Shown in the guest store — keep it punchy. Maximum 300 characters.</div>
           </div>
+
+          <!-- ── EXTENDED LISTING DETAILS (shown on the guest's "tap for more" modal) ── -->
+          <div class="field">
+            <label>Tell guests more <span style="font-weight:300;font-size:12px;color:var(--muted)">(optional)</span> <span style="font-weight:300;font-size:12px" id="pLongDescCount">(0 / 1500 characters)</span></label>
+            <textarea id="pLongDesc" placeholder="Tell guests the story — what's the vibe? What makes you special? Anything they should know before they arrive?" maxlength="1500" rows="6" oninput="updateLongDescCount();updatePreview()" style="min-height:120px;resize:vertical"></textarea>
+            <div class="field-hint">Shown when a guest taps your listing for full details. Use line breaks for paragraphs. Up to 1500 characters.</div>
+          </div>
+
+          <div class="field">
+            <label>Gallery photos <span style="font-weight:300;font-size:12px;color:var(--muted)">(optional, up to 4)</span></label>
+            <div class="field-hint" style="margin-bottom:10px">Extra photos shown to guests in the detail view. Recommended: 800 × 800px or larger.</div>
+            <div id="galleryGrid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px"></div>
+            <input type="file" id="pGalleryFile" accept="image/*" multiple style="display:none" onchange="onGalleryFilesPicked(this)">
+          </div>
+
+          <div class="field">
+            <label>Highlights <span style="font-weight:300;font-size:12px;color:var(--muted)">(optional, up to 6)</span></label>
+            <div class="field-hint" style="margin-bottom:10px">Short, punchy standout points — e.g. "Award-winning chef", "Free wine tasting on arrival", "Vegetarian options".</div>
+            <div id="highlightsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px"></div>
+            <button type="button" id="addHighlightBtn" onclick="addHighlightRow()" style="width:100%;padding:10px;background:#f4f6f5;color:#1a1a1a;border:1.5px dashed var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer">+ Add highlight</button>
+          </div>
+          <!-- ── END EXTENDED DETAILS ── -->
+
           <div id="productFields" style="display:none">
             <div class="field">
               <label>Products in your shop</label>
@@ -1222,6 +1245,126 @@
   }
   window.updateDescCount = updateDescCount;
 
+  // ════════════════════════════════════════════════════════════════════
+  //  EXTENDED LISTING DETAILS — long description, gallery (4 images), highlights (max 6)
+  //  Renders as an expanded modal on the guest store when a guest taps a listing card.
+  // ════════════════════════════════════════════════════════════════════
+
+  function updateLongDescCount() {
+    const max = 1500;
+    const warn = 1350;
+    const textarea = document.getElementById('pLongDesc');
+    const countEl = document.getElementById('pLongDescCount');
+    if (!textarea || !countEl) return;
+    const l = textarea.value.length;
+    countEl.textContent = '(' + l + ' / ' + max + ' characters)';
+    countEl.style.color = l > warn ? '#e53e3e' : 'var(--muted)';
+  }
+  window.updateLongDescCount = updateLongDescCount;
+
+  // ── GALLERY ──
+  // Holds existing image URLs already saved in DB.
+  // Pending files are uploaded on save (matching the timestamped path pattern of the
+  // main product image, so each upload gets a unique URL — no CDN cache collisions).
+  let galleryImages = [];        // mix of strings (already-uploaded URLs) and File objects (pending)
+  const GALLERY_MAX = 4;
+
+  function renderGalleryGrid() {
+    const grid = document.getElementById('galleryGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    galleryImages.forEach((item, idx) => {
+      const isFile = item instanceof File;
+      const src = isFile ? URL.createObjectURL(item) : item;
+      const tile = document.createElement('div');
+      tile.style.cssText = 'position:relative;aspect-ratio:1;background:#f4f6f5;border:1.5px solid var(--border);border-radius:10px;overflow:hidden';
+      tile.innerHTML =
+        '<img src="' + src + '" alt="" style="width:100%;height:100%;object-fit:cover">' +
+        '<button type="button" onclick="removeGalleryImage(' + idx + ')" aria-label="Remove" style="position:absolute;top:6px;right:6px;width:26px;height:26px;border:none;border-radius:50%;background:rgba(0,0,0,0.65);color:white;font-size:14px;line-height:1;cursor:pointer">✕</button>';
+      grid.appendChild(tile);
+    });
+    if (galleryImages.length < GALLERY_MAX) {
+      const addTile = document.createElement('button');
+      addTile.type = 'button';
+      addTile.onclick = () => document.getElementById('pGalleryFile').click();
+      addTile.style.cssText = 'aspect-ratio:1;background:#fafaf8;border:1.5px dashed var(--border);border-radius:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:\'DM Sans\',sans-serif;color:var(--muted);font-size:13px;gap:6px';
+      addTile.innerHTML = '<div style="font-size:24px">+</div><div>Add photo</div>';
+      grid.appendChild(addTile);
+    }
+  }
+
+  function onGalleryFilesPicked(input) {
+    const files = Array.from(input.files || []);
+    for (const f of files) {
+      if (galleryImages.length >= GALLERY_MAX) break;
+      galleryImages.push(f);
+    }
+    input.value = ''; // allow re-picking same file
+    renderGalleryGrid();
+  }
+  window.onGalleryFilesPicked = onGalleryFilesPicked;
+
+  function removeGalleryImage(idx) {
+    galleryImages.splice(idx, 1);
+    renderGalleryGrid();
+  }
+  window.removeGalleryImage = removeGalleryImage;
+
+  async function uploadGalleryImage(file, productId, slotIndex) {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    // Timestamp + slot index in path to guarantee unique URLs and avoid cache issues.
+    const path = 'partner-products/' + partnerData.id + '/' + productId + '-gallery-' + slotIndex + '-' + Date.now() + '.' + ext;
+    const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
+    if (error) { console.error('[HH] Gallery upload error:', error); return null; }
+    const { data } = sb.storage.from('product-images').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
+  // ── HIGHLIGHTS ──
+  let highlights = []; // array of strings
+  const HIGHLIGHT_MAX = 6;
+  const HIGHLIGHT_CHAR_LIMIT = 60;
+
+  function renderHighlights() {
+    const list = document.getElementById('highlightsList');
+    const addBtn = document.getElementById('addHighlightBtn');
+    if (!list) return;
+    list.innerHTML = '';
+    highlights.forEach((h, idx) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:8px;align-items:center';
+      row.innerHTML =
+        '<span style="color:var(--partner);font-weight:700;font-size:14px;width:18px;text-align:center;flex-shrink:0">✓</span>' +
+        '<input type="text" value="' + esc(h) + '" maxlength="' + HIGHLIGHT_CHAR_LIMIT + '" placeholder="e.g. Award-winning chef" oninput="updateHighlight(' + idx + ',this.value)" style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:14px;outline:none;box-sizing:border-box">' +
+        '<button type="button" onclick="removeHighlight(' + idx + ')" aria-label="Remove" style="width:32px;height:32px;border:none;border-radius:8px;background:#f4f6f5;color:#1a1a1a;font-size:14px;cursor:pointer;flex-shrink:0">✕</button>';
+      list.appendChild(row);
+    });
+    // Hide "+ Add" button once at max
+    if (addBtn) addBtn.style.display = highlights.length >= HIGHLIGHT_MAX ? 'none' : 'block';
+  }
+
+  function addHighlightRow() {
+    if (highlights.length >= HIGHLIGHT_MAX) return;
+    highlights.push('');
+    renderHighlights();
+    // Focus the new input
+    const list = document.getElementById('highlightsList');
+    const inputs = list?.querySelectorAll('input');
+    inputs?.[inputs.length - 1]?.focus();
+  }
+  window.addHighlightRow = addHighlightRow;
+
+  function updateHighlight(idx, val) {
+    highlights[idx] = val;
+  }
+  window.updateHighlight = updateHighlight;
+
+  function removeHighlight(idx) {
+    highlights.splice(idx, 1);
+    renderHighlights();
+  }
+  window.removeHighlight = removeHighlight;
+
   // ── SHOP PRODUCTS (nested: shop → products → variants) ──
   let shopProducts = []; // [{ name, description, wholesale_price, rrp, variants: [{label, wholesale_price, rrp}] }]
 
@@ -1507,6 +1650,13 @@
     selectedListingLocation = null;
     document.getElementById('pListingLocation').value = '';
     document.getElementById('pUnitNumber').value = '';
+    // Reset extended details
+    if (document.getElementById('pLongDesc')) document.getElementById('pLongDesc').value = '';
+    galleryImages = [];
+    renderGalleryGrid();
+    highlights = [];
+    renderHighlights();
+    updateLongDescCount();
   }
 
   function previewVoucherPdf(input) {
@@ -1670,10 +1820,23 @@
     }
     const notificationEmail = document.getElementById('pNotificationEmail').value.trim() || null;
 
+    // Build cleaned highlights — drop empties, trim, cap each at HIGHLIGHT_CHAR_LIMIT
+    const cleanHighlights = (highlights || [])
+      .map(h => (h || '').trim().slice(0, HIGHLIGHT_CHAR_LIMIT))
+      .filter(h => h.length > 0)
+      .slice(0, HIGHLIGHT_MAX);
+
+    // Gallery images: split already-uploaded URLs (kept) from pending File uploads (uploaded after save)
+    const existingGalleryUrls = galleryImages.filter(g => typeof g === 'string');
+
     const payload = {
       partner_id: partnerData.id,
       name,
       description: document.getElementById('pDesc').value.trim(),
+      long_description: (document.getElementById('pLongDesc')?.value || '').trim().slice(0, 1500) || null,
+      highlights: cleanHighlights,
+      // gallery_images: kept-existing URLs only on save. Newly picked files get appended after upload below.
+      gallery_images: existingGalleryUrls,
       notes: '',
       type: isBooking ? 'booking' : (isService ? 'service' : 'product'),
       category: document.getElementById('pCategory').value,
@@ -1738,6 +1901,21 @@
       showToast('Uploading image...');
       const url = await uploadProductImage(pendingImageFile, productId);
       if (url) await sb.from('partner_products').update({ image_url: url }).eq('id', productId);
+    }
+
+    // Upload any new gallery images and append their URLs to the existing list saved in the payload.
+    const pendingGalleryFiles = galleryImages.filter(g => g instanceof File);
+    if (pendingGalleryFiles.length && productId) {
+      showToast('Uploading gallery photos...');
+      const newUrls = [];
+      for (let i = 0; i < pendingGalleryFiles.length; i++) {
+        const url = await uploadGalleryImage(pendingGalleryFiles[i], productId, existingGalleryUrls.length + i);
+        if (url) newUrls.push(url);
+      }
+      if (newUrls.length) {
+        const fullList = [...existingGalleryUrls, ...newUrls].slice(0, GALLERY_MAX);
+        await sb.from('partner_products').update({ gallery_images: fullList }).eq('id', productId);
+      }
     }
 
     if (isBooking) {
@@ -1844,6 +2022,15 @@
     document.getElementById('pDesc').value = p.description || '';
     updateDescCount();
     document.getElementById('pNotes') && (document.getElementById('pNotes').value = p.notes || '');
+    // Extended details — long description, gallery, highlights
+    if (document.getElementById('pLongDesc')) {
+      document.getElementById('pLongDesc').value = p.long_description || '';
+      updateLongDescCount();
+    }
+    galleryImages = Array.isArray(p.gallery_images) ? p.gallery_images.filter(u => typeof u === 'string') : [];
+    renderGalleryGrid();
+    highlights = Array.isArray(p.highlights) ? p.highlights.filter(h => typeof h === 'string') : [];
+    renderHighlights();
 
     const isBooking = p.type === 'booking';
     const isService = p.type === 'service';

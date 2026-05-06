@@ -1458,7 +1458,9 @@
 
   async function uploadProductImage(file, productId) {
     const ext = file.name.split('.').pop().toLowerCase();
-    const path = 'partner-products/' + partnerData.id + '/' + productId + '.' + ext;
+    // Timestamp in path ensures each upload gets a unique URL — prevents CDN/browser cache
+    // from serving stale content when a listing's image is replaced.
+    const path = 'partner-products/' + partnerData.id + '/' + productId + '-' + Date.now() + '.' + ext;
     const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
     if (error) { console.error(error); return null; }
     const { data } = sb.storage.from('product-images').getPublicUrl(path);
@@ -1528,7 +1530,9 @@
 
   async function uploadVoucherPdf(file, productId) {
     const ext = file.name.split('.').pop().toLowerCase() || 'png';
-    const path = 'partner-vouchers/' + partnerData.id + '/' + productId + '.' + ext;
+    // Timestamp in path ensures each upload gets a unique URL — prevents CDN/browser cache
+    // from serving stale content when a listing's voucher is replaced.
+    const path = 'partner-vouchers/' + partnerData.id + '/' + productId + '-' + Date.now() + '.' + ext;
     console.log('[HH] Uploading voucher to:', path, 'file size:', file.size);
     const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
     if (error) {

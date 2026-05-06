@@ -1317,6 +1317,8 @@
   // ── LOGO UPLOAD PREVIEW ──
   let pendingLogoFile = null;
   let existingLogoUrl = null;
+  let pendingImageFile = null;
+  let existingImageUrl = null;
   function previewLogoImage(input) {
     const file = input.files[0];
     if (!file) return;
@@ -1433,6 +1435,7 @@
   function previewProductImage(input) {
     const file = input.files[0];
     if (!file) return;
+    pendingImageFile = file;
     const reader = new FileReader();
     reader.onload = e => {
       document.getElementById('pImagePreview').src = e.target.result;
@@ -1444,6 +1447,8 @@
   }
 
   function removeProductImage() {
+    pendingImageFile = null;
+    existingImageUrl = null;
     document.getElementById('pImageFile').value = '';
     document.getElementById('pImagePreview').src = '';
     document.getElementById('pImagePreviewWrap').style.display = 'none';
@@ -1689,6 +1694,8 @@
       promo_code_description: isBooking ? ((document.getElementById('pPromoCodeDescription')?.value || '').trim().slice(0, 80) || null) : null,
       // Logo: use existing URL by default. Set to null if user removed it. New uploads handled below.
       logo_url: pendingLogoFile ? null : (existingLogoUrl || null),
+      // Image: same pattern as logo — null on remove, existing URL on no-change, new upload handled below
+      image_url: pendingImageFile ? null : (existingImageUrl || null),
       active: true,
     };
 
@@ -1723,10 +1730,9 @@
       }
     }
 
-    const imageFile = document.getElementById('pImageFile').files[0];
-    if (imageFile) {
+    if (pendingImageFile) {
       showToast('Uploading image...');
-      const url = await uploadProductImage(imageFile, productId);
+      const url = await uploadProductImage(pendingImageFile, productId);
       if (url) await sb.from('partner_products').update({ image_url: url }).eq('id', productId);
     }
 
@@ -1739,8 +1745,17 @@
       }
     }
 
+    // Reset all pending file state so it doesn't leak into the next edit/new-product flow
+    const wasEdit = editingProductId !== null;
+    pendingLogoFile = null;
+    existingLogoUrl = null;
+    pendingImageFile = null;
+    existingImageUrl = null;
+    document.getElementById('pImageFile').value = '';
+    document.getElementById('pLogoFile').value = '';
+    if (document.getElementById('pVoucherFile')) document.getElementById('pVoucherFile').value = '';
     editingProductId = null;
-    showToast(editingProductId === null ? 'Product saved!' : 'Product updated!');
+    showToast(wasEdit ? 'Product updated!' : 'Product saved!');
     await loadProducts();
     showPage('products', document.querySelector('[onclick*=products]'));
   }
@@ -1806,6 +1821,13 @@
     if (cacheIdx >= 0) partnerProducts[cacheIdx] = p;
     editingProductId = id;
 
+    // Clear any leftover pending file state from a previous edit so files can't leak across listings
+    pendingLogoFile = null;
+    pendingImageFile = null;
+    document.getElementById('pImageFile').value = '';
+    document.getElementById('pLogoFile').value = '';
+    if (document.getElementById('pVoucherFile')) document.getElementById('pVoucherFile').value = '';
+
     // Navigate to form
     document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1831,6 +1853,9 @@
     const legacyPhys = document.getElementById('physicalFields');
     if (legacyPhys) legacyPhys.style.display = 'none';
     document.getElementById('categoryFieldWrap').style.display = isBooking ? 'block' : 'none';
+    // Offer banner — only available on booking listings (mirror of toggleProductType)
+    const offerWrap = document.getElementById('offerBannerField');
+    if (offerWrap) offerWrap.style.display = isBooking ? 'block' : 'none';
     if (isProduct) document.getElementById('pCategory').value = 'product';
     if (isService) document.getElementById('pCategory').value = 'service';
 
@@ -1894,6 +1919,7 @@
     selectOfferColour(p.offer_color || '#2C6E6A');
 
     // Image
+    existingImageUrl = p.image_url || null;
     if (p.image_url) {
       document.getElementById('pImagePreview').src = p.image_url;
       document.getElementById('pImagePreviewWrap').style.display = 'block';

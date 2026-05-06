@@ -2195,8 +2195,12 @@
     document.getElementById('pdfUploadLabel').style.display = 'flex';
   }
 
-  async function uploadVoucherPdf(file, voucherId) {
-    const path = 'vouchers/' + partnerData.id + '/' + voucherId + '.pdf';
+  async function uploadStandaloneVoucherPdf(file, voucherId) {
+    // Renamed from uploadVoucherPdf to avoid name collision with the listing-attached
+    // voucher uploader at line ~1531. JavaScript silently shadows duplicate function names
+    // in the same scope, so previously this function was overriding the other one.
+    // Timestamp in path prevents CDN/browser cache from serving stale content on replace.
+    const path = 'vouchers/' + partnerData.id + '/' + voucherId + '-' + Date.now() + '.pdf';
     const { error } = await sb.storage.from('product-images').upload(path, file, { upsert: true });
     if (error) { console.error(error); return null; }
     const { data } = sb.storage.from('product-images').getPublicUrl(path);
@@ -2230,7 +2234,7 @@
 
     if (isPdf && pdfFile) {
       showToast('Uploading PDF...');
-      const pdfUrl = await uploadVoucherPdf(pdfFile, inserted.id);
+      const pdfUrl = await uploadStandaloneVoucherPdf(pdfFile, inserted.id);
       if (pdfUrl) await sb.from('vouchers').update({ pdf_url: pdfUrl }).eq('id', inserted.id);
     }
 

@@ -453,25 +453,25 @@
   </a>
 
   <div class="panel-content">
-    <div class="panel-eyebrow">Get started today</div>
-    <h1 class="panel-title">Your store.<br>Your guests.<br><em>Your revenue.</em></h1>
-    <p class="panel-desc">Set up your guest extras store in minutes. Try it free for 30 days — no credit card required.</p>
+    <div class="panel-eyebrow" data-i18n="signup.eyebrow">Get started today</div>
+    <h1 class="panel-title" data-i18n="signup.title" data-i18n-html>Your store.<br>Your guests.<br><em>Your revenue.</em></h1>
+    <p class="panel-desc" data-i18n="signup.desc">First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start.</p>
     <div class="panel-perks">
       <div class="perk">
         <div class="perk-icon">🔗</div>
-        <span>Your own store at <strong>yourname.hostiehub.com</strong></span>
+        <span data-i18n="signup.perk1">A guided setup from your listing link</span>
       </div>
       <div class="perk">
         <div class="perk-icon">💳</div>
-        <span>Payments go 100% directly to you via Stripe</span>
+        <span data-i18n="signup.perk2">Payments go 100% to you via Stripe</span>
       </div>
       <div class="perk">
         <div class="perk-icon">⚡</div>
-        <span>Up and running in under 5 minutes</span>
+        <span data-i18n="signup.perk3">Nothing is added to your store until you press Add</span>
       </div>
       <div class="perk">
         <div class="perk-icon">🇦🇺</div>
-        <span>Built by hosts in Newcastle, Australia</span>
+        <span data-i18n="signup.perk4">Built by hosts in Newcastle, Australia</span>
       </div>
     </div>
   </div>
@@ -485,8 +485,8 @@
 
     <!-- TABS -->
     <div class="auth-tabs">
-      <button class="auth-tab active" onclick="showTab('signup')">Create account</button>
-      <button class="auth-tab" onclick="showTab('login')">Log in</button>
+      <button class="auth-tab active" onclick="showTab('signup')" data-i18n="signup.tabCreate">Create account</button>
+      <button class="auth-tab" onclick="showTab('login')" data-i18n="signup.tabLogin">Log in</button>
     </div>
 
     <!-- ALERT -->
@@ -494,8 +494,8 @@
 
     <!-- ── SIGNUP FORM ── -->
     <div id="signupForm">
-      <div class="form-title">Open your store</div>
-      <div class="form-subtitle">Free to try — $99/yr when you're ready to go live.</div>
+      <div class="form-title" data-i18n="signup.formTitle">Open your store</div>
+      <div class="form-subtitle" data-i18n="pricing.sentence">First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start.</div>
 
       <div class="field">
         <label>Full name</label>
@@ -556,8 +556,8 @@
 
     <!-- ── LOGIN FORM ── -->
     <div id="loginForm" style="display:none">
-      <div class="form-title">Welcome back</div>
-      <div class="form-subtitle">Log in to manage your store.</div>
+      <div class="form-title" data-i18n="signup.loginTitle">Welcome back</div>
+      <div class="form-subtitle" data-i18n="signup.loginSub">Log in to manage your store.</div>
 
       <div class="field">
         <label>Email address</label>
@@ -580,11 +580,11 @@
     <!-- ── SUCCESS STATE ── -->
     <div class="success-state" id="successState">
       <div class="success-icon">🎉</div>
-      <h2>Welcome to Hostie Hub!</h2>
-      <p>Your store is ready and your <strong>30-day free trial</strong> has started. No credit card needed — just set up your store and start earning.</p>
+      <h2 data-i18n="signup.welcome">Welcome to Hostie Hub</h2>
+      <p data-i18n="signup.success">Your store is ready and your first free month has started. No card needed. Next we'll set it up from your listing — you choose every product.</p>
       <div class="success-store-url" id="successUrl"></div>
-      <button class="submit-btn" onclick="goToDashboard()" style="margin-top:8px">Set up my store →</button>
-      <p style="font-size:12px;color:var(--muted);margin-top:14px;line-height:1.5">After 30 days you'll be prompted to choose a plan.<br>No sneaky billing — your store just pauses until you're ready.</p>
+      <button class="submit-btn" onclick="goToDashboard()" style="margin-top:8px" data-i18n="signup.setup">Set up my store →</button>
+      <p style="font-size:12px;color:var(--muted);margin-top:14px;line-height:1.5" data-i18n="signup.successNote">After the free month, a simple monthly subscription keeps the store open. Nothing is charged until the price is published.</p>
     </div>
 
   </div>
@@ -602,7 +602,8 @@
   }
 
   function goToDashboard() {
-    window.location.href = 'dashboard.html';
+    try { sessionStorage.setItem('hh_just_signed_up', '1'); } catch (err) {}
+    window.location.href = 'onboarding.html';
   }
 
   // ── SUPABASE INIT ──
@@ -813,7 +814,8 @@
   }
 
   function goToDashboard() {
-    window.location.href = 'dashboard.html';
+    try { sessionStorage.setItem('hh_just_signed_up', '1'); } catch (err) {}
+    window.location.href = 'onboarding.html';
   }
 
   function showAlert(msg, type) {
@@ -832,5 +834,8 @@
   });
 
 </script>
+<div data-lang-slot style="position:fixed;top:16px;right:16px"></div>
+<script src="/js/pricing.js"></script>
+<script src="/js/i18n.js"></script>
 </body>
 </html>

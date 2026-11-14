@@ -7,6 +7,10 @@
 <title>Dashboard – Hostie Hub</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="/js/pricing.js"></script>
+<script src="/js/suggestions.js"></script>
+<script src="/js/i18n.js"></script>
+<script src="/js/assistant-ui.js"></script>
 <style>
   :root {
     --brand: #2C6E6A; --brand-dark: #1d4d4a; --brand-light: #e6f2f1;
@@ -344,19 +348,20 @@
   </div>
   <nav class="sidebar-nav">
     <div class="nav-section-label">Main</div>
-    <button class="nav-item active" onclick="showPage('overview', this)"><div class="nav-icon">🏠</div><span>Overview</span></button>
-    <button class="nav-item" onclick="showPage('orders', this)"><div class="nav-icon">📋</div><span>Orders</span></button>
-    <button class="nav-item" onclick="showPage('analytics', this)"><div class="nav-icon">📊</div><span>Analytics</span></button>
+    <button class="nav-item active" onclick="showPage('overview', this)"><div class="nav-icon">🏠</div><span data-i18n="dash.overview">Overview</span></button>
+    <button class="nav-item" onclick="showPage('orders', this)"><div class="nav-icon">📋</div><span data-i18n="dash.orders">Orders</span></button>
+    <button class="nav-item" onclick="showPage('analytics', this)"><div class="nav-icon">📊</div><span data-i18n="dash.analytics">Analytics</span></button>
     <div class="nav-section-label">My Store</div>
-    <button class="nav-item" onclick="showPage('store', this)"><div class="nav-icon">🎨</div><span>Store Settings</span></button>
-    <button class="nav-item" onclick="showPage('properties', this)"><div class="nav-icon">🏠</div><span>Properties</span></button>
-    <button class="nav-item" onclick="showPage('products', this)"><div class="nav-icon">📦</div><span>Products</span></button>
+    <button class="nav-item" onclick="showPage('store', this)"><div class="nav-icon">🎨</div><span data-i18n="dash.store">Store settings</span></button>
+    <button class="nav-item" onclick="showPage('properties', this)"><div class="nav-icon">🏠</div><span data-i18n="dash.properties">Properties</span></button>
+    <button class="nav-item" onclick="showPage('products', this)"><div class="nav-icon">📦</div><span data-i18n="dash.products">Products</span></button>
+    <button class="nav-item" data-nav="assistant" onclick="showPage('assistant', this)"><div class="nav-icon">✨</div><span data-i18n="dash.assistant">Store assistant</span></button>
     <button class="nav-item" onclick="showPage('vouchers', this)"><div class="nav-icon">🎟️</div><span>Local Vouchers</span></button>
     <button class="nav-item" onclick="showPage('localproducts', this)" style="background:rgba(232,168,56,0.18);border:1px solid rgba(232,168,56,0.3);font-weight:700;color:#E8A838"><div class="nav-icon">🤝</div><span>Local Products</span></button>
-    <button class="nav-item" onclick="showPage('stripe', this)"><div class="nav-icon">💳</div><span>Stripe Connect</span></button>
+    <button class="nav-item" onclick="showPage('stripe', this)"><div class="nav-icon">💳</div><span data-i18n="dash.stripe">Stripe Connect</span></button>
     <div class="nav-section-label">Account</div>
-    <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span>Account</span></button>
-    <button class="nav-item" onclick="showPage('users', this)"><div class="nav-icon">👥</div><span>My Team</span></button>
+    <button class="nav-item" onclick="showPage('account', this)"><div class="nav-icon">👤</div><span data-i18n="dash.account">Account</span></button>
+    <button class="nav-item" onclick="showPage('users', this)"><div class="nav-icon">👥</div><span data-i18n="dash.team">My team</span></button>
     <button class="nav-item" id="linkedStoresNavBtn" onclick="showPage('linkedstores', this)" style="display:none"><div class="nav-icon">🔗</div><span>Linked Stores</span><span id="linkedStoresBadge" style="margin-left:auto;background:#5DCAA5;color:#0A1628;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px"></span></button>
   </nav>
   <div class="sidebar-bottom">
@@ -370,6 +375,7 @@
   <div class="topbar">
     <div class="topbar-title" id="topbarTitle">Overview</div>
     <div class="topbar-actions">
+      <div data-lang-slot></div>
       <span class="badge badge-warn" id="stripeBadge" style="display:none;cursor:pointer" onclick="document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-stripe').classList.add('active');document.getElementById('topbarTitle').textContent='Stripe Connect'">⚡ Connect Stripe</span>
       <span class="badge badge-success" id="stripeConnectedBadge" style="display:none">✓ Stripe Connected</span>
     </div>
@@ -418,8 +424,22 @@
             <button class="btn btn-primary" onclick="showPage('properties', document.querySelector('[onclick*=properties]'))">🏠 &nbsp;Add a property</button>
             <button class="btn btn-outline" onclick="showPage('products', document.querySelector('[onclick*=products]'))">📦 &nbsp;Add a product</button>
             <button class="btn btn-outline" onclick="showPage('stripe', document.querySelector('[onclick*=stripe]'))">💳 &nbsp;Connect Stripe</button>
+            <a class="btn btn-outline" href="onboarding.html">✨ &nbsp;<span data-i18n="dash.setupLink">Set up from your listing link</span></a>
+            <button class="btn btn-outline" onclick="showPage('assistant', document.querySelector('[data-nav=assistant]'))">✨ &nbsp;<span data-i18n="dash.assistant">Store assistant</span></button>
           </div>
         </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title" data-i18n="dash.assistant">Store assistant</div>
+        <div class="card-desc" data-i18n="dash.assistantCard">Ask the store assistant for ideas. It only adds a product when you press Add.</div>
+      </div>
+    </div>
+
+    <!-- STORE ASSISTANT -->
+    <div class="page" id="page-assistant">
+      <div class="card">
+        <div class="card-title" data-i18n="dash.assistant">Store assistant</div>
+        <div id="storeAssistant"></div>
       </div>
     </div>
 
@@ -698,12 +718,15 @@
         </div>
         <div>
           <div class="card" style="margin-bottom:16px">
-            <div class="card-title">Plan</div>
-            <div class="card-desc">Hostie Hub is free for hosts.</div>
+            <div class="card-title" data-i18n="dash.planTitle">Plan</div>
+            <div class="card-desc" data-i18n="dash.planDesc">First month free, then a simple monthly subscription.</div>
             <div style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:12px;padding:18px 20px;margin-top:12px">
-              <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:6px">✅ Free Forever</div>
-              <div style="font-size:22px;font-weight:700;color:var(--brand);font-family:'Playfair Display',serif;margin-bottom:4px">Free Plan</div>
-              <div style="font-size:13px;color:var(--brand-dark);line-height:1.6">Unlimited properties, unlimited products, unlimited orders. No credit card. No subscription. Hostie Hub is funded by local partners — not by hosts.</div>
+              <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:6px"><span data-price-label>TBC</span> <span data-i18n="pricing.perMonth">per month after your free month</span></div>
+              <div style="font-size:15px;color:var(--brand-dark);line-height:1.6" data-i18n="pricing.sentence">First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start.</div>
+              <div style="font-size:13px;color:var(--brand-dark);line-height:1.6;margin-top:8px" data-i18n="dash.planKeep">You keep 100% of guest sales. No commission, no platform fee.</div>
+              <p data-price-pending data-i18n="dash.planOff" style="font-size:13px;color:var(--muted);margin-top:8px">Billing is off until the monthly price and Stripe price ID are set. No card is collected.</p>
+              <button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="startHostSubscription()" data-i18n="dash.planCta">Start monthly subscription</button>
+              <div id="billingMsg" style="font-size:13px;margin-top:8px;color:var(--muted)"></div>
             </div>
           </div>
         </div>
@@ -1238,7 +1261,16 @@
 
   const emojis = ['🌸','🧺','🍾','🕐','🏄','🚗','🎁','🌿','☕','🍫','🧁','🎂','🌊','🏠','🧴','🛁','🎵','🐾','🎉','🍕','🥗','🍷','🎈','🍫','🛎️','🧹'];
   const swatchColours = ['#2C6E6A','#1d4d4a','#E8A838','#e74c3c','#8e44ad','#2980b9','#27ae60','#e67e22','#1a1a1a'];
-  const pageTitles = { overview:'Overview', orders:'Orders', analytics:'Analytics', store:'Store Settings', properties:'Properties', products:'Products', vouchers:'Local Vouchers', localproducts:'Local Products', stripe:'Stripe Connect', account:'Account', users:'My Team', linkedstores:'Linked Stores' };
+  const pageTitles = { overview:'Overview', orders:'Orders', analytics:'Analytics', store:'Store settings', properties:'Properties', products:'Products', assistant:'Store assistant', vouchers:'Local Vouchers', localproducts:'Local Products', stripe:'Stripe Connect', account:'Account', users:'My Team', linkedstores:'Linked Stores' };
+  const pageTitleKeys = { overview:'dash.overview', orders:'dash.orders', analytics:'dash.analytics', store:'dash.store', properties:'dash.properties', products:'dash.products', assistant:'dash.assistant', vouchers:'dash.vouchers', localproducts:'dash.local', stripe:'dash.stripe', account:'dash.account', users:'dash.team' };
+  function pageTitle(name) {
+    var key = pageTitleKeys[name];
+    if (key && window.hhT) {
+      var value = window.hhT(key);
+      if (value && value !== key) return value;
+    }
+    return pageTitles[name] || name;
+  }
 
   // Preset images live in the public Supabase Storage bucket "preset-images".
   // Filename is auto-generated from the preset name (lowercase, hyphenated).
@@ -1332,7 +1364,89 @@
     { name: 'Local Events Calendar', description: 'A personalised calendar of local events, markets, festivals and activities happening during your stay.', price: 8, unit: 'per stay', category: 'product', emoji: '📅', notes_prompt: 'What types of events interest you? (markets / music / sport / food / family)' },
   ];
 
+  function hhAssistantContext() {
+    var property = (properties && properties[0]) || {};
+    var hostProducts = (products || []).filter(function (item) { return !item.partner_id; }).map(function (item) {
+      return { id: item.id, name: item.name, price: Number(item.price), description: item.description || '', unit: item.unit || '', emoji: item.emoji || '' };
+    });
+    return {
+      propertyType: property.property_type || (currentHost && currentHost.property_type) || '',
+      location: [property.location_label, property.address, property.postcode, currentHost && currentHost.postcode].filter(Boolean).join(', '),
+      products: hostProducts
+    };
+  }
+
+  async function hhApplySuggestion(suggestion) {
+    if (window.HH_DEMO) {
+      showToast(window.hhT ? window.hhT('assistant.demoNote') : 'Preview only — nothing was written to a store.');
+      return true;
+    }
+    if (!currentUser) return false;
+    if (suggestion.action === 'edit') {
+      if (!suggestion.productId) return false;
+      var updated = await sb.from('products').update({ price: suggestion.price }).eq('id', suggestion.productId).eq('host_id', currentUser.id);
+      if (updated.error) { showToast(updated.error.message); return false; }
+      showToast('✅ ' + suggestion.name);
+      await loadProducts();
+      return true;
+    }
+    var inserted = await sb.from('products').insert({
+      host_id: currentUser.id,
+      name: suggestion.name,
+      description: suggestion.description || '',
+      price: suggestion.price,
+      unit: suggestion.unit || '',
+      category: suggestion.category || 'service',
+      emoji: suggestion.emoji || '✨',
+      notes_prompt: suggestion.notes_prompt || '',
+      active: true,
+      available_all_properties: true
+    });
+    if (inserted.error) { showToast(inserted.error.message); return false; }
+    showToast('✅ ' + suggestion.name);
+    await loadProducts();
+    return true;
+  }
+
+  async function startHostSubscription() {
+    var msg = document.getElementById('billingMsg');
+    var sessionResult = await sb.auth.getSession();
+    var token = sessionResult.data.session && sessionResult.data.session.access_token;
+    var response = await fetch('/api/host-subscription', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer ' + (token || '') },
+      body: JSON.stringify({
+        success_url: location.origin + '/dashboard.html?billing=success',
+        cancel_url: location.origin + '/dashboard.html?billing=cancel'
+      })
+    });
+    var data = await response.json();
+    if (!data.enabled) {
+      if (msg) msg.textContent = data.message || (window.hhT ? window.hhT('dash.planOff') : 'Billing is off.');
+      return;
+    }
+    if (data.already) { if (msg) msg.textContent = data.message || ''; return; }
+    if (data.url) location.href = data.url;
+    else if (msg) msg.textContent = data.error || 'Could not start checkout.';
+  }
+
   async function init() {
+    var demo = new URLSearchParams(location.search).get('assistantDemo') === '1';
+    if (demo) {
+      window.HH_DEMO = true;
+      currentUser = { id: 'demo', email: 'demo@hostiehub.com.au' };
+      currentHost = { full_name: 'Alex Demo', username: 'beachdemo', property_type: 'beach house', postcode: '2026', trial_ends_at: new Date(Date.now() + 20*86400000).toISOString() };
+      properties = [{ id: 'p1', nickname: 'Sunroom Cottage', address: 'Bondi Beach, NSW', postcode: '2026', property_type: 'beach house', location_label: 'Bondi Beach, NSW' }];
+      products = [{ id: 'prod-late', name: 'Late check-out', price: 20, description: 'Stay until 12pm', unit: 'per stay', emoji: '🛎️', active: true }];
+      var nameEl = document.getElementById('sidebarName');
+      if (nameEl) nameEl.textContent = 'Alex Demo';
+      var avatarEl = document.getElementById('sidebarAvatar');
+      if (avatarEl) avatarEl.textContent = 'AD';
+      showPage('assistant', document.querySelector('[data-nav="assistant"]'));
+      if (window.hhMountAssistant) window.hhMountAssistant();
+      return;
+    }
+
     // Get session — retry up to 3 times to handle token refresh on hard refresh
     let session = null;
     for (let i = 0; i < 3; i++) {
@@ -1363,6 +1477,12 @@
     }
 
     await Promise.all([loadProducts(), loadProperties(), loadOrders()]);
+    try {
+      if (sessionStorage.getItem('hh_just_signed_up') === '1' && !(currentHost && currentHost.onboarding_completed_at) && properties.length === 0) {
+        window.location.href = 'onboarding.html';
+        return;
+      }
+    } catch (err) {}
     loadVouchers();
     loadLocalProducts();
     loadHostAnalytics();
@@ -1480,7 +1600,8 @@
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('page-' + name).classList.add('active');
     if (btn) btn.classList.add('active');
-    document.getElementById('topbarTitle').textContent = pageTitles[name] || name;
+    document.getElementById('topbarTitle').textContent = pageTitle(name);
+    if (name === 'assistant' && window.hhMountAssistant) window.hhMountAssistant();
   }
 
   // ── PROPERTIES ──
@@ -3823,9 +3944,24 @@
   window.requestUpgradeContact = requestUpgradeContact;
   window.handleLogout = handleLogout;
   // Old notification-user window attaches removed.
+  window.hhAssistantContext = hhAssistantContext;
+  window.hhApplySuggestion = hhApplySuggestion;
+  window.startHostSubscription = startHostSubscription;
   window.openCalModal = openCalModal;
   window.copyCalUrl = copyCalUrl;
 
+  function refreshTopbar() {
+    var active = document.querySelector('.page.active');
+    if (!active) return;
+    document.getElementById('topbarTitle').textContent = pageTitle(active.id.replace('page-', ''));
+  }
+  document.addEventListener('hh-locale-ready', refreshTopbar);
+  document.addEventListener('hh-locale', function () {
+    refreshTopbar();
+    if (currentUser && !window.HH_DEMO) {
+      sb.from('hosts').update({ preferred_locale: window.hhLocale ? window.hhLocale() : 'en' }).eq('id', currentUser.id);
+    }
+  });
   init();
 </script>
 <!-- MOBILE BOTTOM NAV -->

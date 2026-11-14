@@ -70,83 +70,85 @@
 
 <div class="container">
 
+  <div style="display:flex;justify-content:flex-end"><div data-lang-slot></div></div>
   <a href="index.html" class="logo">
     <span class="logo-dot"></span>
     Hostie Hub
   </a>
 
   <div class="hero">
-    <div class="hero-eyebrow">Pricing</div>
-    <h1>Free for hosts. <span>Forever.</span></h1>
-    <p>Hostie Hub is a platform that connects short-term rental hosts with their guests, and local businesses with both. Hosts and cleaners pay nothing — ever. Local businesses pay for placement.</p>
+    <div class="hero-eyebrow" data-i18n="plans.eyebrow">Pricing</div>
+    <h1 data-i18n="plans.h1" data-i18n-html>Simple pricing for <span>hosts</span>.</h1>
+    <p data-i18n="plans.lead">First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start.</p>
   </div>
 
   <div class="cards">
 
     <div class="card host">
-      <div class="card-eyebrow eb-host">For Hosts</div>
-      <h2>Free</h2>
-      <div class="card-sub">Unlimited everything. No credit card. No catch.</div>
+      <div class="card-eyebrow eb-host" data-i18n="plans.hostEyebrow">For hosts</div>
+      <h2 data-i18n="plans.hostName">Host</h2>
+      <div class="card-sub" data-i18n="plans.hostSub">Your guest upsell store. You keep every sale.</div>
 
       <div class="price">
-        <span class="price-amount brand">$0</span>
-        <span class="price-suffix">forever</span>
+        <span class="price-amount brand" data-price-label>TBC</span>
+        <span class="price-suffix" data-i18n="plans.suffix">per month after the free month</span>
       </div>
+      <p class="card-sub" data-price-pending data-i18n="pricing.pricePending">Monthly price to be confirmed</p>
 
       <ul class="features">
-        <li>Unlimited properties</li>
-        <li>Unlimited products and services</li>
-        <li>Unlimited orders</li>
-        <li>Stripe payments straight to your account</li>
-        <li>Local partner offerings shown free</li>
-        <li>Calendar sync, guest order emails, dashboard analytics</li>
-        <li>Invite cleaners and team members at no cost</li>
+        <li data-i18n="plans.hf1">First month free, no card to start</li>
+        <li data-i18n="plans.hf2">Unlimited properties, products and orders</li>
+        <li data-i18n="plans.hf3">You keep 100% of guest sales</li>
+        <li data-i18n="plans.hf4">No commission and no platform fee</li>
+        <li data-i18n="plans.hf5">Stripe payouts straight to your account</li>
+        <li data-i18n="plans.hf6">Suggestions you approve one by one</li>
       </ul>
 
-      <a href="signup.html" class="btn btn-brand">Get started — free</a>
+      <a href="signup.html" class="btn btn-brand" data-i18n="plans.cta">Start your free month</a>
     </div>
 
     <div class="card">
-      <div class="card-eyebrow eb-partner">For Local Businesses</div>
-      <h2>Partner</h2>
-      <div class="card-sub">Reach guests staying at local properties.</div>
+      <div class="card-eyebrow eb-partner" data-i18n="plans.partnerEyebrow">For local businesses</div>
+      <h2 data-i18n="plans.partnerName">Partner</h2>
+      <div class="card-sub" data-i18n="plans.partnerSub">A separate plan for businesses that want to reach guests. Not the host plan.</div>
 
       <div class="price">
         <span class="price-amount">$49</span>
-        <span class="price-suffix">/listing/month</span>
+        <span class="price-suffix" data-i18n="plans.partnerSuffix">/listing/month</span>
       </div>
 
       <ul class="features partner">
-        <li><strong>3 months free</strong> when you sign up</li>
-        <li>Get featured on local hosts' guest stores</li>
-        <li>Attach vouchers and special offers</li>
-        <li>Service-area targeting (postcode-based)</li>
-        <li>Direct guest contact for bookings</li>
-        <li>Pause or deactivate anytime</li>
-        <li>Analytics on views, clicks, redemptions</li>
+        <li data-i18n="plans.p1">3 months free when you sign up</li>
+        <li data-i18n="plans.p2">Featured on local host stores</li>
+        <li data-i18n="plans.p3">Vouchers and special offers</li>
+        <li data-i18n="plans.p4">Postcode targeting</li>
+        <li data-i18n="plans.p5">Pause or deactivate anytime</li>
+        <li data-i18n="plans.p6">Views, clicks and redemptions</li>
       </ul>
 
-      <a href="partner-signup.html" class="btn btn-accent">Become a partner</a>
+      <a href="partner-signup.html" class="btn btn-accent" data-i18n="plans.partnerCta">Become a partner</a>
     </div>
 
   </div>
 
   <div class="why">
-    <h3>Why is it free for hosts?</h3>
-    <p>Because hosts already have enough costs. We make our money from local businesses paying to be discovered by your guests. The bigger and stronger the network of hosts, the better it is for everyone — partners reach more guests, hosts get more partner offerings to feature, and guests get a better stay.</p>
+    <h3 data-i18n="plans.whyTitle">Hosts keep the sale</h3>
+    <p data-i18n="plans.whyBody">Guest payments go to the host through Stripe Connect. Hostie Hub does not take a commission or a platform fee on those sales. The monthly subscription is the only host charge, and it stays off until the price is published.</p>
     <div class="why-tags">
-      <span class="why-tag">No subscription</span>
-      <span class="why-tag">No commission</span>
-      <span class="why-tag">No setup fee</span>
-      <span class="why-tag">No catches</span>
+      <span class="why-tag" data-i18n="home.tagKeep">You keep 100%</span>
+      <span class="why-tag" data-i18n="home.tagNoFee">No commission</span>
+      <span class="why-tag" data-i18n="home.tagNoCard">No card to start</span>
+      <span class="why-tag" data-i18n="home.tagTrial">30-day free month</span>
     </div>
   </div>
 
   <div class="footer">
-    Questions? <a href="mailto:hello@hostiehub.com.au">hello@hostiehub.com.au</a>
+    <span data-i18n="plans.footer">Questions?</span> <a href="mailto:hello@hostiehub.com.au">hello@hostiehub.com.au</a>
   </div>
 
 </div>
 
+<script src="/js/pricing.js"></script>
+<script src="/js/i18n.js"></script>
 </body>
 </html>

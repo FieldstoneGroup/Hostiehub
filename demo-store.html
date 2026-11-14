@@ -232,9 +232,9 @@
 
 <!-- DEMO CTA STRIP -->
 <div class="demo-strip">
-  <h2>Ready to offer this to your guests?</h2>
-  <p>Set up your own store in minutes. Add your products, connect Stripe and share your link — it's that simple.</p>
-  <a href="signup.html" class="demo-strip-btn">Start for $99/yr →</a>
+  <h2 data-i18n="demo.strip">Ready to offer this to your guests?</h2>
+  <p data-i18n="demo.stripBody">First month free, then a simple monthly subscription. You keep 100% of guest sales. No card needed to start.</p>
+  <a href="signup.html" class="demo-strip-btn" data-i18n="demo.stripBtn">Start your free month →</a>
 </div>
 
 <footer>
@@ -248,10 +248,10 @@
 <div class="demo-modal-overlay" id="demoModal">
   <div class="demo-modal">
     <div class="demo-modal-icon">🛍️</div>
-    <h3>Love what you see?</h3>
-    <p>This is just a demo — but your guests could be ordering extras from YOUR store just like this. Set up takes less than 5 minutes.</p>
+    <h3 data-i18n="demo.modalTitle">Love what you see?</h3>
+    <p data-i18n="demo.modalBody">This is a demo. Your guests can order extras from your own store. Setup starts from your listing link, and nothing is added until you press Add.</p>
     <div class="demo-modal-actions">
-      <a href="signup.html" class="demo-modal-primary">Create my store for $99/yr →</a>
+      <a href="signup.html" class="demo-modal-primary" data-i18n="demo.modalBtn">Create my store →</a>
       <button class="demo-modal-close" onclick="closeDemoModal()">Continue browsing the demo</button>
     </div>
   </div>
@@ -332,5 +332,8 @@
 
   loadDemo();
 </script>
+<div data-lang-slot style="position:fixed;top:12px;right:12px;z-index:50"></div>
+<script src="/js/pricing.js"></script>
+<script src="/js/i18n.js"></script>
 </body>
 </html>

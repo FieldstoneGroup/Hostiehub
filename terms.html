@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Terms of Service — Hostie Hub</title>
+  <title>Terms of Service — Hostie Hub</title>
+  <script src="/js/pricing.js" defer></script>
+  <script src="/js/i18n.js" defer></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -61,7 +63,7 @@
 
 <nav>
   <a href="index.html" class="nav-logo">Hostie Hub <span class="nav-logo-dot"></span></a>
-  <a href="index.html" class="nav-back">← Back to home</a>
+  <div style="display:flex;align-items:center;gap:12px"><div data-lang-slot></div><a href="index.html" class="nav-back">← Back to home</a></div>
 </nav>
 
 <div class="hero">
@@ -95,22 +97,20 @@
   </div>
 
   <div class="section">
-    <h2>3. Subscriptions and billing</h2>
-    <h3>Free trial</h3>
-    <p>All new host accounts receive a 30-day free trial with full access to the platform. No credit card is required to start your trial.</p>
-    <h3>Paid plans</h3>
-    <ul>
-      <li><strong>Host Plan — $99 AUD per year</strong> (up to 3 properties)</li>
-      <li><strong>Pro Plan — $199 AUD per year</strong> (up to 10 properties)</li>
-      <li><strong>Enterprise — custom pricing</strong> (11+ properties)</li>
-    </ul>
-    <p>All prices are in Australian dollars and include GST.</p>
+    <h2 data-i18n="terms.billingTitle">3. Subscriptions and billing</h2>
+    <h3>Free month</h3>
+    <p data-i18n="terms.trial">Every new host account includes a 30-day free month. No credit card is required to start.</p>
+    <h3>Monthly plan</h3>
+    <p data-i18n="pricing.sentence">First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start.</p>
+    <p><span data-price-label>TBC</span> AUD <span data-i18n="pricing.perMonth">per month after your free month</span>. <span data-price-pending data-i18n="pricing.pricePending">Monthly price to be confirmed</span></p>
+    <p data-i18n="terms.paid">After the free month, the host plan is a simple monthly subscription. The amount is published on the pricing page. Until that amount and its Stripe price are set, no card is collected and nothing is charged.</p>
+    <p data-i18n="terms.noFee">Hostie Hub takes no commission and no platform fee on guest sales. Hosts keep 100% of those sales. Guest payments are processed by Stripe Connect into the host's own Stripe account.</p>
     <h3>Refund policy</h3>
     <div class="warning">
-      <p>We do not offer refunds on subscription payments. Because Hostie Hub offers a 30-day free trial before any payment is required, all subscription purchases are final. Please make use of your trial period to ensure Hostie Hub is right for you before subscribing.</p>
+      <p data-i18n="terms.refund">Subscription payments are not refunded once a paid month has started, because the free month is the time to decide. Guest-order refunds are between the host and the guest.</p>
     </div>
     <h3>Cancellation</h3>
-    <p>You may cancel your subscription at any time. If you cancel mid-subscription period, your store will remain active and accessible until the end of your paid subscription period. No partial refunds will be issued.</p>
+    <p data-i18n="terms.cancel">You can cancel the monthly subscription at any time. The store stays available until the end of the period already paid.</p>
   </div>
 
   <div class="section">

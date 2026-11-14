@@ -5,7 +5,7 @@
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hostie Hub – Your guests' upsell store + local guidebook</title>
-<meta name="description" content="The free platform for short-term rental hosts. Sell extras to your guests, recommend local businesses, and turn every booking into a better experience.">
+<meta name="description" content="First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start.">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -169,14 +169,15 @@
   <div class="container nav-inner">
     <a href="/" class="logo"><span class="logo-dot"></span> Hostie Hub</a>
     <div class="nav-links">
+      <div data-lang-slot></div>
       <div class="login-dropdown">
-        <button type="button" class="login-trigger" onclick="toggleLoginMenu(event)">Log in <span class="caret">▾</span></button>
+        <button type="button" class="login-trigger" onclick="toggleLoginMenu(event)"><span data-i18n="nav.login">Log in</span> <span class="caret">▾</span></button>
         <div class="login-menu" id="loginMenu">
-          <a href="signup.html"><span class="login-emoji">🏠</span> Host login</a>
-          <a href="partner-signup.html"><span class="login-emoji">🤝</span> Business login</a>
+          <a href="signup.html"><span class="login-emoji">🏠</span> <span data-i18n="nav.hostLogin">Host login</span></a>
+          <a href="partner-signup.html"><span class="login-emoji">🤝</span> <span data-i18n="nav.businessLogin">Business login</span></a>
         </div>
       </div>
-      <a href="signup.html" class="nav-cta">Get started</a>
+      <a href="signup.html" class="nav-cta" data-i18n="nav.getStarted">Get started</a>
     </div>
   </div>
 </nav>
@@ -184,33 +185,33 @@
 <!-- HERO -->
 <section class="hero">
   <div class="container">
-    <div class="hero-eyebrow">🎉 Free for hosts. Forever.</div>
-    <h1>Your personal <em>online store</em><br>and <em>guidebook</em>. For free.</h1>
-    <p>Sell extras to your guests — early check-ins, welcome hampers, photography sessions. Recommend the best local restaurants, experiences and shops. All from one beautiful storefront.</p>
+    <div class="hero-eyebrow" data-i18n="home.eyebrow">First month free</div>
+    <h1 data-i18n="home.h1" data-i18n-html>Your guests' <em>upsell store</em>, set up in minutes.</h1>
+    <p data-i18n="home.lead">Sell extras to your guests — early check-in, welcome packs, late checkout — and point them to the best of the neighbourhood. You keep every dollar of those sales.</p>
     <div class="hero-cta">
-      <a href="signup.html" class="btn btn-brand">Start free as a host →</a>
-      <a href="#partners" class="btn btn-outline">For local businesses</a>
+      <a href="signup.html" class="btn btn-brand" data-i18n="home.ctaHost">Start free as a host →</a>
+      <a href="#partners" class="btn btn-outline" data-i18n="home.ctaBusiness">For local businesses</a>
     </div>
-    <div class="hero-microcopy">No credit card. No subscription. No catches.</div>
+    <div class="hero-microcopy" data-i18n="home.micro">No card needed to start. You keep 100% of guest sales.</div>
   </div>
 </section>
 
 <!-- WHAT IS IT -->
 <section class="section">
   <div class="container">
-    <div class="section-eyebrow">What it is</div>
-    <h2>Two tools, <em>one store</em>.</h2>
-    <p class="section-lead">Hostie Hub gives every property a custom storefront link. Your guests scan the QR or open the link, and find everything they need to upgrade their stay.</p>
+    <div class="section-eyebrow" data-i18n="home.whatEyebrow">What it is</div>
+    <h2 data-i18n="home.whatTitle" data-i18n-html>Two tools, <em>one store</em>.</h2>
+    <p class="section-lead" data-i18n="home.whatLead">Every property gets a store link. Guests open it and find the extras and local tips you want them to see.</p>
     <div class="duo">
       <div class="duo-card accent-border">
         <div class="duo-emoji">🛍️</div>
-        <h3>Your online store</h3>
-        <p>Offer paid extras directly to your guests — early check-ins, late check-outs, welcome hampers, mid-stay cleans, sunset photo sessions, surf lessons, anything you want. Stripe payments go straight to your bank account.</p>
+        <h3 data-i18n="home.storeTitle">Your online store</h3>
+        <p data-i18n="home.storeBody">Offer paid extras directly to your guests. Stripe payments go straight to your bank account. Hostie Hub does not take a cut.</p>
       </div>
       <div class="duo-card accent-gold">
         <div class="duo-emoji">🗺️</div>
-        <h3>Your guidebook for guests</h3>
-        <p>Local restaurants, cafes, experiences and shops appear automatically based on your property's postcode. Your guests discover the best of the area before they even arrive — and you don't lift a finger.</p>
+        <h3 data-i18n="home.guideTitle">Your guidebook for guests</h3>
+        <p data-i18n="home.guideBody">Local restaurants, cafes and experiences can appear for your property's area. Guests discover the neighbourhood before they arrive.</p>
       </div>
     </div>
   </div>
@@ -219,52 +220,54 @@
 <!-- HOSTS SECTION -->
 <section class="section hosts-section" id="hosts">
   <div class="container">
-    <div class="section-eyebrow">For Hosts</div>
-    <h2>Free <em>forever</em>. Seriously.</h2>
-    <p class="section-lead">Unlimited properties. Unlimited products. Unlimited orders. No hidden fees, no commission, no catches.</p>
+    <div class="section-eyebrow" data-i18n="home.hostsEyebrow">For hosts</div>
+    <h2 data-i18n="home.hostsTitle" data-i18n-html>First month <em>free</em>.</h2>
+    <p class="section-lead" data-i18n="home.hostsLead">Then a monthly subscription per property. You keep 100% of guest sales.</p>
 
-    <div class="price-banner">
-      <div class="free-tag">Free for hosts</div>
-      <div class="free-amount">$0</div>
-      <div class="free-suffix">forever — no credit card required</div>
-      <div class="free-detail">Hostie Hub is funded by local businesses paying for placement on host stores. Hosts and cleaners pay nothing — ever.</div>
+    <div class="price-banner hh-price-on-dark">
+      <div class="free-tag" data-i18n="home.priceTag">First month free</div>
+      <div class="free-amount"><span data-i18n="pricing.from" style="display:block;font-size:22px;letter-spacing:0;font-family:'DM Sans',sans-serif">From</span><span data-price-from>$6</span></div>
+      <div class="free-suffix" data-i18n="pricing.perProperty">per property per month</div>
+      <div class="free-detail" data-i18n="pricing.sentence">First month free, then a monthly subscription per property. Hosts keep 100% of their guest sales. No card needed to start.</div>
+      <div data-price-table></div>
+      <div class="free-detail" data-i18n="pricing.noCommission">Hostie Hub takes no commission and no platform fee on guest sales.</div>
     </div>
 
     <div class="feature-grid">
       <div class="feature">
         <div class="feature-icon">🏠</div>
-        <h4>Unlimited properties</h4>
-        <p>One STR or fifty. Every property gets its own custom guest store.</p>
+        <h4 data-i18n="home.f1t">Unlimited properties</h4>
+        <p data-i18n="home.f1b">One stay or fifty. Each property can have its own guest store.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">💸</div>
-        <h4>Stripe straight to you</h4>
-        <p>Connect your Stripe account once. Payments land directly in your bank.</p>
+        <h4 data-i18n="home.f2t">Stripe straight to you</h4>
+        <p data-i18n="home.f2b">Connect Stripe once. Guest payments land in your account, with no platform fee.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">🗓️</div>
-        <h4>Calendar sync</h4>
-        <p>Subscribe your Google or Apple calendar to see every order automatically.</p>
+        <h4 data-i18n="home.f3t">Calendar sync</h4>
+        <p data-i18n="home.f3b">Subscribe your Google or Apple calendar to see every order.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">👥</div>
-        <h4>Invite your team</h4>
-        <p>Add cleaners, co-hosts and property managers. They get their own login at no cost.</p>
+        <h4 data-i18n="home.f4t">Invite your team</h4>
+        <p data-i18n="home.f4b">Add cleaners, co-hosts and managers with their own login.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">🎨</div>
-        <h4>Custom branding</h4>
-        <p>Upload your logo, set your colours, write your own welcome message.</p>
+        <h4 data-i18n="home.f5t">Custom branding</h4>
+        <p data-i18n="home.f5b">Your logo, colours and welcome message.</p>
       </div>
       <div class="feature">
         <div class="feature-icon">📧</div>
-        <h4>Auto guest emails</h4>
-        <p>Branded order confirmations sent automatically to every guest.</p>
+        <h4 data-i18n="home.f6t">Guest emails</h4>
+        <p data-i18n="home.f6b">Order confirmations sent for you.</p>
       </div>
     </div>
 
     <div style="text-align:center">
-      <a href="signup.html" class="btn btn-accent">Create your free store →</a>
+      <a href="signup.html" class="btn btn-accent" data-i18n="home.ctaStore">Create your store →</a>
     </div>
   </div>
 </section>
@@ -272,24 +275,24 @@
 <!-- HOW IT WORKS -->
 <section class="section">
   <div class="container">
-    <div class="section-eyebrow">How it works</div>
-    <h2>Live in <em>five minutes</em>.</h2>
-    <p class="section-lead">No tech skills required. No long onboarding. Just sign up and start sharing your store with guests.</p>
+    <div class="section-eyebrow" data-i18n="home.howEyebrow">How it works</div>
+    <h2 data-i18n="home.howTitle" data-i18n-html>Live in <em>a few minutes</em>.</h2>
+    <p class="section-lead" data-i18n="home.howLead">Paste your listing link, confirm the property, and add only the extras you want.</p>
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
-        <h4>Sign up free</h4>
-        <p>Create your account and pick your store name. Takes 30 seconds.</p>
+        <h4 data-i18n="home.s1t">Create your account</h4>
+        <p data-i18n="home.s1b">No card. Your first month is free.</p>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <h4>Add properties &amp; products</h4>
-        <p>Pick from preset products or create your own. Set your prices. Set your service area.</p>
+        <h4 data-i18n="home.s2t">We read your listing</h4>
+        <p data-i18n="home.s2b">We suggest extras. You press Add for each one you want.</p>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <h4>Share your link with guests</h4>
-        <p>Drop your store link into your Airbnb welcome message. Done.</p>
+        <h4 data-i18n="home.s3t">Share the store link</h4>
+        <p data-i18n="home.s3b">Paste it into your guest messages on Airbnb, Booking.com or your PMS.</p>
       </div>
     </div>
   </div>
@@ -298,30 +301,30 @@
 <!-- PARTNERS SECTION -->
 <section class="section partners-section" id="partners">
   <div class="container">
-    <div class="section-eyebrow">For Local Businesses</div>
-    <h2>Reach guests <em>before they arrive</em>.</h2>
-    <p class="section-lead">Get featured on local hosts' guest stores. Restaurants, cafes, experiences, photographers, florists, surf schools — anyone serving travellers.</p>
+    <div class="section-eyebrow" data-i18n="home.partnersEyebrow">For local businesses</div>
+    <h2 data-i18n="home.partnersTitle" data-i18n-html>Reach guests <em>before they arrive</em>.</h2>
+    <p class="section-lead" data-i18n="home.partnersLead">This price is for local businesses, not hosts. Restaurants, tours, photographers and shops can be featured on host stores.</p>
 
     <div class="partner-card">
-      <div class="partner-flag">🎁 First 3 months free</div>
-      <h3>Become a Hostie Hub partner</h3>
-      <p class="partner-lead">List your business. Add vouchers and special offers. Reach guests staying nearby — before they even arrive at the property.</p>
+      <div class="partner-flag" data-i18n="home.partnerFlag">First 3 months free</div>
+      <h3 data-i18n="home.partnerTitle">Become a Hostie Hub partner</h3>
+      <p class="partner-lead" data-i18n="home.partnerLead">List your business, add an offer, and reach guests staying nearby.</p>
 
       <div class="partner-price">
         <span class="amount">$49</span>
-        <span class="suffix">per listing per month, after 3 months free</span>
+        <span class="suffix" data-i18n="home.partnerSuffix">per listing per month, after 3 months free</span>
       </div>
 
       <ul class="partner-features">
-        <li>Featured on local host stores</li>
-        <li>Postcode-based service area</li>
-        <li>Attach vouchers and discounts</li>
-        <li>Direct guest enquiries to you</li>
-        <li>Pause or cancel anytime</li>
-        <li>Analytics on views &amp; redemptions</li>
+        <li data-i18n="home.pf1">Featured on local host stores</li>
+        <li data-i18n="home.pf2">Postcode-based service area</li>
+        <li data-i18n="home.pf3">Attach vouchers and discounts</li>
+        <li data-i18n="home.pf4">Direct guest enquiries to you</li>
+        <li data-i18n="home.pf5">Pause or cancel anytime</li>
+        <li data-i18n="home.pf6">Analytics on views and redemptions</li>
       </ul>
 
-      <a href="partner-signup.html" class="btn btn-accent">Become a partner →</a>
+      <a href="partner-signup.html" class="btn btn-accent" data-i18n="home.partnerCta">Become a partner →</a>
     </div>
   </div>
 </section>
@@ -330,13 +333,13 @@
 <section class="section why-section">
   <div class="container">
     <div class="why-card">
-      <h3>Why is it free for hosts?</h3>
-      <p>Because hosts already have enough costs. Our model is simple — local businesses pay to be discovered by your guests. The bigger and stronger the network of hosts, the better the platform becomes for everyone. Partners reach more guests, hosts get more partner offerings to feature, and guests get a better stay.</p>
+      <h3 data-i18n="home.whyTitle">What hosts pay</h3>
+      <p data-i18n="home.whyBody">First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start. Local businesses pay separately to be featured.</p>
       <div class="why-tags">
-        <span class="why-tag">No subscription</span>
-        <span class="why-tag">No commission</span>
-        <span class="why-tag">No setup fee</span>
-        <span class="why-tag">No credit card</span>
+        <span class="why-tag" data-i18n="home.tagKeep">You keep 100%</span>
+        <span class="why-tag" data-i18n="home.tagNoFee">No commission</span>
+        <span class="why-tag" data-i18n="home.tagNoCard">No card to start</span>
+        <span class="why-tag" data-i18n="home.tagTrial">30-day free month</span>
       </div>
     </div>
   </div>
@@ -345,11 +348,11 @@
 <!-- FINAL CTA -->
 <section class="final-cta">
   <div class="container">
-    <h2>Help us build something genuinely <em style="color:var(--accent);font-style:italic">good for travellers</em>.</h2>
-    <p>Join the early hosts shaping how short-term rentals work in Australia. We're building this together — host by host, partner by partner.</p>
+    <h2 data-i18n="home.finalTitle" data-i18n-html>Open a store your guests will <em style="color:var(--accent);font-style:italic">actually use</em>.</h2>
+    <p data-i18n="home.finalLead">Bring your listing link. We'll help you fill the store — and we won't add a single product until you press Add.</p>
     <div class="hero-cta">
-      <a href="signup.html" class="btn btn-brand">Start free as a host</a>
-      <a href="partner-signup.html" class="btn btn-outline">List your business</a>
+      <a href="signup.html" class="btn btn-brand" data-i18n="home.finalHost">Start free as a host</a>
+      <a href="partner-signup.html" class="btn btn-outline" data-i18n="home.finalBiz">List your business</a>
     </div>
   </div>
 </section>
@@ -360,16 +363,16 @@
     <div class="footer-inner">
       <div class="footer-logo"><span class="logo-dot" style="background:var(--accent)"></span> Hostie Hub</div>
       <div class="footer-links">
-        <a href="plans.html">Pricing</a>
-        <a href="signup.html">Log in</a>
-        <a href="partner-signup.html">Partners</a>
-        <a href="contact.html">Contact</a>
-        <a href="privacy.html">Privacy</a>
-        <a href="terms.html">Terms</a>
+        <a href="plans.html" data-i18n="nav.pricing">Pricing</a>
+        <a href="signup.html" data-i18n="nav.login">Log in</a>
+        <a href="partner-signup.html" data-i18n="nav.partners">Partners</a>
+        <a href="contact.html" data-i18n="nav.contact">Contact</a>
+        <a href="privacy.html" data-i18n="nav.privacy">Privacy</a>
+        <a href="terms.html" data-i18n="nav.terms">Terms</a>
       </div>
     </div>
     <div class="footer-bottom">
-      © 2026 Hostie Hub · Made with ❤️ in Newcastle, Australia
+      <span data-i18n="footer.rights">© 2026 Hostie Hub · Made in Newcastle, Australia</span>
     </div>
   </div>
 </footer>
@@ -391,6 +394,8 @@
     }
   });
 </script>
+<script src="/js/pricing.js"></script>
+<script src="/js/i18n.js"></script>
 
 </body>
 </html>

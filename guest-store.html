@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-i18n-mode="guest">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guest Store – Hostie Hub</title>
+<script src="/js/i18n.js"></script>
 <!-- Open Graph / Link preview -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="Book extras for your stay">
@@ -277,12 +278,13 @@
         <div class="host-avatar" id="hostAvatar">?</div>
         <div>
           <div class="host-name" id="hostName">Loading...</div>
-          <div class="host-sub" id="hostSub">Extras & Add-ons Store</div>
+          <div class="host-sub" id="hostSub" data-i18n="guest.addons">Available add-ons</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
-        <button id="changePropertyBtn" onclick="openPropertyModal()" style="display:none;font-size:12px;font-weight:600;color:var(--brand);background:var(--brand-light);border:none;border-radius:50px;padding:6px 12px;cursor:pointer">🏠 <span id="changePropertyLabel">Change property</span></button>
-        <button class="cart-btn" onclick="openCart()">🛒 Cart <span class="cart-count" id="cartCount">0</span></button>
+        <div data-lang-slot></div>
+        <button id="changePropertyBtn" onclick="openPropertyModal()" style="display:none;font-size:12px;font-weight:600;color:var(--brand);background:var(--brand-light);border:none;border-radius:50px;padding:6px 12px;cursor:pointer">🏠 <span id="changePropertyLabel" data-i18n="guest.changeProperty">Change property</span></button>
+        <button class="cart-btn" onclick="openCart()">🛒 <span data-i18n="guest.cart">Your cart</span> <span class="cart-count" id="cartCount">0</span></button>
       </div>
     </div>
   </header>
@@ -291,9 +293,9 @@
   <div id="storePageHost">
     <div class="hero" id="heroHost">
       <div class="hero-content" id="heroContent">
-        <div class="hero-eyebrow">Welcome, Guest</div>
-        <h1 id="heroTitle">Make your stay<br><em>truly special</em></h1>
-        <p id="heroDesc">Add a few extras before you arrive and we'll have everything ready for you.</p>
+        <div class="hero-eyebrow" data-i18n="guest.welcome">Welcome, guest</div>
+        <h1 id="heroTitle" data-i18n="guest.heroTitle" data-i18n-html>Make your stay<br><em>truly special</em></h1>
+        <p id="heroDesc" data-i18n="guest.heroDesc">Add a few extras before you arrive and we'll have everything ready for you.</p>
       </div>
     </div>
 
@@ -301,7 +303,7 @@
     <div class="store-tab-bar">
       <div class="store-tab-inner">
         <button id="tabHost" onclick="switchStoreTab('host')" class="store-tab store-tab-active-host">
-          <span style="font-size:20px">🏠</span><span>Products & Services</span>
+          <span style="font-size:20px">🏠</span><span data-i18n="guest.tabProducts">Products & services</span>
         </button>
         <button id="tabLocal" onclick="switchStoreTab('local')" class="store-tab store-tab-inactive">
           <span style="font-size:20px">🌟</span><span>Local Reservations & Experiences</span>
@@ -310,7 +312,7 @@
     </div>
 
     <div class="products-section">
-      <div class="section-title"><span>✨</span> Available Add-ons</div>
+      <div class="section-title"><span>✨</span> <span data-i18n="guest.addons">Available add-ons</span></div>
       <div class="products-grid" id="productsGrid"></div>
     </div>
   </div>
@@ -330,7 +332,7 @@
     <div class="store-tab-bar">
       <div class="store-tab-inner">
         <button id="tabHost2" onclick="switchStoreTab('host')" class="store-tab store-tab-inactive">
-          <span style="font-size:20px">🏠</span><span>Products & Services</span>
+          <span style="font-size:20px">🏠</span><span data-i18n="guest.tabProducts">Products & services</span>
         </button>
         <button id="tabLocal2" onclick="switchStoreTab('local')" class="store-tab store-tab-active-local">
           <span style="font-size:20px">🌟</span><span>Local Reservations & Experiences</span>
@@ -355,16 +357,16 @@
 <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
 <div class="cart-drawer" id="cartDrawer">
   <div class="cart-header">
-    <div class="cart-title">Your cart</div>
+    <div class="cart-title" data-i18n="guest.cart">Your cart</div>
     <button class="close-btn" onclick="closeCart()">✕</button>
   </div>
   <div class="cart-items" id="cartItems">
-    <div class="cart-empty"><div class="empty-icon">🛒</div><p>Your cart is empty.<br>Add some extras above!</p></div>
+    <div class="cart-empty"><div class="empty-icon">🛒</div><p data-i18n="guest.cartEmpty" data-i18n-html>Your cart is empty.<br>Add some extras above!</p></div>
   </div>
   <div class="cart-footer">
-    <div class="cart-total"><div class="cart-total-label">Total</div><div class="cart-total-amount" id="cartTotal">$0</div></div>
-    <button class="checkout-btn" onclick="openCheckout()">Proceed to Checkout →</button>
-    <div class="checkout-note">You'll be taken to a secure Stripe checkout</div>
+    <div class="cart-total"><div class="cart-total-label" data-i18n="guest.total">Total</div><div class="cart-total-amount" id="cartTotal">$0</div></div>
+    <button class="checkout-btn" onclick="openCheckout()" data-i18n="guest.checkout">Proceed to checkout →</button>
+    <div class="checkout-note" data-i18n="guest.checkoutNote">You'll be taken to a secure Stripe checkout</div>
   </div>
 </div>
 
@@ -607,14 +609,14 @@
 <div class="checkout-modal" id="checkoutModal">
   <div style="padding:28px 28px 0">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600">Almost there!</div>
+      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:600" data-i18n="guest.almost">Almost there!</div>
       <button class="close-btn" onclick="closeCheckout()">✕</button>
     </div>
-    <p style="font-size:14px;color:var(--muted);margin-bottom:20px">Let us know when you're staying so we can have everything ready.</p>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:20px" data-i18n="guest.stayHint">Let us know when you're staying so we can have everything ready.</p>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px" class="date-row">
-      <div class="mfield" style="margin-bottom:0"><label>Check-in Date</label><input type="date" id="checkinDate" style="width:100%;box-sizing:border-box"></div>
-      <div class="mfield" style="margin-bottom:0"><label>Check-out Date</label><input type="date" id="checkoutDate" style="width:100%;box-sizing:border-box"></div>
+      <div class="mfield" style="margin-bottom:0"><label data-i18n="guest.checkin">Check-in date</label><input type="date" id="checkinDate" style="width:100%;box-sizing:border-box"></div>
+      <div class="mfield" style="margin-bottom:0"><label data-i18n="guest.checkoutDate">Check-out date</label><input type="date" id="checkoutDate" style="width:100%;box-sizing:border-box"></div>
     </div>
     <div class="mfield"><label>Your Name</label><input type="text" id="guestName" placeholder="e.g. James & Emma"></div>
     <div class="mfield"><label>Your Email <span style="font-weight:300;font-size:11px">(for order confirmation)</span></label><input type="email" id="guestEmail" placeholder="your@email.com"></div>
@@ -642,7 +644,7 @@
   </div>
 
   <div style="padding:0 28px 28px">
-    <button onclick="confirmCheckout()" id="checkoutPayBtn" style="width:100%;background:var(--brand);color:white;border:none;border-radius:12px;padding:16px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;cursor:pointer;">Pay securely with Stripe →</button>
+    <button onclick="confirmCheckout()" id="checkoutPayBtn" style="width:100%;background:var(--brand);color:white;border:none;border-radius:12px;padding:16px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;cursor:pointer;" data-i18n="guest.pay">Pay securely with Stripe →</button>
     <div id="partnerRequestNotice" style="display:none;background:#fff7e6;border:1.5px solid #E8A838;border-radius:10px;padding:10px 14px;margin-top:10px;font-size:13px;color:#92600a;line-height:1.5;text-align:center">🤝 Partner requests in your cart are <strong>not charged now</strong> — those businesses will contact you directly to arrange payment.</div>
     <div style="text-align:center;font-size:12px;color:var(--muted);margin-top:10px">🔒 Payments go directly to your host via Stripe · All prices include GST</div>
   </div>
@@ -656,6 +658,14 @@
   );
 
   let cart = [], allProducts = [], properties = [], hostData = null;
+  function gt(key, fallback) {
+    if (window.hhT) {
+      var value = window.hhT(key);
+      if (value && value !== key) return value;
+    }
+    return fallback;
+  }
+  document.addEventListener('hh-locale', function () { if (typeof updateCartUI === 'function') updateCartUI(); });
   let selectedPropertyId = '', selectedPropertyName = '';
   let pendingCartItem = null;
   let pendingPartnerRequestProduct = null, pendingPartnerRequestBtn = null;
@@ -1420,7 +1430,7 @@
                   : '$' + p.price)}</div>
             ${isDemo
               ? `<button class="add-btn" onclick="handleDemoAdd()">Add +</button>`
-              : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">${Array.isArray(p.shop_products) && p.shop_products.length > 0 ? 'View shop →' : (p.partner_product_type === 'service' ? 'Add →' : 'Add')}</button>`
+              : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">${Array.isArray(p.shop_products) && p.shop_products.length > 0 ? 'View shop →' : (p.partner_product_type === 'service' ? gt('guest.add', 'Add') + ' →' : gt('guest.add', 'Add'))}</button>`
             }
           </div>
         </div>`;
@@ -1454,7 +1464,7 @@
               : '$' + p.price + ' <small>' + (p.unit ? '/ ' + p.unit : '') + '</small>')}</div>
           ${isDemo
             ? `<button class="add-btn" onclick="handleDemoAdd()">Add +</button>`
-            : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">Add</button>`
+            : `<button class="add-btn" id="btn-${p.id}" onclick="handleAddToCart(${JSON.stringify(p).replace(/"/g, '&quot;')}, this)">${gt('guest.add', 'Add')}</button>`
           }
         </div>
       </div>`;
@@ -2246,7 +2256,7 @@
     document.getElementById('cartTotal').textContent = '$' + total;
     const el = document.getElementById('cartItems');
     el.innerHTML = cart.length === 0
-      ? `<div class="cart-empty"><div class="empty-icon">🛒</div><p>Your cart is empty.<br>Add some extras above!</p></div>`
+      ? `<div class="cart-empty"><div class="empty-icon">🛒</div><p>${gt('guest.cartEmpty', 'Your cart is empty.<br>Add some extras above!')}</p></div>`
       : cart.map(item => `
           <div class="cart-item">
             <div class="cart-item-icon">${item.icon}</div>
@@ -2263,7 +2273,7 @@
   function closeCart() { document.getElementById('cartOverlay').classList.remove('open'); document.getElementById('cartDrawer').classList.remove('open'); }
 
   function openCheckout() {
-    if (!cart.length) { alert('Add something to your cart first!'); return; }
+    if (!cart.length) { alert(gt('guest.emptyCart', 'Add something to your cart first!')); return; }
     closeCart();
     const total = cart.reduce((s, i) => s + i.price, 0);
 

@@ -29,19 +29,38 @@ export default {
       console.log('Stripe webhook event:', event.type);
       const supabaseUrl = 'https://hjwkycknjiyvrxbcejet.supabase.co';
 
-      // ── SUBSCRIPTION PAYMENT — update host plan ──
-      if (event.type === 'customer.subscription.created' ||
+      // ── HOST SUBSCRIPTION — monthly Stripe Billing, reuses hosts.plan / trial_ends_at ──
+      // Checkout is created by /api/host-subscription and only when HOSTIE_STRIPE_PRICE_ID
+      // is set. Quantity is the host's property count on that tiered volume price.
+      // This webhook records the result.
+      // Guest checkout (mode=payment) is unchanged and still uses application_fee_amount 0.
+      if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted' ||
+          event.type === 'customer.subscription.created' ||
           (event.type === 'checkout.session.completed' && event.data.object.mode === 'subscription')) {
-        const customerEmail = event.data.object.customer_email || event.data.object.customer_details?.email;
-        const amount = event.data.object.amount_total || event.data.object.plan?.amount;
-        const plan = amount >= 19900 ? 'pro' : 'host';
-        if (customerEmail) {
-          const r = await fetch(`${supabaseUrl}/rest/v1/hosts?email=eq.${encodeURIComponent(customerEmail)}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'apikey': env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`, 'Prefer': 'return=minimal' },
-            body: JSON.stringify({ plan, is_active: true })
-          });
-          console.log('Subscription plan update:', r.status, customerEmail, plan);
+        const object = event.data.object;
+        const kind = object.metadata?.kind || '';
+        const hostId = object.metadata?.host_id || object.client_reference_id || '';
+        const customerEmail = object.customer_email || object.customer_details?.email || '';
+        const subscriptionId = object.subscription || (String(object.object) === 'subscription' ? object.id : null);
+        const customerId = object.customer || null;
+        const status = object.status || (event.type === 'customer.subscription.deleted' ? 'canceled' : 'active');
+        const patch = { plan: 'host', subscription_status: status };
+        if (customerId) patch.stripe_customer_id = customerId;
+        if (subscriptionId) patch.stripe_subscription_id = subscriptionId;
+        if (object.trial_end) patch.trial_ends_at = new Date(object.trial_end * 1000).toISOString();
+        if (status === 'canceled' || status === 'unpaid' || event.type === 'customer.subscription.deleted') {
+          patch.is_active = false;
+        } else if (status === 'active' || status === 'trialing') {
+          patch.is_active = true;
+        }
+        const headers = { 'Content-Type': 'application/json', 'apikey': env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`, 'Prefer': 'return=minimal' };
+        let filter = '';
+        if (hostId) filter = `id=eq.${encodeURIComponent(hostId)}`;
+        else if (customerId) filter = `stripe_customer_id=eq.${encodeURIComponent(customerId)}`;
+        else if (customerEmail) filter = `email=eq.${encodeURIComponent(customerEmail)}`;
+        if (filter && (kind === 'host_monthly' || hostId || event.type.startsWith('customer.subscription'))) {
+          const r = await fetch(`${supabaseUrl}/rest/v1/hosts?${filter}`, { method: 'PATCH', headers, body: JSON.stringify(patch) });
+          console.log('Host subscription update:', r.status, filter, status);
         }
         return new Response('OK', { status: 200 });
       }
@@ -682,6 +701,60 @@ export default {
       });
       responseData = await r.json();
 
+    } else if (service === 'stripe-host-quantity') {
+      // Same quantity update as POST /api/host-subscription { action: "sync-quantity" }.
+      // The signed-in host's access token must be in Authorization. Property count
+      // is read for that user only. Default price is the live volume price on
+      // account acct_1TH1K4FGh2TNwWGY. No-op without STRIPE_SECRET_KEY.
+      const priceId = env.HOSTIE_STRIPE_PRICE_ID || 'price_1UbZFJFGh2TNwWGYsQhTzePk';
+      const token = String(request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+      const anon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8';
+      const supabaseUrl = 'https://hjwkycknjiyvrxbcejet.supabase.co';
+      if (!priceId.startsWith('price_') || !env.STRIPE_SECRET_KEY) {
+        responseData = { service: 'stripe-host-quantity', enabled: false, updated: false };
+      } else if (!token) {
+        responseData = { service: 'stripe-host-quantity', error: 'Sign in required.' };
+      } else {
+        const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, { headers: { apikey: anon, authorization: `Bearer ${token}` } });
+        const user = await userRes.json();
+        if (!userRes.ok || !user.id) {
+          responseData = { service: 'stripe-host-quantity', error: 'Sign in required.' };
+        } else {
+          const headers = { apikey: env.SUPABASE_SERVICE_KEY, authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` };
+          const hostRes = await fetch(`${supabaseUrl}/rest/v1/hosts?id=eq.${encodeURIComponent(user.id)}&select=stripe_subscription_id,subscription_status&limit=1`, { headers });
+          const hosts = await hostRes.json();
+          const host = hosts && hosts[0];
+          const propRes = await fetch(`${supabaseUrl}/rest/v1/properties?host_id=eq.${encodeURIComponent(user.id)}&select=id`, { headers });
+          const props = await propRes.json();
+          const quantity = Math.max(1, Array.isArray(props) ? props.length : 0);
+          if (!host || !host.stripe_subscription_id || (host.subscription_status !== 'active' && host.subscription_status !== 'trialing')) {
+            responseData = { service: 'stripe-host-quantity', enabled: true, updated: false, quantity };
+          } else {
+            const subRes = await fetch(`https://api.stripe.com/v1/subscriptions/${encodeURIComponent(host.stripe_subscription_id)}`, {
+              headers: { authorization: `Bearer ${env.STRIPE_SECRET_KEY}` }
+            });
+            const subscription = await subRes.json();
+            const items = subscription.items && subscription.items.data ? subscription.items.data : [];
+            const item = items.find((row) => row.price && row.price.id === priceId) || items[0];
+            if (!item) {
+              responseData = { service: 'stripe-host-quantity', error: 'Subscription has no price item.' };
+            } else if (Number(item.quantity) === quantity) {
+              responseData = { service: 'stripe-host-quantity', enabled: true, updated: false, quantity };
+            } else {
+              const update = await fetch(`https://api.stripe.com/v1/subscription_items/${encodeURIComponent(item.id)}`, {
+                method: 'POST',
+                headers: { authorization: `Bearer ${env.STRIPE_SECRET_KEY}`, 'content-type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ quantity: String(quantity), proration_behavior: 'create_prorations' })
+              });
+              const updated = await update.json();
+              responseData = update.ok
+                ? { service: 'stripe-host-quantity', enabled: true, updated: true, quantity }
+                : { service: 'stripe-host-quantity', error: updated.error && updated.error.message };
+            }
+          }
+        }
+      }
+
     } else if (service === 'stripe-checkout') {
       const params = new URLSearchParams();
       params.append('mode', 'payment');
@@ -724,7 +797,7 @@ export default {
     const in3days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString();
     const tomorrow = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString();
 
-    const r = await fetch(`${supabaseUrl}/rest/v1/hosts?trial_ends_at=lte.${in3days}&trial_ends_at=gte.${tomorrow}&plan=is.null&select=email,full_name,username,trial_ends_at`, {
+    const r = await fetch(`${supabaseUrl}/rest/v1/hosts?trial_ends_at=lte.${in3days}&trial_ends_at=gte.${tomorrow}&stripe_subscription_id=is.null&select=email,full_name,username,trial_ends_at`, {
       headers: {
         'apikey': env.SUPABASE_SERVICE_KEY,
         'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`
@@ -761,22 +834,18 @@ export default {
         <tr><td style="background:white;padding:40px;border-radius:0 0 16px 16px">
           <div style="text-align:center;margin-bottom:28px">
             <div style="font-size:48px;margin-bottom:12px">⏰</div>
-            <h1 style="font-size:24px;font-weight:700;color:#1a1a1a;font-family:Georgia,serif;margin:0 0 8px">Your free trial ends in ${daysLeft} day${daysLeft === 1 ? '' : 's'}</h1>
-            <p style="font-size:15px;color:#6b7280;line-height:1.6;margin:0">Hey ${name} — your Hostie Hub free trial is coming to an end. We'd hate for your store to go offline!</p>
+            <h1 style="font-size:24px;font-weight:700;color:#1a1a1a;font-family:Georgia,serif;margin:0 0 8px">Your free month ends in ${daysLeft} day${daysLeft === 1 ? '' : 's'}</h1>
+            <p style="font-size:15px;color:#6b7280;line-height:1.6;margin:0">Hey ${name} — your first free month on Hostie Hub is nearly over. You keep 100% of guest sales. Hostie Hub takes no commission.</p>
           </div>
           <div style="background:#f4f6f5;border-radius:12px;padding:20px;margin-bottom:28px;text-align:center">
             <div style="font-size:13px;color:#6b7280;margin-bottom:4px">Your store</div>
             <div style="font-size:16px;font-weight:600;color:#2C6E6A">${storeUrl}</div>
           </div>
           <div style="background:#fdf3e0;border-left:4px solid #E8A838;border-radius:0 12px 12px 0;padding:16px 20px;margin-bottom:28px">
-            <p style="font-size:14px;color:#92600a;margin:0;line-height:1.6">After your trial ends your store will be temporarily paused — guests won't be able to browse or order until you activate a plan.</p>
+            <p style="font-size:14px;color:#92600a;margin:0;line-height:1.6">First month free, then a monthly subscription per property. 1–2 properties are $10 each, 3–10 are $8 each, and 11 or more are $6 each. Every property is billed at the rate of the tier you reach. You keep 100% of guest sales. No card was needed to start, and nothing is charged until the Stripe price ID is set.</p>
           </div>
           <div style="text-align:center;margin-bottom:20px">
-            <a href="https://hostiehub.com.au/plans.html" style="background:#2C6E6A;color:white;padding:16px 36px;border-radius:50px;text-decoration:none;font-size:16px;font-weight:600;display:inline-block">Activate my plan →</a>
-          </div>
-          <div style="text-align:center">
-            <a href="https://hostiehub.com.au/plans.html" style="display:block;margin-bottom:10px;background:#2C6E6A;color:white;padding:12px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600">🏠 Host Plan — $99/yr (1 property)</a>
-            <a href="https://hostiehub.com.au/plans.html" style="display:block;background:#1d4d4a;color:white;padding:12px;border-radius:10px;text-decoration:none;font-size:14px;font-weight:600">⭐ Pro Plan — $199/yr (2–10 properties)</a>
+            <a href="https://hostiehub.com.au/plans.html" style="background:#2C6E6A;color:white;padding:16px 36px;border-radius:50px;text-decoration:none;font-size:16px;font-weight:600;display:inline-block">See pricing →</a>
           </div>
           <p style="font-size:13px;color:#9ca3af;text-align:center;margin-top:24px">Questions? Reply to this email or contact us at hello@hostiehub.com.au</p>
         </td></tr>

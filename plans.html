@@ -79,7 +79,7 @@
   <div class="hero">
     <div class="hero-eyebrow" data-i18n="plans.eyebrow">Pricing</div>
     <h1 data-i18n="plans.h1" data-i18n-html>Simple pricing for <span>hosts</span>.</h1>
-    <p data-i18n="plans.lead">First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start.</p>
+    <p data-i18n="plans.lead">First month free, then a monthly subscription per property. Hosts keep 100% of their guest sales. No card needed to start.</p>
   </div>
 
   <div class="cards">
@@ -87,13 +87,14 @@
     <div class="card host">
       <div class="card-eyebrow eb-host" data-i18n="plans.hostEyebrow">For hosts</div>
       <h2 data-i18n="plans.hostName">Host</h2>
-      <div class="card-sub" data-i18n="plans.hostSub">Your guest upsell store. You keep every sale.</div>
+      <div class="card-sub" data-i18n="plans.hostSub">Priced per property. You keep every sale.</div>
 
       <div class="price">
-        <span class="price-amount brand" data-price-label>TBC</span>
-        <span class="price-suffix" data-i18n="plans.suffix">per month after the free month</span>
+        <span class="price-suffix" data-i18n="pricing.from" style="font-size:18px">From</span>
+        <span class="price-amount brand" data-price-from>$6</span>
       </div>
-      <p class="card-sub" data-price-pending data-i18n="pricing.pricePending">Monthly price to be confirmed</p>
+      <p class="card-sub" data-i18n="pricing.perProperty">per property per month</p>
+      <div data-price-table></div>
 
       <ul class="features">
         <li data-i18n="plans.hf1">First month free, no card to start</li>
@@ -133,7 +134,7 @@
 
   <div class="why">
     <h3 data-i18n="plans.whyTitle">Hosts keep the sale</h3>
-    <p data-i18n="plans.whyBody">Guest payments go to the host through Stripe Connect. Hostie Hub does not take a commission or a platform fee on those sales. The monthly subscription is the only host charge, and it stays off until the price is published.</p>
+    <p data-i18n="plans.whyBody">Guest payments go to the host through Stripe Connect. Hostie Hub does not take a commission or a platform fee on those sales. The host subscription is per property per month, and every property is billed at the tier you reach. No card is needed to start.</p>
     <div class="why-tags">
       <span class="why-tag" data-i18n="home.tagKeep">You keep 100%</span>
       <span class="why-tag" data-i18n="home.tagNoFee">No commission</span>

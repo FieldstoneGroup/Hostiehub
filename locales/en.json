@@ -3,10 +3,15 @@
     "label": "Language"
   },
   "pricing": {
-    "sentence": "First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start.",
+    "sentence": "First month free, then a monthly subscription per property. Hosts keep 100% of their guest sales. No card needed to start.",
     "noCommission": "Hostie Hub takes no commission and no platform fee on guest sales.",
     "pricePending": "Monthly price to be confirmed",
-    "perMonth": "per month after your free month"
+    "perMonth": "per property per month",
+    "from": "From",
+    "perProperty": "per property per month",
+    "tierNote": "Every property is billed at the rate for the tier you reach.",
+    "colProperties": "Properties",
+    "colEach": "Each per month"
   },
   "nav": {
     "login": "Log in",
@@ -35,9 +40,9 @@
     "guideBody": "Local restaurants, cafes and experiences can appear for your property's area. Guests discover the neighbourhood before they arrive.",
     "hostsEyebrow": "For hosts",
     "hostsTitle": "First month <em>free</em>.",
-    "hostsLead": "Then a simple monthly subscription. Unlimited properties, products and orders. No commission on guest sales.",
+    "hostsLead": "Then a monthly subscription per property. You keep 100% of guest sales.",
     "priceTag": "First month free",
-    "priceSuffix": "per month after that",
+    "priceSuffix": "per property per month",
     "ctaStore": "Create your store →",
     "howEyebrow": "How it works",
     "howTitle": "Live in <em>a few minutes</em>.",
@@ -91,11 +96,11 @@
   "plans": {
     "eyebrow": "Pricing",
     "h1": "Simple pricing for <span>hosts</span>.",
-    "lead": "First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start.",
+    "lead": "First month free, then a monthly subscription per property. Hosts keep 100% of their guest sales. No card needed to start.",
     "hostEyebrow": "For hosts",
     "hostName": "Host",
-    "hostSub": "Your guest upsell store. You keep every sale.",
-    "suffix": "per month after the free month",
+    "hostSub": "Priced per property. You keep every sale.",
+    "suffix": "per property per month, after the free month",
     "hf1": "First month free, no card to start",
     "hf2": "Unlimited properties, products and orders",
     "hf3": "You keep 100% of guest sales",
@@ -115,7 +120,7 @@
     "p6": "Views, clicks and redemptions",
     "partnerCta": "Become a partner",
     "whyTitle": "Hosts keep the sale",
-    "whyBody": "Guest payments go to the host through Stripe Connect. Hostie Hub does not take a commission or a platform fee on those sales. The monthly subscription is the only host charge, and it stays off until the price is published.",
+    "whyBody": "Guest payments go to the host through Stripe Connect. Hostie Hub does not take a commission or a platform fee on those sales. The host subscription is per property per month, and every property is billed at the tier you reach. No card is needed to start.",
     "footer": "Questions?"
   },
   "signup": {
@@ -235,10 +240,10 @@
     "viewStore": "View my store",
     "logout": "Log out",
     "planTitle": "Plan",
-    "planDesc": "First month free, then a simple monthly subscription.",
+    "planDesc": "First month free, then a monthly rate per property.",
     "planKeep": "You keep 100% of guest sales. No commission, no platform fee.",
     "planCta": "Start monthly subscription",
-    "planOff": "Billing is off until the monthly price and Stripe price ID are set. No card is collected.",
+    "planOff": "Your first 30 days are free and no card is needed to start.",
     "checklist": "Setup checklist",
     "checklistLead": "Complete these steps to go live.",
     "check1": "Account created",
@@ -320,14 +325,14 @@
   "terms": {
     "billingTitle": "Subscriptions and billing",
     "trial": "Every new host account includes a 30-day free month. No credit card is required to start.",
-    "paid": "After the free month, the host plan is a simple monthly subscription. The amount is published on the pricing page. Until that amount and its Stripe price are set, no card is collected and nothing is charged.",
+    "paid": "After the free month, the host plan is a monthly subscription per property. 1–2 properties are $10 each, 3–10 are $8 each, and 11 or more are $6 each. Every property is billed at the rate of the tier you reach.",
     "noFee": "Hostie Hub takes no commission and no platform fee on guest sales. Hosts keep 100% of those sales. Guest payments are processed by Stripe Connect into the host's own Stripe account.",
     "refund": "Subscription payments are not refunded once a paid month has started, because the free month is the time to decide. Guest-order refunds are between the host and the guest.",
     "cancel": "You can cancel the monthly subscription at any time. The store stays available until the end of the period already paid."
   },
   "demo": {
     "strip": "Ready to offer this to your guests?",
-    "stripBody": "First month free, then a simple monthly subscription. You keep 100% of guest sales. No card needed to start.",
+    "stripBody": "First month free, then a monthly subscription per property. You keep 100% of guest sales. No card needed to start.",
     "stripBtn": "Start your free month →",
     "modalTitle": "Love what you see?",
     "modalBody": "This is a demo. Your guests can order extras from your own store. Setup starts from your listing link, and nothing is added until you press Add.",

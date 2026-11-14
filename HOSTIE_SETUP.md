@@ -2,35 +2,49 @@
 
 This file is the checklist for Luke. The website copy is already consistent. Nothing charges a host until the two server settings below are filled in.
 
-## The monthly price (still TBC)
+## Host price (per property, volume tiers)
 
-Public pages read one value:
+Public pages read `js/pricing.js`. The subscription is **per property per month**. Every property is billed at the rate of the tier the host reaches:
 
-`js/pricing.js` → `HOSTIE_PRICING.MONTHLY_PRICE_AUD`
+| Properties | Each per month |
+|---|---|
+| 1–2 | $10 AUD |
+| 3–10 | $8 AUD |
+| 11+ | $6 AUD |
 
-It is `null` on purpose. Every page shows **TBC** until that number is set. Do not put a guessed price in the HTML.
-
-The sentence used everywhere:
-
-> First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start.
-
-Hostie Hub does not take a commission or a platform fee on guest sales. Stripe Connect guest checkout still sends `application_fee_amount` of 0.
+Shown as **From $6 per property per month**. The first month is free. No card is required to start. Hosts keep 100% of guest sales. Hostie Hub takes no commission and no platform fee. Stripe Connect guest checkout still sends `application_fee_amount` of 0.
 
 Partner listings stay on their own price (`$49` per listing per month after 3 free months). That is not the host plan.
 
-## Turn billing on (Stripe)
+## Stripe account and price
 
-Checkout is created only by `api/host-subscription.js`. It refuses to call Stripe unless **both** of these Vercel (or local) environment variables are set:
+Use the Hostie Hub account **`acct_1TH1K4FGh2TNwWGY`** only.
 
-| Variable | Example | Purpose |
-|---|---|---|
-| `HOSTIE_STRIPE_PRICE_ID` | `price_123` | Stripe Billing Price for the monthly host plan |
-| `HOSTIE_MONTHLY_PRICE_AUD` | `29` | Must match `MONTHLY_PRICE_AUD` in `js/pricing.js` |
-| `STRIPE_SECRET_KEY` | already used by the worker | Secret key. Never put this in the browser. |
+| | |
+|---|---|
+| Product | `prod_VcosxU73288ZLQ` (Hostie Hub Host Plan) |
+| Price | `price_1UbZFJFGh2TNwWGYsQhTzePk` |
+| Currency / interval | AUD, monthly, licensed |
+| Tiers | `tiers_mode=volume`: up to 2 = $10/unit, up to 10 = $8/unit, inf = $6/unit |
 
-While either host variable is empty, the Account page explains that billing is off and no card is collected.
+Do **not** use `prod_Vcoq2mnFXsp5ij`. That product is on the wrong Stripe account.
 
-The first month is the existing `hosts.trial_ends_at` (30 days, no card). When a host later subscribes, Checkout uses the days left on that trial (minimum 2, because Stripe requires it). `hosts.plan` stays `host`. New columns, added without changing old ones:
+Set this on Vercel and on the Cloudflare worker:
+
+```
+HOSTIE_STRIPE_PRICE_ID=price_1UbZFJFGh2TNwWGYsQhTzePk
+```
+
+The code uses that value when the env var is unset. `STRIPE_SECRET_KEY` must be a secret key for `acct_1TH1K4FGh2TNwWGY`. Checked on 14 Nov 2026: the Vercel project `hostiehub` has **no** `STRIPE_SECRET_KEY` in any environment, so the preview cannot confirm the key and cannot create a Checkout Session until the key is added.
+
+Checkout (`api/host-subscription.js`) sets:
+
+- `line_items[0][price]` = `HOSTIE_STRIPE_PRICE_ID`
+- `line_items[0][quantity]` = the host's property count (at least 1)
+- `subscription_data[trial_period_days]` = `30`
+- `payment_method_collection` = `if_required` (no card to start)
+
+Adding or removing a property calls `POST /api/host-subscription` with `{ "action": "sync-quantity" }`, which updates the Stripe subscription item quantity. The same update is in `worker.js` as `X-Service: stripe-host-quantity` (redeploy the worker before relying on that URL). `hosts.plan` stays `host`. New columns, added without changing old ones:
 
 - `hosts.stripe_customer_id`
 - `hosts.stripe_subscription_id`

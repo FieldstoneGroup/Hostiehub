@@ -3,10 +3,15 @@
     "label": "Langue"
   },
   "pricing": {
-    "sentence": "Premier mois offert, puis un abonnement mensuel simple. Les hôtes conservent 100 % de leurs ventes aux voyageurs. Aucune carte requise pour commencer.",
+    "sentence": "Le premier mois est offert, puis un abonnement mensuel par logement. Les hôtes gardent 100 % de leurs ventes aux voyageurs. Aucune carte n'est demandée pour commencer.",
     "noCommission": "Hostie Hub ne prélève aucune commission ni aucun frais de plateforme sur les ventes aux voyageurs.",
     "pricePending": "Prix mensuel à confirmer",
-    "perMonth": "par mois après votre mois offert"
+    "perMonth": "par logement et par mois",
+    "from": "Dès",
+    "perProperty": "par logement et par mois",
+    "tierNote": "Chaque logement est facturé au tarif du palier atteint.",
+    "colProperties": "Logements",
+    "colEach": "Chacun par mois"
   },
   "nav": {
     "login": "Connexion",
@@ -35,9 +40,9 @@
     "guideBody": "Restaurants, cafés et expériences locales peuvent s’afficher pour le secteur de votre logement. Les voyageurs découvrent le quartier avant d’arriver.",
     "hostsEyebrow": "Pour les hôtes",
     "hostsTitle": "Premier mois <em>offert</em>.",
-    "hostsLead": "Puis un abonnement mensuel simple. Logements, produits et commandes illimités. Aucune commission sur les ventes aux voyageurs.",
+    "hostsLead": "Puis un abonnement mensuel par logement. Vous gardez 100 % des ventes.",
     "priceTag": "Premier mois offert",
-    "priceSuffix": "par mois ensuite",
+    "priceSuffix": "par logement et par mois",
     "ctaStore": "Créer votre boutique →",
     "howEyebrow": "Comment ça marche",
     "howTitle": "En ligne en <em>quelques minutes</em>.",
@@ -91,11 +96,11 @@
   "plans": {
     "eyebrow": "Tarifs",
     "h1": "Des tarifs simples pour les <span>hôtes</span>.",
-    "lead": "Premier mois offert, puis un abonnement mensuel simple. Les hôtes conservent 100 % de leurs ventes aux voyageurs. Aucune carte requise pour commencer.",
+    "lead": "Le premier mois est offert, puis un abonnement mensuel par logement. Les hôtes gardent 100 % de leurs ventes aux voyageurs. Aucune carte n'est demandée pour commencer.",
     "hostEyebrow": "Pour les hôtes",
     "hostName": "Hôte",
-    "hostSub": "Votre boutique d’extras pour les voyageurs. Vous conservez chaque vente.",
-    "suffix": "par mois après le mois offert",
+    "hostSub": "Tarif par logement. Vous gardez chaque vente.",
+    "suffix": "par logement et par mois, après le mois offert",
     "hf1": "Premier mois offert, sans carte pour commencer",
     "hf2": "Logements, produits et commandes illimités",
     "hf3": "Vous conservez 100 % des ventes aux voyageurs",
@@ -115,7 +120,7 @@
     "p6": "Vues, clics et utilisations",
     "partnerCta": "Devenir partenaire",
     "whyTitle": "Les hôtes conservent la vente",
-    "whyBody": "Les paiements des voyageurs vont à l’hôte via Stripe Connect. Hostie Hub ne prélève ni commission ni frais de plateforme sur ces ventes. L’abonnement mensuel est le seul frais pour l’hôte, et il reste désactivé tant que le prix n’est pas publié.",
+    "whyBody": "Les paiements des voyageurs vont à l'hôte via Stripe Connect. Hostie Hub ne prend ni commission ni frais de plateforme. L'abonnement est par logement et par mois, au palier atteint. Aucune carte pour commencer.",
     "footer": "Des questions ?"
   },
   "signup": {
@@ -235,10 +240,10 @@
     "viewStore": "Voir ma boutique",
     "logout": "Déconnexion",
     "planTitle": "Forfait",
-    "planDesc": "Premier mois offert, puis un abonnement mensuel simple.",
+    "planDesc": "Premier mois offert, puis un tarif mensuel par logement.",
     "planKeep": "Vous conservez 100 % des ventes aux voyageurs. Aucune commission, aucun frais de plateforme.",
     "planCta": "Démarrer l’abonnement mensuel",
-    "planOff": "La facturation est désactivée tant que le prix mensuel et l’identifiant de prix Stripe ne sont pas définis. Aucune carte n’est demandée.",
+    "planOff": "Les 30 premiers jours sont offerts et aucune carte n'est demandée pour commencer.",
     "checklist": "Liste de mise en route",
     "checklistLead": "Terminez ces étapes pour passer en ligne.",
     "check1": "Compte créé",
@@ -320,14 +325,14 @@
   "terms": {
     "billingTitle": "Abonnements et facturation",
     "trial": "Chaque nouveau compte hôte inclut un mois offert de 30 jours. Aucune carte bancaire n’est requise pour commencer.",
-    "paid": "Après le mois offert, le forfait hôte est un abonnement mensuel simple. Le montant est publié sur la page des tarifs. Tant que ce montant et son prix Stripe ne sont pas définis, aucune carte n’est demandée et rien n’est facturé.",
+    "paid": "Après le mois offert, le forfait hôte est un abonnement mensuel par logement. 1 à 2 logements : 10 $ chacun, 3 à 10 : 8 $, 11 et plus : 6 $. Chaque logement est facturé au palier atteint.",
     "noFee": "Hostie Hub ne prélève aucune commission ni aucun frais de plateforme sur les ventes aux voyageurs. Les hôtes conservent 100 % de ces ventes. Les paiements des voyageurs sont traités par Stripe Connect vers le propre compte Stripe de l’hôte.",
     "refund": "Les paiements d’abonnement ne sont pas remboursés une fois un mois payant commencé, car le mois offert est le moment pour vous décider. Les remboursements des commandes de voyageurs se règlent entre l’hôte et le voyageur.",
     "cancel": "Vous pouvez résilier l’abonnement mensuel à tout moment. La boutique reste disponible jusqu’à la fin de la période déjà payée."
   },
   "demo": {
     "strip": "Envie de proposer cela à vos voyageurs ?",
-    "stripBody": "Premier mois offert, puis un abonnement mensuel simple. Vous conservez 100 % des ventes aux voyageurs. Aucune carte requise pour commencer.",
+    "stripBody": "Premier mois offert, puis un abonnement mensuel par logement. Vous gardez 100 % des ventes. Aucune carte pour commencer.",
     "stripBtn": "Commencer votre mois offert →",
     "modalTitle": "Ça vous plaît ?",
     "modalBody": "C’est une démo. Vos voyageurs peuvent commander des extras depuis votre propre boutique. La configuration commence à partir du lien de votre annonce, et rien n’est ajouté tant que vous n’appuyez pas sur Ajouter.",

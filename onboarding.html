@@ -63,7 +63,9 @@
   <div class="kicker" data-i18n="onboarding.kicker">Set up your store</div>
   <h1 data-i18n="onboarding.title">We'll draft it from your listing.</h1>
   <p class="lead" data-i18n="onboarding.lead">You stay in charge. We can suggest products, and only your Add button puts them in the store.</p>
-  <p class="lead" data-i18n="pricing.sentence">First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start.</p>
+  <p class="lead" data-i18n="pricing.sentence">First month free, then a monthly subscription per property. Hosts keep 100% of their guest sales. No card needed to start.</p>
+  <p class="lead"><span data-i18n="pricing.from">From</span> <strong data-price-from>$6</strong> <span data-i18n="pricing.perProperty">per property per month</span></p>
+  <div data-price-table></div>
   <div class="steps" id="stepPills"></div>
   <div id="panel"></div>
 </main>
@@ -271,6 +273,13 @@
     state.propertySaved = true;
     step = 4;
     render();
+    if (!DEMO && session) {
+      fetch('/api/host-subscription', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ action: 'sync-quantity' })
+      }).catch(function () {});
+    }
   }
 
   async function addProduct(item, button) {

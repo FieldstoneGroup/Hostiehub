@@ -31,7 +31,8 @@ export default {
 
       // ── HOST SUBSCRIPTION — monthly Stripe Billing, reuses hosts.plan / trial_ends_at ──
       // Checkout is created by /api/host-subscription and only when HOSTIE_STRIPE_PRICE_ID
-      // and HOSTIE_MONTHLY_PRICE_AUD are set. This webhook records the result.
+      // is set. Quantity is the host's property count on that tiered volume price.
+      // This webhook records the result.
       // Guest checkout (mode=payment) is unchanged and still uses application_fee_amount 0.
       if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted' ||
           event.type === 'customer.subscription.created' ||
@@ -700,6 +701,60 @@ export default {
       });
       responseData = await r.json();
 
+    } else if (service === 'stripe-host-quantity') {
+      // Same quantity update as POST /api/host-subscription { action: "sync-quantity" }.
+      // The signed-in host's access token must be in Authorization. Property count
+      // is read for that user only. Default price is the live volume price on
+      // account acct_1TH1K4FGh2TNwWGY. No-op without STRIPE_SECRET_KEY.
+      const priceId = env.HOSTIE_STRIPE_PRICE_ID || 'price_1UbZFJFGh2TNwWGYsQhTzePk';
+      const token = String(request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '');
+      const anon = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8';
+      const supabaseUrl = 'https://hjwkycknjiyvrxbcejet.supabase.co';
+      if (!priceId.startsWith('price_') || !env.STRIPE_SECRET_KEY) {
+        responseData = { service: 'stripe-host-quantity', enabled: false, updated: false };
+      } else if (!token) {
+        responseData = { service: 'stripe-host-quantity', error: 'Sign in required.' };
+      } else {
+        const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, { headers: { apikey: anon, authorization: `Bearer ${token}` } });
+        const user = await userRes.json();
+        if (!userRes.ok || !user.id) {
+          responseData = { service: 'stripe-host-quantity', error: 'Sign in required.' };
+        } else {
+          const headers = { apikey: env.SUPABASE_SERVICE_KEY, authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}` };
+          const hostRes = await fetch(`${supabaseUrl}/rest/v1/hosts?id=eq.${encodeURIComponent(user.id)}&select=stripe_subscription_id,subscription_status&limit=1`, { headers });
+          const hosts = await hostRes.json();
+          const host = hosts && hosts[0];
+          const propRes = await fetch(`${supabaseUrl}/rest/v1/properties?host_id=eq.${encodeURIComponent(user.id)}&select=id`, { headers });
+          const props = await propRes.json();
+          const quantity = Math.max(1, Array.isArray(props) ? props.length : 0);
+          if (!host || !host.stripe_subscription_id || (host.subscription_status !== 'active' && host.subscription_status !== 'trialing')) {
+            responseData = { service: 'stripe-host-quantity', enabled: true, updated: false, quantity };
+          } else {
+            const subRes = await fetch(`https://api.stripe.com/v1/subscriptions/${encodeURIComponent(host.stripe_subscription_id)}`, {
+              headers: { authorization: `Bearer ${env.STRIPE_SECRET_KEY}` }
+            });
+            const subscription = await subRes.json();
+            const items = subscription.items && subscription.items.data ? subscription.items.data : [];
+            const item = items.find((row) => row.price && row.price.id === priceId) || items[0];
+            if (!item) {
+              responseData = { service: 'stripe-host-quantity', error: 'Subscription has no price item.' };
+            } else if (Number(item.quantity) === quantity) {
+              responseData = { service: 'stripe-host-quantity', enabled: true, updated: false, quantity };
+            } else {
+              const update = await fetch(`https://api.stripe.com/v1/subscription_items/${encodeURIComponent(item.id)}`, {
+                method: 'POST',
+                headers: { authorization: `Bearer ${env.STRIPE_SECRET_KEY}`, 'content-type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ quantity: String(quantity), proration_behavior: 'create_prorations' })
+              });
+              const updated = await update.json();
+              responseData = update.ok
+                ? { service: 'stripe-host-quantity', enabled: true, updated: true, quantity }
+                : { service: 'stripe-host-quantity', error: updated.error && updated.error.message };
+            }
+          }
+        }
+      }
+
     } else if (service === 'stripe-checkout') {
       const params = new URLSearchParams();
       params.append('mode', 'payment');
@@ -787,7 +842,7 @@ export default {
             <div style="font-size:16px;font-weight:600;color:#2C6E6A">${storeUrl}</div>
           </div>
           <div style="background:#fdf3e0;border-left:4px solid #E8A838;border-radius:0 12px 12px 0;padding:16px 20px;margin-bottom:28px">
-            <p style="font-size:14px;color:#92600a;margin:0;line-height:1.6">First month free, then a simple monthly subscription. No card was needed to start. The monthly price is still TBC, so nothing is charged until that price and its Stripe price ID are set.</p>
+            <p style="font-size:14px;color:#92600a;margin:0;line-height:1.6">First month free, then a monthly subscription per property. 1–2 properties are $10 each, 3–10 are $8 each, and 11 or more are $6 each. Every property is billed at the rate of the tier you reach. You keep 100% of guest sales. No card was needed to start, and nothing is charged until the Stripe price ID is set.</p>
           </div>
           <div style="text-align:center;margin-bottom:20px">
             <a href="https://hostiehub.com.au/plans.html" style="background:#2C6E6A;color:white;padding:16px 36px;border-radius:50px;text-decoration:none;font-size:16px;font-weight:600;display:inline-block">See pricing →</a>

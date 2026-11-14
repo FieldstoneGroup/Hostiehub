@@ -4,6 +4,19 @@ const path = require('path');
 const { parseListingHtml, inferType } = require('../api/lib/listing-parse');
 const { isPrivateIp } = require('../api/lib/public-url');
 const { suggest } = require('../js/suggestions');
+const { rateForCount, monthlyTotal, billableQuantity, PRICING } = require('../js/pricing');
+
+assert.strictEqual(PRICING.STRIPE_ACCOUNT_ID, 'acct_1TH1K4FGh2TNwWGY');
+assert.strictEqual(PRICING.STRIPE_PRODUCT_ID, 'prod_VcosxU73288ZLQ');
+assert.strictEqual(PRICING.STRIPE_PRICE_ID, 'price_1UbZFJFGh2TNwWGYsQhTzePk');
+assert.strictEqual(rateForCount(1), 10);
+assert.strictEqual(rateForCount(2), 10);
+assert.strictEqual(monthlyTotal(2), 20);
+assert.strictEqual(rateForCount(3), 8);
+assert.strictEqual(monthlyTotal(10), 80);
+assert.strictEqual(rateForCount(11), 6);
+assert.strictEqual(monthlyTotal(11), 66);
+assert.strictEqual(billableQuantity(0), 1);
 
 const html = fs.readFileSync(path.join(__dirname, '../fixtures/sample-listing.html'), 'utf8');
 const parsed = parseListingHtml(html, 'http://127.0.0.1/fixtures/sample-listing.html');

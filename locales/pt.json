@@ -3,10 +3,15 @@
     "label": "Idioma"
   },
   "pricing": {
-    "sentence": "Primeiro mês grátis, depois uma subscrição mensal simples. Os anfitriões ficam com 100% das vendas aos hóspedes. Não é necessário cartão para começar.",
+    "sentence": "O primeiro mês é grátis e depois há uma assinatura mensal por alojamento. Os anfitriões ficam com 100% das vendas aos hóspedes. Não é preciso cartão para começar.",
     "noCommission": "O Hostie Hub não cobra comissão nem taxa de plataforma sobre as vendas aos hóspedes.",
     "pricePending": "Preço mensal a confirmar",
-    "perMonth": "por mês após o seu mês grátis"
+    "perMonth": "por alojamento por mês",
+    "from": "A partir de",
+    "perProperty": "por alojamento por mês",
+    "tierNote": "Todos os alojamentos são cobrados à tarifa do escalão atingido.",
+    "colProperties": "Alojamentos",
+    "colEach": "Cada um por mês"
   },
   "nav": {
     "login": "Iniciar sessão",
@@ -35,9 +40,9 @@
     "guideBody": "Restaurantes, cafés e experiências locais podem aparecer na zona do seu alojamento. Os hóspedes descobrem o bairro antes de chegarem.",
     "hostsEyebrow": "Para anfitriões",
     "hostsTitle": "Primeiro mês <em>grátis</em>.",
-    "hostsLead": "Depois, uma subscrição mensal simples. Alojamentos, produtos e encomendas ilimitados. Sem comissão sobre as vendas aos hóspedes.",
+    "hostsLead": "Depois, uma assinatura mensal por alojamento. Ficas com 100% das vendas.",
     "priceTag": "Primeiro mês grátis",
-    "priceSuffix": "por mês a seguir",
+    "priceSuffix": "por alojamento por mês",
     "ctaStore": "Criar a sua loja →",
     "howEyebrow": "Como funciona",
     "howTitle": "No ar em <em>poucos minutos</em>.",
@@ -91,11 +96,11 @@
   "plans": {
     "eyebrow": "Preços",
     "h1": "Preços simples para <span>anfitriões</span>.",
-    "lead": "Primeiro mês grátis, depois uma subscrição mensal simples. Os anfitriões ficam com 100% das vendas aos hóspedes. Não é necessário cartão para começar.",
+    "lead": "O primeiro mês é grátis e depois há uma assinatura mensal por alojamento. Os anfitriões ficam com 100% das vendas aos hóspedes. Não é preciso cartão para começar.",
     "hostEyebrow": "Para anfitriões",
     "hostName": "Anfitrião",
-    "hostSub": "A loja de extras para os seus hóspedes. Fica com cada venda.",
-    "suffix": "por mês após o mês grátis",
+    "hostSub": "Preço por alojamento. Ficas com cada venda.",
+    "suffix": "por alojamento por mês, depois do mês grátis",
     "hf1": "Primeiro mês grátis, sem cartão para começar",
     "hf2": "Alojamentos, produtos e encomendas ilimitados",
     "hf3": "Fica com 100% das vendas aos hóspedes",
@@ -115,7 +120,7 @@
     "p6": "Visualizações, cliques e resgates",
     "partnerCta": "Aderir como parceiro",
     "whyTitle": "Os anfitriões ficam com a venda",
-    "whyBody": "Os pagamentos dos hóspedes vão para o anfitrião através do Stripe Connect. O Hostie Hub não cobra comissão nem taxa de plataforma sobre essas vendas. A subscrição mensal é o único encargo do anfitrião e permanece desativada até o preço ser publicado.",
+    "whyBody": "Os pagamentos dos hóspedes vão para o anfitrião via Stripe Connect. A Hostie Hub não cobra comissão nem taxa de plataforma. A assinatura é por alojamento por mês, todos no escalão atingido. Não é preciso cartão para começar.",
     "footer": "Dúvidas?"
   },
   "signup": {
@@ -235,10 +240,10 @@
     "viewStore": "Ver a minha loja",
     "logout": "Terminar sessão",
     "planTitle": "Plano",
-    "planDesc": "Primeiro mês grátis, depois uma subscrição mensal simples.",
+    "planDesc": "O primeiro mês é grátis e depois há uma tarifa mensal por alojamento.",
     "planKeep": "Fica com 100% das vendas aos hóspedes. Sem comissão, sem taxa de plataforma.",
     "planCta": "Iniciar subscrição mensal",
-    "planOff": "A faturação está desligada até estarem definidos o preço mensal e o ID de preço do Stripe. Não é recolhido qualquer cartão.",
+    "planOff": "Os primeiros 30 dias são grátis e não é preciso cartão para começar.",
     "checklist": "Lista de configuração",
     "checklistLead": "Conclua estes passos para ficar no ar.",
     "check1": "Conta criada",
@@ -320,14 +325,14 @@
   "terms": {
     "billingTitle": "Subscrições e faturação",
     "trial": "Cada nova conta de anfitrião inclui um mês grátis de 30 dias. Não é necessário cartão de crédito para começar.",
-    "paid": "Após o mês grátis, o plano de anfitrião é uma subscrição mensal simples. O valor é publicado na página de preços. Enquanto esse valor e o respetivo preço no Stripe não estiverem definidos, não é recolhido qualquer cartão e nada é cobrado.",
+    "paid": "Depois do mês grátis, o plano do anfitrião é uma assinatura mensal por alojamento. 1–2 alojamentos custam $10 cada, 3–10 custam $8 e 11 ou mais custam $6. Todos são cobrados no escalão atingido.",
     "noFee": "O Hostie Hub não cobra comissão nem taxa de plataforma sobre as vendas aos hóspedes. Os anfitriões ficam com 100% dessas vendas. Os pagamentos dos hóspedes são processados pelo Stripe Connect para a conta Stripe do próprio anfitrião.",
     "refund": "Os pagamentos da subscrição não são reembolsados depois de um mês pago ter começado, porque o mês grátis é a altura de decidir. Os reembolsos de encomendas de hóspedes resolvem-se entre o anfitrião e o hóspede.",
     "cancel": "Pode cancelar a subscrição mensal a qualquer momento. A loja mantém-se disponível até ao fim do período já pago."
   },
   "demo": {
     "strip": "Pronto para oferecer isto aos seus hóspedes?",
-    "stripBody": "Primeiro mês grátis, depois uma subscrição mensal simples. Fica com 100% das vendas aos hóspedes. Não é necessário cartão para começar.",
+    "stripBody": "O primeiro mês é grátis e depois há uma assinatura mensal por alojamento. Ficas com 100% das vendas. Não é preciso cartão para começar.",
     "stripBtn": "Começar o mês grátis →",
     "modalTitle": "Gosta do que está a ver?",
     "modalBody": "Isto é uma demonstração. Os seus hóspedes podem encomendar extras na sua própria loja. A configuração começa pelo link do anúncio, e nada é adicionado até carregar em Adicionar.",

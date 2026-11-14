@@ -3,10 +3,15 @@
     "label": "Sprache"
   },
   "pricing": {
-    "sentence": "Erster Monat kostenlos, danach ein einfaches monatliches Abonnement. Gastgeber behalten 100 % ihrer Gästeverkäufe. Keine Karte nötig, um zu starten.",
+    "sentence": "Der erste Monat ist kostenlos, danach ein Monatsabo pro Unterkunft. Gastgeber behalten 100 % ihrer Gästeverkäufe. Zum Start ist keine Karte nötig.",
     "noCommission": "Hostie Hub erhebt keine Provision und keine Plattformgebühr auf Gästeverkäufe.",
     "pricePending": "Monatspreis wird noch bestätigt",
-    "perMonth": "pro Monat nach deinem kostenlosen Monat"
+    "perMonth": "pro Unterkunft und Monat",
+    "from": "Ab",
+    "perProperty": "pro Unterkunft und Monat",
+    "tierNote": "Jede Unterkunft wird zum Tarif der erreichten Stufe berechnet.",
+    "colProperties": "Unterkünfte",
+    "colEach": "Je Monat"
   },
   "nav": {
     "login": "Anmelden",
@@ -35,9 +40,9 @@
     "guideBody": "Lokale Restaurants, Cafés und Erlebnisse können für die Gegend deiner Unterkunft erscheinen. Gäste entdecken die Nachbarschaft, bevor sie anreisen.",
     "hostsEyebrow": "Für Gastgeber",
     "hostsTitle": "Erster Monat <em>kostenlos</em>.",
-    "hostsLead": "Danach ein einfaches monatliches Abonnement. Unbegrenzte Unterkünfte, Produkte und Bestellungen. Keine Provision auf Gästeverkäufe.",
+    "hostsLead": "Danach ein Monatsabo pro Unterkunft. Du behältst 100 % der Verkäufe.",
     "priceTag": "Erster Monat kostenlos",
-    "priceSuffix": "pro Monat danach",
+    "priceSuffix": "pro Unterkunft und Monat",
     "ctaStore": "Deinen Shop erstellen →",
     "howEyebrow": "So funktioniert's",
     "howTitle": "Online in <em>wenigen Minuten</em>.",
@@ -91,11 +96,11 @@
   "plans": {
     "eyebrow": "Preise",
     "h1": "Einfache Preise für <span>Gastgeber</span>.",
-    "lead": "Erster Monat kostenlos, danach ein einfaches monatliches Abonnement. Gastgeber behalten 100 % ihrer Gästeverkäufe. Keine Karte nötig, um zu starten.",
+    "lead": "Der erste Monat ist kostenlos, danach ein Monatsabo pro Unterkunft. Gastgeber behalten 100 % ihrer Gästeverkäufe. Zum Start ist keine Karte nötig.",
     "hostEyebrow": "Für Gastgeber",
     "hostName": "Gastgeber",
-    "hostSub": "Dein Shop für Extras an Gäste. Du behältst jeden Verkauf.",
-    "suffix": "pro Monat nach dem kostenlosen Monat",
+    "hostSub": "Preis pro Unterkunft. Du behältst jeden Verkauf.",
+    "suffix": "pro Unterkunft und Monat, nach dem Gratis-Monat",
     "hf1": "Erster Monat kostenlos, keine Karte zum Start",
     "hf2": "Unbegrenzte Unterkünfte, Produkte und Bestellungen",
     "hf3": "Du behältst 100 % der Gästeverkäufe",
@@ -115,7 +120,7 @@
     "p6": "Aufrufe, Klicks und Einlösungen",
     "partnerCta": "Partner werden",
     "whyTitle": "Gastgeber behalten den Erlös",
-    "whyBody": "Gästezahlungen gehen über Stripe Connect an den Gastgeber. Hostie Hub erhebt auf diese Verkäufe weder eine Provision noch eine Plattformgebühr. Das monatliche Abonnement ist die einzige Gebühr für Gastgeber und bleibt deaktiviert, bis der Preis veröffentlicht ist.",
+    "whyBody": "Gästezahlungen gehen über Stripe Connect an den Gastgeber. Hostie Hub nimmt keine Provision und keine Plattformgebühr. Das Abo gilt pro Unterkunft und Monat, alle zum Tarif der erreichten Stufe. Zum Start keine Karte.",
     "footer": "Fragen?"
   },
   "signup": {
@@ -235,10 +240,10 @@
     "viewStore": "Meinen Shop ansehen",
     "logout": "Abmelden",
     "planTitle": "Tarif",
-    "planDesc": "Erster Monat kostenlos, danach ein einfaches monatliches Abonnement.",
+    "planDesc": "Erster Monat kostenlos, danach ein Monatstarif pro Unterkunft.",
     "planKeep": "Du behältst 100 % der Gästeverkäufe. Keine Provision, keine Plattformgebühr.",
     "planCta": "Monatliches Abonnement starten",
-    "planOff": "Die Abrechnung ist deaktiviert, bis der Monatspreis und die Stripe-Preis-ID festgelegt sind. Es wird keine Karte erfasst.",
+    "planOff": "Die ersten 30 Tage sind kostenlos und zum Start ist keine Karte nötig.",
     "checklist": "Einrichtungs-Checkliste",
     "checklistLead": "Schließe diese Schritte ab, um live zu gehen.",
     "check1": "Konto erstellt",
@@ -320,14 +325,14 @@
   "terms": {
     "billingTitle": "Abonnements und Abrechnung",
     "trial": "Jedes neue Gastgeberkonto enthält einen kostenlosen Monat von 30 Tagen. Zum Start ist keine Kreditkarte erforderlich.",
-    "paid": "Nach dem kostenlosen Monat ist der Gastgeber-Tarif ein einfaches monatliches Abonnement. Der Betrag wird auf der Preisseite veröffentlicht. Bis dieser Betrag und der zugehörige Stripe-Preis festgelegt sind, wird keine Karte erfasst und nichts berechnet.",
+    "paid": "Nach dem Gratis-Monat ist der Host-Plan ein Monatsabo pro Unterkunft. 1–2 Unterkünfte kosten je 10 $, 3–10 je 8 $ und ab 11 je 6 $. Jede Unterkunft wird zum Tarif der erreichten Stufe berechnet.",
     "noFee": "Hostie Hub erhebt keine Provision und keine Plattformgebühr auf Gästeverkäufe. Gastgeber behalten 100 % dieser Verkäufe. Gästezahlungen werden über Stripe Connect auf das eigene Stripe-Konto des Gastgebers abgewickelt.",
     "refund": "Zahlungen für das Abonnement werden nicht erstattet, sobald ein bezahlter Monat begonnen hat, weil der kostenlose Monat die Zeit für die Entscheidung ist. Erstattungen von Gästebestellungen sind eine Sache zwischen Gastgeber und Gast.",
     "cancel": "Du kannst das monatliche Abonnement jederzeit kündigen. Der Shop bleibt bis zum Ende des bereits bezahlten Zeitraums verfügbar."
   },
   "demo": {
     "strip": "Bereit, deinen Gästen das anzubieten?",
-    "stripBody": "Erster Monat kostenlos, danach ein einfaches monatliches Abonnement. Du behältst 100 % der Gästeverkäufe. Keine Karte nötig, um zu starten.",
+    "stripBody": "Erster Monat kostenlos, danach ein Monatsabo pro Unterkunft. Du behältst 100 % der Verkäufe. Zum Start keine Karte.",
     "stripBtn": "Kostenlosen Monat starten →",
     "modalTitle": "Gefällt dir, was du siehst?",
     "modalBody": "Das ist eine Demo. Deine Gäste können Extras aus deinem eigenen Shop bestellen. Die Einrichtung startet mit deinem Inserat-Link, und nichts wird hinzugefügt, bis du auf Hinzufügen klickst.",

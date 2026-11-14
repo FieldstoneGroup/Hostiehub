@@ -721,10 +721,11 @@
             <div class="card-title" data-i18n="dash.planTitle">Plan</div>
             <div class="card-desc" data-i18n="dash.planDesc">First month free, then a simple monthly subscription.</div>
             <div style="background:var(--brand-light);border:1.5px solid var(--brand);border-radius:12px;padding:18px 20px;margin-top:12px">
-              <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:6px"><span data-price-label>TBC</span> <span data-i18n="pricing.perMonth">per month after your free month</span></div>
-              <div style="font-size:15px;color:var(--brand-dark);line-height:1.6" data-i18n="pricing.sentence">First month free, then a simple monthly subscription. Hosts keep 100% of their guest sales. No card needed to start.</div>
+              <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--brand);margin-bottom:6px"><span data-i18n="pricing.from">From</span> <span data-price-from>$6</span> <span data-i18n="pricing.perProperty">per property per month</span></div>
+              <div data-price-table></div>
+              <div style="font-size:15px;color:var(--brand-dark);line-height:1.6;margin-top:10px" data-i18n="pricing.sentence">First month free, then a monthly subscription per property. Hosts keep 100% of their guest sales. No card needed to start.</div>
               <div style="font-size:13px;color:var(--brand-dark);line-height:1.6;margin-top:8px" data-i18n="dash.planKeep">You keep 100% of guest sales. No commission, no platform fee.</div>
-              <p data-price-pending data-i18n="dash.planOff" style="font-size:13px;color:var(--muted);margin-top:8px">Billing is off until the monthly price and Stripe price ID are set. No card is collected.</p>
+              <p data-i18n="dash.planOff" style="font-size:13px;color:var(--muted);margin-top:8px">Your first 30 days are free and no card is needed to start.</p>
               <button class="btn btn-primary btn-sm" style="margin-top:12px" onclick="startHostSubscription()" data-i18n="dash.planCta">Start monthly subscription</button>
               <div id="billingMsg" style="font-size:13px;margin-top:8px;color:var(--muted)"></div>
             </div>
@@ -1672,14 +1673,40 @@
       showToast('✅ Property added');
     }
     closePropertyModal();
-    loadProperties();
+    await loadProperties();
+    syncSubscriptionQuantity();
   }
 
   async function deleteProperty(id) {
     if (!confirm('Delete this property?')) return;
     await sb.from('properties').delete().eq('id', id);
     showToast('🗑 Property deleted');
-    loadProperties();
+    await loadProperties();
+    syncSubscriptionQuantity();
+  }
+
+  async function syncSubscriptionQuantity() {
+    if (window.HH_DEMO || !currentUser) return;
+    try {
+      var sessionResult = await sb.auth.getSession();
+      var token = sessionResult.data.session && sessionResult.data.session.access_token;
+      if (!token) return;
+      var headers = { 'content-type': 'application/json', authorization: 'Bearer ' + token };
+      // Worker path (live once worker.js is redeployed). The current worker
+      // ignores unknown services, so only accept the tagged response.
+      var worker = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
+        method: 'POST',
+        headers: Object.assign({ 'X-Service': 'stripe-host-quantity' }, headers),
+        body: '{}'
+      });
+      var workerBody = await worker.json().catch(function () { return {}; });
+      if (workerBody && workerBody.service === 'stripe-host-quantity') return;
+      await fetch('/api/host-subscription', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({ action: 'sync-quantity' })
+      });
+    } catch (err) { /* billing off or network; the store save already succeeded */ }
   }
 
   // ── PRODUCTS ──

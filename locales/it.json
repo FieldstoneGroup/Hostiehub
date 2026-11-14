@@ -3,10 +3,15 @@
     "label": "Lingua"
   },
   "pricing": {
-    "sentence": "Il primo mese è gratuito, poi un semplice abbonamento mensile. Gli host trattengono il 100% delle vendite agli ospiti. Nessuna carta necessaria per iniziare.",
+    "sentence": "Il primo mese è gratuito, poi un abbonamento mensile per alloggio. Gli host tengono il 100% delle vendite agli ospiti. Nessuna carta per iniziare.",
     "noCommission": "Hostie Hub non applica commissioni né costi di piattaforma sulle vendite agli ospiti.",
     "pricePending": "Prezzo mensile da confermare",
-    "perMonth": "al mese dopo il mese gratuito"
+    "perMonth": "per alloggio al mese",
+    "from": "Da",
+    "perProperty": "per alloggio al mese",
+    "tierNote": "Ogni alloggio è addebitato alla tariffa della fascia raggiunta.",
+    "colProperties": "Alloggi",
+    "colEach": "Ciascuno al mese"
   },
   "nav": {
     "login": "Accedi",
@@ -35,9 +40,9 @@
     "guideBody": "Ristoranti, caffè ed esperienze locali possono comparire per la zona della tua proprietà. Gli ospiti scoprono il quartiere prima di arrivare.",
     "hostsEyebrow": "Per gli host",
     "hostsTitle": "Il primo mese è <em>gratuito</em>.",
-    "hostsLead": "Poi un semplice abbonamento mensile. Proprietà, prodotti e ordini illimitati. Nessuna commissione sulle vendite agli ospiti.",
+    "hostsLead": "Poi un abbonamento mensile per alloggio. Tieni il 100% delle vendite.",
     "priceTag": "Primo mese gratuito",
-    "priceSuffix": "al mese dopo",
+    "priceSuffix": "per alloggio al mese",
     "ctaStore": "Crea il tuo negozio →",
     "howEyebrow": "Come funziona",
     "howTitle": "Online in <em>pochi minuti</em>.",
@@ -91,11 +96,11 @@
   "plans": {
     "eyebrow": "Prezzi",
     "h1": "Prezzi semplici per gli <span>host</span>.",
-    "lead": "Il primo mese è gratuito, poi un semplice abbonamento mensile. Gli host trattengono il 100% delle vendite agli ospiti. Nessuna carta necessaria per iniziare.",
+    "lead": "Il primo mese è gratuito, poi un abbonamento mensile per alloggio. Gli host tengono il 100% delle vendite agli ospiti. Nessuna carta per iniziare.",
     "hostEyebrow": "Per gli host",
     "hostName": "Host",
-    "hostSub": "Il negozio di extra per i tuoi ospiti. Trattieni ogni vendita.",
-    "suffix": "al mese dopo il mese gratuito",
+    "hostSub": "Prezzo per alloggio. Tieni ogni vendita.",
+    "suffix": "per alloggio al mese, dopo il mese gratuito",
     "hf1": "Primo mese gratuito, nessuna carta per iniziare",
     "hf2": "Proprietà, prodotti e ordini illimitati",
     "hf3": "Trattieni il 100% delle vendite agli ospiti",
@@ -115,7 +120,7 @@
     "p6": "Visualizzazioni, clic e riscatti",
     "partnerCta": "Diventa partner",
     "whyTitle": "Gli host trattengono la vendita",
-    "whyBody": "I pagamenti degli ospiti vanno all'host tramite Stripe Connect. Hostie Hub non applica commissioni né costi di piattaforma su quelle vendite. L'abbonamento mensile è l'unico costo per l'host e resta disattivato finché il prezzo non viene pubblicato.",
+    "whyBody": "I pagamenti degli ospiti vanno all'host tramite Stripe Connect. Hostie Hub non trattiene commissioni né costi di piattaforma. L'abbonamento è per alloggio al mese, tutti alla fascia raggiunta. Nessuna carta per iniziare.",
     "footer": "Domande?"
   },
   "signup": {
@@ -235,10 +240,10 @@
     "viewStore": "Vedi il mio negozio",
     "logout": "Esci",
     "planTitle": "Piano",
-    "planDesc": "Primo mese gratuito, poi un semplice abbonamento mensile.",
+    "planDesc": "Il primo mese è gratuito, poi una tariffa mensile per alloggio.",
     "planKeep": "Trattieni il 100% delle vendite agli ospiti. Nessuna commissione, nessun costo di piattaforma.",
     "planCta": "Inizia l'abbonamento mensile",
-    "planOff": "La fatturazione è disattivata finché il prezzo mensile e lo Stripe price ID non sono impostati. Non viene richiesta alcuna carta.",
+    "planOff": "I primi 30 giorni sono gratuiti e non serve una carta per iniziare.",
     "checklist": "Checklist di configurazione",
     "checklistLead": "Completa questi passaggi per andare online.",
     "check1": "Account creato",
@@ -320,14 +325,14 @@
   "terms": {
     "billingTitle": "Abbonamenti e fatturazione",
     "trial": "Ogni nuovo account host include un mese gratuito di 30 giorni. Per iniziare non serve una carta di credito.",
-    "paid": "Dopo il mese gratuito, il piano host è un semplice abbonamento mensile. L'importo è pubblicato nella pagina dei prezzi. Finché quell'importo e il relativo prezzo Stripe non sono impostati, non viene richiesta alcuna carta e non viene addebitato nulla.",
+    "paid": "Dopo il mese gratuito, il piano host è un abbonamento mensile per alloggio. 1–2 alloggi costano 10 $ ciascuno, 3–10 costano 8 $ e da 11 in su 6 $. Ogni alloggio è addebitato alla fascia raggiunta.",
     "noFee": "Hostie Hub non applica commissioni né costi di piattaforma sulle vendite agli ospiti. Gli host trattengono il 100% di quelle vendite. I pagamenti degli ospiti sono elaborati da Stripe Connect sull'account Stripe dell'host.",
     "refund": "I pagamenti dell'abbonamento non vengono rimborsati una volta iniziato un mese a pagamento, perché il mese gratuito è il momento per decidere. I rimborsi degli ordini degli ospiti restano tra l'host e l'ospite.",
     "cancel": "Puoi annullare l'abbonamento mensile in qualsiasi momento. Il negozio resta disponibile fino alla fine del periodo già pagato."
   },
   "demo": {
     "strip": "Vuoi offrirlo ai tuoi ospiti?",
-    "stripBody": "Primo mese gratuito, poi un semplice abbonamento mensile. Trattieni il 100% delle vendite agli ospiti. Nessuna carta necessaria per iniziare.",
+    "stripBody": "Il primo mese è gratuito, poi un abbonamento mensile per alloggio. Tieni il 100% delle vendite. Nessuna carta per iniziare.",
     "stripBtn": "Inizia il tuo mese gratuito →",
     "modalTitle": "Ti piace quello che vedi?",
     "modalBody": "Questa è una demo. I tuoi ospiti possono ordinare extra dal tuo negozio. La configurazione parte dal link dell'annuncio e non viene aggiunto nulla finché non premi Aggiungi.",

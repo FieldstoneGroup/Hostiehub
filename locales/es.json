@@ -3,10 +3,15 @@
     "label": "Idioma"
   },
   "pricing": {
-    "sentence": "El primer mes es gratis y, después, una suscripción mensual sencilla. Los anfitriones se quedan con el 100 % de las ventas a sus huéspedes. No hace falta tarjeta para empezar.",
+    "sentence": "El primer mes es gratis y después hay una suscripción mensual por alojamiento. Los anfitriones se quedan con el 100% de las ventas a sus huéspedes. No hace falta tarjeta para empezar.",
     "noCommission": "Hostie Hub no cobra ni comisión ni tarifa de plataforma sobre las ventas a huéspedes.",
     "pricePending": "Precio mensual pendiente de confirmar",
-    "perMonth": "al mes tras tu mes gratis"
+    "perMonth": "por alojamiento al mes",
+    "from": "Desde",
+    "perProperty": "por alojamiento al mes",
+    "tierNote": "Todos los alojamientos se cobran a la tarifa del tramo que alcances.",
+    "colProperties": "Alojamientos",
+    "colEach": "Cada uno al mes"
   },
   "nav": {
     "login": "Iniciar sesión",
@@ -35,9 +40,9 @@
     "guideBody": "Restaurantes, cafeterías y experiencias de la zona pueden mostrarse en el área de tu alojamiento. Los huéspedes descubren el barrio antes de llegar.",
     "hostsEyebrow": "Para anfitriones",
     "hostsTitle": "El primer mes, <em>gratis</em>.",
-    "hostsLead": "Después, una suscripción mensual sencilla. Alojamientos, productos y pedidos ilimitados. Sin comisión sobre las ventas a huéspedes.",
+    "hostsLead": "Después, una suscripción mensual por alojamiento. Te quedas con el 100% de las ventas.",
     "priceTag": "Primer mes gratis",
-    "priceSuffix": "al mes a partir de entonces",
+    "priceSuffix": "por alojamiento al mes",
     "ctaStore": "Crea tu tienda →",
     "howEyebrow": "Cómo funciona",
     "howTitle": "En marcha en <em>unos minutos</em>.",
@@ -91,11 +96,11 @@
   "plans": {
     "eyebrow": "Precios",
     "h1": "Precios sencillos para <span>anfitriones</span>.",
-    "lead": "El primer mes es gratis y, después, una suscripción mensual sencilla. Los anfitriones se quedan con el 100 % de las ventas a sus huéspedes. No hace falta tarjeta para empezar.",
+    "lead": "El primer mes es gratis y después hay una suscripción mensual por alojamiento. Los anfitriones se quedan con el 100% de las ventas a sus huéspedes. No hace falta tarjeta para empezar.",
     "hostEyebrow": "Para anfitriones",
     "hostName": "Anfitrión",
-    "hostSub": "Tu tienda de extras para huéspedes. Te quedas con cada venta.",
-    "suffix": "al mes tras el mes gratis",
+    "hostSub": "Precio por alojamiento. Te quedas con cada venta.",
+    "suffix": "por alojamiento al mes, después del mes gratis",
     "hf1": "Primer mes gratis, sin tarjeta para empezar",
     "hf2": "Alojamientos, productos y pedidos ilimitados",
     "hf3": "Te quedas con el 100 % de las ventas a huéspedes",
@@ -115,7 +120,7 @@
     "p6": "Visualizaciones, clics y canjes",
     "partnerCta": "Hazte socio",
     "whyTitle": "Los anfitriones se quedan con la venta",
-    "whyBody": "Los pagos de los huéspedes llegan al anfitrión a través de Stripe Connect. Hostie Hub no cobra ni comisión ni tarifa de plataforma sobre esas ventas. La suscripción mensual es el único cargo para el anfitrión, y sigue desactivada hasta que se publique el precio.",
+    "whyBody": "Los pagos de los huéspedes van al anfitrión por Stripe Connect. Hostie Hub no cobra comisión ni tarifa de plataforma. La suscripción es por alojamiento al mes, y todos se cobran al tramo que alcances. No hace falta tarjeta para empezar.",
     "footer": "¿Alguna pregunta?"
   },
   "signup": {
@@ -235,10 +240,10 @@
     "viewStore": "Ver mi tienda",
     "logout": "Cerrar sesión",
     "planTitle": "Plan",
-    "planDesc": "El primer mes es gratis y, después, una suscripción mensual sencilla.",
+    "planDesc": "El primer mes es gratis y después hay una tarifa mensual por alojamiento.",
     "planKeep": "Te quedas con el 100 % de las ventas a huéspedes. Sin comisión ni tarifa de plataforma.",
     "planCta": "Empezar la suscripción mensual",
-    "planOff": "La facturación está desactivada hasta que se definan el precio mensual y el ID de precio de Stripe. No se solicita ninguna tarjeta.",
+    "planOff": "Los primeros 30 días son gratis y no hace falta tarjeta para empezar.",
     "checklist": "Lista de configuración",
     "checklistLead": "Completa estos pasos para ponerte en marcha.",
     "check1": "Cuenta creada",
@@ -320,14 +325,14 @@
   "terms": {
     "billingTitle": "Suscripciones y facturación",
     "trial": "Toda cuenta nueva de anfitrión incluye un mes gratis de 30 días. No hace falta tarjeta de crédito para empezar.",
-    "paid": "Tras el mes gratis, el plan de anfitrión es una suscripción mensual sencilla. El importe se publica en la página de precios. Hasta que ese importe y su precio de Stripe estén definidos, no se solicita ninguna tarjeta y no se cobra nada.",
+    "paid": "Después del mes gratis, el plan del anfitrión es una suscripción mensual por alojamiento. 1–2 alojamientos cuestan $10 cada uno, 3–10 cuestan $8 y 11 o más cuestan $6. Todos se cobran a la tarifa del tramo alcanzado.",
     "noFee": "Hostie Hub no cobra ni comisión ni tarifa de plataforma sobre las ventas a huéspedes. Los anfitriones se quedan con el 100 % de esas ventas. Stripe Connect ingresa los pagos de los huéspedes en la cuenta de Stripe del propio anfitrión.",
     "refund": "Los pagos de la suscripción no se reembolsan una vez empezado un mes de pago, porque el mes gratis es el momento de decidir. Los reembolsos de los pedidos de huéspedes se resuelven entre el anfitrión y el huésped.",
     "cancel": "Puedes cancelar la suscripción mensual en cualquier momento. La tienda sigue disponible hasta el final del periodo ya pagado."
   },
   "demo": {
     "strip": "¿Quieres ofrecer esto a tus huéspedes?",
-    "stripBody": "El primer mes es gratis y, después, una suscripción mensual sencilla. Te quedas con el 100 % de las ventas a huéspedes. No hace falta tarjeta para empezar.",
+    "stripBody": "El primer mes es gratis y después hay una suscripción mensual por alojamiento. Te quedas con el 100% de las ventas. No hace falta tarjeta para empezar.",
     "stripBtn": "Empieza tu mes gratis →",
     "modalTitle": "¿Te gusta lo que ves?",
     "modalBody": "Esto es una demo. Tus huéspedes pueden pedir extras desde tu propia tienda. La configuración empieza por el enlace de tu anuncio, y no se añade nada hasta que pulses Añadir.",

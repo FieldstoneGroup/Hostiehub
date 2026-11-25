@@ -1,7 +1,358 @@
+const SUPABASE_URL = 'https://hjwkycknjiyvrxbcejet.supabase.co';
+// Public anon key, same value the dashboard already ships. Not a secret.
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8';
+const ORDER_ID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function jsonResponse(data, status) {
+  return new Response(JSON.stringify(data), {
+    status: status || 200,
+    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+  });
+}
+
+export function moneyToCents(value) {
+  const n = typeof value === 'number' ? value : parseFloat(value);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.round(n * 100);
+}
+
+export function recordedRefundedCents(order) {
+  if (!order) return 0;
+  const raw = order.refunded_cents;
+  if (raw !== null && raw !== undefined && raw !== '') {
+    const n = Number(raw);
+    if (Number.isFinite(n) && n >= 0) return Math.round(n);
+  }
+  return moneyToCents(order.refunded_amount);
+}
+
+// stripeUnrefundedCents is null when Stripe's charge could not be read.
+// The cap is the lower of the order balance and what Stripe can still refund.
+export function remainingRefundableCents(orderTotalCents, recordedCents, stripeUnrefundedCents) {
+  const fromOrder = Math.max(0, (orderTotalCents || 0) - Math.max(0, recordedCents || 0));
+  if (stripeUnrefundedCents === null || stripeUnrefundedCents === undefined || !Number.isFinite(Number(stripeUnrefundedCents))) {
+    return fromOrder;
+  }
+  return Math.min(fromOrder, Math.max(0, Math.round(Number(stripeUnrefundedCents))));
+}
+
+// null refunds the remaining balance. Anything else must be a positive integer of cents.
+export function parseRefundAmountCents(amountCents, remaining) {
+  if (amountCents === null) {
+    if (remaining <= 0) return { error: 'This order is already fully refunded.' };
+    return { cents: remaining };
+  }
+  if (typeof amountCents !== 'number' || !Number.isInteger(amountCents) || amountCents <= 0) {
+    return { error: 'amountCents must be a positive whole number of cents, or null to refund the remaining balance.' };
+  }
+  if (remaining <= 0) return { error: 'This order is already fully refunded.' };
+  if (amountCents > remaining) {
+    return { error: 'Amount exceeds the remaining refundable balance of $' + (remaining / 100).toFixed(2) + '.' };
+  }
+  return { cents: amountCents };
+}
+
+export function refundOrderStatus(refundedCents, orderTotalCents, chargeFullyRefunded) {
+  if (chargeFullyRefunded || (orderTotalCents > 0 && refundedCents >= orderTotalCents)) return 'refunded';
+  if (refundedCents > 0) return 'partially_refunded';
+  return 'paid';
+}
+
+export function refundIdempotencyKey(orderId, recordedCents, amountCents) {
+  return 'hh-refund-' + orderId + '-' + recordedCents + '-' + amountCents;
+}
+
+function stripeErrorMessage(data) {
+  if (data && typeof data.error === 'string' && data.error) return data.error;
+  if (data && data.error && typeof data.error.message === 'string' && data.error.message) return data.error.message;
+  return 'Stripe request failed.';
+}
+
+function restErrorMessage(data) {
+  if (!data) return 'Request failed.';
+  if (typeof data.message === 'string' && data.message) return data.message;
+  if (typeof data.error === 'string' && data.error) return data.error;
+  if (data.error && typeof data.error.message === 'string') return data.error.message;
+  return 'Request failed.';
+}
+
+function serviceHeaders(env, extra) {
+  return Object.assign({
+    apikey: env.SUPABASE_SERVICE_KEY,
+    authorization: 'Bearer ' + env.SUPABASE_SERVICE_KEY,
+  }, extra || {});
+}
+
+async function readJson(res) {
+  const text = await res.text();
+  if (!text) return null;
+  try { return JSON.parse(text); } catch (e) { return { message: text }; }
+}
+
+async function stripeRequest(env, accountId, path, options) {
+  const opts = options || {};
+  const headers = { Authorization: 'Bearer ' + env.STRIPE_SECRET_KEY };
+  if (accountId) headers['Stripe-Account'] = accountId;
+  if (opts.params) headers['Content-Type'] = 'application/x-www-form-urlencoded';
+  if (opts.idempotencyKey) headers['Idempotency-Key'] = opts.idempotencyKey;
+  const res = await fetch('https://api.stripe.com' + path, {
+    method: opts.method || 'GET',
+    headers,
+    body: opts.params ? opts.params.toString() : undefined,
+  });
+  const data = await readJson(res);
+  return { ok: res.ok, status: res.status, data };
+}
+
+function chargeFromPaymentIntent(pi) {
+  if (!pi || typeof pi !== 'object') return { id: null, charge: null };
+  const latest = pi.latest_charge;
+  if (latest && typeof latest === 'object') return { id: latest.id || null, charge: latest };
+  if (typeof latest === 'string') return { id: latest, charge: null };
+  const list = pi.charges && Array.isArray(pi.charges.data) ? pi.charges.data : [];
+  if (list[0] && typeof list[0] === 'object') return { id: list[0].id || null, charge: list[0] };
+  return { id: null, charge: null };
+}
+
+function unrefundedCentsOf(charge) {
+  if (!charge || typeof charge !== 'object' || !Number.isFinite(Number(charge.amount))) return null;
+  const amount = Number(charge.amount);
+  const refunded = Number(charge.amount_refunded || 0);
+  return Math.max(0, amount - (Number.isFinite(refunded) ? refunded : 0));
+}
+
+function chargeFullyRefunded(charge) {
+  if (!charge || typeof charge !== 'object') return false;
+  if (charge.refunded === true) return true;
+  const amount = Number(charge.amount);
+  const refunded = Number(charge.amount_refunded || 0);
+  return Number.isFinite(amount) && amount > 0 && refunded >= amount;
+}
+
+async function loadRefundablePayment(env, accountId, order) {
+  let paymentIntentId = typeof order.stripe_payment_intent_id === 'string' && order.stripe_payment_intent_id.indexOf('pi_') === 0
+    ? order.stripe_payment_intent_id
+    : null;
+
+  if (!paymentIntentId) {
+    const sessionId = order.stripe_session_id;
+    if (typeof sessionId !== 'string' || sessionId.indexOf('cs_') !== 0) {
+      return { error: 'This order has no card payment to refund.', status: 400 };
+    }
+    const sessionRes = await stripeRequest(
+      env,
+      accountId,
+      '/v1/checkout/sessions/' + encodeURIComponent(sessionId) + '?expand[0]=payment_intent'
+    );
+    if (!sessionRes.ok) return { error: stripeErrorMessage(sessionRes.data), status: sessionRes.status || 400 };
+    const pi = sessionRes.data && sessionRes.data.payment_intent;
+    if (!pi) return { error: 'This checkout has no payment to refund.', status: 400 };
+    paymentIntentId = typeof pi === 'string' ? pi : pi.id;
+    if (!paymentIntentId) return { error: 'This checkout has no payment to refund.', status: 400 };
+  }
+
+  let piRes = await stripeRequest(
+    env,
+    accountId,
+    '/v1/payment_intents/' + encodeURIComponent(paymentIntentId) + '?expand[0]=latest_charge'
+  );
+  if (!piRes.ok) {
+    const plain = await stripeRequest(env, accountId, '/v1/payment_intents/' + encodeURIComponent(paymentIntentId));
+    if (!plain.ok) return { error: stripeErrorMessage(piRes.data), status: piRes.status || 400 };
+    piRes = plain;
+  }
+  const found = chargeFromPaymentIntent(piRes.data);
+  let charge = found.charge;
+  if (!charge && found.id) {
+    const chargeRes = await stripeRequest(env, accountId, '/v1/charges/' + encodeURIComponent(found.id));
+    if (!chargeRes.ok) return { error: stripeErrorMessage(chargeRes.data), status: chargeRes.status || 400 };
+    charge = chargeRes.data;
+  }
+  return { paymentIntentId, charge };
+}
+
+async function saveOrderRefund(env, orderId, patch) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/orders?id=eq.' + encodeURIComponent(orderId), {
+    method: 'PATCH',
+    headers: serviceHeaders(env, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+    body: JSON.stringify(patch),
+  });
+  const data = await readJson(res);
+  if (!res.ok) return { ok: false, error: restErrorMessage(data) };
+  if (!Array.isArray(data) || !data.length) return { ok: false, error: 'The refund was not saved on the order.' };
+  return { ok: true, order: data[0] };
+}
+
+async function callerMayRefund(env, userId, hostId) {
+  if (String(userId).toLowerCase() === String(hostId).toLowerCase()) return true;
+  const url = SUPABASE_URL + '/rest/v1/host_links?owner_host_id=eq.' + encodeURIComponent(hostId)
+    + '&linked_host_id=eq.' + encodeURIComponent(userId)
+    + '&role=eq.admin&accepted=eq.true&select=id&limit=1';
+  const res = await fetch(url, { headers: serviceHeaders(env) });
+  if (!res.ok) return false;
+  const rows = await readJson(res);
+  return Array.isArray(rows) && rows.length > 0;
+}
+
+// Direct charge on the host's Connect account. The browser sends only orderId
+// and amountCents. Session and account ids are read here, never from the client.
+async function handleProcessRefund(request, env, body) {
+  const token = String(request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '').trim();
+  if (!token) return jsonResponse({ ok: false, error: 'Sign in required.' }, 401);
+
+  const userRes = await fetch(SUPABASE_URL + '/auth/v1/user', {
+    headers: { apikey: SUPABASE_ANON_KEY, authorization: 'Bearer ' + token },
+  });
+  const user = await readJson(userRes);
+  if (!userRes.ok || !user || !user.id) return jsonResponse({ ok: false, error: 'Sign in required.' }, 401);
+
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return jsonResponse({ ok: false, error: 'Expected a JSON object with orderId and amountCents.' }, 400);
+  }
+  if (!Object.prototype.hasOwnProperty.call(body, 'orderId') || !Object.prototype.hasOwnProperty.call(body, 'amountCents')) {
+    return jsonResponse({ ok: false, error: 'orderId and amountCents are required. amountCents may be null to refund the remaining balance.' }, 400);
+  }
+  const orderId = String(body.orderId || '');
+  if (!ORDER_ID_RE.test(orderId)) return jsonResponse({ ok: false, error: 'orderId must be the order id.' }, 400);
+
+  if (!env.SUPABASE_SERVICE_KEY || !env.STRIPE_SECRET_KEY) {
+    return jsonResponse({ ok: false, error: 'Refunds are not configured on the server.' }, 500);
+  }
+
+  const orderRes = await fetch(
+    SUPABASE_URL + '/rest/v1/orders?id=eq.' + encodeURIComponent(orderId)
+      + '&select=id,host_id,total,status,stripe_session_id,stripe_payment_intent_id,stripe_refund_id,refunded_cents,refunded_amount,refunded_at&limit=1',
+    { headers: serviceHeaders(env) }
+  );
+  const orderRows = await readJson(orderRes);
+  if (!orderRes.ok) return jsonResponse({ ok: false, error: restErrorMessage(orderRows) }, 500);
+  const order = Array.isArray(orderRows) ? orderRows[0] : null;
+  if (!order) return jsonResponse({ ok: false, error: 'Order not found.' }, 404);
+  if (!order.host_id) return jsonResponse({ ok: false, error: 'This order has no host.' }, 400);
+
+  const allowed = await callerMayRefund(env, user.id, order.host_id);
+  if (!allowed) return jsonResponse({ ok: false, error: 'You do not have permission to refund this order.' }, 403);
+
+  const hostRes = await fetch(
+    SUPABASE_URL + '/rest/v1/hosts?id=eq.' + encodeURIComponent(order.host_id) + '&select=id,stripe_account_id&limit=1',
+    { headers: serviceHeaders(env) }
+  );
+  const hostRows = await readJson(hostRes);
+  if (!hostRes.ok) return jsonResponse({ ok: false, error: restErrorMessage(hostRows) }, 500);
+  const host = Array.isArray(hostRows) ? hostRows[0] : null;
+  const accountId = host && typeof host.stripe_account_id === 'string' ? host.stripe_account_id : '';
+  if (accountId.indexOf('acct_') !== 0) {
+    return jsonResponse({ ok: false, error: 'This store has no Stripe account connected.' }, 400);
+  }
+
+  const payment = await loadRefundablePayment(env, accountId, order);
+  if (payment.error) return jsonResponse({ ok: false, error: payment.error }, payment.status || 400);
+
+  const charge = payment.charge;
+  if (charge && charge.currency && charge.currency !== 'aud') {
+    return jsonResponse({ ok: false, error: 'This payment is in ' + charge.currency + ', not AUD, so it was not refunded.' }, 400);
+  }
+
+  const orderTotalCents = moneyToCents(order.total);
+  const recordedCents = recordedRefundedCents(order);
+  const stripeUnrefunded = unrefundedCentsOf(charge);
+  const remaining = remainingRefundableCents(orderTotalCents, recordedCents, stripeUnrefunded);
+
+  if (remaining <= 0) {
+    if (charge && chargeFullyRefunded(charge)) {
+      const refundedCents = Number.isFinite(Number(charge.amount_refunded)) && Number(charge.amount_refunded) > 0
+        ? Number(charge.amount_refunded)
+        : Number(charge.amount) || orderTotalCents;
+      const saved = await saveOrderRefund(env, order.id, {
+        stripe_payment_intent_id: payment.paymentIntentId,
+        refunded_cents: refundedCents,
+        refunded_amount: (refundedCents / 100).toFixed(2),
+        refunded_at: order.refunded_at || new Date().toISOString(),
+        status: 'refunded',
+      });
+      if (!saved.ok) {
+        return jsonResponse({ ok: false, error: 'This payment has already been fully refunded, but the order could not be updated: ' + saved.error, status: 'refunded' }, 500);
+      }
+    }
+    return jsonResponse({
+      ok: false,
+      error: 'This payment has already been fully refunded.',
+      refund_id: order.stripe_refund_id || null,
+      status: 'refunded',
+    }, 400);
+  }
+
+  const parsed = parseRefundAmountCents(body.amountCents, remaining);
+  if (parsed.error) return jsonResponse({ ok: false, error: parsed.error }, 400);
+
+  const params = new URLSearchParams();
+  params.set('payment_intent', payment.paymentIntentId);
+  params.set('amount', String(parsed.cents));
+  params.set('reason', 'requested_by_customer');
+  params.set('metadata[order_id]', order.id);
+  params.set('metadata[host_id]', String(order.host_id));
+
+  const refundRes = await stripeRequest(env, accountId, '/v1/refunds', {
+    method: 'POST',
+    params,
+    idempotencyKey: refundIdempotencyKey(order.id, recordedCents, parsed.cents),
+  });
+  if (!refundRes.ok) {
+    return jsonResponse({ ok: false, error: stripeErrorMessage(refundRes.data) }, refundRes.status || 400);
+  }
+
+  const refund = refundRes.data || {};
+  if (refund.status === 'failed' || refund.status === 'canceled') {
+    const reason = refund.failure_reason || refund.status || 'failed';
+    return jsonResponse({ ok: false, error: String(reason) }, 400);
+  }
+
+  // Prefer the charge's amount_refunded after the refund. If that read is stale
+  // or missing, add this refund once. A retry of the same Stripe refund
+  // (same id already stored, or the same idempotency key) must not add it twice.
+  let settled = null;
+  const chargeId = typeof refund.charge === 'string' ? refund.charge : (refund.charge && refund.charge.id);
+  if (chargeId) {
+    const again = await stripeRequest(env, accountId, '/v1/charges/' + encodeURIComponent(chargeId));
+    if (again.ok) settled = again.data;
+  }
+  const thisAmount = Number(refund.amount) || parsed.cents;
+  const alreadyRecorded = order.stripe_refund_id === refund.id;
+  const fromBooks = alreadyRecorded ? recordedCents : recordedCents + thisAmount;
+  const fromCharge = settled && Number.isFinite(Number(settled.amount_refunded)) ? Number(settled.amount_refunded) : null;
+  const refundedCents = fromCharge === null ? fromBooks : Math.max(fromCharge, fromBooks);
+
+  const status = refundOrderStatus(refundedCents, orderTotalCents || (settled ? Number(settled.amount) : 0), chargeFullyRefunded(settled));
+  const saved = await saveOrderRefund(env, order.id, {
+    stripe_payment_intent_id: payment.paymentIntentId,
+    stripe_refund_id: refund.id,
+    refunded_cents: refundedCents,
+    refunded_amount: (refundedCents / 100).toFixed(2),
+    refunded_at: new Date().toISOString(),
+    status,
+  });
+  if (!saved.ok) {
+    return jsonResponse({
+      ok: false,
+      error: 'Stripe refund ' + refund.id + ' succeeded, but saving it on the order failed: ' + saved.error + '. Retrying the same refund will not refund the card again.',
+      refund_id: refund.id,
+      status: refund.status || null,
+    }, 500);
+  }
+
+  console.log('process-refund', order.id, refund.id, status);
+  return jsonResponse({
+    ok: true,
+    refund_id: refund.id,
+    status,
+    amount_cents: Number(refund.amount) || parsed.cents,
+  });
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type, X-Service, stripe-signature' } });
+      return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type, X-Service, Authorization, stripe-signature' } });
     }
 
     const service = request.headers.get('X-Service');
@@ -754,6 +1105,9 @@ export default {
           }
         }
       }
+
+    } else if (service === 'process-refund') {
+      return handleProcessRefund(request, env, body);
 
     } else if (service === 'stripe-checkout') {
       const params = new URLSearchParams();

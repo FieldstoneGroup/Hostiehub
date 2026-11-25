@@ -155,6 +155,8 @@
   .status-paid { background: #f0fdf4; color: var(--success); }
   .status-pending { background: var(--accent-light); color: #92600a; }
   .status-fulfilled { background: var(--brand-light); color: var(--brand); }
+  .status-refunded { background: #fee2e2; color: #dc2626; }
+  .status-partial { background: #fff7e6; color: #92600a; }
 
   /* VOUCHERS */
   .voucher-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 18px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 12px; transition: border-color 0.2s; }
@@ -810,7 +812,7 @@
       <div class="field" id="refundAmountField" style="display:none">
         <label>Refund amount ($)</label>
         <input type="number" id="refundAmount" min="0.01" step="0.01" placeholder="e.g. 25.00" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;outline:none;box-sizing:border-box">
-        <div class="field-hint">Must be equal to or less than the order total.</div>
+        <div class="field-hint" id="refundAmountHint">Must be equal to or less than the remaining refundable amount.</div>
       </div>
       <div id="refundMsg" style="display:none;font-size:13px;padding:10px 12px;border-radius:8px;margin-bottom:12px"></div>
       <div style="display:flex;gap:8px">
@@ -2379,13 +2381,48 @@
   }
 
   // ── ORDERS ──
+  function orderTotalCents(o) {
+    return Math.round((parseFloat(o && o.total) || 0) * 100);
+  }
+
+  function orderRefundedCents(o) {
+    if (!o) return 0;
+    if (o.refunded_cents !== null && o.refunded_cents !== undefined && o.refunded_cents !== '') {
+      const n = Number(o.refunded_cents);
+      if (Number.isFinite(n) && n >= 0) return Math.round(n);
+    }
+    if (o.refunded_amount !== null && o.refunded_amount !== undefined && o.refunded_amount !== '') {
+      return Math.max(0, Math.round((parseFloat(o.refunded_amount) || 0) * 100));
+    }
+    if (o.status === 'refunded') return orderTotalCents(o);
+    return 0;
+  }
+
+  function orderRemainingCents(o) {
+    if (o && o.status === 'refunded') return 0;
+    return Math.max(0, orderTotalCents(o) - orderRefundedCents(o));
+  }
+
+  function orderNetDollars(o) {
+    return orderRemainingCents(o) / 100;
+  }
+
+  function orderStatusPresentation(o) {
+    const status = (o && o.status) || 'pending';
+    if (status === 'refunded') return { cls: 'status-refunded', label: 'refunded' };
+    if (status === 'partially_refunded') return { cls: 'status-partial', label: 'partially refunded' };
+    if (status === 'fulfilled') return { cls: 'status-fulfilled', label: 'fulfilled' };
+    if (status === 'paid') return { cls: 'status-paid', label: 'paid' };
+    return { cls: 'status-pending', label: status };
+  }
+
   async function loadOrders() {
     if (!currentUser) return;
     const { data } = await sb.from('orders').select('*').eq('host_id', currentUser.id).order('created_at', { ascending: false });
     orders = data || [];
     renderOrders();
-    const total = orders.reduce((s, o) => s + (o.total || 0), 0);
-    document.getElementById('statRevenue').textContent = '$' + total;
+    const netCents = orders.reduce((s, o) => s + orderRemainingCents(o), 0);
+    document.getElementById('statRevenue').textContent = '$' + (netCents / 100);
     document.getElementById('statOrders').textContent = orders.length;
   }
 
@@ -2408,7 +2445,10 @@
       const items = Array.isArray(o.items) ? o.items : JSON.parse(o.items || '[]');
       const notes = o.product_notes ? (typeof o.product_notes === 'string' ? JSON.parse(o.product_notes) : o.product_notes) : {};
       const noteEntries = Object.entries(notes).filter(([,v]) => v);
-      const statusClass = o.status === 'fulfilled' ? 'status-fulfilled' : o.status === 'paid' ? 'status-paid' : 'status-pending';
+      const statusView = orderStatusPresentation(o);
+      const refundedCents = orderRefundedCents(o);
+      const remainingCents = orderRemainingCents(o);
+      const canRefund = !!(o.stripe_session_id || o.stripe_payment_intent_id) && remainingCents > 0 && o.status !== 'refunded';
       const itemSummary = items.map(i => i.name).join(', ');
       const dateStr = o.checkin_date ? o.checkin_date.replace('2026-', '').replace('2025-', '') : '';
       return `
@@ -2420,7 +2460,8 @@
             </div>
             <div class="order-row-right">
               <div class="order-amount" style="font-size:16px">$${o.total || 0}</div>
-              <div class="order-status ${statusClass}">● ${o.status || 'pending'}</div>
+              ${refundedCents > 0 ? '<div style="font-size:11px;color:#dc2626;font-weight:600">Refunded $' + (refundedCents / 100).toFixed(2) + '</div>' : ''}
+              <div class="order-status ${statusView.cls}">● ${statusView.label}</div>
               <span style="font-size:11px;color:var(--muted)">▾</span>
             </div>
           </div>
@@ -2434,10 +2475,10 @@
             ${o.notes ? `<div class="order-notes">💬 "${o.notes}"</div>` : ''}
             ${noteEntries.length ? `<div class="order-notes" style="margin-top:6px">📝 ${noteEntries.map(([k,v]) => `<strong>${k}:</strong> ${v}`).join(' · ')}</div>` : ''}
             <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">
-              ${o.status !== 'fulfilled' ? '<button class="btn btn-success btn-sm" onclick="fulfillOrder(\'' + o.id + '\')">✓ Mark as fulfilled</button>' : '<span style="font-size:13px;color:var(--brand);font-weight:500">✓ Fulfilled</span>'}
+              ${o.status === 'refunded' ? '' : (o.status !== 'fulfilled' ? '<button class="btn btn-success btn-sm" onclick="fulfillOrder(\'' + o.id + '\')">✓ Mark as fulfilled</button>' : '<span style="font-size:13px;color:var(--brand);font-weight:500">✓ Fulfilled</span>')}
               <div style="display:flex;gap:8px;flex-wrap:wrap">
                 ${o.guest_email ? '<button class="btn btn-sm" style="background:var(--brand-light);color:var(--brand);border:1.5px solid var(--brand)" onclick="resendGuestConfirmation(\'' + o.id + '\')">📧 Resend Confirmation Email</button>' : ''}
-                ${o.stripe_session_id ? '<button class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" onclick="openRefundModal(\'' + o.id + '\',\'' + o.stripe_session_id + '\',' + (parseFloat(o.total)||0) + ',\'full\')">💸 Refund full amount</button><button class="btn btn-sm" style="background:#fff7e6;color:#92600a;border:1.5px solid #fde68a" onclick="openRefundModal(\'' + o.id + '\',\'' + o.stripe_session_id + '\',' + (parseFloat(o.total)||0) + ',\'partial\')">💸 Partial refund</button>' : ''}
+                ${canRefund ? '<button class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" onclick="openRefundModal(\'' + o.id + '\',\'full\')">💸 ' + (refundedCents > 0 ? 'Refund remaining amount' : 'Refund full amount') + '</button><button class="btn btn-sm" style="background:#fff7e6;color:#92600a;border:1.5px solid #fde68a" onclick="openRefundModal(\'' + o.id + '\',\'partial\')">💸 Partial refund</button>' : ''}
               </div>
             </div>
           </div>
@@ -2458,63 +2499,92 @@
   }
 
   let refundOrderId = null;
-  let refundSessionId = null;
-  let refundTotal = 0;
   let refundType = 'full';
 
-  function openRefundModal(orderId, sessionId, total, type) {
+  function openRefundModal(orderId, type) {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
     refundOrderId = orderId;
-    refundSessionId = sessionId;
-    refundTotal = total;
     refundType = type;
+    const remaining = orderRemainingCents(order) / 100;
+    const total = parseFloat(order.total) || 0;
+    const already = orderRefundedCents(order) / 100;
     const info = document.getElementById('refundOrderInfo');
     const amountField = document.getElementById('refundAmountField');
     const msg = document.getElementById('refundMsg');
+    const btn = document.getElementById('refundConfirmBtn');
     msg.style.display = 'none';
+    btn.textContent = 'Confirm refund';
+    btn.disabled = false;
     if (type === 'full') {
-      info.innerHTML = '<strong>Full refund:</strong> $' + total.toFixed(2) + ' will be returned to the guest\'s card.';
+      info.innerHTML = already > 0
+        ? '<strong>Remaining refund:</strong> $' + remaining.toFixed(2) + ' of $' + total.toFixed(2) + ' will be returned to the guest\'s card. $' + already.toFixed(2) + ' is already refunded.'
+        : '<strong>Full refund:</strong> $' + remaining.toFixed(2) + ' will be returned to the guest\'s card.';
       amountField.style.display = 'none';
     } else {
-      info.innerHTML = '<strong>Order total:</strong> $' + total.toFixed(2) + '<br>Enter the amount you want to refund below.';
+      info.innerHTML = '<strong>Remaining refundable:</strong> $' + remaining.toFixed(2)
+        + (already > 0 ? ' ($' + already.toFixed(2) + ' already refunded of $' + total.toFixed(2) + ')' : ' (order total $' + total.toFixed(2) + ')')
+        + '<br>Enter the amount you want to refund below.';
       amountField.style.display = 'block';
-      document.getElementById('refundAmount').value = '';
+      const input = document.getElementById('refundAmount');
+      input.value = '';
+      input.max = remaining.toFixed(2);
+      input.placeholder = 'Up to ' + remaining.toFixed(2);
+      const hint = document.getElementById('refundAmountHint');
+      if (hint) hint.textContent = 'Maximum refund is $' + remaining.toFixed(2) + '.';
     }
     document.getElementById('refundModal').classList.add('open');
   }
   window.openRefundModal = openRefundModal;
 
+  function refundErrorText(result) {
+    if (!result) return 'Refund failed.';
+    if (typeof result.error === 'string' && result.error) return result.error;
+    if (result.error && typeof result.error.message === 'string' && result.error.message) return result.error.message;
+    if (typeof result.message === 'string' && result.message) return result.message;
+    return 'Refund failed.';
+  }
+
   async function processRefund() {
     const msg = document.getElementById('refundMsg');
     const btn = document.getElementById('refundConfirmBtn');
-    let amount = refundTotal;
+    const order = orders.find(o => o.id === refundOrderId);
+    const remaining = order ? orderRemainingCents(order) / 100 : 0;
+    let amountCents = null;
     if (refundType === 'partial') {
-      amount = parseFloat(document.getElementById('refundAmount').value);
-      if (!amount || amount <= 0 || amount > refundTotal) {
+      const amount = parseFloat(document.getElementById('refundAmount').value);
+      if (!amount || amount <= 0 || amount - remaining > 0.001) {
         msg.style.display = 'block';
         msg.style.background = '#fee2e2';
         msg.style.color = '#dc2626';
-        msg.textContent = 'Please enter a valid amount between $0.01 and $' + refundTotal.toFixed(2);
+        msg.textContent = 'Please enter a valid amount between $0.01 and $' + remaining.toFixed(2);
         return;
       }
+      amountCents = Math.round(amount * 100);
     }
     btn.textContent = 'Processing...';
     btn.disabled = true;
     try {
-      if (!currentHost?.stripe_account_id) {
-        throw new Error('Your Stripe account is not connected. Reconnect in My Store → Stripe settings.');
-      }
+      const sessionResult = await sb.auth.getSession();
+      const token = sessionResult.data && sessionResult.data.session && sessionResult.data.session.access_token;
+      if (!token) throw new Error('Sign in required.');
       const res = await fetch('https://hostie-hub-ai.still-feather-9559.workers.dev', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Service': 'process-refund' },
-        body: JSON.stringify({ sessionId: refundSessionId, amount: Math.round(amount * 100), stripe_account_id: currentHost.stripe_account_id })
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Service': 'process-refund',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({ orderId: refundOrderId, amountCents }),
       });
-      const result = await res.json();
+      const result = await res.json().catch(() => ({}));
       if (result.ok) {
+        const refunded = (result.amount_cents != null ? Number(result.amount_cents) : (amountCents != null ? amountCents : Math.round(remaining * 100))) / 100;
+        const label = result.status === 'partially_refunded' ? 'partially refunded' : 'refunded';
         msg.style.display = 'block';
         msg.style.background = '#f0fdf4';
         msg.style.color = '#15803d';
-        msg.textContent = '✓ Refund of $' + amount.toFixed(2) + ' processed successfully.';
-        await sb.from('orders').update({ status: 'refunded' }).eq('id', refundOrderId);
+        msg.textContent = '✓ Refund of $' + refunded.toFixed(2) + ' processed. This order is now ' + label + '.';
         btn.textContent = 'Done';
         setTimeout(() => {
           document.getElementById('refundModal').classList.remove('open');
@@ -2523,17 +2593,14 @@
           loadOrders();
         }, 2000);
       } else {
-        // Pull a real string out of whatever shape the error is
-        const errStr = typeof result.error === 'string'
-          ? result.error
-          : (result.error?.message || result.error?.error || JSON.stringify(result.error || result) || 'Refund failed');
-        throw new Error(errStr);
+        if (result.status) loadOrders();
+        throw new Error(refundErrorText(result));
       }
-    } catch(e) {
+    } catch (e) {
       msg.style.display = 'block';
       msg.style.background = '#fee2e2';
       msg.style.color = '#dc2626';
-      msg.textContent = 'Error: ' + (e.message || String(e));
+      msg.textContent = e.message || String(e);
       btn.textContent = 'Confirm refund';
       btn.disabled = false;
     }
@@ -3769,7 +3836,7 @@
     const opens = filteredEvents.filter(e => e.event_type === 'open').length;
     const clicks = filteredEvents.filter(e => e.event_type === 'click').length;
     const purchases = filteredEvents.filter(e => e.event_type === 'purchase').length;
-    const revenue = filteredOrders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+    const revenue = filteredOrders.reduce((s, o) => s + orderNetDollars(o), 0);
 
     document.getElementById('aStoreOpens').textContent = opens || '–';
     document.getElementById('aProductClicks').textContent = clicks || '–';
@@ -3815,7 +3882,7 @@
     const monthlyRevenue = {};
     filteredOrders.forEach(o => {
       const month = new Date(o.created_at).toLocaleDateString('en-AU', { month: 'short', year: '2-digit' });
-      monthlyRevenue[month] = (monthlyRevenue[month] || 0) + (parseFloat(o.total) || 0);
+      monthlyRevenue[month] = (monthlyRevenue[month] || 0) + orderNetDollars(o);
     });
     const months = Object.entries(monthlyRevenue).slice(-6);
     const maxRev = Math.max(...months.map(m => m[1]), 1);
@@ -3856,7 +3923,7 @@
             '<td style="padding:10px;color:var(--muted)">' + date + '</td>' +
             '<td style="padding:10px;font-weight:500">' + (o.guest_name || 'Guest') + '</td>' +
             '<td style="padding:10px;color:var(--muted)">' + items.map(i => i.name).join(', ') + '</td>' +
-            '<td style="padding:10px;text-align:right;font-family:\'Playfair Display\',serif;font-weight:700;color:var(--brand)">$' + (parseFloat(o.total) || 0).toFixed(2) + '</td>' +
+            '<td style="padding:10px;text-align:right;font-family:\'Playfair Display\',serif;font-weight:700;color:var(--brand)">$' + (parseFloat(o.total) || 0).toFixed(2) + (orderRefundedCents(o) > 0 ? ' <span style="color:#dc2626;font-family:\'DM Sans\',sans-serif;font-weight:600;font-size:11px">(refunded $' + (orderRefundedCents(o) / 100).toFixed(2) + ')</span>' : '') + '</td>' +
           '</tr>';
         }).join('') +
         '</tbody></table>';
@@ -3900,7 +3967,7 @@
     const cutoff = hostAnalyticsDays > 0 ? new Date(Date.now() - hostAnalyticsDays * 24 * 60 * 60 * 1000) : null;
     const filtered = cutoff ? hostOrders.filter(o => new Date(o.created_at) >= cutoff) : hostOrders;
     if (!filtered.length) { showToast('No orders to export'); return; }
-    const rows = [['Date', 'Guest', 'Items', 'Total', 'Property', 'Check-in', 'Check-out']].concat(
+    const rows = [['Date', 'Guest', 'Items', 'Total', 'Refunded', 'Property', 'Check-in', 'Check-out']].concat(
       filtered.map(o => {
         const items = Array.isArray(o.items) ? o.items : JSON.parse(o.items || '[]');
         return [
@@ -3908,6 +3975,7 @@
           o.guest_name || '',
           items.map(i => i.name).join(' | '),
           '$' + (parseFloat(o.total) || 0).toFixed(2),
+          '$' + (orderRefundedCents(o) / 100).toFixed(2),
           o.property_name || '',
           o.checkin_date || '',
           o.checkout_date || '',

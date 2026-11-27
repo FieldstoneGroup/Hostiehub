@@ -4,7 +4,7 @@
 //   CLOUDFLARE_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... node scripts/smoke-ai.mjs
 //
 // Optional: AI_GATEWAY_ID (default "default"), AI_MODEL (default xai/grok-4.3),
-// AI_REASONING_EFFORT (default none).
+// AI_REASONING_EFFORT (default low, matching production).
 //
 // The token needs Account > Workers AI > Read. An AI Gateway-only token
 // returns 401 with error code 10000. The account needs Unified Billing credits.
@@ -24,7 +24,7 @@ const env = {
   AI_MODEL_SONNET: model,
   AI_MODEL_HAIKU: model,
   AI_MODEL_DEFAULT: model,
-  AI_REASONING_EFFORT: process.env.AI_REASONING_EFFORT || 'none',
+  AI_REASONING_EFFORT: process.env.AI_REASONING_EFFORT || 'low',
   AI_GATEWAY_ID: process.env.AI_GATEWAY_ID || 'default',
   CLOUDFLARE_ACCOUNT_ID: accountId,
   CLOUDFLARE_API_TOKEN: token,

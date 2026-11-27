@@ -10,12 +10,11 @@
 
 const SONNET_MODEL = 'xai/grok-4.3';
 // No cheaper xAI chat model is in the Cloudflare catalog (27 Nov 2026).
-// grok-4.20 and grok-4.5+ cost more. grok-4.3 with reasoning_effort none
-// is the fast cheap path, including for the old haiku callers.
+// grok-4.20 and grok-4.5+ cost more. grok-4.3 with reasoning_effort low
+// is the production setting: "none" answered "check the card" with no card.
 const HAIKU_MODEL = 'xai/grok-4.3';
 const DEFAULT_MODEL = 'xai/grok-4.3';
 const DEFAULT_GATEWAY = 'default';
-const DEFAULT_TRUSTED_WORKERS = 'livestayguide-app';
 
 const CORS = {
   'Content-Type': 'application/json',
@@ -58,18 +57,11 @@ export function reasoningEffortFor(model, env) {
   const raw = envString(env, 'AI_REASONING_EFFORT').toLowerCase();
   if (raw === 'omit') return undefined;
   if (raw === 'none' || raw === 'low' || raw === 'medium' || raw === 'high') return raw;
-  // grok-4.3 accepts "none". grok-4.20 rejects the field, so don't send a
+  // grok-4.3 accepts this field. grok-4.20 rejects it, so don't send a
   // default there. An explicit AI_REASONING_EFFORT still passes through.
-  if (id === 'xai/grok-4.3') return 'none';
+  // Production uses low. none dropped the card from tool-using replies.
+  if (id === 'xai/grok-4.3') return 'low';
   return undefined;
-}
-
-export function trustedServiceWorker(cfWorker, trustWorkers) {
-  const name = String(cfWorker || '').trim().toLowerCase();
-  if (!name) return false;
-  const raw = trustWorkers == null ? DEFAULT_TRUSTED_WORKERS : String(trustWorkers);
-  const list = raw.split(',').map((part) => part.trim().toLowerCase()).filter(Boolean);
-  return list.includes(name);
 }
 
 export function presentedProxyToken(request) {
@@ -333,6 +325,19 @@ function parseToolArguments(raw) {
   }
 }
 
+export function unknownModelFailure(status, message) {
+  const text = String(message || '');
+  if (status === 404) return true;
+  return /model not found|unknown model|unrecognized model|no such model|invalid model/i.test(text);
+}
+
+function asClientFailure(status, type, message) {
+  if (unknownModelFailure(status, message)) {
+    return { status: 400, type: 'invalid_request_error', message };
+  }
+  return { status, type, message };
+}
+
 function mapErrorType(status, upstreamType) {
   const known = ['invalid_request_error', 'authentication_error', 'permission_error', 'not_found_error', 'rate_limit_error', 'api_error', 'overloaded_error'];
   if (known.indexOf(upstreamType) !== -1) return upstreamType;
@@ -358,17 +363,18 @@ export function providerFailure(data, httpStatus) {
   if (data.error) {
     const message = typeof data.error === 'string' ? data.error : (data.error.message || 'Model request failed.');
     const type = mapErrorType(status, data.error.type);
-    return { status: status >= 400 ? status : 502, type, message };
+    return asClientFailure(status >= 400 ? status : 502, type, message);
   }
   if (data.success === false || (Array.isArray(data.errors) && data.errors.length)) {
     const first = (data.errors && data.errors[0]) || {};
     const message = first.message || 'Cloudflare AI request failed.';
     let mapped = status >= 400 ? status : 502;
     if (Number(first.code) === 10000) mapped = 401;
-    return { status: mapped, type: mapErrorType(mapped), message };
+    return asClientFailure(mapped, mapErrorType(mapped), message);
   }
   if (status >= 400) {
-    return { status, type: mapErrorType(status), message: data.message || 'Model request failed.' };
+    const message = data.message || 'Model request failed.';
+    return asClientFailure(status, mapErrorType(status), message);
   }
   return { status: 502, type: 'api_error', message: 'The model response had no choices.' };
 }
@@ -475,11 +481,12 @@ export async function callCloudflareModel(env, model, input) {
 async function authorizeProxy(request, env) {
   const secret = envString(env, 'PROXY_TOKEN');
   if (!secret) return { ok: true };
-  const cfWorker = request.headers.get('CF-Worker') || '';
-  if (trustedServiceWorker(cfWorker, env.PROXY_TRUST_WORKERS)) return { ok: true, cfWorker };
+  // Service bindings from livestayguide-app do not set CF-Worker, so a
+  // worker-name allow list cannot exempt them. When the secret is set,
+  // every caller sends X-Proxy-Token. Leave PROXY_TOKEN unset until they do.
   const presented = presentedProxyToken(request);
-  if (presented && await secretsMatch(presented, secret)) return { ok: true, cfWorker };
-  return { ok: false, cfWorker };
+  if (presented && await secretsMatch(presented, secret)) return { ok: true };
+  return { ok: false };
 }
 
 function logProxy(fields) {
@@ -512,7 +519,7 @@ export async function handleAiProxy(request, env, body) {
     const backend = aiBackend(env);
     const auth = await authorizeProxy(request, env);
     if (!auth.ok) {
-      logProxy({ backend, auth: 'rejected', cf_worker: auth.cfWorker || null });
+      logProxy({ backend, auth: 'rejected' });
       return corsJson(anthropicError('authentication_error', 'Proxy token missing or incorrect.'), 401);
     }
     if (backend !== 'cloudflare') {
@@ -527,8 +534,13 @@ export async function handleAiProxy(request, env, body) {
     try {
       called = await callCloudflareModel(env, translated.model, translated.input);
     } catch (err) {
-      logProxy({ backend: 'cloudflare', model: translated.model, error: clip(err && err.message) });
-      return corsJson(anthropicError('api_error', err && err.message ? err.message : 'The model request failed.'), 502);
+      const message = err && err.message ? err.message : 'The model request failed.';
+      const unknown = unknownModelFailure(0, message);
+      logProxy({ backend: 'cloudflare', model: translated.model, status: unknown ? 400 : 502, error: clip(message) });
+      return corsJson(
+        anthropicError(unknown ? 'invalid_request_error' : 'api_error', message),
+        unknown ? 400 : 502
+      );
     }
     if (!called.ok) {
       if (called.data && called.data.type === 'error' && called.data.error) {
@@ -553,7 +565,6 @@ export async function handleAiProxy(request, env, body) {
       stop_reason: anthropic.body && anthropic.body.stop_reason,
       input_tokens: usage && usage.input_tokens,
       output_tokens: usage && usage.output_tokens,
-      cf_worker: auth.cfWorker || null,
     });
     return corsJson(anthropic.body, anthropic.status);
   } catch (err) {

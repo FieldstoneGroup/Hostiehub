@@ -1,21 +1,24 @@
 {
-  // Worker name already deployed at hostie-hub-ai.<account>.workers.dev.
-  // This file did not exist before. The live cron, routes, and plain vars
-  // were set in the dashboard. Read README.md before the first wrangler deploy:
-  // an omitted cron trigger is deleted, and a new compatibility date applies.
+  // Matches the live hostie-hub-ai Worker (27 Nov 2026).
+  // The cron is the trial-reminder schedule. Removing it deletes that trigger
+  // on the next deploy. compatibility_date stays 2026-04-03 so a deploy does
+  // not change the Stripe and Resend runtime.
   "name": "hostie-hub-ai",
   "main": "worker.js",
-  "compatibility_date": "2026-11-27",
+  "compatibility_date": "2026-04-03",
   "observability": {
     "enabled": true,
     "traces": {
       "enabled": true
     }
   },
+  "triggers": {
+    "crons": ["0 23 * * *"]
+  },
   "ai": {
     "binding": "AI"
+  },
+  "vars": {
+    "AI_REASONING_EFFORT": "low"
   }
-  // Copy the live cron from Workers > hostie-hub-ai > Settings > Triggers
-  // into this file BEFORE the first deploy, for example:
-  // "triggers": { "crons": ["0 9 * * *"] }
 }

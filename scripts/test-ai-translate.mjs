@@ -11,7 +11,6 @@ import {
   reasoningEffortFor,
   resolveModel,
   secretsMatch,
-  trustedServiceWorker,
 } from '../ai-translate.js';
 
 const weatherTool = {
@@ -69,18 +68,12 @@ assert.equal(resolveModel('xai/grok-4.7', {}), 'xai/grok-4.7');
 assert.equal(resolveModel('', {}), 'xai/grok-4.3');
 assert.equal(resolveModel('claude-haiku-4-5-20251001', { AI_MODEL_HAIKU: 'xai/grok-4.3' }), 'xai/grok-4.3');
 assert.equal(resolveModel('claude-sonnet-4-5', { AI_MODEL_SONNET: 'xai/grok-4.7' }), 'xai/grok-4.7');
-assert.equal(reasoningEffortFor('xai/grok-4.3', {}), 'none');
+assert.equal(reasoningEffortFor('xai/grok-4.3', {}), 'low');
 assert.equal(reasoningEffortFor('google/gemini-3-flash', {}), undefined);
 assert.equal(reasoningEffortFor('xai/grok-4.20-0309-non-reasoning', {}), undefined);
 assert.equal(reasoningEffortFor('xai/grok-4.3', { AI_REASONING_EFFORT: 'low' }), 'low');
 assert.equal(reasoningEffortFor('xai/grok-4.3', { AI_REASONING_EFFORT: 'omit' }), undefined);
 
-assert.equal(trustedServiceWorker('livestayguide-app', undefined), true);
-assert.equal(trustedServiceWorker('LiveStayGuide-App', undefined), true);
-assert.equal(trustedServiceWorker('other-worker', undefined), false);
-assert.equal(trustedServiceWorker('livestayguide-app', 'other-worker'), false);
-assert.equal(trustedServiceWorker('store-agent', 'livestayguide-app, store-agent'), true);
-assert.equal(trustedServiceWorker('', undefined), false);
 assert.equal(await secretsMatch('same-token', 'same-token'), true);
 assert.equal(await secretsMatch('same-token', 'other-token'), false);
 assert.equal(await secretsMatch('', 'secret'), false);
@@ -123,7 +116,7 @@ assert.equal(translated.input.max_tokens, 1200);
 assert.equal(translated.input.temperature, 0.2);
 assert.equal(translated.input.top_p, 0.9);
 assert.deepEqual(translated.input.stop, ['END']);
-assert.equal(translated.input.reasoning_effort, 'none');
+assert.equal(translated.input.reasoning_effort, 'low');
 assert.equal(translated.input.tool_choice, 'auto');
 assert.equal(translated.input.parallel_tool_calls, false);
 assert.equal(translated.input.system, undefined);
@@ -198,7 +191,7 @@ assert.deepEqual(imageRequest.input.messages, [{
     { type: 'text', text: '(unsupported content block: document)' },
   ],
 }]);
-assert.equal(imageRequest.input.reasoning_effort, 'none');
+assert.equal(imageRequest.input.reasoning_effort, 'low');
 
 const toolImage = anthropicToChat({
   model: 'claude-haiku-4-5-20251001',
@@ -215,7 +208,7 @@ const toolImage = anthropicToChat({
   }],
 }, {});
 assert.equal(toolImage.model, 'xai/grok-4.3');
-assert.equal(toolImage.input.reasoning_effort, 'none');
+assert.equal(toolImage.input.reasoning_effort, 'low');
 assert.deepEqual(toolImage.input.messages, [
   { role: 'tool', tool_call_id: 'toolu_9', content: 'photo attached' },
   {
@@ -354,7 +347,7 @@ assert.equal(handledBody.stop_reason, 'end_turn');
 assert.equal(handledBody.content[0].text, 'Hello from Grok.');
 assert.equal(handled.headers.get('Access-Control-Allow-Origin'), '*');
 assert.equal(ran.model, 'xai/grok-4.3');
-assert.equal(ran.input.reasoning_effort, 'none');
+assert.equal(ran.input.reasoning_effort, 'low');
 assert.equal(ran.input.model, undefined);
 assert.equal(ran.input.input, undefined);
 assert.deepEqual(ran.options, { gateway: { id: 'hostie' } });
@@ -372,7 +365,7 @@ const haikuHandled = await handleAiProxy(post({
 });
 assert.equal(haikuHandled.status, 200);
 assert.equal(ran.model, 'xai/grok-4.3');
-assert.equal(ran.input.reasoning_effort, 'none');
+assert.equal(ran.input.reasoning_effort, 'low');
 
 const thrown = await handleAiProxy(post({
   model: 'claude-sonnet-4-5',
@@ -389,6 +382,29 @@ const thrownBody = await thrown.json();
 assert.equal(thrownBody.type, 'error');
 assert.equal(thrownBody.error.type, 'api_error');
 assert.match(thrownBody.error.message, /7003/);
+
+const unknownModel = await handleAiProxy(post({
+  model: 'xai/not-a-model',
+  messages: [{ role: 'user', content: 'Hi' }],
+}), {
+  AI_BACKEND: 'cloudflare',
+  AI: { async run() { throw new Error('Model not found: xai/not-a-model'); } },
+}, {
+  model: 'xai/not-a-model',
+  messages: [{ role: 'user', content: 'Hi' }],
+});
+assert.equal(unknownModel.status, 400);
+const unknownBody = await unknownModel.json();
+assert.equal(unknownBody.type, 'error');
+assert.equal(unknownBody.error.type, 'invalid_request_error');
+assert.match(unknownBody.error.message, /Model not found/);
+
+const catalogMiss = chatCompletionToAnthropic({
+  success: false,
+  errors: [{ message: 'Model not found: xai/not-a-model' }],
+}, 'xai/not-a-model');
+assert.equal(catalogMiss.status, 400);
+assert.equal(catalogMiss.body.error.type, 'invalid_request_error');
 
 const missing = await handleAiProxy(post({
   model: 'claude-sonnet-4-5',
@@ -452,7 +468,7 @@ const bound = await handleAiProxy(post({
   model: 'claude-sonnet-4-5',
   messages: [{ role: 'user', content: 'Hi' }],
 });
-assert.equal(bound.status, 200);
+assert.equal(bound.status, 401);
 
 const stranger = await handleAiProxy(post({
   model: 'claude-sonnet-4-5',
@@ -496,7 +512,7 @@ await withFetch(async (url, init) => {
   assert.equal(init.headers['cf-aig-gateway-id'], 'default');
   const sent = JSON.parse(init.body);
   assert.equal(sent.model, 'xai/grok-4.3');
-  assert.equal(sent.reasoning_effort, 'none');
+  assert.equal(sent.reasoning_effort, 'low');
   assert.equal(sent.input, undefined);
   return new Response(JSON.stringify({
     error: { message: 'slow down', type: 'rate_limit_error' },

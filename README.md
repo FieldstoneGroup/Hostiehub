@@ -35,9 +35,8 @@ The Worker prefers the `AI` binding. It uses the REST call only when `CLOUDFLARE
 | `AI_MODEL_SONNET` | No | Target for model names containing `sonnet` or `opus`. Default `xai/grok-4.3`. |
 | `AI_MODEL_HAIKU` | No | Target for names containing `haiku`. Default `xai/grok-4.3`. The catalog has no cheaper xAI chat model (grok-4.20 and grok-4.5+ are $2 / $6 per 1M). |
 | `AI_MODEL_DEFAULT` | No | Anything else, including an empty model. Default `xai/grok-4.3`. A caller that already sends a catalog id (`author/model`) is used as-is. |
-| `AI_REASONING_EFFORT` | No | For `xai/grok-4.3`, unset sends `none`. Also `low`, `medium`, `high`, or `omit`. `none` keeps `max_tokens` for the visible answer. Grok's own default is `low`, which spends extra reasoning tokens. Other xAI ids do not get a default, because grok-4.20 rejects the field. |
-| `PROXY_TOKEN` | No | Shared secret. **Off when unset**, so current callers keep working. When set, a messages request must send `X-Proxy-Token: <secret>` or `Authorization: Bearer <secret>`. |
-| `PROXY_TRUST_WORKERS` | No | Comma-separated Worker names that skip the secret. Default `livestayguide-app`. Cloudflare sets `CF-Worker` on service-binding calls; a browser cannot set that header. |
+| `AI_REASONING_EFFORT` | Set in production | `low` on the live Worker and the code default for `xai/grok-4.3`. Also `none`, `medium`, `high`, or `omit`. `none` made tool-using replies say "check the card" with no card. Other xAI ids do not get a default, because grok-4.20 rejects the field. |
+| `PROXY_TOKEN` | No. Leave unset. | Shared secret. Off when unset, which is how production runs. When set, every messages caller, including `livestayguide-app`, must send `X-Proxy-Token`. |
 | `CLOUDFLARE_ACCOUNT_ID` | Only without the AI binding | Account id (`wrangler whoami`). |
 | `CLOUDFLARE_API_TOKEN` | Only without the AI binding | Workers AI Read token. Prefer the binding so this token is not stored on the Worker. |
 
@@ -62,24 +61,16 @@ The script sends one forced tool call and one tool result, then checks the reply
 
 ### Deploy
 
-Do not deploy until the credits and the binding are ready. Shipping this code with `AI_BACKEND` unset does not change which model answers. It does change the Worker config if you use Wrangler, because this repo had no Wrangler file and the live Worker was configured in the dashboard.
+The Worker from this branch is already live on `hostie-hub-ai`. `wrangler.jsonc` matches that production config:
 
-Before the first `wrangler deploy`:
+- cron `0 23 * * *` (trial reminder)
+- `compatibility_date` `2026-04-03`
+- `AI` binding
+- var `AI_REASONING_EFFORT=low`
 
-1. Open the existing Worker and write down its **cron trigger**, **routes**, **compatibility date**, and **variables**. The trial-reminder `scheduled` handler depends on that cron. This repo does not know the cron expression. If `wrangler.jsonc` has no `triggers.crons` entry, deploy deletes the dashboard cron.
-2. Paste the real cron into `wrangler.jsonc`, for example `"triggers": { "crons": ["<the expression from the dashboard>"] }`.
-3. Compare the dashboard compatibility date with `2026-11-27` in `wrangler.jsonc`. Moving the date forward is intentional for this change; read the compatibility notes if the dashboard date is much older, because it applies to the Stripe and Resend routes too.
-4. Deploy with vars preserved, from this repo:
+Do not deploy again just to refresh the file. A later `npx wrangler@4 deploy --keep-vars` must keep this cron and compatibility date. Dropping the cron from the file deletes the trigger. `--keep-vars` keeps secrets that are not listed in the file (`ANTHROPIC_API_KEY`, Stripe, Resend, Supabase). `AI_REASONING_EFFORT` is in the file, so a deploy sets it to `low`.
 
-```bash
-npx wrangler@4 deploy --keep-vars
-```
-
-`--keep-vars` keeps dashboard plain variables and secrets that are not listed in `wrangler.jsonc`. The deploy adds the `AI` binding and turns on Workers logs and traces. With `AI_BACKEND` unset, that deploy is the cutover: the next messages request uses Grok.
-
-5. Run `node scripts/smoke-ai.mjs` with a Workers AI Read token before relying on production.
-6. Deploy this Worker before the website. `support-widget.js` and `api/assistant.js` send `xai/grok-4.3` to the worker. The worker that is live today would forward that id to Anthropic, which rejects it.
-7. Send one support-widget message and one known agent tool round (dashboard agent or `store-agent`) and confirm `stop_reason` is `end_turn` or `tool_use`, and that a tool result round finishes.
+The website should be deployed after this Worker, which it now is. `support-widget.js` and `api/assistant.js` send `xai/grok-4.3`.
 
 `X-Service: resend`, `stripe-checkout`, `stripe-host-quantity`, `process-refund`, the webhook, and the partner/host notification routes are the same code as before.
 
@@ -87,15 +78,19 @@ npx wrangler@4 deploy --keep-vars
 
 Set `AI_BACKEND=anthropic` on the Worker. Deleting the variable does not roll back; unset stays on Grok. The messages route then forwards the body to `https://api.anthropic.com/v1/messages` with `ANTHROPIC_API_KEY`. Callers stay as they are. That relay still answers HTTP 200 and passes Anthropic's JSON through, including Anthropic's own error JSON. This is temporary. After the account is closed, or after 30 Nov 2026 for `claude-sonnet-4-5`, the rollback stops working.
 
-If the deploy itself misbehaves (cron gone, a Stripe route failing), roll the Worker version back from **Workers → hostie-hub-ai → Deployments**. Rolling the version back does not put credits or gateway settings back, and it will not restore a cron that the new version deleted unless that cron was on the previous version. Copy the cron into `wrangler.jsonc` before deploying so it does not get deleted. A version rollback also returns the messages route to the old Anthropic forward, which dies with the account.
+If a later deploy misbehaves, roll the Worker version back from **Workers → hostie-hub-ai → Deployments**. Rolling the version back does not put credits or gateway settings back. The cron `0 23 * * *` has to stay in `wrangler.jsonc` or the next deploy deletes it.
 
 ### Optional proxy secret
 
-Leave `PROXY_TOKEN` unset until you mean to lock the messages route. The check runs on both backends, so setting it before callers send the header also blocks the Anthropic rollback.
+`PROXY_TOKEN` is unset in production. Leave it unset.
 
-- `livestayguide-app` is allowed without the secret when its Worker name matches `PROXY_TRUST_WORKERS` (default `livestayguide-app`). Confirm the script name in the dashboard. A rejected call logs `cf_worker` and not the token.
-- `store-agent` calls over HTTP. It needs `X-Proxy-Token` once the secret is on, which means editing that function. This repo does not change it.
-- `support-widget.js` is public browser JavaScript. A token in that file is not a secret. Turning `PROXY_TOKEN` on blocks the widget until it sends the header, and anyone who can load the script can read the header.
+Service-binding calls from `livestayguide-app` arrive with `CF-Worker` null, so a trusted-worker list cannot recognize them. There is no exemption. When you set `PROXY_TOKEN`, every messages caller must send `X-Proxy-Token: <secret>` (`Authorization: Bearer <secret>` is also accepted):
+
+- `livestayguide-app` (service binding `AI_PROXY`)
+- `store-agent`
+- `support-widget.js`
+
+The widget is public browser JavaScript. A token in that file is not a secret. The check runs on both backends, so turning it on before those callers send the header blocks Grok and the Anthropic rollback together. `X-Service` routes do not check the token.
 
 ### Tests
 
@@ -119,12 +114,12 @@ The translation tests cover multi-turn tool use, parallel tool calls, `tool_resu
 
 ### Risks
 
-- Tool-calling quality on a ~30-tool agent will differ from Claude. That is the risk accepted by moving straight to Grok. `reasoning_effort` defaults to `none` so a `max_tokens` of 1200 is available for the visible answer and tool calls. `low` or higher spends reasoning tokens on top of that cap (xAI's `max_tokens` limits the visible output; reasoning is extra and billed). Chat completions does not replay a reasoning trace on the next turn. With `none`, there is no trace to lose. If you raise the effort, multi-turn tool quality can drop because Grok's thinking is discarded between calls. xAI's own guidance prefers their Responses API for that; Cloudflare's Grok 4.3 catalog entry is chat completions, which is what this proxy uses.
+- Tool-calling quality on a ~30-tool agent will differ from Claude. Production uses `reasoning_effort` `low`. `none` produced replies that said "check the card" when no card was on the request. `low` spends some reasoning tokens on top of `max_tokens` (xAI's cap is the visible output). Chat completions does not replay that thinking on the next turn.
 - If `finish_reason` is `length` and the reply also contains a tool call, `stop_reason` is `max_tokens` and the tool block is still included. A truncated argument is `{ "_unparsed": "<raw>" }`. Callers should not execute tools when `stop_reason` is `max_tokens`.
-- Haiku names, the support widget, and the store assistant's Grok path all use `xai/grok-4.3`. The Cloudflare catalog has no cheaper xAI chat model. `reasoning_effort` `none` is what keeps that call fast.
+- Haiku names, the support widget, and the store assistant's Grok path all use `xai/grok-4.3` with `reasoning_effort` `low`. The Cloudflare catalog has no cheaper xAI chat model. An unknown model id returns HTTP 400, not 502.
 - Vision calls up to about 5 MB are parsed in the Worker and sent again as a data URL. That fits a normal request, and it is a second copy of the image in memory (128 MB Worker limit). Much larger images can fail the Worker or the provider.
 - The messages route returns real HTTP error statuses. The old relay returned HTTP 200 even when Anthropic returned an error. A caller that treats any non-200 as a transport failure will take its error path. The error body is still Anthropic-shaped.
-- `PROXY_TOKEN` breaks the public support widget and `store-agent` until they send it. Service-binding exemption depends on the platform `CF-Worker` header matching the script name.
+- `PROXY_TOKEN` stays off. Turning it on blocks `livestayguide-app`, `store-agent`, and the support widget until each sends `X-Proxy-Token`. `CF-Worker` is null on the service binding, so it cannot be used as a bypass.
 - Several dashboard `X-Service` names have no handler in `worker.js`: `stripe-account-status`, `stripe-order-complete`, `send-invite-accepted`, `send-linked-user-invite`. They do not send `messages`. They used to fall through to Anthropic. They now get HTTP 400 and are not sent to Grok or Anthropic. Stripe Connect "is the account ready?" in the dashboard depends on `stripe-account-status`, which this Worker does not implement.
 - `api/assistant.js` defaults to OpenAI when `HOSTIE_LLM_PROVIDER` is unset. `grok`, `cloudflare`, and a leftover `anthropic` call the worker with `xai/grok-4.3`. The Anthropic key is no longer sent. The call still waits for `HOSTIE_LLM_API_KEY` to be set; without it the assistant stays on the rules list. Deploy the Worker before this Vercel function.
 

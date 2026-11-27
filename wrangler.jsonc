@@ -1,0 +1,24 @@
+{
+  // Matches the live hostie-hub-ai Worker (27 Nov 2026).
+  // The cron is the trial-reminder schedule. Removing it deletes that trigger
+  // on the next deploy. compatibility_date stays 2026-04-03 so a deploy does
+  // not change the Stripe and Resend runtime.
+  "name": "hostie-hub-ai",
+  "main": "worker.js",
+  "compatibility_date": "2026-04-03",
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true
+    }
+  },
+  "triggers": {
+    "crons": ["0 23 * * *"]
+  },
+  "ai": {
+    "binding": "AI"
+  },
+  "vars": {
+    "AI_REASONING_EFFORT": "low"
+  }
+}

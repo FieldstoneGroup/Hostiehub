@@ -1,0 +1,21 @@
+{
+  // Worker name already deployed at hostie-hub-ai.<account>.workers.dev.
+  // This file did not exist before. The live cron, routes, and plain vars
+  // were set in the dashboard. Read README.md before the first wrangler deploy:
+  // an omitted cron trigger is deleted, and a new compatibility date applies.
+  "name": "hostie-hub-ai",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-27",
+  "observability": {
+    "enabled": true,
+    "traces": {
+      "enabled": true
+    }
+  },
+  "ai": {
+    "binding": "AI"
+  }
+  // Copy the live cron from Workers > hostie-hub-ai > Settings > Triggers
+  // into this file BEFORE the first deploy, for example:
+  // "triggers": { "crons": ["0 9 * * *"] }
+}

@@ -2,9 +2,11 @@
  *
  * Optional LLM (falls back to rules when unset or when the call fails):
  *   HOSTIE_LLM_API_KEY     required to leave the rules fallback
- *   HOSTIE_LLM_PROVIDER    openai (default) or anthropic
- *   HOSTIE_LLM_MODEL       optional model id
- *   HOSTIE_LLM_BASE_URL    optional, OpenAI-compatible base URL
+ *   HOSTIE_LLM_PROVIDER    openai (default), grok, or cloudflare.
+ *                          anthropic is accepted as a legacy name and calls Grok.
+ *   HOSTIE_LLM_MODEL       optional model id. Claude names are sent as xai/grok-4.3.
+ *   HOSTIE_LLM_BASE_URL    optional, OpenAI-compatible base URL (openai provider only)
+ *   HOSTIE_AI_PROXY_URL    optional worker URL for the Grok provider
  */
 const { suggest } = require('../js/suggestions');
 
@@ -35,9 +37,16 @@ function sanitize(list, knownIds) {
   }).filter(Boolean);
 }
 
+function grokModel() {
+  var requested = String(process.env.HOSTIE_LLM_MODEL || '').trim();
+  if (!requested || /claude|anthropic|haiku|sonnet|opus/i.test(requested)) return 'xai/grok-4.3';
+  return requested;
+}
+
 async function callLlm(input, rules) {
   var provider = (process.env.HOSTIE_LLM_PROVIDER || 'openai').toLowerCase();
-  var model = process.env.HOSTIE_LLM_MODEL || (provider === 'anthropic' ? 'claude-haiku-4-5-20251001' : 'gpt-4o-mini');
+  var model = grokModel();
+  if (provider === 'openai') model = process.env.HOSTIE_LLM_MODEL || 'gpt-4o-mini';
   var locale = String(input.locale || 'en').slice(0, 12);
   var system = [
     'You suggest extras for a short-stay host store.',
@@ -55,25 +64,23 @@ async function callLlm(input, rules) {
     rulesFallback: rules.suggestions
   });
 
-  if (provider === 'anthropic') {
-    var anthropic = await fetch('https://api.anthropic.com/v1/messages', {
+  if (provider === 'grok' || provider === 'cloudflare' || provider === 'anthropic') {
+    var proxy = (process.env.HOSTIE_AI_PROXY_URL || 'https://hostie-hub-ai.still-feather-9559.workers.dev').replace(/\/$/, '');
+    var grok = await fetch(proxy, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': process.env.HOSTIE_LLM_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         model: model,
         max_tokens: 800,
+        temperature: 0.3,
         system: system,
         messages: [{ role: 'user', content: user }]
       })
     });
-    var anthropicBody = await anthropic.json();
-    if (!anthropic.ok) throw new Error('anthropic');
-    var text = (anthropicBody.content || []).map(function (block) { return block.text || ''; }).join('\n');
-    return JSON.parse(text.replace(/^```json\s*|```$/g, ''));
+    var grokBody = await grok.json();
+    if (!grok.ok || !grokBody || grokBody.type === 'error') throw new Error('grok');
+    var grokText = (grokBody.content || []).map(function (block) { return block.text || ''; }).join('\n');
+    return JSON.parse(grokText.replace(/^```json\s*|```$/g, ''));
   }
 
   var base = (process.env.HOSTIE_LLM_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
@@ -124,7 +131,10 @@ module.exports = async function handler(req, res) {
     var llm = await callLlm(input, rules);
     var suggestions = sanitize(llm.suggestions, knownIds);
     res.status(200).json({
-      provider: (process.env.HOSTIE_LLM_PROVIDER || 'openai').toLowerCase(),
+      provider: (function () {
+        var name = (process.env.HOSTIE_LLM_PROVIDER || 'openai').toLowerCase();
+        return (name === 'anthropic' || name === 'cloudflare') ? 'grok' : name;
+      })(),
       reply: String(llm.reply || '').slice(0, 600),
       replyKey: rules.replyKey,
       suggestions: suggestions.length ? suggestions : rules.suggestions

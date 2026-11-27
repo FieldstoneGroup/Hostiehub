@@ -1,3 +1,5 @@
+import { handleAiProxy, isMessagesRequest } from './ai-translate.js';
+
 const SUPABASE_URL = 'https://hjwkycknjiyvrxbcejet.supabase.co';
 // Public anon key, same value the dashboard already ships. Not a secret.
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqd2t5Y2tuaml5dnJ4YmNlamV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4Njc3MjUsImV4cCI6MjA5MDQ0MzcyNX0.qmdp--Zw24bBlHqsXrQfFiIEv_ux0k9-1NE4RH_Ldb8';
@@ -352,7 +354,7 @@ async function handleProcessRefund(request, env, body) {
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type, X-Service, Authorization, stripe-signature' } });
+      return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type, X-Service, Authorization, stripe-signature, X-Proxy-Token' } });
     }
 
     const service = request.headers.get('X-Service');
@@ -1129,13 +1131,21 @@ export default {
       });
       responseData = await r.json();
 
+    } else if (isMessagesRequest(body)) {
+      // Anthropic Messages callers (no X-Service, or an unknown one that still
+      // sends messages). Translated to Grok when AI_BACKEND=cloudflare.
+      return handleAiProxy(request, env, body);
     } else {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify(body)
+      // Not a messages request and not a known X-Service. Previously this
+      // fell through to Anthropic. It now stops here so closing that
+      // account cannot receive these payloads.
+      return new Response(JSON.stringify({
+        type: 'error',
+        error: { type: 'invalid_request_error', message: 'Send a messages request, or a known X-Service header.' },
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       });
-      responseData = await r.json();
     }
 
     return new Response(JSON.stringify(responseData), {

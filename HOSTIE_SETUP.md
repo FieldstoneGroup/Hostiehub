@@ -61,9 +61,10 @@ If `HOSTIE_LLM_API_KEY` is missing, the API uses the rules in `js/suggestions.js
 | Variable | Purpose |
 |---|---|
 | `HOSTIE_LLM_API_KEY` | Turns on the model. Leave unset to keep the rules fallback. |
-| `HOSTIE_LLM_PROVIDER` | `openai` (default) or `anthropic` |
-| `HOSTIE_LLM_MODEL` | Optional model id |
-| `HOSTIE_LLM_BASE_URL` | Optional OpenAI-compatible base URL |
+| `HOSTIE_LLM_PROVIDER` | `openai` (default), `grok`, or `cloudflare`. A leftover `anthropic` value calls Grok and does not contact Anthropic. |
+| `HOSTIE_LLM_MODEL` | Optional model id. Claude names are replaced with `xai/grok-4.3`. |
+| `HOSTIE_LLM_BASE_URL` | Optional OpenAI-compatible base URL. Used only when the provider is `openai`. |
+| `HOSTIE_AI_PROXY_URL` | Optional. Grok calls go to the `hostie-hub-ai` worker, which bills them through Cloudflare. |
 
 ## Onboarding
 
